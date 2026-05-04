@@ -1,0 +1,14 @@
+{
+  "name": "nta-tool",
+  "private": true,
+  "workspaces": ["nta-tool-prototype"],
+  "dependencies": {
+    "next": "16.2.4"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace=nta-tool-prototype",
+    "build": "npm run build --workspace=nta-tool-prototype",
+    "start": "npm run start --workspace=nta-tool-prototype",
+    "lint": "npm run lint --workspace=nta-tool-prototype"
+  }
+}
