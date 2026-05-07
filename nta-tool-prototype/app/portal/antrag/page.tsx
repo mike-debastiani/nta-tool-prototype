@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function PortalPage() {
+export default async function PortalAntragPage() {
   redirect("/portal/antragserstellung");
 }

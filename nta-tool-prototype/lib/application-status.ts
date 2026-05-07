@@ -10,7 +10,7 @@ export type ApplicationStatus =
 export const statusLabel: Record<ApplicationStatus, string> = {
   draft: "Entwurf",
   submitted: "Uebermittelt",
-  in_review: "In Bearbeitung",
+  in_review: "In Review",
   needs_correction: "Nachbesserung noetig",
   approved: "Freigegeben",
   rejected: "Abgelehnt",

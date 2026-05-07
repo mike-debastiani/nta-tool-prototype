@@ -1,35 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  type ApplicationStatus,
-  statusLabel,
-} from "@/lib/application-status";
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
 import { createClient } from "@/utils/supabase/client";
-import { ApplicationStatusBadge } from "@/components/domain/application-status-badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 type WorkspaceTestFlowProps = {
   userId: string;
   initialApplications: WorkspaceApplication[];
 };
-
-const nextStatusOptions: ApplicationStatus[] = [
-  "in_review",
-  "needs_correction",
-  "approved",
-  "rejected",
-];
 
 export function WorkspaceTestFlow({
   userId,
@@ -39,11 +21,38 @@ export function WorkspaceTestFlow({
   const [applications, setApplications] =
     useState<WorkspaceApplication[]>(initialApplications);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
-  const [statusDrafts, setStatusDrafts] = useState<
-    Record<string, ApplicationStatus>
-  >({});
   const [message, setMessage] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
+
+  const formatFileSize = (sizeInBytes: number) => `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;
+  const statusMeta = (application: WorkspaceApplication) => {
+    const hasSubmitted = Boolean(application.data.submittedAt);
+    const consultationStatus = application.data.consultation?.status;
+
+    if (hasSubmitted && application.status === "in_review") {
+      return { label: "In Review", className: "border-amber-200 bg-amber-100 text-amber-700" };
+    }
+    if (
+      !hasSubmitted &&
+      consultationStatus === "done" &&
+      application.data.recommendation?.ready
+    ) {
+      return {
+        label: "Beratung abgehalten & Empfehlung verfasst",
+        className: "border-cyan-200 bg-cyan-100 text-cyan-700",
+      };
+    }
+    if (!hasSubmitted && consultationStatus) {
+      return {
+        label: "Entwurf · Beratungstermin vereinbart",
+        className: "border-zinc-200 bg-zinc-100 text-zinc-700",
+      };
+    }
+    if (application.status === "in_review") {
+      return { label: "In Review", className: "border-amber-200 bg-amber-100 text-amber-700" };
+    }
+    return { label: "Entwurf", className: "border-zinc-200 bg-zinc-100 text-zinc-700" };
+  };
 
   const refreshApplications = useCallback(async () => {
     const { data } = await supabase
@@ -56,13 +65,6 @@ export function WorkspaceTestFlow({
     if (data) {
       const nextApplications = data as WorkspaceApplication[];
       setApplications(nextApplications);
-      setStatusDrafts((previous) => {
-        const next = { ...previous };
-        for (const application of nextApplications) {
-          next[application.id] = previous[application.id] ?? application.status;
-        }
-        return next;
-      });
     }
   }, [supabase]);
 
@@ -87,20 +89,33 @@ export function WorkspaceTestFlow({
     };
   }, [refreshApplications, supabase, userId]);
 
-  async function updateStatus(applicationId: string) {
+  async function markConsultationDone(applicationId: string) {
     setPendingId(applicationId);
     setMessage(null);
 
-    const nextStatus = statusDrafts[applicationId];
-    if (!nextStatus) {
+    const target = applications.find((a) => a.id === applicationId);
+    if (!target) {
       setPendingId(null);
       return;
     }
 
-    const { error } = await supabase.rpc("r2_set_application_status", {
-      p_application_id: applicationId,
-      p_next_status: nextStatus,
-    });
+    const { error } = await supabase
+      .from("applications")
+      .update({
+        status: "in_review",
+        data: {
+          ...target.data,
+          consultation: {
+            ...target.data.consultation,
+            status: "done",
+          },
+          recommendation: {
+            ready: true,
+            url: "https://www.google.com",
+          },
+        },
+      })
+      .eq("id", applicationId);
 
     if (error) {
       setMessage(error.message);
@@ -109,18 +124,13 @@ export function WorkspaceTestFlow({
     }
 
     await refreshApplications();
-    setMessage(`Status wurde auf "${statusLabel[nextStatus]}" gesetzt.`);
+    setMessage("Beratung als durchgeführt markiert, Empfehlungsschreiben freigegeben.");
     setPendingId(null);
   }
 
   const selectedApplication = applications.find(
     (application) => application.id === selectedApplicationId,
   );
-
-  const canSave =
-    selectedApplication != null &&
-    statusDrafts[selectedApplication.id] != null &&
-    statusDrafts[selectedApplication.id] !== selectedApplication.status;
 
   if (!selectedApplication) {
     return (
@@ -145,7 +155,14 @@ export function WorkspaceTestFlow({
                 <p className="line-clamp-1 text-sm font-medium">
                   {application.data.title ?? "Ohne Titel"}
                 </p>
-                <ApplicationStatusBadge status={application.status} />
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium",
+                    statusMeta(application).className,
+                  )}
+                >
+                  {statusMeta(application).label}
+                </span>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
                 {application.users[0]?.display_name ??
@@ -184,7 +201,14 @@ export function WorkspaceTestFlow({
               <h3 className="font-medium">
                 {selectedApplication.data.title ?? "Ohne Titel"}
               </h3>
-              <ApplicationStatusBadge status={selectedApplication.status} />
+              <span
+                className={cn(
+                  "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium",
+                  statusMeta(selectedApplication).className,
+                )}
+              >
+                {statusMeta(selectedApplication).label}
+              </span>
             </div>
             <p className="text-sm text-muted-foreground">
               {selectedApplication.data.summary || "Keine Beschreibung hinterlegt."}
@@ -195,39 +219,151 @@ export function WorkspaceTestFlow({
                 selectedApplication.users[0]?.email ??
                 selectedApplication.applicant_id}
             </p>
+            {selectedApplication.data.consultation?.status ? (
+              <div className="rounded-md border bg-background p-3 text-xs">
+                <p className="font-medium text-foreground">Angefragter Beratungstermin</p>
+                <p className="text-muted-foreground">
+                  {selectedApplication.data.consultation.date ?? "Datum noch offen"}
+                </p>
+                <p className="text-muted-foreground">
+                  Slot: {selectedApplication.data.consultation.slot ?? "Slot noch offen"}
+                </p>
+                <p className="text-muted-foreground">
+                  Ort: {selectedApplication.data.consultation.location ?? "Ort noch offen"}
+                </p>
+              </div>
+            ) : null}
+            {selectedApplication.data.personalData ? (
+              <div className="space-y-1 rounded-md border bg-background p-3 text-xs">
+                <p className="mb-1 font-medium text-foreground">
+                  Übermittelte Antragsdaten (read-only)
+                </p>
+                <p className="text-muted-foreground">
+                  Name: {selectedApplication.data.personalData.vorname}{" "}
+                  {selectedApplication.data.personalData.name}
+                </p>
+                <p className="text-muted-foreground">
+                  E-Mail: {selectedApplication.data.personalData.email}
+                </p>
+                <p className="text-muted-foreground">
+                  Telefon: {selectedApplication.data.personalData.phone}
+                </p>
+                <p className="text-muted-foreground">
+                  Matrikel: {selectedApplication.data.personalData.matrikel}
+                </p>
+                <p className="text-muted-foreground">
+                  Studiengang: {selectedApplication.data.personalData.studiengang}
+                </p>
+                <p className="text-muted-foreground">
+                  Uploads: {selectedApplication.data.attestFiles?.length ?? 0}
+                </p>
+              </div>
+            ) : null}
+            {selectedApplication.data.attestFiles?.length ? (
+              <div className="space-y-2 rounded-md border bg-background p-3 text-xs">
+                <p className="font-medium text-foreground">Fachärztliche Atteste</p>
+                {selectedApplication.data.attestFiles.map((file) => (
+                  <a
+                    key={file.id ?? file.name}
+                    href="https://www.google.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-between rounded-md bg-secondary px-3 py-2 text-foreground hover:underline"
+                  >
+                    <span>{file.name ?? "Datei"}</span>
+                    <span className="inline-flex items-center gap-1 text-muted-foreground">
+                      {formatFileSize(file.size ?? 0)}
+                      <ExternalLink className="size-3.5" />
+                    </span>
+                  </a>
+                ))}
+              </div>
+            ) : null}
+            {selectedApplication.data.recommendation?.url ? (
+              <div className="rounded-md border bg-background p-3 text-xs">
+                <p className="mb-1 font-medium text-foreground">Empfehlungsschreiben</p>
+                <a
+                  href={selectedApplication.data.recommendation.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-foreground underline"
+                >
+                  Dokument in neuem Tab öffnen
+                  <ExternalLink className="size-3.5" />
+                </a>
+              </div>
+            ) : null}
+            {selectedApplication.data.applicationDefinition ? (
+              <div className="space-y-1 rounded-md border bg-background p-3 text-xs">
+                <p className="mb-1 font-medium text-foreground">Antragsdefinition</p>
+                <p className="text-muted-foreground">
+                  Beschreibung:{" "}
+                  {selectedApplication.data.applicationDefinition.situationDescription ??
+                    "Keine Angabe"}
+                </p>
+                <p className="text-muted-foreground">
+                  Gültigkeit:{" "}
+                  {selectedApplication.data.applicationDefinition.duration === "full_study"
+                    ? "Gesamte Studiendauer"
+                    : selectedApplication.data.applicationDefinition.duration === "one_semester"
+                      ? "Einmalig für ein Semester"
+                      : "Keine Angabe"}
+                </p>
+                <p className="text-muted-foreground">
+                  Geltungsbereich:{" "}
+                  {selectedApplication.data.applicationDefinition.scopeSelections?.join(", ") ||
+                    "Keine Angabe"}
+                </p>
+                <p className="text-muted-foreground">
+                  Maßnahmen Lehrveranstaltungen:{" "}
+                  {[
+                    ...(selectedApplication.data.applicationDefinition.lectureMeasures ?? []),
+                    selectedApplication.data.applicationDefinition.lectureOtherEnabled
+                      ? selectedApplication.data.applicationDefinition.lectureOtherText || "Sonstige"
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(", ") || "Keine Angabe"}
+                </p>
+                <p className="text-muted-foreground">
+                  Maßnahmen Leistungsnachweise:{" "}
+                  {[
+                    ...(selectedApplication.data.applicationDefinition.assessmentMeasures ?? []),
+                    selectedApplication.data.applicationDefinition.assessmentOtherEnabled
+                      ? selectedApplication.data.applicationDefinition.assessmentOtherText ||
+                        "Sonstige"
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(", ") || "Keine Angabe"}
+                </p>
+              </div>
+            ) : null}
           </div>
 
           <div className="space-y-3 rounded-lg border p-4">
-            <p className="text-sm font-medium">Status aendern und freigeben</p>
-            <Select
-              value={statusDrafts[selectedApplication.id] ?? selectedApplication.status}
-              onValueChange={(value: string) =>
-                setStatusDrafts((previous) => ({
-                  ...previous,
-                  [selectedApplication.id]: value as ApplicationStatus,
-                }))
-              }
-            >
-              <SelectTrigger className="w-full sm:max-w-xs">
-                <SelectValue placeholder="Status waehlen" />
-              </SelectTrigger>
-              <SelectContent>
-                {nextStatusOptions.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {statusLabel[status]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <p className="text-sm font-medium">
+              Empfehlungsschreiben freigeben (Mock)
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Der eingereichte Antrag ist hier nur lesbar. Nach Durchführung der
+              Beratung können Sie die Empfehlung freigeben.
+            </p>
             <div className="flex items-center justify-between gap-3">
-              <ApplicationStatusBadge
-                status={statusDrafts[selectedApplication.id] ?? selectedApplication.status}
-              />
-              <Button
-                onClick={() => updateStatus(selectedApplication.id)}
-                disabled={!canSave || pendingId === selectedApplication.id}
+              <span
+                className={cn(
+                  "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium",
+                  statusMeta(selectedApplication).className,
+                )}
               >
-                Aenderung speichern
+                {statusMeta(selectedApplication).label}
+              </span>
+              <Button
+                variant="outline"
+                onClick={() => markConsultationDone(selectedApplication.id)}
+                disabled={pendingId === selectedApplication.id}
+              >
+                Beratung durchgeführt + Empfehlung freigeben
               </Button>
             </div>
           </div>
