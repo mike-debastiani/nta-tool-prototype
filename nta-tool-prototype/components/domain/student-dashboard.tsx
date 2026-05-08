@@ -55,7 +55,7 @@ export function StudentDashboard({ applications }: StudentDashboardProps) {
                 <p className="line-clamp-1 text-sm font-medium">
                   {application.data.title ?? "NTA Antrag"}
                 </p>
-                <ApplicationStatusBadge status={application.status} />
+                <ApplicationStatusBadge application={application} audience="R1" />
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
                 Aktualisiert am {new Date(application.updated_at).toLocaleDateString("de-CH")}
@@ -108,7 +108,7 @@ export function StudentDashboard({ applications }: StudentDashboardProps) {
         <CardTitle>{selected.data.title ?? "NTA Antrag"}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <ApplicationStatusBadge status={selected.status} />
+        <ApplicationStatusBadge application={selected} audience="R1" />
         {selected.data.personalData ? (
           <div className="rounded-md border bg-muted/20 p-3 text-xs">
             <p className="mb-1 font-medium text-foreground">Persönliche Angaben</p>

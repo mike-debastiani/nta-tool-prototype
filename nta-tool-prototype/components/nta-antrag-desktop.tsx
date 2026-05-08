@@ -452,11 +452,16 @@ export function NtaAntragDesktop({
           const next = payload.new as ApplicationRow;
           if (!next?.id) return;
           setApplication(next);
-          if (next.data?.recommendation?.ready) {
-            setCurrentStep("step3_recommendation");
-          } else if (next.data?.consultation?.status === "booked") {
-            setCurrentStep("step3_booked");
-          }
+          const isFinalSubmitted = Boolean(
+            next.data?.finalSubmitted || next.data?.submittedAt,
+          );
+          setCurrentStep((previousStep) => {
+            if (isFinalSubmitted) return "step6_submitted";
+            if (previousStep === "step6_submitted") return previousStep;
+            if (next.data?.recommendation?.ready) return "step3_recommendation";
+            if (next.data?.consultation?.status === "booked") return "step3_booked";
+            return previousStep;
+          });
         },
       )
       .subscribe();
@@ -643,7 +648,7 @@ export function NtaAntragDesktop({
     const { error: updateError } = await supabase
       .from("applications")
       .update({
-        status: "in_review",
+        status: "submitted",
         data: {
           title: `NTA Antrag ${formData.vorname} ${formData.name}`.trim(),
           summary: "Beratungstermin vereinbart",
@@ -711,64 +716,103 @@ export function NtaAntragDesktop({
       targetId = data.id as string;
     }
 
-    const { error } = await supabase
-      .from("applications")
-      .update({
-        status: "in_review",
-        data: {
-          title: `NTA Antrag ${formData.vorname} ${formData.name}`.trim(),
-          summary: "In Review",
-          personalData: {
-            vorname: formData.vorname,
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            matrikel: formData.matrikel,
-            studiengang: formData.studiengang,
-            semester: formData.semester,
-            antragsart: formData.antragsart,
-          },
-          attestFiles: formData.attestFiles,
-          consultation: {
-            ...(application?.data?.consultation ?? {}),
-            status: "done",
-            date: application?.data?.consultation?.date ?? bookingDateLabel,
-            slot: application?.data?.consultation?.slot ?? selectedBookingSlot,
-            location: application?.data?.consultation?.location ?? MOCK_LOCATION,
-            advisor: application?.data?.consultation?.advisor ?? MOCK_ADVISOR,
-          },
-          recommendation: {
-            ready: true,
-            url: recommendationUrl,
-          },
-          applicationDefinition: {
-            situationDescription: applicationFormData.situationDescription,
-            duration: applicationFormData.duration || undefined,
-            scopeSelections: applicationFormData.scopeSelections,
-            lectureMeasures: applicationFormData.lectureMeasures,
-            lectureOtherEnabled: applicationFormData.lectureOtherEnabled,
-            lectureOtherText: applicationFormData.lectureOtherText,
-            assessmentMeasures: applicationFormData.assessmentMeasures,
-            assessmentOtherEnabled: applicationFormData.assessmentOtherEnabled,
-            assessmentOtherText: applicationFormData.assessmentOtherText,
-          },
-          submittedAt: new Date().toISOString(),
-        },
-      })
-      .eq("id", targetId);
+    const submittedAt = new Date().toISOString();
+    const fullSubmitData = {
+      title: `NTA Antrag ${formData.vorname} ${formData.name}`.trim(),
+      summary: "In Review",
+      personalData: {
+        vorname: formData.vorname,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        matrikel: formData.matrikel,
+        studiengang: formData.studiengang,
+        semester: formData.semester,
+        antragsart: formData.antragsart,
+      },
+      attestFiles: formData.attestFiles,
+      consultation: {
+        ...(application?.data?.consultation ?? {}),
+        status: "done" as const,
+        date: application?.data?.consultation?.date ?? bookingDateLabel,
+        slot: application?.data?.consultation?.slot ?? selectedBookingSlot,
+        location: application?.data?.consultation?.location ?? MOCK_LOCATION,
+        advisor: application?.data?.consultation?.advisor ?? MOCK_ADVISOR,
+      },
+      recommendation: {
+        ready: true,
+        url: recommendationUrl,
+      },
+      applicationDefinition: {
+        situationDescription: applicationFormData.situationDescription,
+        duration: applicationFormData.duration || undefined,
+        scopeSelections: applicationFormData.scopeSelections,
+        lectureMeasures: applicationFormData.lectureMeasures,
+        lectureOtherEnabled: applicationFormData.lectureOtherEnabled,
+        lectureOtherText: applicationFormData.lectureOtherText,
+        assessmentMeasures: applicationFormData.assessmentMeasures,
+        assessmentOtherEnabled: applicationFormData.assessmentOtherEnabled,
+        assessmentOtherText: applicationFormData.assessmentOtherText,
+      },
+      finalSubmitted: true,
+      submittedAt,
+    };
 
-    if (error) {
-      setStepFiveError(error.message);
+    const minimalSubmitData = {
+      ...(application?.data ?? {}),
+      title: `NTA Antrag ${formData.vorname} ${formData.name}`.trim(),
+      summary: "In Review",
+      personalData: {
+        vorname: formData.vorname,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        matrikel: formData.matrikel,
+        studiengang: formData.studiengang,
+        semester: formData.semester,
+        antragsart: formData.antragsart,
+      },
+      attestFiles: formData.attestFiles,
+      applicationDefinition: {
+        situationDescription: applicationFormData.situationDescription,
+        duration: applicationFormData.duration || undefined,
+        scopeSelections: applicationFormData.scopeSelections,
+        lectureMeasures: applicationFormData.lectureMeasures,
+        lectureOtherEnabled: applicationFormData.lectureOtherEnabled,
+        lectureOtherText: applicationFormData.lectureOtherText,
+        assessmentMeasures: applicationFormData.assessmentMeasures,
+        assessmentOtherEnabled: applicationFormData.assessmentOtherEnabled,
+        assessmentOtherText: applicationFormData.assessmentOtherText,
+      },
+      finalSubmitted: true,
+      submittedAt,
+    };
+
+    const runSubmitUpdate = async (nextData: typeof fullSubmitData | typeof minimalSubmitData) =>
+      supabase
+        .from("applications")
+        .update({
+          status: "in_review",
+          data: nextData,
+        })
+        .eq("id", targetId)
+        .select("id,applicant_id,status,data,created_at,updated_at")
+        .maybeSingle<ApplicationRow>();
+
+    let { data: refreshed, error } = await runSubmitUpdate(fullSubmitData);
+    if (!refreshed && !error) {
+      ({ data: refreshed, error } = await runSubmitUpdate(minimalSubmitData));
+    }
+
+    if (error || !refreshed) {
+      setStepFiveError(
+        error?.message
+          ?? "Antrag konnte nicht final gespeichert werden (keine Datenänderung in der DB).",
+      );
       return;
     }
 
-    const { data: refreshed } = await supabase
-      .from("applications")
-      .select("id,applicant_id,status,data,created_at,updated_at")
-      .eq("id", targetId)
-      .maybeSingle<ApplicationRow>();
-
-    if (refreshed) setApplication(refreshed);
+    setApplication(refreshed);
     setCurrentStep("step6_submitted");
   }
 

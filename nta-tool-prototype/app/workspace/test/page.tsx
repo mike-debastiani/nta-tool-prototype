@@ -1,7 +1,7 @@
 import { requireUserProfile } from "@/lib/auth";
+import { RoleDashboardLayout } from "@/components/domain/role-dashboard-layout";
 import { WorkspaceTestFlow } from "@/components/domain/workspace-test-flow";
 import { SignOutButton } from "@/components/domain/sign-out-button";
-import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/utils/supabase/server";
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
 
@@ -22,18 +22,17 @@ export default async function WorkspaceTestPage() {
   const initialApplications = (data ?? []) as WorkspaceApplication[];
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-5xl space-y-6 px-6 py-8">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+    <RoleDashboardLayout
+      role="R2"
+      userLabel={`Eingeloggt als ${profile.display_name ?? profile.email}`}
+      actions={<SignOutButton />}
+    >
+      <div className="mx-auto w-full max-w-5xl space-y-6">
         <div>
           <h1 className="text-2xl font-semibold">Workspace - R2 Testbereich</h1>
-          <p className="text-sm text-muted-foreground">
-            Eingeloggt als {profile.display_name ?? profile.email}
-          </p>
         </div>
-        <SignOutButton />
-      </header>
-      <Separator />
-      <WorkspaceTestFlow userId={profile.id} initialApplications={initialApplications} />
-    </main>
+        <WorkspaceTestFlow userId={profile.id} initialApplications={initialApplications} />
+      </div>
+    </RoleDashboardLayout>
   );
 }

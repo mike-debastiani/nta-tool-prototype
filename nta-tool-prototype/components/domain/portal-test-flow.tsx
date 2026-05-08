@@ -203,7 +203,7 @@ export function PortalTestFlow({
                 <p className="line-clamp-1 text-sm font-medium">
                   {application.data.title ?? "Ohne Titel"}
                 </p>
-                <ApplicationStatusBadge status={application.status} />
+                <ApplicationStatusBadge application={application} audience="R1" />
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
                 Erstellt am {new Date(application.created_at).toLocaleDateString("de-CH")}
@@ -286,7 +286,7 @@ export function PortalTestFlow({
               <h3 className="font-medium">
                 {selectedApplication.data.title ?? "Ohne Titel"}
               </h3>
-              <ApplicationStatusBadge status={selectedApplication.status} />
+              <ApplicationStatusBadge application={selectedApplication} audience="R1" />
             </div>
             <p className="text-sm text-muted-foreground">
               {selectedApplication.data.summary || "Keine Beschreibung vorhanden."}

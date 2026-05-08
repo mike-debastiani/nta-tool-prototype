@@ -41,6 +41,7 @@ export type ApplicationData = {
     assessmentOtherEnabled?: boolean;
     assessmentOtherText?: string;
   };
+  finalSubmitted?: boolean;
   submittedAt?: string;
 };
 

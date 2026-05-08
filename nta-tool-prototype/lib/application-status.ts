@@ -3,26 +3,126 @@ export type ApplicationStatus =
   | "submitted"
   | "in_review"
   | "needs_correction"
+  | "needs_adjustment"
+  | "in_decision"
   | "approved"
   | "rejected"
   | "in_implementation";
 
-export const statusLabel: Record<ApplicationStatus, string> = {
-  draft: "Entwurf",
-  submitted: "Uebermittelt",
-  in_review: "In Review",
-  needs_correction: "Nachbesserung noetig",
-  approved: "Freigegeben",
-  rejected: "Abgelehnt",
-  in_implementation: "In Umsetzung",
+export type StatusAudience = "R1" | "R2";
+
+export type CanonicalApplicationState =
+  | "draft"
+  | "consultation_recommendation"
+  | "in_review"
+  | "needs_adjustment"
+  | "in_decision"
+  | "approved"
+  | "rejected";
+
+export type StatusDerivationInput = {
+  status: ApplicationStatus;
+  data?: {
+    summary?: string;
+    finalSubmitted?: boolean;
+    submittedAt?: string;
+    applicationDefinition?: unknown;
+    consultation?: {
+      status?: "booked" | "done";
+    };
+    recommendation?: {
+      ready?: boolean;
+    };
+  } | null;
 };
 
-export const statusBadgeClass: Record<ApplicationStatus, string> = {
-  draft: "border-zinc-200 bg-zinc-100 text-zinc-700",
-  submitted: "border-sky-200 bg-sky-100 text-sky-700",
-  in_review: "border-amber-200 bg-amber-100 text-amber-700",
-  needs_correction: "border-orange-200 bg-orange-100 text-orange-700",
-  approved: "border-emerald-200 bg-emerald-100 text-emerald-700",
-  rejected: "border-rose-200 bg-rose-100 text-rose-700",
-  in_implementation: "border-indigo-200 bg-indigo-100 text-indigo-700",
+const canonicalStatusLabel: Record<CanonicalApplicationState, string> = {
+  draft: "Entwurf",
+  consultation_recommendation: "Beratung & Empfehlung",
+  in_review: "In Review",
+  needs_adjustment: "Anpassung erforderlich",
+  in_decision: "In Entscheid",
+  approved: "Bewilligt",
+  rejected: "Abgelehnt",
 };
+
+const canonicalStatusLabelR2: Partial<Record<CanonicalApplicationState, string>> = {
+  needs_adjustment: "Anpassung ausstehend",
+};
+
+export const statusBadgeClass: Record<CanonicalApplicationState, string> = {
+  draft: "bg-zinc-100 text-zinc-500",
+  consultation_recommendation: "bg-sky-100 text-sky-500",
+  in_review: "bg-blue-200 text-blue-500",
+  needs_adjustment: "bg-orange-100 text-orange-400",
+  in_decision: "bg-purple-100 text-purple-600",
+  approved: "bg-green-100 text-green-700",
+  rejected: "bg-red-200 text-red-700",
+};
+
+export function deriveCanonicalApplicationState(
+  application: StatusDerivationInput,
+): CanonicalApplicationState {
+  if (application.status === "approved") return "approved";
+  if (application.status === "rejected") return "rejected";
+  if (application.status === "in_decision" || application.status === "in_implementation") {
+    return "in_decision";
+  }
+  if (
+    application.status === "needs_adjustment"
+    || application.status === "needs_correction"
+  ) {
+    return "needs_adjustment";
+  }
+
+  const hasFinalSubmissionMarker = Boolean(application.data?.finalSubmitted);
+  const hasSubmitted = Boolean(application.data?.submittedAt);
+  const hasApplicationDefinition = Boolean(application.data?.applicationDefinition);
+  const summaryLooksLikeInReview =
+    application.data?.summary?.trim().toLowerCase() === "in review";
+  const consultationStarted = Boolean(
+    application.data?.consultation?.status || application.data?.recommendation?.ready,
+  );
+  const statusSuggestsFinalReview =
+    application.status === "in_review"
+    || (application.status === "submitted" && !consultationStarted);
+
+  if (
+    hasFinalSubmissionMarker
+    || hasSubmitted
+    || hasApplicationDefinition
+    || (application.status === "in_review" && summaryLooksLikeInReview)
+    || statusSuggestsFinalReview
+  ) {
+    return "in_review";
+  }
+  if (consultationStarted) {
+    return "consultation_recommendation";
+  }
+  if (application.status === "in_review") {
+    return "in_review";
+  }
+  return "draft";
+}
+
+export function getStatusLabelForAudience(
+  state: CanonicalApplicationState,
+  audience: StatusAudience = "R1",
+) {
+  if (audience === "R2" && canonicalStatusLabelR2[state]) {
+    return canonicalStatusLabelR2[state] as string;
+  }
+  return canonicalStatusLabel[state];
+}
+
+export function getApplicationStatusMeta(
+  application: StatusDerivationInput,
+  audience: StatusAudience = "R1",
+) {
+  const canonicalState = deriveCanonicalApplicationState(application);
+  return {
+    canonicalState,
+    label: getStatusLabelForAudience(canonicalState, audience),
+    className: statusBadgeClass[canonicalState],
+  };
+}

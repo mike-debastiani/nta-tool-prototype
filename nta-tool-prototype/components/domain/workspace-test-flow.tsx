@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
 import { createClient } from "@/utils/supabase/client";
 import { cn } from "@/lib/utils";
+import { getApplicationStatusMeta } from "@/lib/application-status";
 
 type WorkspaceTestFlowProps = {
   userId: string;
@@ -25,35 +26,6 @@ export function WorkspaceTestFlow({
   const [pendingId, setPendingId] = useState<string | null>(null);
 
   const formatFileSize = (sizeInBytes: number) => `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;
-  const statusMeta = (application: WorkspaceApplication) => {
-    const hasSubmitted = Boolean(application.data.submittedAt);
-    const consultationStatus = application.data.consultation?.status;
-
-    if (hasSubmitted && application.status === "in_review") {
-      return { label: "In Review", className: "border-amber-200 bg-amber-100 text-amber-700" };
-    }
-    if (
-      !hasSubmitted &&
-      consultationStatus === "done" &&
-      application.data.recommendation?.ready
-    ) {
-      return {
-        label: "Beratung abgehalten & Empfehlung verfasst",
-        className: "border-cyan-200 bg-cyan-100 text-cyan-700",
-      };
-    }
-    if (!hasSubmitted && consultationStatus) {
-      return {
-        label: "Entwurf · Beratungstermin vereinbart",
-        className: "border-zinc-200 bg-zinc-100 text-zinc-700",
-      };
-    }
-    if (application.status === "in_review") {
-      return { label: "In Review", className: "border-amber-200 bg-amber-100 text-amber-700" };
-    }
-    return { label: "Entwurf", className: "border-zinc-200 bg-zinc-100 text-zinc-700" };
-  };
-
   const refreshApplications = useCallback(async () => {
     const { data } = await supabase
       .from("applications")
@@ -102,7 +74,6 @@ export function WorkspaceTestFlow({
     const { error } = await supabase
       .from("applications")
       .update({
-        status: "in_review",
         data: {
           ...target.data,
           consultation: {
@@ -131,6 +102,9 @@ export function WorkspaceTestFlow({
   const selectedApplication = applications.find(
     (application) => application.id === selectedApplicationId,
   );
+  const selectedStatusMeta = selectedApplication
+    ? getApplicationStatusMeta(selectedApplication, "R2")
+    : null;
 
   if (!selectedApplication) {
     return (
@@ -144,36 +118,39 @@ export function WorkspaceTestFlow({
               Keine sichtbaren Antraege in der Inbox.
             </p>
           )}
-          {applications.map((application) => (
-            <button
-              key={application.id}
-              type="button"
-              onClick={() => setSelectedApplicationId(application.id)}
-              className="w-full rounded-md border p-3 text-left transition hover:bg-muted/30"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <p className="line-clamp-1 text-sm font-medium">
-                  {application.data.title ?? "Ohne Titel"}
+          {applications.map((application) => {
+            const statusMeta = getApplicationStatusMeta(application, "R2");
+            return (
+              <button
+                key={application.id}
+                type="button"
+                onClick={() => setSelectedApplicationId(application.id)}
+                className="w-full rounded-md border p-3 text-left transition hover:bg-muted/30"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="line-clamp-1 text-sm font-medium">
+                    {application.data.title ?? "Ohne Titel"}
+                  </p>
+                  <span
+                    className={cn(
+                        "inline-flex items-center rounded-lg px-2 py-0.5 text-xs leading-4 font-semibold",
+                      statusMeta.className,
+                    )}
+                  >
+                    {statusMeta.label}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {application.users[0]?.display_name ??
+                    application.users[0]?.email ??
+                    application.applicant_id}
                 </p>
-                <span
-                  className={cn(
-                    "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium",
-                    statusMeta(application).className,
-                  )}
-                >
-                  {statusMeta(application).label}
-                </span>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {application.users[0]?.display_name ??
-                  application.users[0]?.email ??
-                  application.applicant_id}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Eingereicht am {new Date(application.created_at).toLocaleDateString("de-CH")}
-              </p>
-            </button>
-          ))}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Eingereicht am {new Date(application.created_at).toLocaleDateString("de-CH")}
+                </p>
+              </button>
+            );
+          })}
           {message && <p className="pt-2 text-sm text-muted-foreground">{message}</p>}
         </CardContent>
       </Card>
@@ -203,11 +180,11 @@ export function WorkspaceTestFlow({
               </h3>
               <span
                 className={cn(
-                  "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium",
-                  statusMeta(selectedApplication).className,
+                  "inline-flex items-center rounded-lg px-2 py-0.5 text-xs leading-4 font-semibold",
+                  selectedStatusMeta?.className,
                 )}
               >
-                {statusMeta(selectedApplication).label}
+                {selectedStatusMeta?.label}
               </span>
             </div>
             <p className="text-sm text-muted-foreground">
@@ -352,11 +329,11 @@ export function WorkspaceTestFlow({
             <div className="flex items-center justify-between gap-3">
               <span
                 className={cn(
-                  "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium",
-                  statusMeta(selectedApplication).className,
+                  "inline-flex items-center rounded-lg px-2 py-0.5 text-xs leading-4 font-semibold",
+                  selectedStatusMeta?.className,
                 )}
               >
-                {statusMeta(selectedApplication).label}
+                {selectedStatusMeta?.label}
               </span>
               <Button
                 variant="outline"
