@@ -12,6 +12,17 @@ export type ReviewWorkspaceBlockId =
   | "lectureMeasures"
   | "assessmentMeasures";
 
+/** Reihenfolge wie im R2-Review-Workspace — alle mit Bestätigen/Anpassung. */
+export const REVIEW_WORKSPACE_BLOCK_IDS: ReviewWorkspaceBlockId[] = [
+  "applicant",
+  "attest",
+  "definition",
+  "duration",
+  "scope",
+  "lectureMeasures",
+  "assessmentMeasures",
+];
+
 const ANCHOR_PREFIX = "nta-review-block";
 
 /** DOM-`id` für `scrollIntoView` — muss zu den `id`s in `nta-antrag-desktop.tsx` passen. */

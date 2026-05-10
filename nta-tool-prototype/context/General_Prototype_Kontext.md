@@ -91,8 +91,11 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 ## 7. Daten & Sicherheit (Kurz)
 
 - Zentrale Entität: **`applications`** mit JSONB **`data`**, Status-Spalte, Timestamps.
-- Berechtigungen: **Postgres RLS** und ggf. **Trigger** (z. B. eingeschränkte Spalten-Updates für R2) — Frontend ersetzt das nicht.
-- Details zu Feldern im Antrags-JSON: `Antragerstellung_Kontext.md` und `lib/test-flow-types.ts`; Review-Marker wenn umgesetzt → `Antrag_Review_Kontext.md` / Migrationen.
+- Berechtigungen: **Postgres RLS** und **Trigger** — Frontend ersetzt das nicht. Wichtig:
+  - **R2-Trigger** `enforce_r2_application_update_columns` erlaubt R2 nur Schreibzugriff auf `data.consultation` und `data.recommendation`. R2-Reviewdaten liegen daher unter `data.recommendation.workspaceReview` (siehe `Antrag_Review_Kontext.md` § 4).
+  - **SELECT-Policy** `applications_select_r2_worklist` deckt seit Migration `extend_workspace_select_to_decision_states` zusätzlich `in_implementation`, `approved`, `rejected` ab — Voraussetzung dafür, dass R2 nach „Antrag weiterreichen“ den nun in „In Entscheid“ befindlichen Antrag noch sieht und der `UPDATE` nicht am `RETURNING`-SELECT scheitert.
+  - **Status-Übergänge** über reguläre Session-Clients: ein dedizierter `SUPABASE_SERVICE_ROLE_KEY` ist im Forward-Pfad nicht nötig (`utils/supabase/service-role.ts` bleibt nur als optionaler Helper bestehen).
+- Details zu Feldern im Antrags-JSON: `Antragerstellung_Kontext.md` und `lib/test-flow-types.ts`; Review-spezifische Pfade → `Antrag_Review_Kontext.md` / Migrationen.
 
 ---
 
@@ -114,9 +117,10 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 
 1. **Scope:** Muss-have vs. später (siehe Funktionen + „nicht im Scope“).
 2. **Route & Rolle:** Wer darf die Seite sehen? Welches Layout?
-3. **Daten:** Welche Tabellen/JSON-Pfade? RLS beachten.
-4. **Realtime:** Muss sich ein anderer Client aktualisieren?
-5. **Konsistenz:** Status und Freischaltlogik **datenbasiert** (nicht nur UI-Step) — siehe `Antragerstellung_Kontext.md`.
+3. **Daten:** Welche Tabellen/JSON-Pfade? RLS und R2-Trigger beachten (R2-Schreiben nur unter `data.consultation` / `data.recommendation`).
+4. **Realtime:** Muss sich ein anderer Client aktualisieren? Subscriptions möglichst **eng scopen** (z. B. `id=eq.<applicationId>`), damit fremde Updates lokalen UI-State nicht überschreiben.
+5. **Status-Übergänge:** Bei `UPDATE` immer prüfen, ob der **neue** Zeilenzustand für den ausführenden Rollen-User per SELECT-Policy noch sichtbar ist (sonst RLS-Violation).
+6. **Konsistenz:** Status und Freischaltlogik **datenbasiert** (nicht nur UI-Step) — siehe `Antragerstellung_Kontext.md`.
 
 ---
 
@@ -125,5 +129,5 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | Datei | Nutzen |
 |-------|--------|
 | `Prototyp_Funktionen.md` | Ausführliche Funktions- und Architektur-Beschreibung |
-| `Antragerstellung_Kontext.md` | Antrag R1, R2-Beratung/Empfehlung, Status, Daten, RLS |
-| `Antrag_Review_Kontext.md` | Platzhalter für Review nach Einreichung |
+| `Antragerstellung_Kontext.md` | Antrag R1, R2-Beratung/Empfehlung/Forward, Status, Daten, RLS |
+| `Antrag_Review_Kontext.md` | R2-Block-Review nach Einreichung inkl. Persistenz und Forward in „In Entscheid“ |

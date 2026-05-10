@@ -41,13 +41,13 @@ const canonicalStatusLabel: Record<CanonicalApplicationState, string> = {
   consultation_recommendation: "Beratung & Empfehlung",
   in_review: "In Review",
   needs_adjustment: "Anpassung erforderlich",
-  in_decision: "In Entscheid",
+  in_decision: "In Entscheidung",
   approved: "Bewilligt",
   rejected: "Abgelehnt",
 };
 
 const canonicalStatusLabelR2: Partial<Record<CanonicalApplicationState, string>> = {
-  needs_adjustment: "Anpassung ausstehend",
+  needs_adjustment: "Anpassung angefordert",
 };
 
 export const statusBadgeClass: Record<CanonicalApplicationState, string> = {

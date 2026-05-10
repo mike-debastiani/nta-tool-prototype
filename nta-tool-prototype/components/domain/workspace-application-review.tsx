@@ -4,6 +4,11 @@ import {
   type ComponentType,
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -11,6 +16,7 @@ import {
   CheckCheck,
   ExternalLink,
   FileText,
+  Loader2,
   MessageSquarePlus,
   MessageSquareText,
   RotateCcw,
@@ -32,25 +38,35 @@ import {
   APPLICATION_MEASURE_OPTIONS,
   APPLICATION_SCOPE_OPTIONS,
 } from "@/lib/application-review-labels";
-import { type WorkspaceApplication } from "@/lib/test-flow-types";
+import {
+  REVIEW_WORKSPACE_BLOCK_IDS,
+  type ReviewWorkspaceBlockId,
+} from "@/lib/review-workspace-blocks";
+import { dataWithoutLegacyReviewRoots } from "@/lib/r2-review-persist";
+import {
+  type R2PostSubmitReview,
+  type R2ReviewBlockSnapshot,
+  type R2ReviewDraft,
+  type R2ReviewDraftBlock,
+  type RecommendationWorkspaceReview,
+  type WorkspaceApplication,
+} from "@/lib/test-flow-types";
+import { createClient } from "@/utils/supabase/client";
 import { cn } from "@/lib/utils";
-import { getApplicationStatusMeta } from "@/lib/application-status";
-
-type ReviewBlockId =
-  | "applicant"
-  | "attest"
-  | "definition"
-  | "duration"
-  | "scope"
-  | "lectureMeasures"
-  | "assessmentMeasures";
+import {
+  type ApplicationStatus,
+  getApplicationStatusMeta,
+} from "@/lib/application-status";
 
 type ReviewBlockPhase =
   | { phase: "pending" }
   | { phase: "confirmed" }
   | { phase: "adjustment"; remark: string };
 
-const INITIAL_REVIEW_BLOCK_PHASES: Record<ReviewBlockId, ReviewBlockPhase> = {
+const INITIAL_REVIEW_BLOCK_PHASES: Record<
+  ReviewWorkspaceBlockId,
+  ReviewBlockPhase
+> = {
   applicant: { phase: "pending" },
   attest: { phase: "pending" },
   definition: { phase: "pending" },
@@ -59,6 +75,117 @@ const INITIAL_REVIEW_BLOCK_PHASES: Record<ReviewBlockId, ReviewBlockPhase> = {
   lectureMeasures: { phase: "pending" },
   assessmentMeasures: { phase: "pending" },
 };
+
+function hydrateBlockPhasesFromApplication(
+  application: WorkspaceApplication,
+): Record<ReviewWorkspaceBlockId, ReviewBlockPhase> {
+  const wr = application.data.recommendation?.workspaceReview;
+  const forwarded = wr?.postSubmit?.blocks ?? application.data.r2PostSubmitReview?.blocks;
+  if (forwarded) {
+    const next: Record<ReviewWorkspaceBlockId, ReviewBlockPhase> = {
+      ...INITIAL_REVIEW_BLOCK_PHASES,
+    };
+    for (const id of REVIEW_WORKSPACE_BLOCK_IDS) {
+      const entry = forwarded[id];
+      if (!entry) continue;
+      if (entry.phase === "confirmed") {
+        next[id] = { phase: "confirmed" };
+      } else {
+        next[id] = { phase: "adjustment", remark: entry.remark };
+      }
+    }
+    return next;
+  }
+
+  const draft = wr?.draft?.blocks ?? application.data.r2ReviewDraft?.blocks;
+  if (draft) {
+    const next: Record<ReviewWorkspaceBlockId, ReviewBlockPhase> = {
+      ...INITIAL_REVIEW_BLOCK_PHASES,
+    };
+    for (const id of REVIEW_WORKSPACE_BLOCK_IDS) {
+      const entry = draft[id];
+      if (!entry) continue;
+      if (entry.phase === "pending") next[id] = { phase: "pending" };
+      else if (entry.phase === "confirmed") next[id] = { phase: "confirmed" };
+      else next[id] = { phase: "adjustment", remark: entry.remark };
+    }
+    return next;
+  }
+
+  return INITIAL_REVIEW_BLOCK_PHASES;
+}
+
+function hydrateSavedCommentsFromApplication(
+  application: WorkspaceApplication,
+): SavedReviewComment[] {
+  const wr = application.data.recommendation?.workspaceReview;
+  if (wr?.postSubmit || application.data.r2PostSubmitReview) {
+    const list =
+      wr?.forwardedComments ?? application.data.reviewComments ?? [];
+    return list.map((c) => ({
+      id: c.id,
+      blockId: c.blockId,
+      blockTitle: c.blockTitle,
+      body: c.body,
+      createdAt: new Date(c.createdAt).getTime(),
+    }));
+  }
+
+  const draftList = wr?.draft?.reviewComments ?? application.data.r2ReviewDraft?.reviewComments;
+  const list =
+    draftList && draftList.length > 0
+      ? draftList
+      : (application.data.reviewComments ?? []);
+
+  return list.map((c) => ({
+    id: c.id,
+    blockId: c.blockId,
+    blockTitle: c.blockTitle,
+    body: c.body,
+    createdAt: new Date(c.createdAt).getTime(),
+  }));
+}
+
+function draftBlocksFromPhases(
+  phases: Record<ReviewWorkspaceBlockId, ReviewBlockPhase>,
+): Record<ReviewWorkspaceBlockId, R2ReviewDraftBlock> {
+  const blocks = {} as Record<ReviewWorkspaceBlockId, R2ReviewDraftBlock>;
+  for (const id of REVIEW_WORKSPACE_BLOCK_IDS) {
+    const p = phases[id];
+    if (p.phase === "pending") {
+      blocks[id] = { phase: "pending" };
+    } else if (p.phase === "confirmed") {
+      blocks[id] = { phase: "confirmed" };
+    } else {
+      blocks[id] = { phase: "adjustment", remark: p.remark };
+    }
+  }
+  return blocks;
+}
+
+function reviewBlocksComplete(
+  phases: Record<ReviewWorkspaceBlockId, ReviewBlockPhase>,
+): boolean {
+  return REVIEW_WORKSPACE_BLOCK_IDS.every((id) => {
+    const p = phases[id];
+    return p.phase === "confirmed" || p.phase === "adjustment";
+  });
+}
+
+function snapshotBlocksFromPhases(
+  phases: Record<ReviewWorkspaceBlockId, ReviewBlockPhase>,
+): Record<ReviewWorkspaceBlockId, R2ReviewBlockSnapshot> {
+  const blocks = {} as Record<ReviewWorkspaceBlockId, R2ReviewBlockSnapshot>;
+  for (const id of REVIEW_WORKSPACE_BLOCK_IDS) {
+    const p = phases[id];
+    if (p.phase === "confirmed") {
+      blocks[id] = { phase: "confirmed" };
+    } else if (p.phase === "adjustment") {
+      blocks[id] = { phase: "adjustment", remark: p.remark };
+    }
+  }
+  return blocks;
+}
 
 export type WorkspaceReviewViewMode =
   | "interactive"
@@ -89,23 +216,120 @@ export function WorkspaceApplicationReview({
   const data = application.data;
   const statusMeta = getApplicationStatusMeta(application, "R2");
   const def = data.applicationDefinition;
+  const supabase = useMemo(() => createClient(), []);
 
-  const [blockPhases, setBlockPhases] =
-    useState<Record<ReviewBlockId, ReviewBlockPhase>>(INITIAL_REVIEW_BLOCK_PHASES);
+  const [blockPhases, setBlockPhases] = useState<
+    Record<ReviewWorkspaceBlockId, ReviewBlockPhase>
+  >(() => hydrateBlockPhasesFromApplication(application));
 
   const [pendingComposer, setPendingComposer] = useState<{
-    blockId: ReviewBlockId;
+    blockId: ReviewWorkspaceBlockId;
     blockTitle: string;
     draft: string;
   } | null>(null);
   const [adjustmentRemarkSaveError, setAdjustmentRemarkSaveError] = useState(false);
-  const [savedReviewComments, setSavedReviewComments] = useState<SavedReviewComment[]>(
-    [],
-  );
+  const [savedReviewComments, setSavedReviewComments] = useState<
+    SavedReviewComment[]
+  >(() => hydrateSavedCommentsFromApplication(application));
   const [adjustmentResetDialogBlockId, setAdjustmentResetDialogBlockId] =
-    useState<ReviewBlockId | null>(null);
+    useState<ReviewWorkspaceBlockId | null>(null);
+  const [forwardError, setForwardError] = useState<string | null>(null);
+  const [isForwarding, setIsForwarding] = useState(false);
+  const [draftPersistError, setDraftPersistError] = useState<string | null>(null);
 
-  const openAdjustmentComposer = (blockId: ReviewBlockId, blockTitle: string) => {
+  const applicationRef = useRef(application);
+  const blockPhasesRef = useRef(blockPhases);
+  const savedReviewCommentsRef = useRef(savedReviewComments);
+  const readOnlyRef = useRef(readOnly);
+  const isForwardingRef = useRef(isForwarding);
+  /** Blockiert Draft-Speicher nach Start „Weiterreichen“, bis neue Props da sind (Race mit Debounce-Timer). */
+  const suppressDraftSaveRef = useRef(false);
+
+  useLayoutEffect(() => {
+    applicationRef.current = application;
+    blockPhasesRef.current = blockPhases;
+    savedReviewCommentsRef.current = savedReviewComments;
+    readOnlyRef.current = readOnly;
+    isForwardingRef.current = isForwarding;
+  }, [
+    application,
+    blockPhases,
+    savedReviewComments,
+    readOnly,
+    isForwarding,
+  ]);
+
+  const allReviewBlocksDone = reviewBlocksComplete(blockPhases);
+
+  useEffect(() => {
+    if (application.status !== "in_review") {
+      suppressDraftSaveRef.current = false;
+    }
+  }, [application.status]);
+
+  const persistReviewDraft = useCallback(async () => {
+    const app = applicationRef.current;
+    if (suppressDraftSaveRef.current) return;
+    if (readOnlyRef.current) return;
+    if (app.status !== "in_review") return;
+    if (isForwardingRef.current) return;
+
+    const draftPayload: R2ReviewDraft = {
+      updatedAt: new Date().toISOString(),
+      blocks: draftBlocksFromPhases(blockPhasesRef.current),
+      reviewComments: savedReviewCommentsRef.current.map((c) => ({
+        id: c.id,
+        blockId: c.blockId,
+        blockTitle: c.blockTitle,
+        body: c.body,
+        createdAt: new Date(c.createdAt).toISOString(),
+      })),
+    };
+
+    const base = dataWithoutLegacyReviewRoots(app.data);
+    const { error } = await supabase
+      .from("applications")
+      .update({
+        data: {
+          ...base,
+          recommendation: {
+            ...app.data.recommendation,
+            workspaceReview: {
+              ...app.data.recommendation?.workspaceReview,
+              draft: draftPayload,
+            },
+          },
+        },
+      })
+      .eq("id", app.id);
+
+    if (error) {
+      console.warn("[r2-review-draft]", error.message);
+      setDraftPersistError(error.message);
+      return;
+    }
+    setDraftPersistError(null);
+    onPersisted?.();
+  }, [supabase, onPersisted]);
+
+  useEffect(() => {
+    if (readOnly || application.status !== "in_review") return;
+
+    const timer = window.setTimeout(() => {
+      void persistReviewDraft();
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    blockPhases,
+    savedReviewComments,
+    readOnly,
+    application.status,
+    application.id,
+    persistReviewDraft,
+  ]);
+
+  const openAdjustmentComposer = (blockId: ReviewWorkspaceBlockId, blockTitle: string) => {
     setAdjustmentRemarkSaveError(false);
     setPendingComposer({ blockId, blockTitle, draft: "" });
   };
@@ -130,25 +354,24 @@ export function WorkspaceApplicationReview({
     ]);
     setPendingComposer(null);
     setAdjustmentRemarkSaveError(false);
-    onPersisted?.();
   };
 
-  const confirmBlock = (id: ReviewBlockId) => {
+  const confirmBlock = (id: ReviewWorkspaceBlockId) => {
     setBlockPhases((prev) => ({ ...prev, [id]: { phase: "confirmed" } }));
   };
 
-  const adjustBlock = (id: ReviewBlockId, remark: string) => {
+  const adjustBlock = (id: ReviewWorkspaceBlockId, remark: string) => {
     setBlockPhases((prev) => ({
       ...prev,
       [id]: { phase: "adjustment", remark },
     }));
   };
 
-  const resetBlock = (id: ReviewBlockId) => {
+  const resetBlock = (id: ReviewWorkspaceBlockId) => {
     setBlockPhases((prev) => ({ ...prev, [id]: { phase: "pending" } }));
   };
 
-  const handleResetRequest = (id: ReviewBlockId) => {
+  const handleResetRequest = (id: ReviewWorkspaceBlockId) => {
     const phase = blockPhases[id];
     if (phase.phase === "adjustment") {
       setAdjustmentResetDialogBlockId(id);
@@ -165,6 +388,68 @@ export function WorkspaceApplicationReview({
     setPendingComposer((prev) => (prev?.blockId === id ? null : prev));
     setAdjustmentRemarkSaveError(false);
     setAdjustmentResetDialogBlockId(null);
+  };
+
+  const handleForwardReview = async () => {
+    if (!allReviewBlocksDone || readOnly) return;
+    setForwardError(null);
+    suppressDraftSaveRef.current = true;
+    setIsForwarding(true);
+
+    const hasAdjustment = REVIEW_WORKSPACE_BLOCK_IDS.some(
+      (id) => blockPhases[id].phase === "adjustment",
+    );
+    /** Postgres-Enum: typisch `needs_correction` statt `needs_adjustment`; „In Entscheidung“ = `in_implementation` (nicht `in_decision`). */
+    const nextStatus: ApplicationStatus = hasAdjustment
+      ? "needs_correction"
+      : "in_implementation";
+    const forwardedAt = new Date().toISOString();
+    const r2PostSubmitReview: R2PostSubmitReview = {
+      forwardedAt,
+      blocks: snapshotBlocksFromPhases(blockPhases),
+    };
+    const persistedReviewComments = savedReviewComments.map((c) => ({
+      id: c.id,
+      blockId: c.blockId,
+      blockTitle: c.blockTitle,
+      body: c.body,
+      createdAt: new Date(c.createdAt).toISOString(),
+    }));
+
+    const workspaceReview: RecommendationWorkspaceReview = {
+      postSubmit: r2PostSubmitReview,
+      forwardedComments: persistedReviewComments,
+    };
+
+    const res = await fetch("/api/applications/review-forward", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({
+        applicationId: application.id,
+        nextStatus,
+        workspaceReview,
+      }),
+    });
+
+    let payload: { error?: string } = {};
+    try {
+      payload = (await res.json()) as { error?: string };
+    } catch {
+      /* ignore */
+    }
+
+    setIsForwarding(false);
+    if (!res.ok) {
+      suppressDraftSaveRef.current = false;
+      setForwardError(
+        typeof payload.error === "string"
+          ? payload.error
+          : `Anfrage fehlgeschlagen (${res.status})`,
+      );
+      return;
+    }
+    onPersisted?.();
   };
 
   return (
@@ -358,15 +643,36 @@ export function WorkspaceApplicationReview({
         <div className="pt-2">
           <Button
             type="button"
-            className="h-11 w-full bg-zinc-900 text-white hover:bg-zinc-800 sm:w-auto sm:min-w-[240px]"
-            disabled
-            title="Logik folgt"
+            className="h-11 w-full gap-2 bg-zinc-900 text-white hover:bg-zinc-800 sm:w-auto sm:min-w-[280px]"
+            disabled={!allReviewBlocksDone || readOnly || isForwarding}
+            onClick={() => void handleForwardReview()}
           >
-            Anpassungen anfordern
+            {isForwarding ? (
+              <>
+                <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
+                Wird weitergeleitet …
+              </>
+            ) : (
+              "Antrag weiterreichen"
+            )}
           </Button>
           <p className="mt-2 text-xs text-muted-foreground">
-            Gesamtaktion nach Block-Freigaben — Anbindung folgt.
+            {readOnly
+              ? viewMode === "readonly_decision"
+                ? "Dieser Antrag liegt zur Entscheid vor; das Review ist abgeschlossen."
+                : "Die Anpassungen wurden an die Studierendenperson weitergegeben. Sie können hier nichts mehr ändern."
+              : "Sobald jeder Block bestätigt oder mit einem Anpassungskommentar versehen ist, können Sie den Antrag weiterreichen."}
           </p>
+          {draftPersistError && !readOnly ? (
+            <p className="mt-2 text-sm text-destructive" role="alert">
+              Entwurf konnte nicht gespeichert werden: {draftPersistError}
+            </p>
+          ) : null}
+          {forwardError ? (
+            <p className="mt-2 text-sm text-destructive" role="alert">
+              {forwardError}
+            </p>
+          ) : null}
         </div>
         </div>
       </div>

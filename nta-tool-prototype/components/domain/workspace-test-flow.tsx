@@ -219,6 +219,7 @@ export function WorkspaceTestFlow({
   ) {
     return (
       <WorkspaceApplicationReview
+        key={`${selectedApplication.id}-${selectedApplication.status}`}
         application={selectedApplication}
         reviewerDisplayName={reviewerDisplayName}
         viewMode={workspaceReviewMode}

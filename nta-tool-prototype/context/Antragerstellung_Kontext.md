@@ -8,8 +8,8 @@
 ## 1. Produktscope (aktueller Stand)
 
 - R1 **Antragserstellung** end-to-end bis zum **finalen Submit**; danach fachlich **„In Review“**.
-- R2 kann **Beratung + Empfehlung** im **Workspace-Test** bearbeiten (Schreibzugriff nur auf definierte `data`-Teile).
-- R1 **Dashboard:** Liste eigener Anträge, Read-only-Detail, Delete; **Neuer Antrag** nur mit leerem Stand über **`?new=1`**.
+- R2 kann **Beratung + Empfehlung** und im Anschluss den **Block-Review** im **Workspace** bearbeiten und mit **„Antrag weiterreichen“** in **`in_implementation`** bzw. **`needs_correction`** überführen (Schreibzugriff nur auf definierte `data`-Teile).
+- R1 **Dashboard:** Liste eigener Anträge, Read-only-Detail, Delete; **Neuer Antrag** nur mit leerem Stand über **`?new`** / **`?new=1`**.
 - **Statusdarstellung** für Badges ist **zentral** in `lib/application-status.ts` (R1/R2 konsistent; Wording z. B. bei „Anpassung“ rollenabhängig).
 - R1- und R2-Dashboard nutzen ein gemeinsames **`RoleDashboardLayout`** (einklappbare Sidebar, rollenspezifische Nav-Items).
 
@@ -23,11 +23,16 @@
 |-------|--------|
 | Login | `/student/login` |
 | Antragserstellung | `/portal/antragserstellung` |
-| Leerer Neustart | `/portal/antragserstellung?new=1` |
+| Leerer Neustart | `/portal/antragserstellung?new` (oder `?new=1` / beliebiger Wert) |
+| Bestimmten Antrag fortsetzen | `/portal/antragserstellung?applicationId=<uuid>` |
 | Dashboard | `/portal/home` |
 | Legacy | `/portal/antrag` → Redirect auf `/portal/antragserstellung` |
 
-Hinweis: `/portal` kann noch auf die Antragserstellung zeigen — mit `app/` abgleichen.
+Hinweise:
+
+- `app/portal/antragserstellung/page.tsx` interpretiert **jeden** Wert von `?new` als „leerer Neustart“ (`params.new !== undefined`).
+- Ohne `?new` und ohne `?applicationId` wird der **letzte** Antrag des Users **nur dann** automatisch geladen, wenn sein kanonischer Status **`draft`**, **`consultation_recommendation`** oder **`needs_adjustment`** ist. Bereits eingereichte Anträge (`in_review` / `in_decision` / `approved` / `rejected`) führen zu einem **leeren** Formular, damit R1 problemlos einen zweiten Antrag starten kann.
+- `/portal` kann noch auf die Antragserstellung zeigen — mit `app/` abgleichen.
 
 ### R2
 
@@ -42,15 +47,19 @@ Hinweis: `/portal` kann noch auf die Antragserstellung zeigen — mit `app/` abg
 
 | Datei | Rolle |
 |-------|--------|
-| `components/nta-antrag-desktop.tsx` | R1 Flow Step 1–6: Validierung, Autosave, Realtime, Sidebar, Delete |
-| `app/portal/antragserstellung/page.tsx` | Letzten Antrag laden; `?new=1` für leeren Start |
-| `components/domain/student-dashboard.tsx` | R1 Dashboard (Liste, Detail, Delete) |
+| `components/nta-antrag-desktop.tsx` | R1 Flow Step 1–6: Validierung, Autosave, Realtime (per **`application.id`** gescoped), Sidebar, Delete |
+| `app/portal/antragserstellung/page.tsx` | Steuert Initial-Load: `?new` ⇒ leer; `?applicationId` ⇒ gezielt; sonst nur **resumable** Anträge auto-laden |
+| `components/domain/student-dashboard.tsx` | R1 Dashboard (Liste, Detail, Delete; „Neuen Antrag erstellen“ → `?new=1`) |
 | `app/portal/home/page.tsx` | Serverpage R1 Dashboard |
-| `components/domain/workspace-test-flow.tsx` | Workspace: Liste, Detail, Aktion Beratung/Empfehlung |
+| `components/domain/workspace-test-flow.tsx` | Workspace: Liste, Detail, Aktion Beratung/Empfehlung, Mode-Switch `review` / `readonly_decision` |
+| `components/domain/workspace-application-review.tsx` | R2 Block-Review inkl. Persistenz und Forward |
+| `app/api/applications/review-forward/route.ts` | Forward-API: Statuswechsel auf `in_implementation` / `needs_correction` (RLS-konform, Session-Client) |
 | `components/domain/role-dashboard-layout.tsx` | Gemeinsames R1/R2 Dashboard-Layout (collapsible Sidebar, Workspace-Topbar R2) |
-| `lib/test-flow-types.ts` | `ApplicationData` / `applications.data` |
+| `lib/test-flow-types.ts` | `ApplicationData` / `applications.data` (inkl. `recommendation.workspaceReview`) |
 | `lib/application-status.ts` | Zentrale fachliche States + rollenabhängige Labels/Farben |
+| `lib/r2-review-persist.ts` | Helfer `dataWithoutLegacyReviewRoots` für trigger-konforme R2-Saves |
 | `components/domain/application-status-badge.tsx` | Badge-UI aus Status-Ableitung |
+| `utils/supabase/service-role.ts` | Optionaler Service-Role-Client (aktuell **nicht** im Forward-Pfad benötigt) |
 
 ---
 
@@ -85,6 +94,7 @@ Hinweis: `/portal` kann noch auf die Antragserstellung zeigen — mit `app/` abg
 
 - Success-Screen, z. B. **„Zum Dashboard“** → `/portal/home`.
 - **Realtime** darf nach finalem Submit **nicht** wieder auf frühere Steps (z. B. nur Empfehlung) springen — **Lock über Submit-Marker** (`finalSubmitted` / `submittedAt`).
+- **Realtime-Scope:** Subscription in `nta-antrag-desktop.tsx` filtert auf **`id=eq.${activeApplicationId}`** (nicht auf `applicant_id`). Ohne aktive `application.id` wird **keine** Subscription geöffnet. Damit kann ein bereits eingereichter Altantrag den Step-State eines neu gestarteten Drafts nicht mehr auf `step6_submitted` zurückwerfen.
 
 ---
 
@@ -99,7 +109,9 @@ Hinweis: `/portal` kann noch auf die Antragserstellung zeigen — mit `app/` abg
 ## 6. R1 Dashboard — Sollverhalten
 
 - Liste aller eigenen Anträge.
-- **Neuen Antrag erstellen** → komplett leer über **`?new=1`**.
+- **Neuen Antrag erstellen** → komplett leer über **`?new=1`** (auch `?new` ohne Wert genügt).
+- **Korrekturen vornehmen** (`needs_adjustment`) → `?applicationId=<uuid>` öffnet genau diesen Antrag.
+- Direktaufruf von `/portal/antragserstellung` ohne Parameter: lädt nur **resumable** Anträge automatisch; bei bereits eingereichten Anträgen erscheint ein leeres Formular (kein Re-Display des Erfolgs-Screens).
 - Detail **read-only** (keine Edit-Aktionen im aktuellen Stand).
 - **Delete:** Papierkorb-Icon + Bestätigung.
 - Sidebar wie im Layout: **collapsible** (expanded / icon-only).
@@ -130,11 +142,11 @@ Verbindlich (Figma-State-Canvas + Produktregel):
 | **Entwurf** | Antrag nicht final eingereicht. R1: relevant; R2: irrelevant. |
 | **Beratung & Empfehlung** | Termin gebucht bis Empfehlung von R2 freigegeben. R1 + R2 relevant. |
 | **In Review** | Final von R1 eingereicht. R1 und R2 gleich. |
-| **Anpassung erforderlich** / **Anpassung ausstehend** | Gleicher fachlicher State; **R1** vs. **R2** Wording. |
-| **In Entscheid** | An Entscheidungsstelle übergeben (Doku nennt z. B. R4; im Funktionen-Dokument oft **R3** als dezentrale Entscheid — mit Code/Produkt abgleichen). |
-| **Bewilligt** / **Abgelehnt** | Abschluss nach Entscheid. |
+| **Anpassung erforderlich** / **Anpassung ausstehend** | Gleicher fachlicher State (`needs_correction` / `needs_adjustment`); **R1** vs. **R2** Wording. |
+| **In Entscheid** | R2 hat „Antrag weiterreichen“ ausgelöst; technisch **`in_implementation`**. |
+| **Bewilligt** / **Abgelehnt** | Abschluss nach Entscheid (`approved` / `rejected`). |
 
-**Technisch bereits vorgesehen/umgesetzt (Ableitung):** Entwurf, Beratung & Empfehlung, In Review; weitere States (Anpassung, In Entscheid, Bewilligt/Abgelehnt) in `application-status.ts` — **fachliche Trigger** für Wechsel *nach* In Review durch nachgelagerte Prozesse ggf. **noch nicht** vollständig.
+**Technisch umgesetzt (Ableitung):** Entwurf, Beratung & Empfehlung, In Review, **`in_implementation` → In Entscheid** über `app/api/applications/review-forward/route.ts`. **`needs_correction → in_review`** nach R1-Korrektur sowie der Entscheidungsschritt **`approved` / `rejected`** sind im Statusmodell vorgesehen, aber UI-/Trigger-seitig noch nicht final verdrahtet.
 
 ### Ableitungslogik (verbindlich)
 
@@ -161,17 +173,23 @@ State-Badges orientieren sich an **Figma-Farbkodierung** (kompakt, ohne Border) 
 - Aktion **„Beratung durchgeführt + Empfehlung freigeben“** darf in **`applications.data`** nur ändern:
   - `consultation`
   - `recommendation`
-- Diese Aktion ändert den technischen **`applications.status`** **nicht** in einer Weise, die R1-**Finalsubmit** blockiert (RLS-konform).
+- **Block-Review nach `in_review`:** Persistenz unter **`data.recommendation.workspaceReview`** (innerhalb des Trigger-erlaubten `recommendation`-Pfads). Details: `Antrag_Review_Kontext.md` § 4.
+- **„Antrag weiterreichen“** geht über **`POST /api/applications/review-forward`** mit Session-Client:
+  - Alle Blöcke `confirmed` ⇒ `applications.status = in_implementation` (kanonisch „In Entscheid“).
+  - Mind. ein Block `adjustment` ⇒ `applications.status = needs_correction` (kanonisch „Anpassung erforderlich“).
+  - Schreibt zugleich `recommendation.workspaceReview.postSubmit` und `forwardedComments`.
+- Diese Aktionen ändern den technischen **`applications.status`** **nicht** in einer Weise, die R1-**Finalsubmit** blockiert (RLS-konform).
 - Andere `data`-Felder für R2: **trigger-/policy-seitig gesperrt**.
 
 ---
 
 ## 10. DB / RLS / Trigger — nicht verletzen
 
-- Workspace-Policies: Zugriff für Rollen wie **R2, R3, R5, R6** (exakt: aktuelle Supabase-Policies im Repo).
-- R1 darf eigenen Antrag nur in **erlaubten Status** updaten.
-- **Konsequenz:** Beratungsphase darf technisch **nicht** in einem Status landen, der den **späteren Final-Submit** durch R1 blockiert. Umgesetzter Pfad: Beratung im Workspace u. a. bei **`submitted`**, finaler Submit R1 → **`in_review`**.
-- Trigger **`enforce_r2_application_update_columns`:** R2 darf in `applications.data` nur **`consultation`** / **`recommendation`** ändern — nicht `summary`, `applicationDefinition`, `personalData`, etc.
+- Workspace-Policies: Zugriff für Rollen **R2, R3, R5, R6**. Die **SELECT**-Policy `applications_select_r2_worklist` umfasst seit Migration **`extend_workspace_select_to_decision_states`** auch **`in_implementation`**, **`approved`** und **`rejected`** — sonst scheitert der `UPDATE` von `in_review → in_implementation` am implizit folgenden `RETURNING`-SELECT (Postgres-RLS-Mechanik). **`SUPABASE_SERVICE_ROLE_KEY` ist für den Forward-Pfad nicht erforderlich.**
+- **UPDATE**-Policy `applications_update_r2_worklist` deckt den Übergang aus `in_review` heraus (`USING`); `WITH CHECK` erlaubt die Ziel-Status `in_implementation` / `needs_correction`.
+- R1 darf eigenen Antrag nur in **erlaubten Status** updaten (`applications_update_r1_own_limited`).
+- **Konsequenz:** Beratungsphase darf technisch **nicht** in einem Status landen, der den **späteren Final-Submit** durch R1 blockiert. Umgesetzter Pfad: Beratung im Workspace u. a. bei **`submitted`**, finaler Submit R1 → **`in_review`** → R2-Forward → **`in_implementation`** / **`needs_correction`**.
+- Trigger **`enforce_r2_application_update_columns`:** R2 darf in `applications.data` nur **`consultation`** / **`recommendation`** ändern — nicht `summary`, `applicationDefinition`, `personalData`, etc. Vor jedem Save daher **`dataWithoutLegacyReviewRoots`** (`lib/r2-review-persist.ts`) auf das Daten-Objekt anwenden.
 
 ---
 
@@ -179,10 +197,12 @@ State-Badges orientieren sich an **Figma-Farbkodierung** (kompakt, ohne Border) 
 
 1. Keine Regression in bereits umgesetzten Screens ohne Produktentscheid.
 2. Status- und Freischaltlogik **datenbasiert** halten.
-3. R2-**Trigger-Grenzen** strikt einhalten.
-4. Neue Screens nach Möglichkeit **screen-by-screen** aus Figma.
-5. Neue Pflichtfelder: klare **Error-UI** und Konsistenz mit Übersicht/Sidebar.
-6. Status-Erweiterungen in **`application-status.ts`** zentralisieren.
+3. R2-**Trigger-Grenzen** strikt einhalten (nur `consultation` / `recommendation`); R2-Review-Daten gehören unter `recommendation.workspaceReview`.
+4. **Realtime-Subscriptions** im R1-Flow immer auf die **aktive `application.id`** scopen, nicht auf `applicant_id` — sonst können Updates eines anderen Antrags den lokalen Step-State überschreiben.
+5. RLS-Anpassungen: bei **Status-Übergängen** prüfen, ob die Ziel-Zeile nach dem Update via SELECT-Policy weiterhin sichtbar ist (sonst `new row violates row-level security policy`).
+6. Neue Screens nach Möglichkeit **screen-by-screen** aus Figma.
+7. Neue Pflichtfelder: klare **Error-UI** und Konsistenz mit Übersicht/Sidebar.
+8. Status-Erweiterungen in **`application-status.ts`** zentralisieren.
 
 ---
 

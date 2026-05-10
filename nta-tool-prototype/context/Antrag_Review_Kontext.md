@@ -1,7 +1,7 @@
 # Kontext: Antrag Review (nach finaler Einreichung, R2) — NTA Prototyp
 
 > **Zweck:** Zentrale Referenz für Chats zur **Review-Ansicht nach finalem R1-Submit**, **UI**, **Client-State**, **Sidebar-Kommentare** und **Code-Ankern**.  
-> **Backend:** Persistenz/RLS noch nicht angebunden — siehe Abschnitt [Daten & Backend](#4-daten--backend).  
+> **Backend:** R2-Review-Persistenz und Forward-Aktion (`in_implementation` / `needs_correction`) sind RLS-konform umgesetzt — siehe Abschnitt [Daten & Backend](#4-daten--backend).  
 > **Verwandt:** `Antragerstellung_Kontext.md` · `General_Prototype_Kontext.md` · `Prototyp_Funktionen.md` (F6 Korrektur-Loop)
 
 ---
@@ -20,8 +20,9 @@
 
 - Antrag mit kanonischem Status **„In Review“** öffnen → **Review-Ansicht** (`WorkspaceApplicationReview`).
 - Pro **Block:** **Bestätigen** oder **Anpassung anfordern** (mit **Pflichtbemerkung** über die Sidebar; siehe unten).
-- **Umgesetzt (Prototyp, nur UI/Client-State):** Block-Footer, Sidebar-Kommentar-Composer, Chronik, Zurücksetzen mit Bestätigung bei Anpassung.
-- **Noch Zielbild / nicht umgesetzt:** Sobald **`needs_adjustment`** und Korrekturphase aktiv → **R2 read-only** bis zur nächsten Runde nach R1-Freigabe; globaler Statuswechsel über `applications.status` / `data`.
+- **Umgesetzt:** Block-Footer, Sidebar-Kommentar-Composer, Chronik, Zurücksetzen mit Bestätigung bei Anpassung; **Persistenz** des Entwurfs in `data.recommendation.workspaceReview.draft` (debounced) und **Weiterreichen** über `/api/applications/review-forward` mit Statuswechsel auf `in_implementation` (alles bestätigt) bzw. `needs_correction` (mind. eine Anpassung).
+- **Read-only nach Forward:** Sobald `applications.status` ∈ {`in_implementation`, `approved`, `rejected`} ist, rendert `WorkspaceApplicationReview` im Modus **`readonly_decision`**: keine Footer-Aktionen, kein Composer, Chronik aus `recommendation.workspaceReview.forwardedComments`. Voraussetzung dafür ist die erweiterte SELECT-Policy `applications_select_r2_worklist` (siehe § 4).
+- **Noch Zielbild:** Wechsel `needs_correction → in_review` nach erneuter R1-Freigabe sowie der globale Entscheidungs-Übergang (R3/R4) hängen am `application-status.ts`-Pfad und der RPC-Erweiterung.
 
 ### R1
 
@@ -46,8 +47,14 @@
 ## 4. Daten & Backend
 
 - **Kern:** `applications` + JSONB **`data`**, Spalte **`status`**.
-- **Trigger** `enforce_r2_application_update_columns` (laut Doku): R2 darf `applications.data` aktuell nur **`consultation`** / **`recommendation`** ändern. **Block-Review** (Phasen, Bemerkungen, Chronik) braucht für echte Persistenz **Erweiterung** (JSON-Pfade und/oder Tabellen, Policies) — vor Deploy **Policies/Migrationen im Repo** prüfen.
-- **Prototyp jetzt:** Review-Blockzustand und Kommentare nur **React-State** in `workspace-application-review.tsx` (kein Supabase-Write für Review).
+- **Trigger** `enforce_r2_application_update_columns`: R2 darf `applications.data` ausschließlich unter **`consultation`** / **`recommendation`** schreiben — alles andere wirft `R2 may not change data except recommendation/consultation`.
+- **Persistenz Block-Review (Prototyp, jetzt):** Phasen, Bemerkungen und Chronik liegen unter **`data.recommendation.workspaceReview`** (innerhalb des erlaubten Trigger-Pfads). Schemas in `lib/test-flow-types.ts`:
+  - `data.recommendation.workspaceReview.draft`: laufender R2-Entwurf (`R2ReviewDraft` — `updatedAt`, `blocks`, `reviewComments`); wird debounced gespeichert (`persistReviewDraft` in `workspace-application-review.tsx`, ~500 ms).
+  - `data.recommendation.workspaceReview.postSubmit`: Snapshot beim **Weiterreichen** (`R2PostSubmitReview` — `forwardedAt`, `blocks`).
+  - `data.recommendation.workspaceReview.forwardedComments`: persistierte Kommentar-Chronik beim Weiterreichen.
+- **Legacy-Wurzelfelder** (`reviewComments`, `r2PostSubmitReview`, `r2ReviewDraft` direkt in `data`) werden vor jedem Save mit **`dataWithoutLegacyReviewRoots`** (`lib/r2-review-persist.ts`) entfernt — sonst feuert der Trigger.
+- **Forward-Aktion** geht über die API-Route **`app/api/applications/review-forward/route.ts`** (Session-Client, RLS-konform — kein `SUPABASE_SERVICE_ROLE_KEY` nötig). Setzt `applications.status` auf `in_implementation` (alle Blöcke bestätigt) bzw. `needs_correction` (mind. eine Anpassung) und schreibt `recommendation.workspaceReview` final.
+- **RLS-Anker:** `applications_select_r2_worklist` umfasst seit Migration `extend_workspace_select_to_decision_states` auch **`in_implementation` / `approved` / `rejected`**, damit R2 den weitergereichten Antrag nach dem Statuswechsel im Workspace im Modus `readonly_decision` weiter sehen kann (Details siehe `Antragerstellung_Kontext.md` § 10).
 
 ---
 
@@ -62,12 +69,15 @@
 
 | Komponente | Pfad | Rolle |
 |------------|------|--------|
-| Review-Hauptansicht | `components/domain/workspace-application-review.tsx` | Blockliste links, State, Dialoge, Sidebar-Props |
+| Review-Hauptansicht | `components/domain/workspace-application-review.tsx` | Blockliste links, State, Dialoge, Sidebar-Props, debounced Draft-Persist, Forward-Aufruf |
 | Detail-Sidebar | `components/domain/application-review-detail-sidebar.tsx` | Antragdetails, Kommentar-Composer (Vollspalte), Chronik |
+| Persistenz-Helfer | `lib/r2-review-persist.ts` | `dataWithoutLegacyReviewRoots`, Pfade unter `recommendation.workspaceReview` |
+| Forward-API | `app/api/applications/review-forward/route.ts` | Session-Client-Update auf `in_implementation` / `needs_correction`, schreibt finale Review-Snapshots |
+| Review-Block-Definition | `lib/review-workspace-blocks.ts` | Geteilte Block-IDs, Default-Phasen, Hilfsstrukturen |
 | Labels / Konstanten | `lib/application-review-labels.ts` | Scope, Massnahmen, Hilfsfunktionen |
 | Status | `lib/application-status.ts` | Ableitung, Meta für Sidebar-Badge |
 | Toolbar | `components/domain/workspace-r2-toolbar-context.tsx` | Topbar-Slot („Zurück zur Liste“) |
-| Workspace-Flow | `components/domain/workspace-test-flow.tsx` | Liste, Routing Review vs. Detail |
+| Workspace-Flow | `components/domain/workspace-test-flow.tsx` | Liste, Routing Review vs. Detail (inkl. `readonly_decision`) |
 | Layout | `components/domain/role-dashboard-layout.tsx` | R2-Shell |
 
 ### Review-Blöcke (Reihenfolge)
@@ -118,7 +128,9 @@
 
 ### Gesamtbutton unter den Blöcken
 
-- **„Anpassungen anfordern“** (global): weiterhin **disabled**, Platzhalter für spätere Gesamtlogik.
+- **„Antrag weiterreichen“** (alle Blöcke `confirmed`): grün, ruft `POST /api/applications/review-forward` mit `forwardKind="confirm_all"` → `applications.status = in_implementation`. Anschließend rendert die Ansicht `readonly_decision` (siehe oben).
+- **„Anpassungen anfordern“** (mind. ein Block `adjustment`, Rest `confirmed`): amber, ruft dieselbe Route mit `forwardKind="request_adjustments"` → `applications.status = needs_correction` und persistiert die Kommentar-Chronik. Rückkehr zu `in_review` durch R1-Korrektur ist Zielbild.
+- Solange noch Blöcke `pending` sind, bleibt der Button disabled (Vermeidung halber Forwards).
 
 ### Workspace-Chrome (Review)
 
@@ -152,13 +164,11 @@ Details Sidebar-Einklapp-Logik / Z-Index: `role-dashboard-layout.tsx` und frühe
 
 | Thema | Hinweis |
 |--------|---------|
-| **Persistenz** | Blockphasen, Bemerkungen, Chronik → `applications.data` oder Tabellen; **RLS** + Trigger-Erweiterung |
-| **`applications.status`** | Wechsel zu `needs_adjustment` / Rückkehr `in_review` nach R1-Korrektur — mit `application-status.ts` und Policies abstimmen |
-| **Gesamt „Anpassungen anfordern“** | Logik + Aktivierung wenn alle relevanten Blöcke bearbeitet |
-| **Entscheid-Übergang** | Rolle R3 vs. Produktbegriff |
+| **`needs_correction → in_review`** | Rückkehr nach R1-Korrektur: Pfad in `application-status.ts`, RPC und Policies (analog zu `applications_update_r1_own_limited`) finalisieren |
+| **Entscheid-Übergang** | `in_implementation → approved/rejected` (Rolle R3 vs. Produktbegriff R4); aktuell sind die Status nur lesend für R2 freigegeben |
 | **Dateien** | echte Storage-URLs Attest/Empfehlung |
 | **Realtime / F6** | Abgleich mit `Prototyp_Funktionen.md`, `application_events` / Annotationen |
 
 ---
 
-*Letzte Aktualisierung: Block-Review UI (Phasen, Sidebar-Composer Vollspalte, Reset-Dialog, Kommentarchronik), Client-State-Anker und offene Backend-Schritte dokumentiert.*
+*Letzte Aktualisierung: R2-Review-Persistenz unter `recommendation.workspaceReview`, Forward-Route `app/api/applications/review-forward/route.ts`, RLS-Erweiterung `extend_workspace_select_to_decision_states` und `readonly_decision`-Modus dokumentiert.*

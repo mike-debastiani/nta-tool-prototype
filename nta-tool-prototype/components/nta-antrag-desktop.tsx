@@ -354,7 +354,6 @@ function RichRadioOption({
 }
 
 export function NtaAntragDesktop({
-  userId,
   initialApplication,
   autosaveKey = "nta-antrag-draft",
   initialData,
@@ -515,16 +514,24 @@ export function NtaAntragDesktop({
     }
   }, [forceNew, initialApplication]);
 
+  // Scope realtime to the currently active application ONLY.
+  // Filtering by `applicant_id` would hijack the in-progress draft whenever any
+  // other application of the same R1 user gets updated (e.g. an existing
+  // `in_review` application receiving an unrelated UPDATE), which previously
+  // caused the success screen to appear when starting a second application.
+  const activeApplicationId = application?.id ?? null;
+
   useEffect(() => {
+    if (!activeApplicationId) return;
     const channel = supabase
-      .channel(`portal-antrag-${userId}`)
+      .channel(`portal-antrag-${activeApplicationId}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "applications",
-          filter: `applicant_id=eq.${userId}`,
+          filter: `id=eq.${activeApplicationId}`,
         },
         (payload) => {
           if (payload.eventType === "DELETE") {
@@ -532,7 +539,7 @@ export function NtaAntragDesktop({
             return;
           }
           const next = payload.new as ApplicationRow;
-          if (!next?.id) return;
+          if (!next?.id || next.id !== activeApplicationId) return;
           setApplication(next);
           const isFinalSubmitted = Boolean(
             next.data?.finalSubmitted || next.data?.submittedAt,
@@ -551,7 +558,7 @@ export function NtaAntragDesktop({
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [supabase, userId]);
+  }, [supabase, activeApplicationId]);
 
   const appendFiles = (files: FileList | null) => {
     if (!files?.length) return;
@@ -976,7 +983,9 @@ export function NtaAntragDesktop({
   const showCorrectionSidebar = canonicalR1State === "needs_adjustment";
 
   const savedReviewCommentsForSidebar = useMemo(() => {
-    const raw = application?.data?.reviewComments;
+    const raw =
+      application?.data?.recommendation?.workspaceReview?.forwardedComments
+      ?? application?.data?.reviewComments;
     if (!raw?.length) return [];
     return raw.map((c) => ({
       id: c.id,
@@ -985,7 +994,10 @@ export function NtaAntragDesktop({
       body: c.body,
       createdAt: Date.parse(c.createdAt),
     }));
-  }, [application?.data?.reviewComments]);
+  }, [
+    application?.data?.recommendation?.workspaceReview?.forwardedComments,
+    application?.data?.reviewComments,
+  ]);
 
   const statusMetaForCorrection = useMemo(
     () => (application ? getApplicationStatusMeta(application, "R1") : null),
