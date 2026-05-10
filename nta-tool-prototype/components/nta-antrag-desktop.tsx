@@ -14,13 +14,16 @@ import {
   CircleArrowRight,
   CircleCheck,
   CircleDashed,
+  CircleHelp,
   ExternalLink,
   Eye,
   FileText,
   Info,
   MapPin,
   MessageCircle,
+  Mail,
   Lock,
+  Phone,
   Stethoscope,
   Trash2,
   Upload,
@@ -831,6 +834,9 @@ export function NtaAntragDesktop({
     currentStep === "step4_application" ||
     currentStep === "step5_overview" ||
     currentStep === "step6_submitted";
+  const stepOneLockedAfterConsultation =
+    application?.data?.consultation?.status === "booked" ||
+    application?.data?.consultation?.status === "done";
   const step1Complete = isStepOneComplete(formData);
   const step2Complete = formData.attestFiles.length > 0;
   const step3Complete = recommendationReleased;
@@ -1051,17 +1057,31 @@ export function NtaAntragDesktop({
             />
           </nav>
 
-          <Card className="mt-auto rounded-xl border-0 bg-background py-3 shadow-none ring-0">
-            <CardContent className="px-3 py-0 text-xs leading-4">
-              <p className="mb-3 font-medium text-foreground">Fragen und Unklarheiten?</p>
-              <p className="mb-3 text-foreground">
-                Kontaktieren Sie unsere Fachstelle unter
-              </p>
-              <p className="text-foreground">
-                <span className="underline underline-offset-2">beispiel@hochschule.ch</span>
-                <br />
-                <span>+41 55 120 36 56</span>
-              </p>
+          <Card className="mt-auto rounded-lg border border-zinc-200 bg-background p-0 shadow-none ring-0">
+            <CardContent className="px-4 py-3">
+              <div className="flex items-start gap-3">
+                <CircleHelp className="mt-0.5 size-4 shrink-0 text-foreground" />
+                <div className="min-w-0 text-xs leading-4 text-foreground">
+                  <p className="font-medium">Fragen oder Unklarheiten?</p>
+                  <p className="mt-0.5">kontaktieren Sie unsere Fachstelle unter</p>
+                  <div className="mt-3 space-y-2.5">
+                    <a
+                      href="mailto:Kontaktstelle@hochschule.ch"
+                      className="flex items-center gap-2 transition-colors hover:text-foreground/80"
+                    >
+                      <span>Kontaktstelle@hochschule.ch</span>
+                      <Mail className="size-3.5" />
+                    </a>
+                    <a
+                      href="tel:+41551203489"
+                      className="flex items-center gap-2 transition-colors hover:text-foreground/80"
+                    >
+                      <span>+41 55 120 34 89</span>
+                      <Phone className="size-3.5" />
+                    </a>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </aside>
@@ -1106,10 +1126,12 @@ export function NtaAntragDesktop({
               <CardContent className="space-y-8 p-0">
                 {currentStep === "step1" ? (
                   <>
-                    <div className="space-y-6">
-                      <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
-                        Persönliche Angaben
-                      </CardTitle>
+                    {!stepOneLockedAfterConsultation ? (
+                      <>
+                        <div className="space-y-6">
+                          <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
+                            Persönliche Angaben
+                          </CardTitle>
                       <div className="grid gap-6 lg:grid-cols-2 lg:gap-x-[29px]">
                         <div className="flex flex-col gap-1">
                           <Label htmlFor="vorname">Vorname</Label>
@@ -1388,6 +1410,124 @@ export function NtaAntragDesktop({
                         />
                       </div>
                     </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="space-y-6">
+                          <p className="text-lg font-medium text-foreground">
+                            Persönliche Angaben
+                          </p>
+                          <div className="grid gap-6 lg:grid-cols-2 lg:gap-x-[29px]">
+                            {(
+                              [
+                                { label: "Vorname", value: formData.vorname },
+                                { label: "Name", value: formData.name },
+                                { label: "Email", value: formData.email },
+                                { label: "Telefonnummer", value: formData.phone },
+                              ] as const
+                            ).map((item) => (
+                              <div key={item.label} className="flex flex-col gap-1">
+                                <Label>{item.label}</Label>
+                                <div className="flex min-h-9 items-center justify-between rounded-lg border border-border bg-background px-3 py-2 opacity-70 shadow-xs">
+                                  <span className="text-sm text-muted-foreground">
+                                    {item.value}
+                                  </span>
+                                  <Lock className="size-4 text-muted-foreground" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="space-y-6">
+                          <p className="text-lg font-medium text-foreground">
+                            Angaben zum Studium
+                          </p>
+                          <div className="space-y-4">
+                            <div className="flex flex-col gap-1">
+                              <Label>Matrikelnummer</Label>
+                              <div className="flex min-h-9 items-center justify-between rounded-lg border border-border bg-background px-3 py-2 opacity-70 shadow-xs">
+                                <span className="text-sm text-muted-foreground">
+                                  {formData.matrikel}
+                                </span>
+                                <Lock className="size-4 text-muted-foreground" />
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <Label>Welches Semester besuchen Sie</Label>
+                              <div className="flex min-h-9 items-center justify-between rounded-lg border border-border bg-background px-3 py-2 opacity-70 shadow-xs">
+                                <span className="text-sm text-muted-foreground">
+                                  {formData.studiengang}
+                                </span>
+                                <Lock className="size-4 text-muted-foreground" />
+                              </div>
+                            </div>
+                            <div className="flex max-w-[320px] flex-col gap-1">
+                              <Label>Welches Semester besuchen Sie</Label>
+                              <div className="flex min-h-9 items-center justify-between rounded-lg border border-border bg-background px-3 py-2 opacity-70 shadow-xs">
+                                <span className="text-sm text-muted-foreground">
+                                  {formData.semester
+                                    ? `${formData.semester}. Semester`
+                                    : ""}
+                                </span>
+                                <Lock className="size-4 text-muted-foreground" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <p className="text-lg font-medium text-foreground">Antragsart</p>
+                          <div className="space-y-2">
+                            {(
+                              [
+                                {
+                                  value: "studium",
+                                  title: "Für Studium",
+                                  description:
+                                    "Ich bin bereits immatrikuliert und möchte einen Nachteilsausgleich während des Studiums stellen.",
+                                },
+                                {
+                                  value: "aufnahmeverfahren",
+                                  title: "Für Aufnahmeverfahren",
+                                  description:
+                                    "Ich bin noch nicht immatrikuliert und möchte einen Nachteilsausgleich für das Aufnahmeverfahren stellen.",
+                                },
+                              ] as const
+                            ).map((item) => (
+                              <div
+                                key={item.value}
+                                className={cn(
+                                  "flex w-full items-start gap-3 rounded-xl border border-border px-3 py-3",
+                                  formData.antragsart === item.value
+                                    ? "opacity-100"
+                                    : "opacity-50",
+                                )}
+                              >
+                                <input
+                                  type="radio"
+                                  checked={formData.antragsart === item.value}
+                                  readOnly
+                                  disabled
+                                  className="mt-0.5 h-4 w-4 accent-primary"
+                                />
+                                <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
+                                  <span className="flex flex-col gap-1">
+                                    <span className="text-sm leading-5 text-foreground">
+                                      {item.title}
+                                    </span>
+                                    <span className="text-xs leading-4 text-muted-foreground">
+                                      {item.description}
+                                    </span>
+                                  </span>
+                                  <Lock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </>
                 ) : currentStep === "step2" ? (
                   <div className="space-y-5">
