@@ -31,6 +31,16 @@ export type RecommendationWorkspaceReview = {
   forwardedComments?: ReviewCommentPersisted[];
 };
 
+/**
+ * Per-Block-Markierung, dass R1 nach R2-Anforderung „Anpassung" eine Korrektur
+ * vorgenommen und gespeichert hat. Der Originalkommentar (`R2`) bleibt erhalten,
+ * aber der Block wird visuell als „Anpassung erfolgt" markiert.
+ */
+export type R1AdjustmentResolution = {
+  /** ISO-8601 — Zeitpunkt des letzten R1-Speicherns für diesen Block. */
+  resolvedAt: string;
+};
+
 export type ApplicationData = {
   title?: string;
   summary?: string;
@@ -76,6 +86,14 @@ export type ApplicationData = {
   };
   finalSubmitted?: boolean;
   submittedAt?: string;
+  /**
+   * Pro Review-Block: gesetzt, sobald R1 den Block in der Korrekturansicht
+   * aktualisiert und gespeichert hat. Wird beim erneuten Einreichen (zurück
+   * nach `in_review`) wieder geleert.
+   */
+  r1AdjustmentResolutions?: Partial<
+    Record<import("@/lib/review-workspace-blocks").ReviewWorkspaceBlockId, R1AdjustmentResolution>
+  >;
   /**
    * @deprecated Alte Speicherung — lesen nur noch für Migration; schreiben unter
    * `recommendation.workspaceReview`.

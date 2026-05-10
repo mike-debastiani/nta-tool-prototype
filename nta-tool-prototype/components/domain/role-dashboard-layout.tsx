@@ -32,6 +32,13 @@ type RoleDashboardLayoutProps = {
    * Omit until inbox/notifications are implemented.
    */
   inboxNotificationCount?: number;
+  /**
+   * Setzt die innere Inhaltsfläche auf „edge-to-edge" (kein eigenes
+   * `px-6 py-8`-Padding, kein Header). Genutzt für Screens, die selbst eine
+   * mehrspaltige Vollflächen-Komposition liefern (z. B. R1-Korrekturansicht
+   * mit eigener rechter Sidebar).
+   */
+  edgeToEdge?: boolean;
 };
 
 type NavItem = {
@@ -49,6 +56,7 @@ export function RoleDashboardLayout({
   children,
   actions,
   inboxNotificationCount,
+  edgeToEdge = false,
 }: RoleDashboardLayoutProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -307,7 +315,7 @@ export function RoleDashboardLayout({
             </div>
           </div>
         ) : null}
-        {role === "R2" ? (
+        {role === "R2" || edgeToEdge ? (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-8">

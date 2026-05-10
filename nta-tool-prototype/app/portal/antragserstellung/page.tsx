@@ -1,7 +1,12 @@
 import { NtaAntragDesktop } from "@/components/nta-antrag-desktop";
+import { PortalApplicationAdjustment } from "@/components/domain/portal-application-adjustment";
+import { RoleDashboardLayout } from "@/components/domain/role-dashboard-layout";
 import { requireUserProfile } from "@/lib/auth";
 import { deriveCanonicalApplicationState } from "@/lib/application-status";
-import { type ApplicationRow } from "@/lib/test-flow-types";
+import {
+  type ApplicationRow,
+  type WorkspaceApplication,
+} from "@/lib/test-flow-types";
 import { createClient } from "@/utils/supabase/server";
 
 type PortalAntragserstellungPageProps = {
@@ -62,6 +67,33 @@ export default async function PortalAntragserstellungPage({
   }
 
   const startFresh = forceNew || !initial;
+
+  // Explizite Auswahl aus `/portal/home`: immer in die Block-Detailansicht.
+  // Bearbeiten ist dort nur im Kanon-Status `needs_adjustment` erlaubt.
+  if (!startFresh && initial && applicationId) {
+    const canonical = deriveCanonicalApplicationState(initial);
+    const workspaceApplication: WorkspaceApplication = {
+      ...initial,
+      users: [
+        {
+          display_name: profile.display_name,
+          email: profile.email,
+        },
+      ],
+    };
+    const applicantDisplayName =
+      profile.display_name?.trim() || profile.email || "Antragsteller";
+    return (
+      <RoleDashboardLayout role="R1" userLabel="" edgeToEdge>
+        <PortalApplicationAdjustment
+          key={`${workspaceApplication.id}-${workspaceApplication.status}`}
+          application={workspaceApplication}
+          applicantDisplayName={applicantDisplayName}
+          allowAdjustments={canonical === "needs_adjustment"}
+        />
+      </RoleDashboardLayout>
+    );
+  }
 
   return (
     <NtaAntragDesktop
