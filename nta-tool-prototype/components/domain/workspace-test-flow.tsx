@@ -1,23 +1,33 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useWorkspaceR2Toolbar } from "@/components/domain/workspace-r2-toolbar-context";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
 import { createClient } from "@/utils/supabase/client";
 import { cn } from "@/lib/utils";
-import { getApplicationStatusMeta } from "@/lib/application-status";
+import {
+  deriveCanonicalApplicationState,
+  getApplicationStatusMeta,
+} from "@/lib/application-status";
+import { WorkspaceApplicationReview } from "@/components/domain/workspace-application-review";
 
 type WorkspaceTestFlowProps = {
   userId: string;
+  /** Logged-in reviewer name for „Zugewiesen an“ in the review sidebar. */
+  reviewerDisplayName: string;
   initialApplications: WorkspaceApplication[];
 };
 
 export function WorkspaceTestFlow({
   userId,
+  reviewerDisplayName,
   initialApplications,
 }: WorkspaceTestFlowProps) {
+  const setLeadingToolbarSlot = useWorkspaceR2Toolbar()?.setLeadingSlot;
+
   const supabase = useMemo(() => createClient(), []);
   const [applications, setApplications] =
     useState<WorkspaceApplication[]>(initialApplications);
@@ -106,8 +116,37 @@ export function WorkspaceTestFlow({
     ? getApplicationStatusMeta(selectedApplication, "R2")
     : null;
 
+  const selectedCanonicalState = selectedApplication
+    ? deriveCanonicalApplicationState(selectedApplication)
+    : null;
+
+  useEffect(() => {
+    if (!setLeadingToolbarSlot) return;
+
+    if (selectedCanonicalState !== "in_review") {
+      setLeadingToolbarSlot(null);
+      return;
+    }
+
+    setLeadingToolbarSlot(
+      <Button
+        variant="ghost"
+        size="sm"
+        className="-ml-2 gap-2 px-2 text-muted-foreground hover:text-foreground"
+        type="button"
+        onClick={() => setSelectedApplicationId(null)}
+      >
+        <ArrowLeft className="size-4 shrink-0" aria-hidden />
+        Zurück zur Liste
+      </Button>,
+    );
+
+    return () => setLeadingToolbarSlot(null);
+  }, [selectedCanonicalState, setLeadingToolbarSlot]);
+
   if (!selectedApplication) {
     return (
+      <div className="px-6 py-6">
       <Card>
         <CardHeader>
           <CardTitle>Eingegangene Antraege</CardTitle>
@@ -154,10 +193,21 @@ export function WorkspaceTestFlow({
           {message && <p className="pt-2 text-sm text-muted-foreground">{message}</p>}
         </CardContent>
       </Card>
+      </div>
+    );
+  }
+
+  if (selectedCanonicalState === "in_review") {
+    return (
+      <WorkspaceApplicationReview
+        application={selectedApplication}
+        reviewerDisplayName={reviewerDisplayName}
+      />
     );
   }
 
   return (
+    <div className="px-6 py-6">
     <Card>
       <CardHeader>
         <Button
@@ -348,5 +398,6 @@ export function WorkspaceTestFlow({
         {message && <p className="text-sm text-muted-foreground">{message}</p>}
       </CardContent>
     </Card>
+    </div>
   );
 }

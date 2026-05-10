@@ -126,3 +126,5 @@ export function getApplicationStatusMeta(
     className: statusBadgeClass[canonicalState],
   };
 }
+
+export type ApplicationStatusMeta = ReturnType<typeof getApplicationStatusMeta>;

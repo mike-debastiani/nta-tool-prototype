@@ -54,14 +54,14 @@ export function WorkspaceAccountMenu({ initials = "FS" }: WorkspaceAccountMenuPr
           <p className="text-xs font-medium text-muted-foreground">Mein Account</p>
         </div>
         <Link
-          href="/workspace/test?view=profil"
+          href="/workspace?view=profil"
           className={MENU_ITEM}
           onClick={() => setOpen(false)}
         >
           Profil
         </Link>
         <Link
-          href="/workspace/test?view=einstellungen"
+          href="/workspace?view=einstellungen"
           className={MENU_ITEM}
           onClick={() => setOpen(false)}
         >

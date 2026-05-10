@@ -52,7 +52,7 @@ export function LoginCard({ title, allowedRoles }: LoginCardProps) {
     }
 
     router.push(
-      profile.role === "R1" ? "/portal/antragserstellung" : "/workspace/test",
+      profile.role === "R1" ? "/portal/antragserstellung" : "/workspace",
     );
     router.refresh();
   }
