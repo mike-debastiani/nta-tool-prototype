@@ -12,7 +12,10 @@ import {
   deriveCanonicalApplicationState,
   getApplicationStatusMeta,
 } from "@/lib/application-status";
-import { WorkspaceApplicationReview } from "@/components/domain/workspace-application-review";
+import {
+  WorkspaceApplicationReview,
+  type WorkspaceReviewViewMode,
+} from "@/components/domain/workspace-application-review";
 
 type WorkspaceTestFlowProps = {
   userId: string;
@@ -123,7 +126,12 @@ export function WorkspaceTestFlow({
   useEffect(() => {
     if (!setLeadingToolbarSlot) return;
 
-    if (selectedCanonicalState !== "in_review") {
+    const reviewWorkspaceDetail =
+      selectedCanonicalState === "in_review"
+      || selectedCanonicalState === "in_decision"
+      || selectedCanonicalState === "needs_adjustment";
+
+    if (!reviewWorkspaceDetail) {
       setLeadingToolbarSlot(null);
       return;
     }
@@ -142,7 +150,14 @@ export function WorkspaceTestFlow({
     );
 
     return () => setLeadingToolbarSlot(null);
-  }, [selectedCanonicalState, setLeadingToolbarSlot]);
+  }, [selectedCanonicalState, setLeadingToolbarSlot, selectedApplication]);
+
+  const workspaceReviewMode: WorkspaceReviewViewMode =
+    selectedCanonicalState === "in_decision"
+      ? "readonly_decision"
+      : selectedCanonicalState === "needs_adjustment"
+        ? "readonly_adjustment_pending"
+        : "interactive";
 
   if (!selectedApplication) {
     return (
@@ -197,11 +212,17 @@ export function WorkspaceTestFlow({
     );
   }
 
-  if (selectedCanonicalState === "in_review") {
+  if (
+    selectedCanonicalState === "in_review"
+    || selectedCanonicalState === "in_decision"
+    || selectedCanonicalState === "needs_adjustment"
+  ) {
     return (
       <WorkspaceApplicationReview
         application={selectedApplication}
         reviewerDisplayName={reviewerDisplayName}
+        viewMode={workspaceReviewMode}
+        onPersisted={() => void refreshApplications()}
       />
     );
   }

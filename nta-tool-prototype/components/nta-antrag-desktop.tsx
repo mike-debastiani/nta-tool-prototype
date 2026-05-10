@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -45,8 +46,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ApplicationReviewDetailSidebar } from "@/components/domain/application-review-detail-sidebar";
 import { StudiengangCombobox } from "@/components/studiengang-combobox";
-import { type ApplicationRow } from "@/lib/test-flow-types";
+import {
+  deriveCanonicalApplicationState,
+  getApplicationStatusMeta,
+} from "@/lib/application-status";
+import {
+  reviewBlockToAntragStep,
+  reviewWorkspaceAnchorId,
+  type ReviewWorkspaceBlockId,
+} from "@/lib/review-workspace-blocks";
+import { type ApplicationRow, type WorkspaceApplication } from "@/lib/test-flow-types";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
 
@@ -294,6 +305,25 @@ type RichRadioOptionProps = {
   onChange: () => void;
 };
 
+function resolveInitialFlowStep(
+  initialApplication: ApplicationRow | undefined,
+  forceNew: boolean,
+): FlowStep {
+  if (forceNew) return "step1";
+  if (!initialApplication) return "step1";
+  const canonical = deriveCanonicalApplicationState(initialApplication);
+  if (canonical === "needs_adjustment") return "step4_application";
+  const recommendationReady = Boolean(initialApplication.data?.recommendation?.ready);
+  const consultationStatus = initialApplication.data?.consultation?.status;
+  const isSubmitted = Boolean(initialApplication.data?.submittedAt);
+  if (isSubmitted) return "step6_submitted";
+  if (recommendationReady) return "step3_recommendation";
+  if (consultationStatus === "booked" || consultationStatus === "done") {
+    return "step3_booked";
+  }
+  return "step1";
+}
+
 function RichRadioOption({
   checked,
   title,
@@ -361,18 +391,9 @@ export function NtaAntragDesktop({
       : undefined;
     return mergeWithDefaults(fromApplication ?? initialData);
   });
-  const [currentStep, setCurrentStep] = useState<FlowStep>(() => {
-    if (forceNew) return "step1";
-    const recommendationReady = Boolean(initialApplication?.data?.recommendation?.ready);
-    const consultationStatus = initialApplication?.data?.consultation?.status;
-    const isSubmitted = Boolean(initialApplication?.data?.submittedAt);
-    if (isSubmitted) return "step6_submitted";
-    if (recommendationReady) return "step3_recommendation";
-    if (consultationStatus === "booked" || consultationStatus === "done") {
-      return "step3_booked";
-    }
-    return "step1";
-  });
+  const [currentStep, setCurrentStep] = useState<FlowStep>(() =>
+    resolveInitialFlowStep(initialApplication, forceNew),
+  );
   const [isDragActive, setIsDragActive] = useState(false);
   const [stepOneErrors, setStepOneErrors] = useState<
     Partial<Record<StepOneField, string>>
@@ -397,6 +418,7 @@ export function NtaAntragDesktop({
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const overviewFileInputRef = useRef<HTMLInputElement>(null);
+  const lastSyncedInitialApplicationId = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     // Load persisted draft only after hydration to avoid SSR/client markup mismatch.
@@ -435,6 +457,63 @@ export function NtaAntragDesktop({
     }, 400);
     return () => window.clearTimeout(timeout);
   }, [autosaveKey, formData]);
+
+  useEffect(() => {
+    if (forceNew || !initialApplication) return;
+    const id = initialApplication.id;
+    if (lastSyncedInitialApplicationId.current === undefined) {
+      lastSyncedInitialApplicationId.current = id;
+      return;
+    }
+    if (lastSyncedInitialApplicationId.current === id) return;
+    lastSyncedInitialApplicationId.current = id;
+
+    setApplication(initialApplication);
+    setCurrentStep(resolveInitialFlowStep(initialApplication, false));
+
+    const pd = initialApplication.data.personalData;
+    if (pd) {
+      setFormData(
+        mergeWithDefaults({
+          vorname: pd.vorname ?? "",
+          name: pd.name ?? "",
+          email: pd.email ?? "",
+          phone: pd.phone ?? "",
+          matrikel: pd.matrikel ?? "",
+          studiengang: pd.studiengang ?? "",
+          semester: pd.semester ?? "",
+          antragsart:
+            (pd.antragsart as "studium" | "aufnahmeverfahren" | undefined) ?? "studium",
+          attestFiles: (initialApplication.data.attestFiles ?? []).map((file) => ({
+            id: file.id ?? crypto.randomUUID(),
+            name: file.name ?? "Datei",
+            size: file.size ?? 0,
+            type: file.type ?? "",
+          })),
+        }),
+      );
+    }
+
+    const ad = initialApplication.data.applicationDefinition;
+    if (ad) {
+      const measureKeys: ApplicationMeasureKey[] = ["m1", "m2", "m3", "m4"];
+      const pickMeasures = (raw: string[] | undefined) =>
+        (raw ?? []).filter((k): k is ApplicationMeasureKey =>
+          measureKeys.includes(k as ApplicationMeasureKey),
+        );
+      setApplicationFormData({
+        situationDescription: ad.situationDescription ?? "",
+        duration: (ad.duration as ApplicationDuration | "") ?? "",
+        scopeSelections: [...(ad.scopeSelections ?? [])],
+        lectureMeasures: pickMeasures(ad.lectureMeasures),
+        lectureOtherEnabled: Boolean(ad.lectureOtherEnabled),
+        lectureOtherText: ad.lectureOtherText ?? "",
+        assessmentMeasures: pickMeasures(ad.assessmentMeasures),
+        assessmentOtherEnabled: Boolean(ad.assessmentOtherEnabled),
+        assessmentOtherText: ad.assessmentOtherText ?? "",
+      });
+    }
+  }, [forceNew, initialApplication]);
 
   useEffect(() => {
     const channel = supabase
@@ -891,10 +970,54 @@ export function NtaAntragDesktop({
     currentStep === "step3_booked" ||
     currentStep === "step3_recommendation";
 
+  const canonicalR1State = application
+    ? deriveCanonicalApplicationState(application)
+    : null;
+  const showCorrectionSidebar = canonicalR1State === "needs_adjustment";
+
+  const savedReviewCommentsForSidebar = useMemo(() => {
+    const raw = application?.data?.reviewComments;
+    if (!raw?.length) return [];
+    return raw.map((c) => ({
+      id: c.id,
+      blockId: c.blockId,
+      blockTitle: c.blockTitle,
+      body: c.body,
+      createdAt: Date.parse(c.createdAt),
+    }));
+  }, [application?.data?.reviewComments]);
+
+  const statusMetaForCorrection = useMemo(
+    () => (application ? getApplicationStatusMeta(application, "R1") : null),
+    [application],
+  );
+
+  const workspaceApplicationForSidebar: WorkspaceApplication | null = useMemo(() => {
+    if (!application) return null;
+    return { ...application, users: [] };
+  }, [application]);
+
+  const navigateFromSavedComment = useCallback((blockId: string) => {
+    const id = blockId as ReviewWorkspaceBlockId;
+    setCurrentStep(reviewBlockToAntragStep(id));
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        document
+          .getElementById(reviewWorkspaceAnchorId(id))
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+  }, []);
+
   return (
     <div className="h-screen w-full overflow-hidden bg-background">
       <div className="grid h-screen grid-cols-12 gap-6">
-        <aside className="col-span-12 flex h-screen flex-col overflow-hidden border-r border-border bg-sidebar p-8 lg:col-span-4">
+        <aside
+          className={cn(
+            "col-span-12 flex h-screen flex-col overflow-hidden border-r border-border bg-sidebar p-8",
+            showCorrectionSidebar ? "lg:col-span-3" : "lg:col-span-4",
+          )}
+        >
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Prozessfortschritt
           </h1>
@@ -1086,7 +1209,12 @@ export function NtaAntragDesktop({
           </Card>
         </aside>
 
-        <main className="col-span-12 h-screen overflow-y-auto px-6 pb-16 pt-[93px] lg:col-span-8 lg:pr-8">
+        <main
+          className={cn(
+            "col-span-12 h-screen overflow-y-auto px-6 pb-16 pt-[93px] lg:pr-8",
+            showCorrectionSidebar ? "lg:col-span-6" : "lg:col-span-8",
+          )}
+        >
           <form
             onSubmit={(event) => {
               event.preventDefault();
@@ -1128,7 +1256,10 @@ export function NtaAntragDesktop({
                   <>
                     {!stepOneLockedAfterConsultation ? (
                       <>
-                        <div className="space-y-6">
+                        <div
+                          id={reviewWorkspaceAnchorId("applicant")}
+                          className="scroll-mt-4 space-y-6"
+                        >
                           <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
                             Persönliche Angaben
                           </CardTitle>
@@ -1413,7 +1544,10 @@ export function NtaAntragDesktop({
                       </>
                     ) : (
                       <>
-                        <div className="space-y-6">
+                        <div
+                          id={reviewWorkspaceAnchorId("applicant")}
+                          className="scroll-mt-4 space-y-6"
+                        >
                           <p className="text-lg font-medium text-foreground">
                             Persönliche Angaben
                           </p>
@@ -1530,7 +1664,10 @@ export function NtaAntragDesktop({
                     )}
                   </>
                 ) : currentStep === "step2" ? (
-                  <div className="space-y-5">
+                  <div
+                    id={reviewWorkspaceAnchorId("attest")}
+                    className="scroll-mt-4 space-y-5"
+                  >
                     <div className="space-y-2">
                       <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
                         Fachärztliches Attest
@@ -1897,7 +2034,10 @@ export function NtaAntragDesktop({
                         Antragsstellung
                       </CardTitle>
 
-                      <div className="space-y-2">
+                      <div
+                        id={reviewWorkspaceAnchorId("definition")}
+                        className="scroll-mt-4 space-y-2"
+                      >
                         <p className="text-sm font-medium text-foreground">
                           Beschreibung der gesundheitlichen Situation und Nachteile
                         </p>
@@ -1930,7 +2070,10 @@ export function NtaAntragDesktop({
                         ) : null}
                       </div>
 
-                      <div className="space-y-2">
+                      <div
+                        id={reviewWorkspaceAnchorId("duration")}
+                        className="scroll-mt-4 space-y-2"
+                      >
                         <p className="text-sm font-medium text-foreground">
                           Gültigkeitsdauer des beantragten Nachteilsausgleiches
                         </p>
@@ -1987,7 +2130,10 @@ export function NtaAntragDesktop({
                         ) : null}
                       </div>
 
-                      <div className="space-y-2">
+                      <div
+                        id={reviewWorkspaceAnchorId("scope")}
+                        className="scroll-mt-4 space-y-2"
+                      >
                         <p className="text-sm font-medium text-foreground">
                           Geltungsbereich des beantragten Nachteilsausgleiches
                         </p>
@@ -2024,7 +2170,10 @@ export function NtaAntragDesktop({
                         ) : null}
                       </div>
 
-                      <div className="space-y-2">
+                      <div
+                        id={reviewWorkspaceAnchorId("lectureMeasures")}
+                        className="scroll-mt-4 space-y-2"
+                      >
                         <p className="text-sm font-medium text-foreground">
                           Ausgleichsmassnahme für Lehrveranstaltungen
                         </p>
@@ -2094,7 +2243,10 @@ export function NtaAntragDesktop({
                         ) : null}
                       </div>
 
-                      <div className="space-y-2">
+                      <div
+                        id={reviewWorkspaceAnchorId("assessmentMeasures")}
+                        className="scroll-mt-4 space-y-2"
+                      >
                         <p className="text-sm font-medium text-foreground">
                           Ausgleichsmassnahme für Leistungsnachweise
                         </p>
@@ -2844,6 +2996,18 @@ export function NtaAntragDesktop({
             </Card>
           </form>
         </main>
+        {showCorrectionSidebar && workspaceApplicationForSidebar && statusMetaForCorrection ? (
+          <aside className="col-span-12 hidden h-screen flex-col overflow-y-auto border-l border-border bg-sidebar p-6 lg:col-span-3 lg:flex">
+            <ApplicationReviewDetailSidebar
+              application={workspaceApplicationForSidebar}
+              statusMeta={statusMetaForCorrection}
+              assignedReviewerLabel="Fachstelle NTA"
+              adjustmentComposer={null}
+              savedReviewComments={savedReviewCommentsForSidebar}
+              onSavedCommentNavigate={navigateFromSavedComment}
+            />
+          </aside>
+        ) : null}
       </div>
     </div>
   );

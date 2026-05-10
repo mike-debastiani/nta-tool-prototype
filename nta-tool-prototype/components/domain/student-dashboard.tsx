@@ -6,6 +6,7 @@ import { ArrowLeft, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApplicationStatusBadge } from "@/components/domain/application-status-badge";
+import { deriveCanonicalApplicationState } from "@/lib/application-status";
 import { type ApplicationRow } from "@/lib/test-flow-types";
 import { createClient } from "@/utils/supabase/client";
 
@@ -27,6 +28,10 @@ export function StudentDashboard({ applications }: StudentDashboardProps) {
     () => items.find((application) => application.id === selectedId) ?? null,
     [items, selectedId],
   );
+
+  const needsCorrection =
+    selected !== null
+    && deriveCanonicalApplicationState(selected) === "needs_adjustment";
 
   if (!selected) {
     return (
@@ -109,6 +114,13 @@ export function StudentDashboard({ applications }: StudentDashboardProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <ApplicationStatusBadge application={selected} audience="R1" />
+        {needsCorrection ? (
+          <Button asChild className="w-full sm:w-auto">
+            <Link href={`/portal/antragserstellung?applicationId=${selected.id}`}>
+              Korrekturen vornehmen
+            </Link>
+          </Button>
+        ) : null}
         {selected.data.personalData ? (
           <div className="rounded-md border bg-muted/20 p-3 text-xs">
             <p className="mb-1 font-medium text-foreground">Persönliche Angaben</p>

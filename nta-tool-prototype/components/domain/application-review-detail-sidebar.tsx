@@ -6,10 +6,14 @@ import {
   Copy,
   Hash,
   MessageSquare,
+  MoreHorizontal,
   User,
   UserCircle,
+  X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
 import { formatReviewSubmittedAt } from "@/lib/application-review-labels";
@@ -21,17 +25,60 @@ type DetailRow = {
   value: React.ReactNode;
 };
 
+export type SavedReviewComment = {
+  id: string;
+  /** Gleicher Schlüssel wie im Review-Workspace (Anpassung zurücksetzen / Liste filtern). */
+  blockId: string;
+  blockTitle: string;
+  body: string;
+  createdAt: number;
+};
+
+export type ReviewAdjustmentComposerProps = {
+  blockTitle: string;
+  draft: string;
+  onDraftChange: (value: string) => void;
+  onCancel: () => void;
+  onSave: () => void;
+  saveError: boolean;
+};
+
 type ApplicationReviewDetailSidebarProps = {
   application: WorkspaceApplication;
   statusMeta: ApplicationStatusMeta;
   /** Shown for „Zugewiesen an“ — typically the logged-in R2 reviewer in the prototype. */
   assignedReviewerLabel: string;
+  /** Aktiver Entwurf zur Anpassung (Sidebar nach „Anpassung anfordern“). */
+  adjustmentComposer: ReviewAdjustmentComposerProps | null;
+  /** Gespeicherte Block-Kommentare (Chronik unter dem Entwurf). */
+  savedReviewComments: SavedReviewComment[];
+  /** Z. B. R1 Korrekturflow: Sprung zum passenden Antragsschritt / Anker. */
+  onSavedCommentNavigate?: (blockId: string) => void;
 };
+
+function formatCommentTimestamp(ts: number): string {
+  const d = new Date(ts);
+  const now = new Date();
+  const sameDay =
+    d.getDate() === now.getDate()
+    && d.getMonth() === now.getMonth()
+    && d.getFullYear() === now.getFullYear();
+  if (sameDay) {
+    return `Heute, ${d.toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" })}`;
+  }
+  return d.toLocaleDateString("de-CH", {
+    day: "numeric",
+    month: "long",
+  });
+}
 
 export function ApplicationReviewDetailSidebar({
   application,
   statusMeta,
   assignedReviewerLabel,
+  adjustmentComposer,
+  savedReviewComments,
+  onSavedCommentNavigate,
 }: ApplicationReviewDetailSidebarProps) {
   const submitted = formatReviewSubmittedAt(application.data);
   const updated = new Date(application.updated_at).toLocaleDateString("de-CH", {
@@ -84,6 +131,31 @@ export function ApplicationReviewDetailSidebar({
     [application, assignedReviewerLabel, submitted, updated],
   );
 
+  if (adjustmentComposer) {
+    return (
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#fafafa]">
+        <header className="flex shrink-0 items-center gap-2 border-b border-border px-6 py-5">
+          <button
+            type="button"
+            onClick={() => adjustmentComposer.onCancel()}
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted"
+            aria-label="Kommentarentwurf schliessen"
+          >
+            <X className="size-6" aria-hidden />
+          </button>
+          <h2 className="text-lg font-medium leading-[27px] text-foreground">Kommentare</h2>
+        </header>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6 pt-6">
+          <ReviewAdjustmentDraftCard
+            reviewerName={assignedReviewerLabel}
+            composer={adjustmentComposer}
+            layout="fullColumn"
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#fafafa]">
       <div className="shrink-0 space-y-4 border-b border-border px-5 py-5">
@@ -115,22 +187,184 @@ export function ApplicationReviewDetailSidebar({
       </div>
 
       <section
-        className="flex min-h-0 flex-1 flex-col overflow-hidden px-5 pb-5 pt-4"
+        className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6 pt-6"
         aria-labelledby="review-comments-heading"
       >
-        <div className="mb-3 flex shrink-0 items-center gap-2">
-          <MessageSquare className="size-4 text-muted-foreground" aria-hidden />
-          <h3 id="review-comments-heading" className="text-sm font-semibold text-foreground">
+        <div className="mb-5 flex shrink-0 items-center gap-2">
+          <h3 id="review-comments-heading" className="text-lg font-medium leading-[27px] text-foreground">
             Kommentare
           </h3>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-dashed border-border bg-background/80 p-4">
-          <p className="text-sm text-muted-foreground">
-            Kommentarverlauf folgt — dieser Bereich ist scrollbar vorgesehen.
-          </p>
+        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
+          {savedReviewComments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Klicken Sie bei einem Block auf «Anpassung anfordern», um hier eine Bemerkung zu verfassen.
+            </p>
+          ) : null}
+          {savedReviewComments.map((c) => (
+            <SavedReviewCommentCard
+              key={c.id}
+              reviewerName={assignedReviewerLabel}
+              comment={c}
+              onNavigate={
+                onSavedCommentNavigate
+                  ? () => onSavedCommentNavigate(c.blockId)
+                  : undefined
+              }
+            />
+          ))}
         </div>
       </section>
     </div>
+  );
+}
+
+function ReviewAdjustmentDraftCard({
+  reviewerName,
+  composer,
+  layout = "embedded",
+}: {
+  reviewerName: string;
+  composer: ReviewAdjustmentComposerProps;
+  /** `fullColumn`: nutzt die volle Höhe der Sidebar-Spalte (Kommentarentwurf). */
+  layout?: "embedded" | "fullColumn";
+}) {
+  const nowLabel = formatCommentTimestamp(Date.now());
+  const full = layout === "fullColumn";
+
+  return (
+    <article
+      className={cn(
+        "flex flex-col gap-4 rounded-lg border-[1.5px] border-amber-400 bg-muted/80 p-4 shadow-xs",
+        full && "min-h-0 flex-1",
+      )}
+    >
+      <div className="flex shrink-0 items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-4">
+          <span className="flex shrink-0 rounded-full bg-background p-2.5">
+            <MessageSquare className="size-6 text-foreground" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-medium leading-5 text-foreground">{reviewerName}</p>
+            <p className="text-xs font-medium leading-4 text-muted-foreground">{nowLabel}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-background/80 hover:text-foreground"
+          aria-label="Weitere Optionen"
+        >
+          <MoreHorizontal className="size-4" aria-hidden />
+        </button>
+      </div>
+      <div
+        className={cn(
+          "flex min-h-0 flex-col gap-1",
+          full && "min-h-0 flex-1",
+        )}
+      >
+        <p className="shrink-0 text-xs font-medium leading-4 text-muted-foreground">
+          Block: {composer.blockTitle}
+        </p>
+        <Textarea
+          value={composer.draft}
+          onChange={(e) => {
+            composer.onDraftChange(e.target.value);
+          }}
+          placeholder="Erläutern Sie was konkret angepasst werden muss"
+          rows={full ? undefined : 6}
+          aria-invalid={composer.saveError}
+          className={cn(
+            "resize-y rounded-lg border-border bg-background text-sm shadow-xs",
+            full ? "min-h-[180px] flex-1" : "min-h-[149px]",
+            composer.saveError && "border-destructive",
+          )}
+        />
+        {composer.saveError ? (
+          <p className="shrink-0 text-xs text-destructive" role="alert">
+            Bitte geben Sie eine Bemerkung ein, bevor Sie speichern.
+          </p>
+        ) : null}
+      </div>
+      <div className="flex shrink-0 items-center justify-between gap-3 pt-0.5">
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-9 px-4 text-sm font-medium text-muted-foreground hover:text-foreground"
+          onClick={composer.onCancel}
+        >
+          Abbrechen
+        </Button>
+        <Button
+          type="button"
+          className="h-9 bg-amber-400 px-4 text-sm font-medium text-white hover:bg-amber-500"
+          onClick={composer.onSave}
+        >
+          Speichern
+        </Button>
+      </div>
+    </article>
+  );
+}
+
+function SavedReviewCommentCard({
+  reviewerName,
+  comment,
+  onNavigate,
+}: {
+  reviewerName: string;
+  comment: SavedReviewComment;
+  onNavigate?: () => void;
+}) {
+  return (
+    <article
+      className={cn(
+        "flex max-w-full flex-col gap-4 rounded-lg border border-border bg-muted/80 p-4",
+        onNavigate &&
+          "cursor-pointer transition-colors hover:border-border hover:bg-muted",
+      )}
+      onClick={onNavigate}
+      onKeyDown={
+        onNavigate
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onNavigate();
+              }
+            }
+          : undefined
+      }
+      role={onNavigate ? "button" : undefined}
+      tabIndex={onNavigate ? 0 : undefined}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-4">
+          <span className="flex shrink-0 rounded-full bg-background p-2.5">
+            <MessageSquare className="size-6 text-foreground" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-medium leading-5 text-foreground">{reviewerName}</p>
+            <p className="text-xs font-medium leading-4 text-muted-foreground">
+              {formatCommentTimestamp(comment.createdAt)}
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-background/80 hover:text-foreground"
+          aria-label="Weitere Optionen"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MoreHorizontal className="size-4" aria-hidden />
+        </button>
+      </div>
+      <div className="flex flex-col gap-1">
+        <p className="text-xs font-medium leading-4 text-muted-foreground">
+          Block: {comment.blockTitle}
+        </p>
+        <p className="whitespace-pre-wrap text-sm leading-5 text-foreground">{comment.body}</p>
+      </div>
+    </article>
   );
 }
 

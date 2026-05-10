@@ -43,6 +43,15 @@ export type ApplicationData = {
   };
   finalSubmitted?: boolean;
   submittedAt?: string;
+  /** Persistierte Review-Kommentare (R2 → R1 / Sidebar). */
+  reviewComments?: Array<{
+    id: string;
+    blockId: string;
+    blockTitle: string;
+    body: string;
+    /** ISO-8601 */
+    createdAt: string;
+  }>;
 };
 
 export type ApplicationRow = {

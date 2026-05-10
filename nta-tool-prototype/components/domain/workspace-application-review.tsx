@@ -1,14 +1,33 @@
 "use client";
 
-import { type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import {
+  type ComponentType,
+  type MouseEvent as ReactMouseEvent,
+  type ReactNode,
+  useState,
+} from "react";
 import {
   Check,
+  CheckCheck,
   ExternalLink,
   FileText,
-  SquarePen,
+  MessageSquarePlus,
+  MessageSquareText,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ApplicationReviewDetailSidebar } from "@/components/domain/application-review-detail-sidebar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  ApplicationReviewDetailSidebar,
+  type SavedReviewComment,
+} from "@/components/domain/application-review-detail-sidebar";
 import {
   APPLICATION_MEASURE_OPTIONS,
   APPLICATION_SCOPE_OPTIONS,
@@ -17,9 +36,42 @@ import { type WorkspaceApplication } from "@/lib/test-flow-types";
 import { cn } from "@/lib/utils";
 import { getApplicationStatusMeta } from "@/lib/application-status";
 
+type ReviewBlockId =
+  | "applicant"
+  | "attest"
+  | "definition"
+  | "duration"
+  | "scope"
+  | "lectureMeasures"
+  | "assessmentMeasures";
+
+type ReviewBlockPhase =
+  | { phase: "pending" }
+  | { phase: "confirmed" }
+  | { phase: "adjustment"; remark: string };
+
+const INITIAL_REVIEW_BLOCK_PHASES: Record<ReviewBlockId, ReviewBlockPhase> = {
+  applicant: { phase: "pending" },
+  attest: { phase: "pending" },
+  definition: { phase: "pending" },
+  duration: { phase: "pending" },
+  scope: { phase: "pending" },
+  lectureMeasures: { phase: "pending" },
+  assessmentMeasures: { phase: "pending" },
+};
+
+export type WorkspaceReviewViewMode =
+  | "interactive"
+  | "readonly_decision"
+  | "readonly_adjustment_pending";
+
 type WorkspaceApplicationReviewProps = {
   application: WorkspaceApplication;
   reviewerDisplayName: string;
+  /** Nur-Lese-Modi für andere Kanon-States (z. B. Entscheid, ausstehende Anpassung). */
+  viewMode?: WorkspaceReviewViewMode;
+  /** Optional: nach persistierender Aktion (z. B. Refresh der Antragsliste). */
+  onPersisted?: () => void;
 };
 
 function formatFileSize(sizeInBytes: number) {
@@ -30,10 +82,90 @@ function formatFileSize(sizeInBytes: number) {
 export function WorkspaceApplicationReview({
   application,
   reviewerDisplayName,
+  viewMode = "interactive",
+  onPersisted,
 }: WorkspaceApplicationReviewProps) {
+  const readOnly = viewMode !== "interactive";
   const data = application.data;
   const statusMeta = getApplicationStatusMeta(application, "R2");
   const def = data.applicationDefinition;
+
+  const [blockPhases, setBlockPhases] =
+    useState<Record<ReviewBlockId, ReviewBlockPhase>>(INITIAL_REVIEW_BLOCK_PHASES);
+
+  const [pendingComposer, setPendingComposer] = useState<{
+    blockId: ReviewBlockId;
+    blockTitle: string;
+    draft: string;
+  } | null>(null);
+  const [adjustmentRemarkSaveError, setAdjustmentRemarkSaveError] = useState(false);
+  const [savedReviewComments, setSavedReviewComments] = useState<SavedReviewComment[]>(
+    [],
+  );
+  const [adjustmentResetDialogBlockId, setAdjustmentResetDialogBlockId] =
+    useState<ReviewBlockId | null>(null);
+
+  const openAdjustmentComposer = (blockId: ReviewBlockId, blockTitle: string) => {
+    setAdjustmentRemarkSaveError(false);
+    setPendingComposer({ blockId, blockTitle, draft: "" });
+  };
+
+  const handleSaveAdjustmentFromSidebar = () => {
+    if (!pendingComposer) return;
+    const trimmed = pendingComposer.draft.trim();
+    if (!trimmed) {
+      setAdjustmentRemarkSaveError(true);
+      return;
+    }
+    adjustBlock(pendingComposer.blockId, trimmed);
+    setSavedReviewComments((prev) => [
+      {
+        id: crypto.randomUUID(),
+        blockId: pendingComposer.blockId,
+        blockTitle: pendingComposer.blockTitle,
+        body: trimmed,
+        createdAt: Date.now(),
+      },
+      ...prev,
+    ]);
+    setPendingComposer(null);
+    setAdjustmentRemarkSaveError(false);
+    onPersisted?.();
+  };
+
+  const confirmBlock = (id: ReviewBlockId) => {
+    setBlockPhases((prev) => ({ ...prev, [id]: { phase: "confirmed" } }));
+  };
+
+  const adjustBlock = (id: ReviewBlockId, remark: string) => {
+    setBlockPhases((prev) => ({
+      ...prev,
+      [id]: { phase: "adjustment", remark },
+    }));
+  };
+
+  const resetBlock = (id: ReviewBlockId) => {
+    setBlockPhases((prev) => ({ ...prev, [id]: { phase: "pending" } }));
+  };
+
+  const handleResetRequest = (id: ReviewBlockId) => {
+    const phase = blockPhases[id];
+    if (phase.phase === "adjustment") {
+      setAdjustmentResetDialogBlockId(id);
+      return;
+    }
+    resetBlock(id);
+  };
+
+  const confirmWithdrawAdjustment = () => {
+    const id = adjustmentResetDialogBlockId;
+    if (!id) return;
+    resetBlock(id);
+    setSavedReviewComments((prev) => prev.filter((c) => c.blockId !== id));
+    setPendingComposer((prev) => (prev?.blockId === id ? null : prev));
+    setAdjustmentRemarkSaveError(false);
+    setAdjustmentResetDialogBlockId(null);
+  };
 
   return (
     <div className="flex min-h-0 flex-1 w-full min-w-0 flex-row overflow-hidden">
@@ -46,14 +178,14 @@ export function WorkspaceApplicationReview({
         </div>
 
         {/* Step „Persönliche Angaben“ ohne Antragsart (Figma: Antragsteller) */}
-        <ReviewBlockCard
+        <InteractiveReviewBlock
+          readOnly={readOnly}
           title="Antragsteller"
-          footer={
-            <ReviewBlockActions
-              onAdjust={() => {}}
-              onConfirm={() => {}}
-            />
-          }
+          phase={blockPhases.applicant}
+          onConfirm={() => confirmBlock("applicant")}
+          onRequestAdjustment={() =>
+            openAdjustmentComposer("applicant", "Antragsteller")}
+          onReset={() => handleResetRequest("applicant")}
         >
           {data.personalData ? (
             <div className="grid gap-4 sm:grid-cols-2">
@@ -85,17 +217,17 @@ export function WorkspaceApplicationReview({
           ) : (
             <p className="text-sm text-muted-foreground">Keine Daten erfasst.</p>
           )}
-        </ReviewBlockCard>
+        </InteractiveReviewBlock>
 
         {/* Fachärztliches Attest */}
-        <ReviewBlockCard
+        <InteractiveReviewBlock
+          readOnly={readOnly}
           title="Fachärztliches Attest"
-          footer={
-            <ReviewBlockActions
-              onAdjust={() => {}}
-              onConfirm={() => {}}
-            />
-          }
+          phase={blockPhases.attest}
+          onConfirm={() => confirmBlock("attest")}
+          onRequestAdjustment={() =>
+            openAdjustmentComposer("attest", "Fachärztliches Attest")}
+          onReset={() => handleResetRequest("attest")}
         >
           {data.attestFiles?.length ? (
             <ul className="space-y-3">
@@ -113,7 +245,7 @@ export function WorkspaceApplicationReview({
           ) : (
             <p className="text-sm text-muted-foreground">Keine Dateien hochgeladen.</p>
           )}
-        </ReviewBlockCard>
+        </InteractiveReviewBlock>
 
         {/* Empfehlungsschreiben — gleiche Dateikachel wie Attest, ohne Aktionen */}
         <ReviewBlockCard title="Empfehlungsschreiben der Fachstelle" footer={null}>
@@ -133,57 +265,66 @@ export function WorkspaceApplicationReview({
         </ReviewBlockCard>
 
         {/* Antragsdefinition (Freitext) */}
-        <ReviewBlockCard
+        <InteractiveReviewBlock
+          readOnly={readOnly}
           title="Antragsdefinition"
-          footer={
-            <ReviewBlockActions
-              onAdjust={() => {}}
-              onConfirm={() => {}}
-            />
-          }
+          phase={blockPhases.definition}
+          onConfirm={() => confirmBlock("definition")}
+          onRequestAdjustment={() =>
+            openAdjustmentComposer("definition", "Antragsdefinition")}
+          onReset={() => handleResetRequest("definition")}
         >
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
             {def?.situationDescription?.trim()
               ? def.situationDescription
               : "Keine Beschreibung hinterlegt."}
           </p>
-        </ReviewBlockCard>
+        </InteractiveReviewBlock>
 
         {/* Gültigkeitsdauer */}
-        <ReviewBlockCard
+        <InteractiveReviewBlock
+          readOnly={readOnly}
           title="Gültigkeitsdauer des Nachteilsausgleiches"
-          footer={
-            <ReviewBlockActions
-              onAdjust={() => {}}
-              onConfirm={() => {}}
-            />
-          }
+          phase={blockPhases.duration}
+          onConfirm={() => confirmBlock("duration")}
+          onRequestAdjustment={() =>
+            openAdjustmentComposer(
+              "duration",
+              "Gültigkeitsdauer des Nachteilsausgleiches",
+            )}
+          onReset={() => handleResetRequest("duration")}
         >
           <DurationChoiceCompare selected={def?.duration} />
-        </ReviewBlockCard>
+        </InteractiveReviewBlock>
 
         {/* Geltungsbereich */}
-        <ReviewBlockCard
+        <InteractiveReviewBlock
+          readOnly={readOnly}
           title="Geltungsbereich des beantragten Nachteilsausgleiches"
-          footer={
-            <ReviewBlockActions
-              onAdjust={() => {}}
-              onConfirm={() => {}}
-            />
-          }
+          phase={blockPhases.scope}
+          onConfirm={() => confirmBlock("scope")}
+          onRequestAdjustment={() =>
+            openAdjustmentComposer(
+              "scope",
+              "Geltungsbereich des beantragten Nachteilsausgleiches",
+            )}
+          onReset={() => handleResetRequest("scope")}
         >
           <ScopeChecklist selected={def?.scopeSelections ?? []} />
-        </ReviewBlockCard>
+        </InteractiveReviewBlock>
 
         {/* Lehrveranstaltungen */}
-        <ReviewBlockCard
+        <InteractiveReviewBlock
+          readOnly={readOnly}
           title="Ausgleichsmassnahmen für Lehrveranstaltungen"
-          footer={
-            <ReviewBlockActions
-              onAdjust={() => {}}
-              onConfirm={() => {}}
-            />
-          }
+          phase={blockPhases.lectureMeasures}
+          onConfirm={() => confirmBlock("lectureMeasures")}
+          onRequestAdjustment={() =>
+            openAdjustmentComposer(
+              "lectureMeasures",
+              "Ausgleichsmassnahmen für Lehrveranstaltungen",
+            )}
+          onReset={() => handleResetRequest("lectureMeasures")}
         >
           <MeasureChecklist
             options={APPLICATION_MEASURE_OPTIONS}
@@ -191,17 +332,20 @@ export function WorkspaceApplicationReview({
             otherEnabled={def?.lectureOtherEnabled}
             otherText={def?.lectureOtherText}
           />
-        </ReviewBlockCard>
+        </InteractiveReviewBlock>
 
         {/* Leistungsnachweise */}
-        <ReviewBlockCard
+        <InteractiveReviewBlock
+          readOnly={readOnly}
           title="Ausgleichsmassnahmen für Leistungsnachweise"
-          footer={
-            <ReviewBlockActions
-              onAdjust={() => {}}
-              onConfirm={() => {}}
-            />
-          }
+          phase={blockPhases.assessmentMeasures}
+          onConfirm={() => confirmBlock("assessmentMeasures")}
+          onRequestAdjustment={() =>
+            openAdjustmentComposer(
+              "assessmentMeasures",
+              "Ausgleichsmassnahmen für Leistungsnachweise",
+            )}
+          onReset={() => handleResetRequest("assessmentMeasures")}
         >
           <MeasureChecklist
             options={APPLICATION_MEASURE_OPTIONS}
@@ -209,7 +353,7 @@ export function WorkspaceApplicationReview({
             otherEnabled={def?.assessmentOtherEnabled}
             otherText={def?.assessmentOtherText}
           />
-        </ReviewBlockCard>
+        </InteractiveReviewBlock>
 
         <div className="pt-2">
           <Button
@@ -232,8 +376,61 @@ export function WorkspaceApplicationReview({
           application={application}
           statusMeta={statusMeta}
           assignedReviewerLabel={reviewerDisplayName}
+          adjustmentComposer={
+            readOnly || !pendingComposer
+              ? null
+              : {
+                  blockTitle: pendingComposer.blockTitle,
+                  draft: pendingComposer.draft,
+                  onDraftChange: (value) => {
+                    setPendingComposer((prev) =>
+                      prev ? { ...prev, draft: value } : null,
+                    );
+                    setAdjustmentRemarkSaveError((err) =>
+                      err && value.trim() ? false : err,
+                    );
+                  },
+                  onCancel: () => {
+                    setPendingComposer(null);
+                    setAdjustmentRemarkSaveError(false);
+                  },
+                  onSave: handleSaveAdjustmentFromSidebar,
+                  saveError: adjustmentRemarkSaveError,
+                }
+          }
+          savedReviewComments={savedReviewComments}
         />
       </aside>
+
+      <Dialog
+        open={adjustmentResetDialogBlockId !== null}
+        onOpenChange={(open: boolean) => {
+          if (!open) setAdjustmentResetDialogBlockId(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Anpassung zurückziehen?</DialogTitle>
+            <DialogDescription>
+              Möchten Sie die angeforderte Anpassung für diesen Block wirklich
+              zurückziehen? Der zugehörige Kommentar wird aus der Kommentarliste
+              entfernt.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAdjustmentResetDialogBlockId(null)}
+            >
+              Abbrechen
+            </Button>
+            <Button type="button" variant="destructive" onClick={confirmWithdrawAdjustment}>
+              Zurückziehen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -289,22 +486,37 @@ function ReviewBlockCard({
   title,
   children,
   footer,
+  footerTone = "default",
 }: {
   title: string;
   children: ReactNode;
   footer?: ReactNode | null;
+  /** Nur die unterste Leiste: farbiger Balken wie Figma-Review-States. */
+  footerTone?: "default" | "confirmed" | "adjustment";
 }) {
+  /** Gleiche vertikale Polsterung über alle States (`py-3`) — verhindert Höhensprung beim Wechsel der Fußzeile. */
+  const footerClassName =
+    footerTone === "default"
+      ? "flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/20 px-6 py-3"
+      : footerTone === "confirmed"
+        ? "flex flex-wrap items-center justify-between gap-3 border-t border-teal-600 bg-teal-600 px-3 py-3 dark:bg-teal-600"
+        : "flex flex-wrap items-center justify-between gap-3 border-t border-amber-400 bg-amber-400 px-3 py-3";
+
+  const sectionClassName = cn(
+    "overflow-hidden rounded-xl bg-card shadow-xs",
+    footerTone === "default" && "border border-border",
+    footerTone === "confirmed" &&
+      "border-[1.5px] border-teal-600 dark:border-teal-500",
+    footerTone === "adjustment" && "border-[1.5px] border-amber-400",
+  );
+
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+    <section className={sectionClassName}>
       <div className="border-b border-border px-6 py-5">
         <h2 className="text-lg font-medium text-foreground">{title}</h2>
       </div>
       <div className="space-y-4 px-6 py-5">{children}</div>
-      {footer ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/20 px-6 py-4">
-          {footer}
-        </div>
-      ) : null}
+      {footer ? <div className={footerClassName}>{footer}</div> : null}
     </section>
   );
 }
@@ -320,22 +532,164 @@ function ReviewBlockActions({
     <>
       <Button
         type="button"
-        variant="outline"
-        className="gap-2 border-amber-400/80 bg-amber-50 text-amber-950 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-100 dark:hover:bg-amber-950/50"
+        variant="ghost"
+        className={cn(
+          "h-9 gap-2 rounded-lg border-0 bg-amber-400 px-4 text-white shadow-xs",
+          "hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500",
+          "focus-visible:text-white focus-visible:ring-amber-400/45",
+          "dark:bg-amber-400 dark:text-white dark:hover:text-white",
+        )}
         onClick={onAdjust}
       >
-        <SquarePen className="size-4" aria-hidden />
+        <MessageSquarePlus className="size-4" aria-hidden />
         Anpassung anfordern
       </Button>
       <Button
         type="button"
-        className="gap-2 bg-teal-600 text-white hover:bg-teal-700"
+        className="h-9 gap-2 bg-teal-600 text-white hover:bg-teal-700"
         onClick={onConfirm}
       >
         <Check className="size-4" aria-hidden />
         Bestätigen
       </Button>
     </>
+  );
+}
+
+/** Ghost-Button auf farbigem Footer; gleiche Höhe wie ReviewBlockActions (`h-9`). */
+function ReviewBlockFooterResetButton({ onReset }: { onReset: () => void }) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      className={cn(
+        "h-9 shrink-0 gap-1.5 px-2.5 text-sm font-medium text-white",
+        "hover:bg-destructive hover:text-destructive-foreground",
+        "focus-visible:ring-white/80",
+      )}
+      onClick={onReset}
+    >
+      <RotateCcw className="size-4 shrink-0" aria-hidden />
+      Zurücksetzen
+    </Button>
+  );
+}
+
+function ReviewBlockFooterStatus({
+  icon: Icon,
+  label,
+}: {
+  icon: ComponentType<{ className?: string }>;
+  label: string;
+}) {
+  return (
+    <span
+      className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium text-white"
+      role="status"
+    >
+      <Icon className="size-4 shrink-0" aria-hidden />
+      {label}
+    </span>
+  );
+}
+
+function InteractiveReviewBlock({
+  title,
+  phase,
+  onConfirm,
+  onRequestAdjustment,
+  onReset,
+  readOnly = false,
+  children,
+}: {
+  title: string;
+  phase: ReviewBlockPhase;
+  onConfirm: () => void;
+  onRequestAdjustment: () => void;
+  onReset: () => void;
+  readOnly?: boolean;
+  children: ReactNode;
+}) {
+  if (phase.phase === "confirmed") {
+    return (
+      <ReviewBlockCard
+        title={title}
+        footerTone="confirmed"
+        footer={
+          readOnly ? (
+            <div className="flex w-full justify-end">
+              <ReviewBlockFooterStatus
+                icon={CheckCheck}
+                label="Reviewed & Bestätigt"
+              />
+            </div>
+          ) : (
+            <>
+              <ReviewBlockFooterResetButton onReset={onReset} />
+              <ReviewBlockFooterStatus
+                icon={CheckCheck}
+                label="Reviewed & Bestätigt"
+              />
+            </>
+          )
+        }
+      >
+        {children}
+      </ReviewBlockCard>
+    );
+  }
+
+  if (phase.phase === "adjustment") {
+    return (
+      <ReviewBlockCard
+        title={title}
+        footerTone="adjustment"
+        footer={
+          readOnly ? (
+            <div className="flex w-full justify-end">
+              <ReviewBlockFooterStatus
+                icon={MessageSquareText}
+                label="Anpassung angefordert"
+              />
+            </div>
+          ) : (
+            <>
+              <ReviewBlockFooterResetButton onReset={onReset} />
+              <ReviewBlockFooterStatus
+                icon={MessageSquareText}
+                label="Anpassung angefordert"
+              />
+            </>
+          )
+        }
+      >
+        <>
+          {children}
+          <div className="rounded-lg border border-amber-200 bg-amber-50/90 px-4 py-3 dark:border-amber-900/40 dark:bg-amber-950/35">
+            <p className="text-xs font-medium text-muted-foreground">Bemerkung</p>
+            <p className="mt-1 whitespace-pre-wrap text-sm leading-5 text-foreground">{phase.remark}</p>
+          </div>
+        </>
+      </ReviewBlockCard>
+    );
+  }
+
+  return (
+    <ReviewBlockCard
+      title={title}
+      footer={
+        readOnly ? (
+          <p className="text-xs text-muted-foreground">Nur Ansicht.</p>
+        ) : (
+          <ReviewBlockActions
+            onAdjust={onRequestAdjustment}
+            onConfirm={onConfirm}
+          />
+        )
+      }
+    >
+      {children}
+    </ReviewBlockCard>
   );
 }
 
