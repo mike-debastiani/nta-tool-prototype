@@ -1,7 +1,6 @@
 import { requireUserProfile } from "@/lib/auth";
 import { RoleDashboardLayout } from "@/components/domain/role-dashboard-layout";
 import { WorkspaceTestFlow } from "@/components/domain/workspace-test-flow";
-import { SignOutButton } from "@/components/domain/sign-out-button";
 import { createClient } from "@/utils/supabase/server";
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
 
@@ -25,7 +24,6 @@ export default async function WorkspaceTestPage() {
     <RoleDashboardLayout
       role="R2"
       userLabel={`Eingeloggt als ${profile.display_name ?? profile.email}`}
-      actions={<SignOutButton />}
     >
       <div className="mx-auto w-full max-w-5xl space-y-6">
         <div>

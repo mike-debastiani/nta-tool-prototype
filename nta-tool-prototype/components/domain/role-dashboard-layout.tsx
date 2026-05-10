@@ -10,11 +10,15 @@ import {
   CircleHelp,
   ClipboardList,
   House,
+  Inbox,
   PieChart,
+  Search,
   Settings,
   User,
 } from "lucide-react";
+import { WorkspaceAccountMenu } from "@/components/domain/workspace-account-menu";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 type RoleDashboardLayoutProps = {
@@ -22,6 +26,11 @@ type RoleDashboardLayoutProps = {
   userLabel: string;
   children: ReactNode;
   actions?: ReactNode;
+  /**
+   * Workspace: unread count for the Inbox badge (only rendered when provided and positive).
+   * Omit until inbox/notifications are implemented.
+   */
+  inboxNotificationCount?: number;
 };
 
 type NavItem = {
@@ -38,6 +47,7 @@ export function RoleDashboardLayout({
   userLabel,
   children,
   actions,
+  inboxNotificationCount,
 }: RoleDashboardLayoutProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -129,7 +139,15 @@ export function RoleDashboardLayout({
             )}
           >
             <div className={cn("flex items-center gap-3", collapsed && "justify-center gap-0")}>
-              <p className="text-xl font-semibold text-foreground">Logo</p>
+              <div
+                className="size-9 shrink-0 rounded-lg bg-zinc-300"
+                aria-hidden
+              />
+              {!collapsed ? (
+                <h3 className="text-lg font-semibold leading-none tracking-tight text-foreground">
+                  Logo
+                </h3>
+              ) : null}
             </div>
             {!collapsed ? (
               <Button
@@ -230,8 +248,46 @@ export function RoleDashboardLayout({
         </div>
       </aside>
 
-      <main className="flex-1">
-        <div className="flex min-h-screen flex-col px-6 py-8">
+      <main className="flex min-h-screen flex-1 flex-col">
+        {role === "R2" ? (
+          <div className="flex items-center justify-end gap-3 border-b border-border bg-background px-6 py-3">
+            <div className="relative w-full max-w-xs shrink-0">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
+              <Input
+                type="search"
+                placeholder="Suchen…"
+                className="h-9 rounded-lg border-zinc-200 bg-zinc-50 pl-9 shadow-xs placeholder:text-muted-foreground focus-visible:bg-background dark:border-zinc-700 dark:bg-zinc-900/50"
+                aria-label="Suchen"
+              />
+            </div>
+            <Link
+              href="/workspace/test?view=inbox"
+              className={cn(
+                "relative inline-flex h-9 shrink-0 items-center gap-2 rounded-md px-3 text-sm text-zinc-700 transition-colors",
+                "hover:bg-zinc-200/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              )}
+            >
+              <Inbox className="size-4 shrink-0" aria-hidden />
+              <span>Inbox</span>
+              {inboxNotificationCount != null && inboxNotificationCount > 0 ? (
+                <span
+                  className={cn(
+                    "inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1",
+                    "text-[10px] font-semibold tabular-nums leading-none text-primary-foreground",
+                  )}
+                  aria-label={`${inboxNotificationCount} Benachrichtigungen`}
+                >
+                  {inboxNotificationCount > 99 ? "99+" : inboxNotificationCount}
+                </span>
+              ) : null}
+            </Link>
+            <WorkspaceAccountMenu initials="FS" />
+          </div>
+        ) : null}
+        <div className="flex flex-1 flex-col px-6 py-8">
           <header className="mb-6 flex items-center justify-between gap-3">
             <p className="text-sm text-muted-foreground">{userLabel}</p>
             {actions}
