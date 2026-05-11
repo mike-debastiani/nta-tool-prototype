@@ -4,7 +4,13 @@ import { type ReviewWorkspaceBlockId } from "@/lib/review-workspace-blocks";
 /** Persistenter Snapshot nach R2-Weiterreichung (Review nach Einreichung). */
 export type R2ReviewBlockSnapshot =
   | { phase: "confirmed" }
-  | { phase: "adjustment"; remark: string };
+  | { phase: "adjustment"; remark: string }
+  /**
+   * R1 hat angeforderte Anpassungen erledigt und zurück an die Fachstelle
+   * gegeben: Block erneut wie „frisches“ Review, Bemerkung bleibt sichtbar
+   * bis R2 erneut „Anpassung anfordert“ (dann ersetzt).
+   */
+  | { phase: "pending_after_adjustment"; lockedRemark: string };
 
 export type R2PostSubmitReview = {
   /** ISO-8601 */
@@ -20,6 +26,8 @@ export type ReviewCommentPersisted = {
   body: string;
   /** ISO-8601 */
   createdAt: string;
+  /** Anzeigename der Person, die den Kommentar verfasst hat (typisch R2). */
+  authorDisplayName?: string;
 };
 
 export type RecommendationWorkspaceReview = {
@@ -155,7 +163,8 @@ export type ApplicationData = {
 export type R2ReviewDraftBlock =
   | { phase: "pending" }
   | { phase: "confirmed" }
-  | { phase: "adjustment"; remark: string };
+  | { phase: "adjustment"; remark: string }
+  | { phase: "pending_after_adjustment"; lockedRemark: string };
 
 export type R2ReviewDraft = {
   /** ISO-8601 */

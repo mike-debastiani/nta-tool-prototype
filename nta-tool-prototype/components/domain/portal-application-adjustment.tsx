@@ -6,6 +6,7 @@ import {
   type ChangeEvent,
   type DragEvent,
   type ReactNode,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -14,7 +15,6 @@ import {
 import {
   ArrowLeft,
   CheckCheck,
-  Loader2,
   MessageSquareText,
   PencilLine,
   Save,
@@ -60,12 +60,18 @@ import {
 } from "@/lib/review-workspace-blocks";
 import {
   type ApplicationData,
+  type ApplicationRow,
   type R1AdjustmentResolution,
   type WorkspaceApplication,
 } from "@/lib/test-flow-types";
 import { createClient } from "@/utils/supabase/client";
 import { cn } from "@/lib/utils";
 import { getApplicationStatusMeta } from "@/lib/application-status";
+import {
+  APPLICATION_ROW_BROADCAST_EVENT,
+  applicationRowBroadcastChannelName,
+} from "@/lib/application-realtime-sync";
+import { r1AllRequestedAdjustmentsSaved } from "@/lib/r1-adjustment-release";
 
 type R2BlockPhase =
   | { phase: "confirmed" }
@@ -153,6 +159,7 @@ function readSavedComments(data: ApplicationData): SavedReviewComment[] {
     blockTitle: c.blockTitle,
     body: c.body,
     createdAt: Date.parse(c.createdAt),
+    authorDisplayName: c.authorDisplayName,
   }));
 }
 
@@ -231,13 +238,6 @@ function workspaceRowWithSanitizedAttests(row: WorkspaceApplication): WorkspaceA
   };
 }
 
-function formatAutosaveTime(ts: number): string {
-  return new Intl.DateTimeFormat("de-CH", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(ts));
-}
-
 type AutosaveStatus =
   | { kind: "idle" }
   | { kind: "pending" }
@@ -258,7 +258,6 @@ type PortalApplicationAdjustmentProps = {
 export function PortalApplicationAdjustment({
   application,
   applicantDisplayName,
-  allowAdjustments = false,
   onPersisted,
 }: PortalApplicationAdjustmentProps) {
   const router = useRouter();
@@ -279,6 +278,9 @@ export function PortalApplicationAdjustment({
     Record<ReviewWorkspaceBlockId, R1AdjustmentResolution>
   >;
   const statusMeta = getApplicationStatusMeta(snapshot, "R1");
+  // Entscheidend ist der aktuelle kanonische Status des Snapshots (Realtime),
+  // nicht nur der Server-Prop-Zustand beim ersten Render.
+  const canEditBlocks = statusMeta.canonicalState === "needs_adjustment";
 
   const [editing, setEditing] = useState<EditingState | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -286,14 +288,166 @@ export function PortalApplicationAdjustment({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [releaseSubmitting, setReleaseSubmitting] = useState(false);
+  const [releaseError, setReleaseError] = useState<string | null>(null);
   const [autosave, setAutosave] = useState<AutosaveStatus>({ kind: "idle" });
   const [autosaveBaseline, setAutosaveBaseline] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const applicationIdRef = useRef<string>(application.id);
+  applicationIdRef.current = snapshot.id;
+
+  const editingRef = useRef<EditingState | null>(null);
+  useEffect(() => {
+    editingRef.current = editing;
+  }, [editing]);
+
+  const applyRemoteApplicationRow = useCallback(
+    (nextRow: ApplicationRow) => {
+      setSnapshot((prev) => {
+        if (prev.id !== nextRow.id) return prev;
+        if (prev.status === nextRow.status && prev.updated_at === nextRow.updated_at) {
+          return prev;
+        }
+
+        if (prev.status !== nextRow.status) {
+          // Re-sync Server Components + `key` on `PortalAntragserstellungPage` (status suffix).
+          queueMicrotask(() => {
+            router.refresh();
+          });
+        }
+
+        const next = workspaceRowWithSanitizedAttests({
+          ...prev,
+          ...(nextRow as unknown as Partial<WorkspaceApplication>),
+        });
+        const nextStatusMeta = getApplicationStatusMeta(next, "R1");
+        const stillEditable = nextStatusMeta.canonicalState === "needs_adjustment";
+
+        if (editingRef.current && !stillEditable) {
+          queueMicrotask(() => {
+            setEditing(null);
+            setErrors({});
+            setSaveError(null);
+            setAutosave({ kind: "idle" });
+            setAutosaveBaseline(null);
+          });
+        }
+
+        return next;
+      });
+    },
+    [router],
+  );
+
+  const refreshSnapshotFromServer = useCallback(async () => {
+    const applicationId = applicationIdRef.current;
+    if (!applicationId) return;
+    const { data: row, error } = await supabase
+      .from("applications")
+      .select("id,applicant_id,status,data,created_at,updated_at")
+      .eq("id", applicationId)
+      .maybeSingle<ApplicationRow>();
+    if (error || !row) return;
+    applyRemoteApplicationRow(row);
+  }, [applyRemoteApplicationRow, supabase]);
+
+  useEffect(() => {
+    const applicationId = snapshot.id;
+    if (!applicationId) return;
+
+    const channel = supabase
+      .channel(`portal-antrag-${applicationId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "applications",
+          filter: `id=eq.${applicationId}`,
+        },
+        (payload) => {
+          if (payload.eventType === "DELETE") {
+            router.push("/portal/home");
+            return;
+          }
+
+          const nextRow = payload.new as ApplicationRow | null;
+          if (!nextRow?.id || nextRow.id !== applicationId) return;
+          applyRemoteApplicationRow(nextRow);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [applyRemoteApplicationRow, router, snapshot.id, supabase]);
+
+  /** Broadcast works without adding `applications` to `supabase_realtime`. */
+  useEffect(() => {
+    const applicationId = snapshot.id;
+    if (!applicationId) return;
+
+    const channel = supabase
+      .channel(applicationRowBroadcastChannelName(applicationId), {
+        config: {
+          private: false,
+          broadcast: { ack: false, self: true },
+        },
+      })
+      .on("broadcast", { event: APPLICATION_ROW_BROADCAST_EVENT }, () => {
+        void refreshSnapshotFromServer();
+      })
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [refreshSnapshotFromServer, snapshot.id, supabase]);
+
+  /** Fallback if neither postgres_changes nor broadcast arrives (misconfig / offline). */
+  useEffect(() => {
+    const applicationId = snapshot.id;
+    if (!applicationId) return;
+
+    const tick = () => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") {
+        return;
+      }
+      void refreshSnapshotFromServer();
+    };
+
+    void refreshSnapshotFromServer();
+    const interval = window.setInterval(tick, 1500);
+    return () => window.clearInterval(interval);
+  }, [refreshSnapshotFromServer, snapshot.id]);
 
   const startEdit = (blockId: ReviewWorkspaceBlockId) => {
-    if (!allowAdjustments) return;
+    if (!canEditBlocks) return;
     setSaveError(null);
     setErrors({});
+
+    /** Erneut bearbeiten: gespeicherte Resolution entfernen → UI wieder To do / gelb bis zum nächsten Speichern. */
+    const resMap = snapshot.data.r1AdjustmentResolutions ?? {};
+    if (resMap[blockId]) {
+      const nextRes = { ...resMap };
+      delete nextRes[blockId];
+      const nextData: ApplicationData = {
+        ...snapshot.data,
+        r1AdjustmentResolutions: nextRes,
+      };
+      setSnapshot((prev) =>
+        prev.id !== snapshot.id ? prev : { ...prev, data: nextData },
+      );
+      void supabase
+        .from("applications")
+        .update({ data: nextData })
+        .eq("id", snapshot.id)
+        .then(() => {
+          onPersisted?.();
+        });
+    }
+
     if (blockId === "applicant") {
       const nextEdit: EditingState = {
         blockId,
@@ -394,7 +548,7 @@ export function PortalApplicationAdjustment({
   };
 
   useEffect(() => {
-    if (!allowAdjustments || !editing || saving) return;
+    if (!canEditBlocks || !editing || saving) return;
 
     const signature = JSON.stringify(editing);
     if (signature === autosaveBaseline) return;
@@ -432,10 +586,10 @@ export function PortalApplicationAdjustment({
       cancelled = true;
       window.clearTimeout(timeout);
     };
-  }, [editing, allowAdjustments, autosaveBaseline, saving, data, snapshot.id, supabase]);
+  }, [editing, canEditBlocks, autosaveBaseline, saving, data, snapshot.id, supabase]);
 
   const persistEdit = async (edit: EditingState) => {
-    if (!allowAdjustments) return;
+    if (!canEditBlocks) return;
     const blockErrors = validateBlock(edit);
     if (Object.keys(blockErrors).length > 0) {
       setErrors(blockErrors);
@@ -476,6 +630,39 @@ export function PortalApplicationAdjustment({
     onPersisted?.();
   };
 
+  const releaseAdjustmentsForReview = async () => {
+    setReleaseError(null);
+    setReleaseSubmitting(true);
+    try {
+      const res = await fetch("/api/applications/r1-release-adjustments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ applicationId: snapshot.id }),
+      });
+      let payload: { error?: string } = {};
+      try {
+        payload = (await res.json()) as { error?: string };
+      } catch {
+        /* ignore */
+      }
+      if (!res.ok) {
+        setReleaseError(
+          typeof payload.error === "string"
+            ? payload.error
+            : `Anfrage fehlgeschlagen (${res.status})`,
+        );
+        return;
+      }
+      router.refresh();
+      onPersisted?.();
+    } catch (e) {
+      setReleaseError(e instanceof Error ? e.message : "Netzwerkfehler");
+    } finally {
+      setReleaseSubmitting(false);
+    }
+  };
+
   const deleteApplication = async () => {
     const shouldDelete = window.confirm(
       "Möchten Sie diesen Antrag wirklich zurückziehen? Der Antrag wird aus dem System entfernt; dieser Vorgang kann nicht rückgängig gemacht werden.",
@@ -510,22 +697,34 @@ export function PortalApplicationAdjustment({
     });
   };
 
-  const savedComments = readSavedComments(data);
+  const savedComments = useMemo(() => {
+    const raw = readSavedComments(data);
+    if (!canEditBlocks) return raw;
+    return raw.map((c) => {
+      const bid = c.blockId as ReviewWorkspaceBlockId;
+      if (forwarded[bid]?.phase !== "adjustment") return c;
+      return {
+        ...c,
+        adjustmentResolutionStatus: resolutions[bid] ? ("done" as const) : ("todo" as const),
+      };
+    });
+  }, [data, canEditBlocks, forwarded, resolutions]);
 
   const blockProps = (id: ReviewWorkspaceBlockId): R1BlockShellProps => ({
     blockId: id,
     title: BLOCK_TITLES[id],
     forwarded: forwarded[id] ?? null,
     resolution: resolutions[id] ?? null,
-    isEditing: allowAdjustments && editing?.blockId === id,
-    canEdit: allowAdjustments,
+    isEditing: canEditBlocks && editing?.blockId === id,
+    canEdit: canEditBlocks,
     onStartEdit: () => startEdit(id),
     onCancel: cancelEdit,
     onSave: () => editing && void persistEdit(editing),
     saving,
     saveError: editing?.blockId === id ? saveError : null,
     remarkComment: commentForBlock(data, id),
-    autosave: editing?.blockId === id ? autosave : { kind: "idle" },
+    autosaveErrorMessage:
+      editing?.blockId === id && autosave.kind === "error" ? autosave.message : null,
   });
 
   return (
@@ -554,7 +753,7 @@ export function PortalApplicationAdjustment({
                   {shortApplicationRef(snapshot.id)}
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {allowAdjustments ? (
+                  {canEditBlocks ? (
                     <>
                       Die Fachstelle hat zu einzelnen Blöcken Anpassungen
                       angefordert. Klicken Sie bei einem markierten Block auf{" "}
@@ -651,7 +850,7 @@ export function PortalApplicationAdjustment({
               releasedAt={data.recommendation.releasedAt}
               authorDisplayName={
                 data.recommendation.releasedBy?.trim()
-                || "Fachstelle für Nachteilsausgleich"
+                || "NTA Fachstelle"
               }
             />
           ) : null}
@@ -828,19 +1027,12 @@ export function PortalApplicationAdjustment({
             )}
           </R1BlockShell>
 
-          {allowAdjustments ? (
-            <p className="pt-2 text-xs text-muted-foreground">
-              Sie können Anpassungen jederzeit erneut öffnen und überarbeiten,
-              solange der Antrag im Status «Anpassung erforderlich» ist.
-            </p>
-          ) : null}
-
-          <div className="mt-6 flex flex-col items-start gap-3">
+          <div className="mt-8 flex w-full flex-row flex-wrap items-center justify-between gap-3">
             <Button
               type="button"
               variant="ghost"
               className={cn(
-                "gap-2 rounded-full px-4 text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/15",
+                "h-10 gap-2 rounded-full px-4 text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/15",
                 "focus-visible:border-destructive/30 focus-visible:ring-destructive/20",
               )}
               onClick={() => void deleteApplication()}
@@ -849,7 +1041,24 @@ export function PortalApplicationAdjustment({
               <Trash2 className="size-4 shrink-0" aria-hidden />
               {deleting ? "Wird zurückgezogen…" : "Antrag zurückziehen"}
             </Button>
+            {canEditBlocks && r1AllRequestedAdjustmentsSaved(data) ? (
+              <Button
+                type="button"
+                className="h-10 shrink-0 bg-zinc-900 px-5 text-white hover:bg-zinc-800 disabled:opacity-60"
+                disabled={releaseSubmitting || saving || Boolean(editing)}
+                onClick={() => void releaseAdjustmentsForReview()}
+              >
+                {releaseSubmitting
+                  ? "Wird freigegeben…"
+                  : "Anpassungen für Review freigeben"}
+              </Button>
+            ) : null}
           </div>
+          {releaseError ? (
+            <p className="mt-2 text-sm text-destructive" role="alert">
+              {releaseError}
+            </p>
+          ) : null}
           </div>
         </div>
       </div>
@@ -862,7 +1071,7 @@ export function PortalApplicationAdjustment({
           adjustmentComposer={null}
           savedReviewComments={savedComments}
           onSavedCommentNavigate={navigateFromComment}
-          showCommentsSection={allowAdjustments}
+          showCommentsSection={canEditBlocks}
         />
       </aside>
     </div>
@@ -885,8 +1094,8 @@ type R1BlockShellProps = {
   saveError: string | null;
   /** Neuester R2-Kommentar zu diesem Block (für Anzeige in der Karte). */
   remarkComment: SavedReviewComment | null;
-  /** Autosave-Status — nur relevant wenn `isEditing`. */
-  autosave: AutosaveStatus;
+  /** Nur bei fehlgeschlagenem Hintergrund-Autosave (kein Hinweis bei Erfolg). */
+  autosaveErrorMessage: string | null;
 };
 
 function R1BlockShell({
@@ -902,7 +1111,7 @@ function R1BlockShell({
   saveError,
   remarkComment,
   blockId,
-  autosave,
+  autosaveErrorMessage,
   children,
 }: R1BlockShellProps & { children: ReactNode }) {
   const anchorId = reviewWorkspaceAnchorId(blockId);
@@ -941,24 +1150,26 @@ function R1BlockShell({
             >
               Abbrechen
             </Button>
-            <div className="flex items-center gap-3 sm:justify-end">
-              <AutosaveBadge status={autosave} />
-              <Button
-                type="button"
-                className="h-9 gap-2 bg-zinc-900 text-white hover:bg-zinc-800"
-                onClick={onSave}
-                disabled={saving}
-              >
-                <Save className="size-4" aria-hidden />
-                {saving ? "Wird gespeichert…" : "Anpassung speichern"}
-              </Button>
-            </div>
+            <Button
+              type="button"
+              className="h-9 gap-2 border border-white/80 bg-white text-amber-950 shadow-sm hover:bg-amber-50 hover:text-amber-950 focus-visible:ring-white/90 disabled:opacity-60 sm:ml-auto"
+              onClick={onSave}
+              disabled={saving}
+            >
+              <Save className="size-4 text-amber-800" aria-hidden />
+              {saving ? "Wird gespeichert…" : "Anpassung speichern"}
+            </Button>
           </div>
         }
       >
         <>
           {remark ? <RemarkBox remark={remark} /> : null}
           {children}
+          {autosaveErrorMessage ? (
+            <p className="text-sm text-destructive" role="alert">
+              {autosaveErrorMessage}
+            </p>
+          ) : null}
           {saveError ? (
             <p className="text-sm text-destructive" role="alert">
               {saveError}
@@ -990,29 +1201,34 @@ function R1BlockShell({
     );
   }
 
-  // Adjustment requested + R1 hat Anpassung gespeichert: amber Rahmen + Marker „Anpassung erfolgt".
+  // Adjustment requested + R1 hat gespeichert: wie Fachstellen-Teal, aber abgeschwächt; Done-Pill kräftig teal.
   if (isAdjustmentRequested && isResolved) {
     return (
       <ReviewBlockCard
         anchorId={anchorId}
         title={title}
-        footerTone="adjustment"
+        footerTone="adjustment_done"
         footer={
           <div className="flex w-full flex-wrap items-center justify-between gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <span className="inline-flex shrink-0 rounded-full bg-teal-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm ring-1 ring-teal-950/20 dark:bg-teal-600 dark:text-white">
+                Done
+              </span>
+              <span className="text-sm font-medium text-white drop-shadow-sm">
+                Anpassung gespeichert
+              </span>
+            </div>
             {canEdit ? (
               <Button
                 type="button"
                 variant="ghost"
-                className="h-9 gap-2 px-3 text-white hover:bg-amber-500 hover:text-white focus-visible:ring-white/80"
+                className="h-9 gap-2 px-3 text-white hover:bg-white/20 hover:text-white focus-visible:ring-white/40"
                 onClick={onStartEdit}
               >
                 <PencilLine className="size-4" aria-hidden />
                 Erneut bearbeiten
               </Button>
-            ) : (
-              <span />
-            )}
-            <ReviewBlockFooterStatus icon={CheckCheck} label="Anpassung gespeichert" />
+            ) : null}
           </div>
         }
       >
@@ -1025,7 +1241,7 @@ function R1BlockShell({
     );
   }
 
-  // Adjustment requested, noch nicht bearbeitet: amber + „Anpassung vornehmen".
+  // Adjustment requested, noch nicht bearbeitet: gelb + To-do-Pill + „Anpassung vornehmen".
   if (isAdjustmentRequested) {
     return (
       <ReviewBlockCard
@@ -1034,17 +1250,22 @@ function R1BlockShell({
         footerTone="adjustment"
         footer={
           <div className="flex w-full flex-wrap items-center justify-between gap-3">
-            <ReviewBlockFooterStatus
-              icon={MessageSquareText}
-              label={canEdit ? "Anpassung erforderlich" : "Anpassung angefordert"}
-            />
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <span className="inline-flex shrink-0 rounded-full bg-white/25 px-2.5 py-1 text-xs font-semibold text-white">
+                To do
+              </span>
+              <span className="inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-white">
+                <MessageSquareText className="size-4 shrink-0" aria-hidden />
+                {canEdit ? "Anpassung erforderlich" : "Anpassung angefordert"}
+              </span>
+            </div>
             {canEdit ? (
               <Button
                 type="button"
-                className="h-9 gap-2 bg-zinc-900 text-white hover:bg-zinc-800"
+                className="h-9 gap-2 border border-white/80 bg-white text-amber-950 shadow-sm hover:bg-amber-50 hover:text-amber-950 focus-visible:ring-white/90"
                 onClick={onStartEdit}
               >
-                <PencilLine className="size-4" aria-hidden />
+                <PencilLine className="size-4 text-amber-800" aria-hidden />
                 Anpassung vornehmen
               </Button>
             ) : null}
@@ -1082,63 +1303,13 @@ function RemarkBox({ remark }: { remark: string }) {
 
 function ResolvedNotice() {
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-teal-300 bg-teal-50/80 px-4 py-3 text-sm text-teal-950 dark:border-teal-700/60 dark:bg-teal-950/30">
-      <CheckCheck className="size-4 shrink-0 text-teal-600" aria-hidden />
+    <div className="flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50/90 px-4 py-3 text-sm text-teal-800 dark:border-teal-800/45 dark:bg-teal-950/30 dark:text-teal-100/90">
+      <CheckCheck className="size-4 shrink-0 text-teal-600 dark:text-teal-400" aria-hidden />
       <span>
         Sie haben diesen Block angepasst. Die Bemerkung der Fachstelle bleibt
         zur Nachvollziehbarkeit sichtbar.
       </span>
     </div>
-  );
-}
-
-function AutosaveBadge({ status }: { status: AutosaveStatus }) {
-  if (status.kind === "idle") return null;
-
-  if (status.kind === "pending") {
-    return (
-      <span
-        className="text-xs text-white/85"
-        aria-live="polite"
-        title="Änderungen werden in Kürze automatisch gespeichert"
-      >
-        Autosave aktiv …
-      </span>
-    );
-  }
-
-  if (status.kind === "saving") {
-    return (
-      <span
-        className="flex items-center gap-1.5 text-xs text-white/85"
-        aria-live="polite"
-      >
-        <Loader2 className="size-3 animate-spin" aria-hidden />
-        Speichert …
-      </span>
-    );
-  }
-
-  if (status.kind === "saved") {
-    return (
-      <span
-        className="text-xs text-white/85"
-        aria-live="polite"
-        title={`Zwischengespeichert um ${formatAutosaveTime(status.at)}`}
-      >
-        Gespeichert · {formatAutosaveTime(status.at)}
-      </span>
-    );
-  }
-
-  return (
-    <span
-      className="text-xs font-medium text-amber-100"
-      role="alert"
-      title={status.message}
-    >
-      Autosave fehlgeschlagen
-    </span>
   );
 }
 

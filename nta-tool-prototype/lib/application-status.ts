@@ -47,6 +47,7 @@ const canonicalStatusLabel: Record<CanonicalApplicationState, string> = {
 };
 
 const canonicalStatusLabelR2: Partial<Record<CanonicalApplicationState, string>> = {
+  in_review: "Review erforderlich",
   needs_adjustment: "Anpassung angefordert",
 };
 

@@ -13,6 +13,7 @@ import {
   deriveCanonicalApplicationState,
   getApplicationStatusMeta,
 } from "@/lib/application-status";
+import { workspaceReviewPostSubmitHydrationKey } from "@/lib/workspace-review-hydration-key";
 import {
   WorkspaceApplicationReview,
   type WorkspaceReviewViewMode,
@@ -275,7 +276,7 @@ export function WorkspaceTestFlow({
   ) {
     return (
       <WorkspaceApplicationReview
-        key={`${selectedApplication.id}-${selectedApplication.status}`}
+        key={`${selectedApplication.id}-${selectedApplication.status}-${workspaceReviewPostSubmitHydrationKey(selectedApplication)}`}
         application={selectedApplication}
         reviewerDisplayName={reviewerDisplayName}
         viewMode={workspaceReviewMode}

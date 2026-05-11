@@ -18,6 +18,10 @@ import { cn } from "@/lib/utils";
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
 import { formatReviewSubmittedAt } from "@/lib/application-review-labels";
 import { type ApplicationStatusMeta } from "@/lib/application-status";
+import {
+  REVIEW_WORKSPACE_BLOCK_IDS,
+  type ReviewWorkspaceBlockId,
+} from "@/lib/review-workspace-blocks";
 
 type DetailRow = {
   icon: React.ComponentType<{ className?: string }>;
@@ -32,7 +36,16 @@ export type SavedReviewComment = {
   blockTitle: string;
   body: string;
   createdAt: number;
+  /** Verfasser des Kommentars (persistiert; nicht der aktuell eingeloggte Viewer). */
+  authorDisplayName?: string;
+  /**
+   * Nur R1 «Anpassung erforderlich»: ob der Block noch offen ist oder bereits gespeichert wurde
+   * (`data.r1AdjustmentResolutions`). Unset z. B. in der R2-Review-Ansicht.
+   */
+  adjustmentResolutionStatus?: "todo" | "done";
 };
+
+const REVIEW_COMMENT_AUTHOR_FALLBACK = "NTA Fachstelle";
 
 export type ReviewAdjustmentComposerProps = {
   blockTitle: string;
@@ -120,7 +133,7 @@ export function ApplicationReviewDetailSidebar({
         label: "Zugewiesen an",
         value: (
           <span className="inline-flex items-center gap-2 text-foreground">
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-teal-600 text-[10px] font-semibold text-white">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-[10px] leading-none font-semibold text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100">
               {initialsFromName(assignedReviewerLabel)}
             </span>
             <span className="truncate">{assignedReviewerLabel}</span>
@@ -139,6 +152,26 @@ export function ApplicationReviewDetailSidebar({
     ],
     [application, assignedReviewerLabel, submitted, updated],
   );
+
+  const orderedSavedReviewComments = useMemo(() => {
+    const orderIndex = new Map<ReviewWorkspaceBlockId, number>(
+      REVIEW_WORKSPACE_BLOCK_IDS.map((id, idx) => [id, idx]),
+    );
+
+    return [...savedReviewComments].sort((a, b) => {
+      const aIdx = orderIndex.get(a.blockId as ReviewWorkspaceBlockId);
+      const bIdx = orderIndex.get(b.blockId as ReviewWorkspaceBlockId);
+
+      // Comments zu unbekannten Block-IDs ans Ende schieben.
+      const ai = aIdx ?? Number.MAX_SAFE_INTEGER;
+      const bi = bIdx ?? Number.MAX_SAFE_INTEGER;
+
+      if (ai !== bi) return ai - bi;
+
+      // Gleicher Block: stabile Sortierung nach Erstellzeit.
+      return a.createdAt - b.createdAt;
+    });
+  }, [savedReviewComments]);
 
   if (adjustmentComposer) {
     return (
@@ -211,15 +244,14 @@ export function ApplicationReviewDetailSidebar({
             </h3>
           </div>
           <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
-            {savedReviewComments.length === 0 ? (
+            {orderedSavedReviewComments.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 {emptyCommentsLabel}
               </p>
             ) : null}
-            {savedReviewComments.map((c) => (
+            {orderedSavedReviewComments.map((c) => (
               <SavedReviewCommentCard
                 key={c.id}
-                reviewerName={assignedReviewerLabel}
                 comment={c}
                 onNavigate={
                   onSavedCommentNavigate
@@ -269,7 +301,10 @@ function ReviewAdjustmentDraftCard({
     <article
       className={cn(
         "flex flex-col gap-4 rounded-lg border-[1.5px] border-amber-400 bg-muted/80 p-4 shadow-xs",
-        full && "min-h-0 flex-1",
+        // In `fullColumn` mode the card should not stretch to fill the column
+        // height. We want "height on hug" based on the textarea content,
+        // while keeping the textarea's min-height intact.
+        full && "min-h-0",
       )}
     >
       <div className="flex shrink-0 items-start justify-between gap-2">
@@ -293,7 +328,7 @@ function ReviewAdjustmentDraftCard({
       <div
         className={cn(
           "flex min-h-0 flex-col gap-1",
-          full && "min-h-0 flex-1",
+          full && "min-h-0",
         )}
       >
         <p className="shrink-0 text-xs font-medium leading-4 text-muted-foreground">
@@ -345,20 +380,32 @@ function ReviewAdjustmentDraftCard({
 }
 
 function SavedReviewCommentCard({
-  reviewerName,
   comment,
   onNavigate,
 }: {
-  reviewerName: string;
   comment: SavedReviewComment;
   onNavigate?: () => void;
 }) {
+  const trimmedAuthor = comment.authorDisplayName?.trim();
+  const authorName = trimmedAuthor || REVIEW_COMMENT_AUTHOR_FALLBACK;
+  /** Ohne persistierten Namen (Legacy): fest „NF“ für Fachstelle, nicht aus dem Langtext abgeleitet. */
+  const authorInitials = trimmedAuthor ? initialsFromName(trimmedAuthor) : "NF";
+  const adjStatus = comment.adjustmentResolutionStatus;
+
   return (
     <article
       className={cn(
-        "flex max-w-full flex-col gap-4 rounded-lg border border-border bg-muted/80 p-4",
+        "flex max-w-full flex-col gap-4 rounded-lg border bg-muted/80 p-4",
+        adjStatus === "todo" && "border-[1.5px] border-amber-400",
+        adjStatus === "done" &&
+          "border-[1.5px] border-solid [border-color:rgb(13_148_136/0.6)] dark:[border-color:rgb(20_184_166/0.6)]",
+        !adjStatus && "border border-border",
+        onNavigate && "cursor-pointer transition-colors hover:bg-muted",
+        onNavigate && adjStatus === "todo" && "hover:border-amber-500",
         onNavigate &&
-          "cursor-pointer transition-colors hover:border-border hover:bg-muted",
+          adjStatus === "done" &&
+          "hover:[border-color:rgb(13_148_136/0.8)] dark:hover:[border-color:rgb(20_184_166/0.8)]",
+        onNavigate && !adjStatus && "hover:border-border",
       )}
       onClick={onNavigate}
       onKeyDown={
@@ -376,11 +423,14 @@ function SavedReviewCommentCard({
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-1 items-center gap-4">
-          <span className="flex shrink-0 rounded-full bg-background p-2.5">
-            <MessageSquare className="size-6 text-foreground" aria-hidden />
+          <span
+            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-sm leading-none font-semibold text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100"
+            aria-hidden
+          >
+            {authorInitials}
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-medium leading-5 text-foreground">{reviewerName}</p>
+            <p className="text-sm font-medium leading-5 text-foreground">{authorName}</p>
             <p className="text-xs font-medium leading-4 text-muted-foreground">
               {formatCommentTimestamp(comment.createdAt)}
             </p>
@@ -396,9 +446,21 @@ function SavedReviewCommentCard({
         </button>
       </div>
       <div className="flex flex-col gap-1">
-        <p className="text-xs font-medium leading-4 text-muted-foreground">
-          Block: {comment.blockTitle}
-        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-xs font-medium leading-4 text-muted-foreground">
+            Block: {comment.blockTitle}
+          </p>
+          {adjStatus === "todo" ? (
+            <span className="inline-flex shrink-0 items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold leading-none text-amber-950 dark:bg-amber-950/40 dark:text-amber-50">
+              To do
+            </span>
+          ) : null}
+          {adjStatus === "done" ? (
+            <span className="inline-flex shrink-0 items-center rounded-full bg-teal-600 px-2 py-0.5 text-[11px] font-semibold leading-none text-white shadow-sm ring-1 ring-teal-700/20 dark:bg-teal-600 dark:text-white">
+              Done
+            </span>
+          ) : null}
+        </div>
         <p className="whitespace-pre-wrap text-sm leading-5 text-foreground">{comment.body}</p>
       </div>
     </article>

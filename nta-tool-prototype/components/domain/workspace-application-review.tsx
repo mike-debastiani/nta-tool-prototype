@@ -64,11 +64,14 @@ import {
   type ApplicationStatus,
   getApplicationStatusMeta,
 } from "@/lib/application-status";
+import { broadcastApplicationRowUpdated } from "@/lib/application-realtime-sync";
+import { workspaceReviewPostSubmitHydrationKey } from "@/lib/workspace-review-hydration-key";
 
 type ReviewBlockPhase =
   | { phase: "pending" }
   | { phase: "confirmed" }
-  | { phase: "adjustment"; remark: string };
+  | { phase: "adjustment"; remark: string }
+  | { phase: "pending_after_adjustment"; displayRemark: string };
 
 const INITIAL_REVIEW_BLOCK_PHASES: Record<
   ReviewWorkspaceBlockId,
@@ -83,6 +86,11 @@ const INITIAL_REVIEW_BLOCK_PHASES: Record<
   assessmentMeasures: { phase: "pending" },
 };
 
+function safeIsoMs(iso: string): number {
+  const t = new Date(iso).getTime();
+  return Number.isFinite(t) ? t : 0;
+}
+
 function hydrateBlockPhasesFromApplication(
   application: WorkspaceApplication,
 ): Record<ReviewWorkspaceBlockId, ReviewBlockPhase> {
@@ -94,11 +102,27 @@ function hydrateBlockPhasesFromApplication(
     };
     for (const id of REVIEW_WORKSPACE_BLOCK_IDS) {
       const entry = forwarded[id];
-      if (!entry) continue;
-      if (entry.phase === "confirmed") {
+      if (!entry || typeof entry !== "object" || !("phase" in entry)) continue;
+      const phase = entry.phase;
+      if (phase === "confirmed") {
         next[id] = { phase: "confirmed" };
+      } else if (phase === "pending_after_adjustment") {
+        const lr =
+          "lockedRemark" in entry && typeof entry.lockedRemark === "string"
+            ? entry.lockedRemark
+            : "";
+        next[id] = {
+          phase: "pending_after_adjustment",
+          displayRemark: lr,
+        };
+      } else if (phase === "adjustment") {
+        const remark =
+          "remark" in entry && typeof entry.remark === "string" ? entry.remark : "";
+        next[id] = { phase: "adjustment", remark };
+      } else if (phase === "pending") {
+        next[id] = { phase: "pending" };
       } else {
-        next[id] = { phase: "adjustment", remark: entry.remark };
+        next[id] = { phase: "pending" };
       }
     }
     return next;
@@ -111,10 +135,26 @@ function hydrateBlockPhasesFromApplication(
     };
     for (const id of REVIEW_WORKSPACE_BLOCK_IDS) {
       const entry = draft[id];
-      if (!entry) continue;
-      if (entry.phase === "pending") next[id] = { phase: "pending" };
-      else if (entry.phase === "confirmed") next[id] = { phase: "confirmed" };
-      else next[id] = { phase: "adjustment", remark: entry.remark };
+      if (!entry || typeof entry !== "object" || !("phase" in entry)) continue;
+      const phase = entry.phase;
+      if (phase === "pending") next[id] = { phase: "pending" };
+      else if (phase === "confirmed") next[id] = { phase: "confirmed" };
+      else if (phase === "pending_after_adjustment") {
+        const lr =
+          "lockedRemark" in entry && typeof entry.lockedRemark === "string"
+            ? entry.lockedRemark
+            : "";
+        next[id] = {
+          phase: "pending_after_adjustment",
+          displayRemark: lr,
+        };
+      } else if (phase === "adjustment") {
+        const remark =
+          "remark" in entry && typeof entry.remark === "string" ? entry.remark : "";
+        next[id] = { phase: "adjustment", remark };
+      } else {
+        next[id] = { phase: "pending" };
+      }
     }
     return next;
   }
@@ -134,7 +174,8 @@ function hydrateSavedCommentsFromApplication(
       blockId: c.blockId,
       blockTitle: c.blockTitle,
       body: c.body,
-      createdAt: new Date(c.createdAt).getTime(),
+      createdAt: safeIsoMs(c.createdAt),
+      authorDisplayName: c.authorDisplayName,
     }));
   }
 
@@ -149,7 +190,8 @@ function hydrateSavedCommentsFromApplication(
     blockId: c.blockId,
     blockTitle: c.blockTitle,
     body: c.body,
-    createdAt: new Date(c.createdAt).getTime(),
+    createdAt: safeIsoMs(c.createdAt),
+    authorDisplayName: c.authorDisplayName,
   }));
 }
 
@@ -163,6 +205,11 @@ function draftBlocksFromPhases(
       blocks[id] = { phase: "pending" };
     } else if (p.phase === "confirmed") {
       blocks[id] = { phase: "confirmed" };
+    } else if (p.phase === "pending_after_adjustment") {
+      blocks[id] = {
+        phase: "pending_after_adjustment",
+        lockedRemark: p.displayRemark,
+      };
     } else {
       blocks[id] = { phase: "adjustment", remark: p.remark };
     }
@@ -195,6 +242,11 @@ function snapshotBlocksForForwardPostSubmit(
     const p = phases[id];
     if (p.phase === "adjustment") {
       out[id] = { phase: "adjustment", remark: p.remark };
+    } else if (p.phase === "pending_after_adjustment") {
+      out[id] = {
+        phase: "pending_after_adjustment",
+        lockedRemark: p.displayRemark,
+      };
     } else if (p.phase === "confirmed") {
       out[id] = { phase: "confirmed" };
     } else {
@@ -364,6 +416,20 @@ export function WorkspaceApplicationReview({
     }
   }, [application.status]);
 
+  const postSubmitHydrationKey =
+    workspaceReviewPostSubmitHydrationKey(application);
+  const prevPostSubmitHydrationKeyRef = useRef(postSubmitHydrationKey);
+
+  useEffect(() => {
+    if (prevPostSubmitHydrationKeyRef.current === postSubmitHydrationKey) {
+      return;
+    }
+    prevPostSubmitHydrationKeyRef.current = postSubmitHydrationKey;
+    setBlockPhases(hydrateBlockPhasesFromApplication(application));
+    setSavedReviewComments(hydrateSavedCommentsFromApplication(application));
+    suppressDraftSaveRef.current = false;
+  }, [application, postSubmitHydrationKey]);
+
   const persistReviewDraft = useCallback(async () => {
     const app = applicationRef.current;
     if (suppressDraftSaveRef.current) return;
@@ -380,6 +446,9 @@ export function WorkspaceApplicationReview({
         blockTitle: c.blockTitle,
         body: c.body,
         createdAt: new Date(c.createdAt).toISOString(),
+        ...(c.authorDisplayName?.trim()
+          ? { authorDisplayName: c.authorDisplayName.trim() }
+          : {}),
       })),
     };
 
@@ -439,15 +508,17 @@ export function WorkspaceApplicationReview({
       return;
     }
     adjustBlock(pendingComposer.blockId, trimmed);
+    const bid = pendingComposer.blockId;
     setSavedReviewComments((prev) => [
       {
         id: crypto.randomUUID(),
-        blockId: pendingComposer.blockId,
+        blockId: bid,
         blockTitle: pendingComposer.blockTitle,
         body: trimmed,
         createdAt: Date.now(),
+        authorDisplayName: reviewerDisplayName.trim() || undefined,
       },
-      ...prev,
+      ...prev.filter((c) => c.blockId !== bid),
     ]);
     setPendingComposer(null);
     setAdjustmentRemarkSaveError(false);
@@ -533,6 +604,9 @@ export function WorkspaceApplicationReview({
       blockTitle: c.blockTitle,
       body: c.body,
       createdAt: new Date(c.createdAt).toISOString(),
+      ...(c.authorDisplayName?.trim()
+        ? { authorDisplayName: c.authorDisplayName.trim() }
+        : {}),
     }));
 
     const workspaceReview: RecommendationWorkspaceReview = {
@@ -568,6 +642,7 @@ export function WorkspaceApplicationReview({
       );
       return;
     }
+    await broadcastApplicationRowUpdated(supabase, application.id);
     onPersisted?.();
   };
 
@@ -681,7 +756,7 @@ export function WorkspaceApplicationReview({
             releasedAt={data.recommendation?.releasedAt}
             authorDisplayName={
               data.recommendation?.releasedBy?.trim()
-              || "Fachstelle für Nachteilsausgleich"
+              || "NTA Fachstelle"
             }
             variant="card"
           />
@@ -807,36 +882,31 @@ export function WorkspaceApplicationReview({
           <div className="pt-2">{bottomAction}</div>
         ) : compactReadOnlyBlocks && showReleasedRecommendationBlock ? null : (
         <div className="flex w-full flex-col items-end gap-2 pt-2">
-          <Button
-            type="button"
-            className="h-11 gap-2 bg-zinc-900 px-5 text-white hover:bg-zinc-800 sm:min-w-[280px]"
-            disabled={readOnly || isForwarding}
-            onClick={() => void handleForwardReview()}
-          >
-            {isForwarding ? (
-              <>
-                <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
-                Wird weitergeleitet …
-              </>
-            ) : forwardCtaHasAdjustment ? (
-              "Anpassungen weiterleiten"
-            ) : (
-              "Antrag weiterreichen"
-            )}
-          </Button>
-          {readOnly ? (
-            <p className="max-w-full text-right text-xs text-muted-foreground">
-              {viewMode === "readonly_decision"
-                ? "Dieser Antrag liegt zur Entscheid vor; das Review ist abgeschlossen."
-                : "Die Anpassungen wurden an die Studierendenperson weitergegeben. Sie können hier nichts mehr ändern."}
-            </p>
+          {!readOnly && allReviewBlocksDone ? (
+            <Button
+              type="button"
+              className="h-11 gap-2 bg-zinc-900 px-5 text-white hover:bg-zinc-800 sm:min-w-[280px]"
+              disabled={isForwarding}
+              onClick={() => void handleForwardReview()}
+            >
+              {isForwarding ? (
+                <>
+                  <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
+                  Wird weitergeleitet …
+                </>
+              ) : forwardCtaHasAdjustment ? (
+                "Anpassungen weiterleiten"
+              ) : (
+                "Antrag weiterreichen"
+              )}
+            </Button>
           ) : null}
           {draftPersistError && !readOnly ? (
             <p className="mt-2 text-sm text-destructive" role="alert">
               Entwurf konnte nicht gespeichert werden: {draftPersistError}
             </p>
           ) : null}
-          {forwardError ? (
+          {!readOnly && forwardError ? (
             <p className="mt-2 text-sm text-destructive" role="alert">
               {forwardError}
             </p>
@@ -1018,6 +1088,38 @@ function InteractiveReviewBlock({
         }
       >
         {children}
+      </ReviewBlockCard>
+    );
+  }
+
+  if (phase.phase === "pending_after_adjustment") {
+    return (
+      <ReviewBlockCard
+        anchorId={anchorId}
+        title={title}
+        footerTone="default"
+        footer={
+          readOnly && compactReadOnly ? null : readOnly ? (
+            <p className="text-xs text-muted-foreground">Nur Ansicht.</p>
+          ) : (
+            <ReviewBlockActions
+              onAdjust={onRequestAdjustment}
+              onConfirm={onConfirm}
+            />
+          )
+        }
+      >
+        <>
+          {children}
+          <div className="rounded-lg border border-amber-200 bg-amber-50/90 px-4 py-3 dark:border-amber-900/40 dark:bg-amber-950/35">
+            <p className="text-xs font-medium text-muted-foreground">
+              Bemerkung der Fachstelle (Anpassung)
+            </p>
+            <p className="mt-1 whitespace-pre-wrap text-sm leading-5 text-foreground">
+              {phase.displayRemark}
+            </p>
+          </div>
+        </>
       </ReviewBlockCard>
     );
   }

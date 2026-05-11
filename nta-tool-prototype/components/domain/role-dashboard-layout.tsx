@@ -314,7 +314,7 @@ export function RoleDashboardLayout({
                   </span>
                 ) : null}
               </Link>
-              <WorkspaceAccountMenu initials="FS" />
+              <WorkspaceAccountMenu initials="NF" />
             </div>
           </div>
         ) : null}

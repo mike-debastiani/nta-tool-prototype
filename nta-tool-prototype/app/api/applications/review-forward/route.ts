@@ -71,7 +71,12 @@ export async function POST(request: Request) {
   }
 
   const base = dataWithoutLegacyReviewRoots(row.data);
-
+  /**
+   * `r1AdjustmentResolutions` darf hier nicht entfallen oder geleert werden:
+   * Trigger `enforce_r2_application_update_columns` erlaubt R2 nur Änderungen
+   * unter `data.recommendation` / `data.consultation`. Markierungen werden
+   * ohnehin bei R1-Freigabe (`r1-release-adjustments`) und durch R1-Saves neu geführt.
+   */
   const payload = {
     status: nextStatus,
     data: {

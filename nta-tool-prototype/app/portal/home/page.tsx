@@ -20,7 +20,10 @@ export default async function PortalHomePage() {
       userLabel={`Eingeloggt als ${profile.display_name ?? profile.email}`}
     >
       <div className="mx-auto w-full max-w-5xl">
-        <StudentDashboard applications={(data as ApplicationRow[]) ?? []} />
+        <StudentDashboard
+          applications={(data as ApplicationRow[]) ?? []}
+          applicantId={profile.id}
+        />
       </div>
     </RoleDashboardLayout>
   );

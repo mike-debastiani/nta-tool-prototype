@@ -167,8 +167,14 @@ export function shortApplicationRef(id: string) {
  * - `confirmed`: teal — R2 hat bestätigt bzw. R1 zeigt einen vom Kommentar
  *   nicht betroffenen Block.
  * - `adjustment`: amber — R2 hat eine Anpassung angefordert.
+ * - `adjustment_done`: gleiche Teal-Farbe wie `confirmed`, Rahmen und unterer Balken mit
+ *   60 % Deckkraft (R1-Anpassung gespeichert vs. volle Fachstellen-Bestätigung).
  */
-export type ReviewBlockFooterTone = "default" | "confirmed" | "adjustment";
+export type ReviewBlockFooterTone =
+  | "default"
+  | "confirmed"
+  | "adjustment"
+  | "adjustment_done";
 
 export function ReviewBlockCard({
   title,
@@ -194,13 +200,17 @@ export function ReviewBlockCard({
       ? "flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/20 px-6 py-3"
       : footerTone === "confirmed"
         ? "flex flex-wrap items-center justify-between gap-3 border-t border-teal-600 bg-teal-600 px-3 py-3 dark:bg-teal-600"
-        : "flex flex-wrap items-center justify-between gap-3 border-t border-amber-400 bg-amber-400 px-3 py-3";
+        : footerTone === "adjustment_done"
+          ? "flex flex-wrap items-center justify-between gap-3 border-0 border-t border-solid bg-[rgb(13_148_136/0.6)] px-3 py-3 [border-top-color:rgb(13_148_136/0.6)] dark:bg-[rgb(20_184_166/0.6)] dark:[border-top-color:rgb(20_184_166/0.6)]"
+          : "flex flex-wrap items-center justify-between gap-3 border-t border-amber-400 bg-amber-400 px-3 py-3";
 
   const sectionClassName = cn(
     "scroll-mt-6 overflow-hidden rounded-xl bg-card shadow-xs",
     borderTone === "default" && "border border-border",
     borderTone === "confirmed" &&
       "border-[1.5px] border-teal-600 dark:border-teal-500",
+    borderTone === "adjustment_done" &&
+      "border-[1.5px] border-solid [border-color:rgb(13_148_136/0.6)] dark:[border-color:rgb(20_184_166/0.6)]",
     borderTone === "adjustment" && "border-[1.5px] border-amber-400",
   );
 

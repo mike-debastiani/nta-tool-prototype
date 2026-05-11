@@ -1198,7 +1198,7 @@ export function NtaAntragDesktop({
     application?.data?.recommendation?.releasedHtml?.trim() ?? "";
   const releasedRecommendationAuthor =
     application?.data?.recommendation?.releasedBy?.trim()
-    || "Fachstelle für Nachteilsausgleich";
+    || "NTA Fachstelle";
   const bookedSlot = application?.data?.consultation?.slot ?? selectedBookingSlot;
   const bookedDateShort = selectedBookingDate.toLocaleDateString("de-CH", {
     day: "2-digit",
@@ -1281,15 +1281,40 @@ export function NtaAntragDesktop({
       application?.data?.recommendation?.workspaceReview?.forwardedComments
       ?? application?.data?.reviewComments;
     if (!raw?.length) return [];
-    return raw.map((c) => ({
-      id: c.id,
-      blockId: c.blockId,
-      blockTitle: c.blockTitle,
-      body: c.body,
-      createdAt: Date.parse(c.createdAt),
-    }));
+    const blocks =
+      application?.data?.recommendation?.workspaceReview?.postSubmit?.blocks
+      ?? application?.data?.r2PostSubmitReview?.blocks;
+    const resolutions = application?.data?.r1AdjustmentResolutions ?? {};
+    const canonical = application
+      ? deriveCanonicalApplicationState(application)
+      : null;
+    return raw.map((c) => {
+      const bid = c.blockId as ReviewWorkspaceBlockId;
+      const phase = blocks?.[bid]?.phase;
+      const showAdjPills =
+        canonical === "needs_adjustment" && phase === "adjustment";
+      return {
+        id: c.id,
+        blockId: c.blockId,
+        blockTitle: c.blockTitle,
+        body: c.body,
+        createdAt: Date.parse(c.createdAt),
+        authorDisplayName: c.authorDisplayName,
+        ...(showAdjPills
+          ? {
+              adjustmentResolutionStatus: resolutions[bid]
+                ? ("done" as const)
+                : ("todo" as const),
+            }
+          : {}),
+      };
+    });
   }, [
+    application,
     application?.data?.recommendation?.workspaceReview?.forwardedComments,
+    application?.data?.recommendation?.workspaceReview?.postSubmit?.blocks,
+    application?.data?.r2PostSubmitReview?.blocks,
+    application?.data?.r1AdjustmentResolutions,
     application?.data?.reviewComments,
   ]);
 
