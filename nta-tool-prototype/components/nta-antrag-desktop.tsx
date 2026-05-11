@@ -10,6 +10,7 @@ import {
   type DragEvent,
   type ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 import {
   Calendar,
   Circle,
@@ -34,6 +35,7 @@ import {
   Clock3,
   ArrowLeft,
   ArrowRight,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -47,6 +49,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
+import {
+  createAttestFileEntryFromBrowserFile,
+  formatReviewFileSize,
+  mergeAttestFilesForHydration,
+  revokeAttestFileUrls,
+  ReviewFileRow,
+  sanitizeAttestFilesForDatabase,
+} from "@/components/domain/application-review-blocks";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -67,7 +77,13 @@ import {
   reviewWorkspaceAnchorId,
   type ReviewWorkspaceBlockId,
 } from "@/lib/review-workspace-blocks";
-import { type ApplicationRow, type WorkspaceApplication } from "@/lib/test-flow-types";
+import {
+  type ApplicationData,
+  type ApplicationDefinitionData,
+  type ApplicationRow,
+  type R1PortalFlowStep,
+  type WorkspaceApplication,
+} from "@/lib/test-flow-types";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
 
@@ -76,6 +92,8 @@ export type NtaAntragUploadFile = {
   name: string;
   size: number;
   type: string;
+  /** Lokale Vorschau (`blob:`) oder Storage-URL zum Öffnen in neuem Tab. */
+  url?: string;
 };
 
 export type NtaAntragFormData = {
@@ -107,6 +125,11 @@ type NtaAntragDesktopProps = {
   initialData?: Partial<NtaAntragFormData>;
   onContinue?: (data: NtaAntragFormData) => void;
   forceNew?: boolean;
+  /**
+   * Nach bereits eingereichtem Antrag: „Schliessen“ speichert den Entwurf in
+   * der DB und springt zum Dashboard (`/portal/home`).
+   */
+  enableDraftExitToDashboard?: boolean;
 };
 
 type StepOneField =
@@ -217,8 +240,21 @@ function mergeWithDefaults(value?: Partial<NtaAntragFormData>): NtaAntragFormDat
   };
 }
 
-function formatFileSize(sizeInBytes: number) {
-  return `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;
+/** Atteste aus persistiertem Antrag; `blob:` aus der DB ist immer ungültig. */
+function mapRemoteAttestFiles(
+  files: ApplicationData["attestFiles"] | undefined,
+): NtaAntragUploadFile[] {
+  return (files ?? []).map((file) => ({
+    id: file.id ?? crypto.randomUUID(),
+    name: file.name ?? "Datei",
+    size: file.size ?? 0,
+    type: file.type ?? "",
+    ...(typeof file.url === "string"
+      && file.url.length > 0
+      && !file.url.startsWith("blob:")
+      ? { url: file.url }
+      : {}),
+  }));
 }
 
 function formatMatrikelInput(value: string) {
@@ -262,6 +298,85 @@ function isStepFourComplete(data: ApplicationFormData) {
   if (data.assessmentMeasures.length === 0 && !data.assessmentOtherEnabled) return false;
   if (data.assessmentOtherEnabled && !data.assessmentOtherText.trim()) return false;
   return true;
+}
+
+const R1_PORTAL_FLOW_STEPS: R1PortalFlowStep[] = [
+  "step1",
+  "step2",
+  "step3_booking",
+  "step3_booked",
+  "step3_recommendation",
+  "step4_application",
+  "step5_overview",
+];
+
+function isR1PortalFlowStep(value: unknown): value is R1PortalFlowStep {
+  return typeof value === "string" && (R1_PORTAL_FLOW_STEPS as string[]).includes(value);
+}
+
+function applicationFormDataFromRow(
+  row: ApplicationRow | undefined,
+  forceNew: boolean,
+): ApplicationFormData {
+  if (forceNew || !row) return DEFAULT_APPLICATION_FORM_DATA;
+  const ad =
+    row.data?.r1DraftApplicationDefinition ?? row.data?.applicationDefinition;
+  if (!ad) return DEFAULT_APPLICATION_FORM_DATA;
+  const measureKeys: ApplicationMeasureKey[] = ["m1", "m2", "m3", "m4"];
+  const pickMeasures = (raw: string[] | undefined) =>
+    (raw ?? []).filter((k): k is ApplicationMeasureKey =>
+      measureKeys.includes(k as ApplicationMeasureKey),
+    );
+  return {
+    situationDescription: ad.situationDescription ?? "",
+    duration: (ad.duration as ApplicationDuration | "") ?? "",
+    scopeSelections: [...(ad.scopeSelections ?? [])],
+    lectureMeasures: pickMeasures(ad.lectureMeasures),
+    lectureOtherEnabled: Boolean(ad.lectureOtherEnabled),
+    lectureOtherText: ad.lectureOtherText ?? "",
+    assessmentMeasures: pickMeasures(ad.assessmentMeasures),
+    assessmentOtherEnabled: Boolean(ad.assessmentOtherEnabled),
+    assessmentOtherText: ad.assessmentOtherText ?? "",
+  };
+}
+
+function readBookingUiFromApplication(
+  row: ApplicationRow | undefined,
+  forceNew: boolean,
+): { displayedMonth: Date; selectedBookingDate: Date; selectedBookingSlot: string } {
+  if (forceNew || !row?.data?.r1DraftBookingUi) {
+    return {
+      displayedMonth: INITIAL_BOOKING_MONTH,
+      selectedBookingDate: INITIAL_BOOKING_DATE,
+      selectedBookingSlot: BOOKING_SLOTS[4],
+    };
+  }
+  const ui = row.data.r1DraftBookingUi;
+  const dm = new Date(ui.displayedMonthIso);
+  const sd = new Date(ui.selectedBookingDateIso);
+  return {
+    displayedMonth: Number.isFinite(dm.getTime()) ? dm : INITIAL_BOOKING_MONTH,
+    selectedBookingDate: Number.isFinite(sd.getTime()) ? sd : INITIAL_BOOKING_DATE,
+    selectedBookingSlot: ui.selectedBookingSlot || BOOKING_SLOTS[4],
+  };
+}
+
+function clampFlowStepToData(desired: R1PortalFlowStep, row: ApplicationRow): FlowStep {
+  const recommendationReady = Boolean(row.data?.recommendation?.ready);
+  const consultationStatus = row.data?.consultation?.status;
+  const booked = consultationStatus === "booked" || consultationStatus === "done";
+
+  if (desired === "step5_overview" || desired === "step4_application") {
+    if (!recommendationReady) return booked ? "step3_booked" : "step3_booking";
+    return desired;
+  }
+  if (desired === "step3_recommendation") {
+    if (recommendationReady) return "step3_recommendation";
+    return booked ? "step3_booked" : "step3_booking";
+  }
+  if (desired === "step3_booked") return booked ? "step3_booked" : "step3_booking";
+  if (desired === "step3_booking") return booked ? "step3_booked" : "step3_booking";
+  return desired;
 }
 
 function ProgressRow({
@@ -327,6 +442,11 @@ function resolveInitialFlowStep(
   const consultationStatus = initialApplication.data?.consultation?.status;
   const isSubmitted = Boolean(initialApplication.data?.submittedAt);
   if (isSubmitted) return "step6_submitted";
+
+  const saved = initialApplication.data?.r1PortalFlowStep;
+  if (isR1PortalFlowStep(saved)) {
+    return clampFlowStepToData(saved, initialApplication);
+  }
   if (recommendationReady) return "step3_recommendation";
   if (consultationStatus === "booked" || consultationStatus === "done") {
     return "step3_booked";
@@ -364,12 +484,15 @@ function RichRadioOption({
 }
 
 export function NtaAntragDesktop({
+  userId: _userId,
   initialApplication,
   autosaveKey = "nta-antrag-draft",
   initialData,
   onContinue,
   forceNew = false,
+  enableDraftExitToDashboard = false,
 }: NtaAntragDesktopProps) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [application, setApplication] = useState<ApplicationRow | null>(
     forceNew ? null : (initialApplication ?? null),
@@ -390,12 +513,7 @@ export function NtaAntragDesktop({
               | "studium"
               | "aufnahmeverfahren"
               | undefined) ?? "studium",
-          attestFiles: (initialApplication.data.attestFiles ?? []).map((file) => ({
-            id: file.id ?? crypto.randomUUID(),
-            name: file.name ?? "Datei",
-            size: file.size ?? 0,
-            type: file.type ?? "",
-          })),
+          attestFiles: mapRemoteAttestFiles(initialApplication.data.attestFiles),
         } satisfies Partial<NtaAntragFormData>)
       : undefined;
     return mergeWithDefaults(fromApplication ?? initialData);
@@ -415,17 +533,23 @@ export function NtaAntragDesktop({
   const [isDeletingApplication, setIsDeletingApplication] = useState(false);
   const [deleteApplicationDialogOpen, setDeleteApplicationDialogOpen] =
     useState(false);
-  const [isRecommendationAcknowledged, setIsRecommendationAcknowledged] =
-    useState(false);
+  const [isRecommendationAcknowledged, setIsRecommendationAcknowledged] = useState(
+    () => Boolean(initialApplication?.data?.r1RecommendationAcknowledged),
+  );
   const [applicationFormData, setApplicationFormData] = useState<ApplicationFormData>(
-    DEFAULT_APPLICATION_FORM_DATA,
+    () => applicationFormDataFromRow(initialApplication, forceNew),
   );
-  const [displayedMonth, setDisplayedMonth] = useState<Date>(INITIAL_BOOKING_MONTH);
-  const [selectedBookingDate, setSelectedBookingDate] =
-    useState<Date>(INITIAL_BOOKING_DATE);
-  const [selectedBookingSlot, setSelectedBookingSlot] = useState<string>(
-    BOOKING_SLOTS[4],
+  const [displayedMonth, setDisplayedMonth] = useState<Date>(() =>
+    readBookingUiFromApplication(initialApplication, forceNew).displayedMonth,
   );
+  const [selectedBookingDate, setSelectedBookingDate] = useState<Date>(() =>
+    readBookingUiFromApplication(initialApplication, forceNew).selectedBookingDate,
+  );
+  const [selectedBookingSlot, setSelectedBookingSlot] = useState<string>(() =>
+    readBookingUiFromApplication(initialApplication, forceNew).selectedBookingSlot,
+  );
+  const [draftExitError, setDraftExitError] = useState<string | null>(null);
+  const [isPersistingDraftExit, setIsPersistingDraftExit] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const overviewFileInputRef = useRef<HTMLInputElement>(null);
   const situationDescriptionStep4Ref = useRef<HTMLTextAreaElement>(null);
@@ -457,7 +581,10 @@ export function NtaAntragDesktop({
       if (forceNew) {
         window.localStorage.removeItem(autosaveKey);
         setApplication(null);
-        setFormData(mergeWithDefaults(initialData));
+        setFormData((previous) => {
+          revokeAttestFileUrls(previous.attestFiles);
+          return mergeWithDefaults(initialData);
+        });
         setApplicationFormData(DEFAULT_APPLICATION_FORM_DATA);
         setStepOneErrors({});
         setStepTwoFileError(null);
@@ -472,18 +599,44 @@ export function NtaAntragDesktop({
         const rawDraft = window.localStorage.getItem(autosaveKey);
         if (!rawDraft) return;
         const parsedDraft = JSON.parse(rawDraft) as Partial<NtaAntragFormData>;
-        setFormData(mergeWithDefaults(parsedDraft));
+        const draftMerged = mergeWithDefaults(parsedDraft);
+
+        if (initialApplication?.data) {
+          const serverAttest = mapRemoteAttestFiles(initialApplication.data.attestFiles);
+          setFormData(
+            mergeWithDefaults({
+              ...parsedDraft,
+              attestFiles: mergeAttestFilesForHydration(serverAttest, draftMerged.attestFiles),
+            }),
+          );
+        } else {
+          setFormData(draftMerged);
+        }
       } catch {
         // Keep current in-memory state when draft is malformed.
       }
     }, 0);
 
+    // Nur `initialApplication?.id` in den deps: vermeidet erneutes Merge bei jedem Parent-Re-Render.
     return () => window.clearTimeout(timeout);
-  }, [autosaveKey, forceNew, initialData]);
+  }, [autosaveKey, forceNew, initialData, initialApplication?.id]);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      window.localStorage.setItem(autosaveKey, JSON.stringify(formData));
+      try {
+        const payload = {
+          ...formData,
+          attestFiles: formData.attestFiles.map(({ id, name, size, type }) => ({
+            id,
+            name,
+            size,
+            type,
+          })),
+        };
+        window.localStorage.setItem(autosaveKey, JSON.stringify(payload));
+      } catch {
+        /* Quota oder Private Mode — ohne Entwurf weiterarbeiten. */
+      }
     }, 400);
     return () => window.clearTimeout(timeout);
   }, [autosaveKey, formData]);
@@ -503,8 +656,9 @@ export function NtaAntragDesktop({
 
     const pd = initialApplication.data.personalData;
     if (pd) {
-      setFormData(
-        mergeWithDefaults({
+      setFormData((previous) => {
+        revokeAttestFileUrls(previous.attestFiles);
+        return mergeWithDefaults({
           vorname: pd.vorname ?? "",
           name: pd.name ?? "",
           email: pd.email ?? "",
@@ -514,35 +668,19 @@ export function NtaAntragDesktop({
           semester: pd.semester ?? "",
           antragsart:
             (pd.antragsart as "studium" | "aufnahmeverfahren" | undefined) ?? "studium",
-          attestFiles: (initialApplication.data.attestFiles ?? []).map((file) => ({
-            id: file.id ?? crypto.randomUUID(),
-            name: file.name ?? "Datei",
-            size: file.size ?? 0,
-            type: file.type ?? "",
-          })),
-        }),
-      );
-    }
-
-    const ad = initialApplication.data.applicationDefinition;
-    if (ad) {
-      const measureKeys: ApplicationMeasureKey[] = ["m1", "m2", "m3", "m4"];
-      const pickMeasures = (raw: string[] | undefined) =>
-        (raw ?? []).filter((k): k is ApplicationMeasureKey =>
-          measureKeys.includes(k as ApplicationMeasureKey),
-        );
-      setApplicationFormData({
-        situationDescription: ad.situationDescription ?? "",
-        duration: (ad.duration as ApplicationDuration | "") ?? "",
-        scopeSelections: [...(ad.scopeSelections ?? [])],
-        lectureMeasures: pickMeasures(ad.lectureMeasures),
-        lectureOtherEnabled: Boolean(ad.lectureOtherEnabled),
-        lectureOtherText: ad.lectureOtherText ?? "",
-        assessmentMeasures: pickMeasures(ad.assessmentMeasures),
-        assessmentOtherEnabled: Boolean(ad.assessmentOtherEnabled),
-        assessmentOtherText: ad.assessmentOtherText ?? "",
+          attestFiles: mapRemoteAttestFiles(initialApplication.data.attestFiles),
+        });
       });
     }
+
+    setApplicationFormData(applicationFormDataFromRow(initialApplication, false));
+    setIsRecommendationAcknowledged(
+      Boolean(initialApplication.data.r1RecommendationAcknowledged),
+    );
+    const booking = readBookingUiFromApplication(initialApplication, false);
+    setDisplayedMonth(booking.displayedMonth);
+    setSelectedBookingDate(booking.selectedBookingDate);
+    setSelectedBookingSlot(booking.selectedBookingSlot);
   }, [forceNew, initialApplication]);
 
   // Scope realtime to the currently active application ONLY.
@@ -591,14 +729,11 @@ export function NtaAntragDesktop({
     };
   }, [supabase, activeApplicationId]);
 
-  const appendFiles = (files: FileList | null) => {
+  const appendFiles = async (files: FileList | null) => {
     if (!files?.length) return;
-    const nextFiles: NtaAntragUploadFile[] = Array.from(files).map((file) => ({
-      id: `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`,
-      name: file.name,
-      size: file.size,
-      type: file.type,
-    }));
+    const nextFiles = await Promise.all(
+      Array.from(files).map((file) => createAttestFileEntryFromBrowserFile(file)),
+    );
     setFormData((previous) => ({
       ...previous,
       attestFiles: [...previous.attestFiles, ...nextFiles],
@@ -609,7 +744,7 @@ export function NtaAntragDesktop({
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     setIsDragActive(false);
-    appendFiles(event.dataTransfer.files);
+    void appendFiles(event.dataTransfer.files);
   };
 
   const validateStepOne = (): boolean => {
@@ -697,7 +832,10 @@ export function NtaAntragDesktop({
     }
 
     setApplication(null);
-    setFormData(DEFAULT_FORM_DATA);
+    setFormData((previous) => {
+      revokeAttestFileUrls(previous.attestFiles);
+      return DEFAULT_FORM_DATA;
+    });
     setApplicationFormData(DEFAULT_APPLICATION_FORM_DATA);
     setStepOneErrors({});
     setStepTwoFileError(null);
@@ -712,6 +850,132 @@ export function NtaAntragDesktop({
     window.localStorage.removeItem(autosaveKey);
     setDeleteApplicationDialogOpen(false);
     setIsDeletingApplication(false);
+  }
+
+  async function handleDraftExitToDashboard() {
+    if (!enableDraftExitToDashboard) return;
+    setDraftExitError(null);
+    setIsPersistingDraftExit(true);
+    try {
+      const consultationBooked =
+        application?.data?.consultation?.status === "booked"
+        || application?.data?.consultation?.status === "done";
+
+      const hasMeaningfulInput =
+        application !== null
+        || formData.attestFiles.length > 0
+        || [
+            formData.vorname,
+            formData.name,
+            formData.email,
+            formData.phone,
+            formData.matrikel,
+            formData.studiengang,
+            formData.semester,
+          ].some((s) => s.trim().length > 0);
+
+      if (!hasMeaningfulInput) {
+        router.push("/portal/home");
+        return;
+      }
+
+      const draftDef: ApplicationDefinitionData = {
+        situationDescription: applicationFormData.situationDescription,
+        duration: applicationFormData.duration || undefined,
+        scopeSelections: [...applicationFormData.scopeSelections],
+        lectureMeasures: [...applicationFormData.lectureMeasures],
+        lectureOtherEnabled: applicationFormData.lectureOtherEnabled,
+        lectureOtherText: applicationFormData.lectureOtherText,
+        assessmentMeasures: [...applicationFormData.assessmentMeasures],
+        assessmentOtherEnabled: applicationFormData.assessmentOtherEnabled,
+        assessmentOtherText: applicationFormData.assessmentOtherText,
+      };
+
+      const stepForPersist: R1PortalFlowStep =
+        currentStep === "step6_submitted"
+          ? "step5_overview"
+          : isR1PortalFlowStep(currentStep)
+            ? currentStep
+            : "step5_overview";
+
+      const r1DraftBookingUi = !consultationBooked
+        ? {
+            displayedMonthIso: displayedMonth.toISOString(),
+            selectedBookingDateIso: selectedBookingDate.toISOString(),
+            selectedBookingSlot,
+          }
+        : undefined;
+
+      let targetId = application?.id ?? null;
+      if (!targetId) {
+        const { data, error } = await supabase.rpc("r1_submit_application", {
+          p_title:
+            `NTA Antrag ${formData.vorname} ${formData.name}`.trim() || "NTA Antrag (Entwurf)",
+          p_summary: "Entwurf",
+        });
+        if (error || !data?.id) {
+          setDraftExitError(error?.message ?? "Entwurf konnte nicht gespeichert werden.");
+          return;
+        }
+        targetId = data.id as string;
+      }
+
+      const baseData: ApplicationData = { ...(application?.data ?? {}) };
+      delete baseData.finalSubmitted;
+      delete baseData.submittedAt;
+      delete baseData.applicationDefinition;
+
+      const nextData: ApplicationData = {
+        ...baseData,
+        title:
+          `NTA Antrag ${formData.vorname} ${formData.name}`.trim()
+          || baseData.title
+          || "NTA Antrag (Entwurf)",
+        summary: baseData.summary?.trim() ? baseData.summary : "Entwurf",
+        personalData: {
+          vorname: formData.vorname,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          matrikel: formData.matrikel,
+          studiengang: formData.studiengang,
+          semester: formData.semester,
+          antragsart: formData.antragsart,
+        },
+        attestFiles: sanitizeAttestFilesForDatabase(formData.attestFiles),
+        recommendation: { ...(application?.data?.recommendation ?? {}) },
+        r1DraftApplicationDefinition: draftDef,
+        r1PortalFlowStep: stepForPersist,
+        r1RecommendationAcknowledged: isRecommendationAcknowledged,
+      };
+
+      if (consultationBooked) {
+        nextData.consultation = application?.data?.consultation;
+        delete nextData.r1DraftBookingUi;
+      } else {
+        nextData.r1DraftBookingUi = r1DraftBookingUi;
+      }
+
+      const nextStatus = consultationBooked ? (application?.status ?? "submitted") : "draft";
+
+      const { error: updateError } = await supabase
+        .from("applications")
+        .update({
+          status: nextStatus,
+          data: nextData,
+        })
+        .eq("id", targetId);
+
+      if (updateError) {
+        setDraftExitError(updateError.message);
+        return;
+      }
+
+      window.localStorage.removeItem(autosaveKey);
+      router.push("/portal/home");
+    } finally {
+      setIsPersistingDraftExit(false);
+    }
   }
 
   const bookingDateLabel = selectedBookingDate.toLocaleDateString("de-CH", {
@@ -777,7 +1041,7 @@ export function NtaAntragDesktop({
             semester: formData.semester,
             antragsart: formData.antragsart,
           },
-          attestFiles: formData.attestFiles,
+          attestFiles: sanitizeAttestFilesForDatabase(formData.attestFiles),
           consultation: {
             status: "booked",
             date: bookingDateLabel,
@@ -838,7 +1102,7 @@ export function NtaAntragDesktop({
         semester: formData.semester,
         antragsart: formData.antragsart,
       },
-      attestFiles: formData.attestFiles,
+      attestFiles: sanitizeAttestFilesForDatabase(formData.attestFiles),
       consultation: {
         ...(application?.data?.consultation ?? {}),
         status: "done" as const,
@@ -866,8 +1130,14 @@ export function NtaAntragDesktop({
       submittedAt,
     };
 
+    const prevSubmitData: ApplicationData = { ...(application?.data ?? {}) };
+    delete prevSubmitData.r1PortalFlowStep;
+    delete prevSubmitData.r1DraftApplicationDefinition;
+    delete prevSubmitData.r1DraftBookingUi;
+    delete prevSubmitData.r1RecommendationAcknowledged;
+
     const minimalSubmitData = {
-      ...(application?.data ?? {}),
+      ...prevSubmitData,
       title: `NTA Antrag ${formData.vorname} ${formData.name}`.trim(),
       summary: "In Review",
       personalData: {
@@ -880,7 +1150,7 @@ export function NtaAntragDesktop({
         semester: formData.semester,
         antragsart: formData.antragsart,
       },
-      attestFiles: formData.attestFiles,
+      attestFiles: sanitizeAttestFilesForDatabase(formData.attestFiles),
       applicationDefinition: {
         situationDescription: applicationFormData.situationDescription,
         duration: applicationFormData.duration || undefined,
@@ -1047,6 +1317,25 @@ export function NtaAntragDesktop({
 
   return (
     <div className="h-screen w-full overflow-hidden bg-background">
+      {enableDraftExitToDashboard ? (
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-50 flex flex-col items-end gap-1 p-4 sm:p-6">
+          <Button
+            type="button"
+            variant="ghost"
+            className="pointer-events-auto h-9 shrink-0 gap-2 px-3 text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+            disabled={isPersistingDraftExit}
+            onClick={() => void handleDraftExitToDashboard()}
+          >
+            <X className="size-4 shrink-0 stroke-[2]" aria-hidden />
+            <span>{isPersistingDraftExit ? "Wird gespeichert …" : "Schliessen"}</span>
+          </Button>
+          {draftExitError ? (
+            <p className="pointer-events-auto max-w-sm text-right text-xs text-destructive">
+              {draftExitError}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
       <div className="grid h-screen grid-cols-12 gap-6">
         <aside
           className={cn(
@@ -1716,7 +2005,7 @@ export function NtaAntragDesktop({
                       </p>
                     </div>
 
-                    <div className="rounded-lg bg-blue-100 px-4 py-3">
+                    <div className="rounded-lg border border-blue-400 bg-blue-100 px-4 py-3">
                       <div className="mb-1 flex items-start gap-2 text-sm font-medium text-foreground">
                         <Info className="mt-0.5 size-4 shrink-0" />
                         <span>Bitte beachten Sie die Vorgaben des fachärztlichen Attests</span>
@@ -1779,7 +2068,7 @@ export function NtaAntragDesktop({
                           type="file"
                           multiple
                           className="hidden"
-                          onChange={(event) => appendFiles(event.target.files)}
+                          onChange={(event) => void appendFiles(event.target.files)}
                         />
                       </div>
                       {stepTwoFileError ? (
@@ -1794,28 +2083,32 @@ export function NtaAntragDesktop({
                       {formData.attestFiles.map((file) => (
                         <div
                           key={file.id}
-                          className="flex items-center gap-4 rounded-lg bg-secondary px-4 py-4"
+                          className="flex items-center gap-3 rounded-lg bg-secondary px-3 py-3"
                         >
-                          <FileText className="size-5 shrink-0 text-muted-foreground" />
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-foreground">
-                              {file.name}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {formatFileSize(file.size)}
-                            </p>
+                            <ReviewFileRow
+                              title={file.name}
+                              subtitle={formatReviewFileSize(file.size)}
+                              file={file}
+                            />
                           </div>
                           <button
                             type="button"
                             onClick={() =>
-                              setFormData((previous) => ({
-                                ...previous,
-                                attestFiles: previous.attestFiles.filter(
-                                  (item) => item.id !== file.id,
-                                ),
-                              }))
+                              setFormData((previous) => {
+                                const removed = previous.attestFiles.find(
+                                  (item) => item.id === file.id,
+                                );
+                                if (removed) revokeAttestFileUrls([removed]);
+                                return {
+                                  ...previous,
+                                  attestFiles: previous.attestFiles.filter(
+                                    (item) => item.id !== file.id,
+                                  ),
+                                };
+                              })
                             }
-                            className="rounded-md p-2 text-destructive/80 transition hover:bg-destructive/10 hover:text-destructive"
+                            className="shrink-0 self-center rounded-md p-2 text-destructive/80 transition hover:bg-destructive/10 hover:text-destructive"
                             aria-label={`${file.name} löschen`}
                           >
                             <Trash2 className="size-4" />
@@ -1975,7 +2268,7 @@ export function NtaAntragDesktop({
                       <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
                         Ihr Beratungsgespräch ist gebucht!
                       </CardTitle>
-                      <div className="mx-auto w-full max-w-[544px] rounded-lg bg-blue-100 px-4 py-3 text-sm">
+                      <div className="mx-auto w-full max-w-[544px] rounded-lg border border-blue-400 bg-blue-100 px-4 py-3 text-sm">
                         <div className="flex items-start gap-2">
                           <Info className="mt-0.5 size-4 shrink-0" />
                           <p className="text-left">
@@ -2364,7 +2657,7 @@ export function NtaAntragDesktop({
                         Ihr Antrag wurde übermittelt und befindet sich jetzt im Status In Review.
                       </p>
                     </div>
-                    <div className="mx-auto w-full max-w-[544px] rounded-lg bg-blue-100 px-4 py-3 text-sm">
+                    <div className="mx-auto w-full max-w-[544px] rounded-lg border border-blue-400 bg-blue-100 px-4 py-3 text-sm">
                       <div className="flex items-start gap-2 text-left">
                         <Info className="mt-0.5 size-4 shrink-0" />
                         <p>
@@ -2380,7 +2673,7 @@ export function NtaAntragDesktop({
                         window.location.href = "/portal/home";
                       }}
                     >
-                      Zum Dashboard
+                      Meine Anträge
                     </Button>
                   </div>
                 ) : (
@@ -2515,7 +2808,7 @@ export function NtaAntragDesktop({
                           onDrop={(event) => {
                             event.preventDefault();
                             setIsDragActive(false);
-                            appendFiles(event.dataTransfer.files);
+                            void appendFiles(event.dataTransfer.files);
                           }}
                           onClick={() => overviewFileInputRef.current?.click()}
                           role="button"
@@ -2537,7 +2830,7 @@ export function NtaAntragDesktop({
                             type="file"
                             multiple
                             className="hidden"
-                            onChange={(event) => appendFiles(event.target.files)}
+                            onChange={(event) => void appendFiles(event.target.files)}
                           />
                         </div>
                         <p className="text-sm text-muted-foreground">
@@ -2552,28 +2845,32 @@ export function NtaAntragDesktop({
                       {formData.attestFiles.map((file) => (
                         <div
                           key={file.id}
-                          className="flex items-center gap-4 rounded-lg bg-secondary px-4 py-4"
+                          className="flex items-center gap-3 rounded-lg bg-secondary px-3 py-3"
                         >
-                          <FileText className="size-5 shrink-0 text-muted-foreground" />
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-foreground">
-                              {file.name}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {formatFileSize(file.size)}
-                            </p>
+                            <ReviewFileRow
+                              title={file.name}
+                              subtitle={formatReviewFileSize(file.size)}
+                              file={file}
+                            />
                           </div>
                           <button
                             type="button"
                             onClick={() =>
-                              setFormData((previous) => ({
-                                ...previous,
-                                attestFiles: previous.attestFiles.filter(
-                                  (item) => item.id !== file.id,
-                                ),
-                              }))
+                              setFormData((previous) => {
+                                const removed = previous.attestFiles.find(
+                                  (item) => item.id === file.id,
+                                );
+                                if (removed) revokeAttestFileUrls([removed]);
+                                return {
+                                  ...previous,
+                                  attestFiles: previous.attestFiles.filter(
+                                    (item) => item.id !== file.id,
+                                  ),
+                                };
+                              })
                             }
-                            className="rounded-md p-2 text-destructive/80 transition hover:bg-destructive/10 hover:text-destructive"
+                            className="shrink-0 self-center rounded-md p-2 text-destructive/80 transition hover:bg-destructive/10 hover:text-destructive"
                             aria-label={`${file.name} löschen`}
                           >
                             <Trash2 className="size-4" />

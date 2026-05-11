@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  type ComponentType,
-  type MouseEvent as ReactMouseEvent,
-  type ReactNode,
-} from "react";
+import { type ComponentType, type ReactNode } from "react";
 import { Check, ExternalLink, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -15,6 +11,150 @@ import {
 export function formatReviewFileSize(sizeInBytes: number) {
   if (!sizeInBytes || Number.isNaN(sizeInBytes)) return "—";
   return `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+/**
+ * Dateien bis zu dieser Grösse werden als `data:`-URL in `applications.data`
+ * gehalten, damit R1/R2 sie nach Reload in einem neuen Tab öffnen können.
+ * `blob:`-URLs überleben keine Persistenz — werden vor dem DB-Write entfernt.
+ * Im localStorage-Entwurf werden Attest-URLs weggelassen (Quota); nach dem
+ * Laden werden Server-URLs mit dem Entwurf zusammengeführt.
+ */
+export const ATTEST_INLINE_PREVIEW_MAX_BYTES = 4 * 1024 * 1024;
+
+function readBrowserFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error ?? new Error("FileReader failed"));
+    reader.readAsDataURL(file);
+  });
+}
+
+/** Ein Attest-Eintrag inkl. Vorschau-URL für Upload aus dem Browser. */
+export async function createAttestFileEntryFromBrowserFile(file: File): Promise<{
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  url: string;
+}> {
+  const id = `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`;
+  if (file.size <= ATTEST_INLINE_PREVIEW_MAX_BYTES) {
+    try {
+      const url = await readBrowserFileAsDataUrl(file);
+      return {
+        id,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        url,
+      };
+    } catch {
+      /* fall through to blob */
+    }
+  }
+  return {
+    id,
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    url: URL.createObjectURL(file),
+  };
+}
+
+/** Revokes blob: object URLs created for attest previews (call before dropping file refs). */
+export function revokeAttestFileUrls(files: readonly { url?: string | undefined }[]) {
+  for (const f of files) {
+    if (f.url?.startsWith("blob:")) {
+      URL.revokeObjectURL(f.url);
+    }
+  }
+}
+
+/** `blob:`-URLs in Postgres/JSON sind nach Reload ungültig — vor dem Speichern entfernen. */
+export function sanitizeAttestFilesForDatabase<T extends { url?: string }>(files: readonly T[]): T[] {
+  return files.map((f) => {
+    if (f.url?.startsWith("blob:")) {
+      const { url: _omit, ...rest } = f;
+      return rest as T;
+    }
+    return f;
+  });
+}
+
+type AttestMergeEntry = {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  url?: string;
+};
+
+function attestMergeKey(f: { id?: string; name?: string; size?: number }): string {
+  if (f.id && String(f.id).trim().length > 0) return `id:${f.id}`;
+  return `meta:${f.name ?? ""}|${String(f.size ?? 0)}`;
+}
+
+function attestOpenScore(f: { url?: string }): number {
+  const h = f.url;
+  if (!h) return 0;
+  if (
+    h.startsWith("data:")
+    || h.startsWith("http://")
+    || h.startsWith("https://")
+  ) {
+    return 3;
+  }
+  if (h.startsWith("blob:")) return 1;
+  return 0;
+}
+
+function normalizeAttestMergeEntry(f: {
+  id?: string;
+  name?: string;
+  size?: number;
+  type?: string;
+  url?: string;
+}): AttestMergeEntry {
+  return {
+    id: f.id && String(f.id).trim().length > 0 ? f.id : crypto.randomUUID(),
+    name: f.name ?? "Datei",
+    size: f.size ?? 0,
+    type: f.type ?? "",
+    ...(typeof f.url === "string" && f.url.length > 0 ? { url: f.url } : {}),
+  };
+}
+
+/**
+ * Beim Client-Start: Server-Atteste (mit `data:` aus der DB) nicht durch einen
+ * alten localStorage-Entwurf ohne URLs überschreiben.
+ */
+export function mergeAttestFilesForHydration(
+  server: readonly { id?: string; name?: string; size?: number; type?: string; url?: string }[],
+  draft: readonly { id?: string; name?: string; size?: number; type?: string; url?: string }[],
+): AttestMergeEntry[] {
+  const pickBetter = (a: AttestMergeEntry, b: AttestMergeEntry): AttestMergeEntry => {
+    const sa = attestOpenScore(a);
+    const sb = attestOpenScore(b);
+    if (sb > sa) return b;
+    if (sa > sb) return a;
+    if (sa === 0 && sb === 0) return { ...a, ...b, id: b.id || a.id };
+    return b;
+  };
+
+  const map = new Map<string, AttestMergeEntry>();
+  for (const raw of server) {
+    const e = normalizeAttestMergeEntry(raw);
+    map.set(attestMergeKey(e), e);
+  }
+  for (const raw of draft) {
+    const e = normalizeAttestMergeEntry(raw);
+    const k = attestMergeKey(e);
+    const existing = map.get(k);
+    map.set(k, existing ? pickBetter(existing, e) : e);
+  }
+  return [...map.values()];
 }
 
 export function shortApplicationRef(id: string) {
@@ -35,14 +175,19 @@ export function ReviewBlockCard({
   children,
   footer,
   footerTone = "default",
+  /** Optional: nur Card-Rahmen (z. B. aktiver Anpassungs-Entwurf), Fußzeile bleibt `footerTone`. */
+  cardBorderTone,
   anchorId,
 }: {
   title: string;
   children: ReactNode;
   footer?: ReactNode | null;
   footerTone?: ReviewBlockFooterTone;
+  cardBorderTone?: ReviewBlockFooterTone;
   anchorId?: string;
 }) {
+  const borderTone = cardBorderTone ?? footerTone;
+
   /** Gleiche vertikale Polsterung über alle States — verhindert Höhensprung beim Wechsel der Fußzeile. */
   const footerClassName =
     footerTone === "default"
@@ -53,10 +198,10 @@ export function ReviewBlockCard({
 
   const sectionClassName = cn(
     "scroll-mt-6 overflow-hidden rounded-xl bg-card shadow-xs",
-    footerTone === "default" && "border border-border",
-    footerTone === "confirmed" &&
+    borderTone === "default" && "border border-border",
+    borderTone === "confirmed" &&
       "border-[1.5px] border-teal-600 dark:border-teal-500",
-    footerTone === "adjustment" && "border-[1.5px] border-amber-400",
+    borderTone === "adjustment" && "border-[1.5px] border-amber-400",
   );
 
   return (
@@ -97,36 +242,166 @@ export function ReviewField({ label, value }: { label: string; value: string }) 
   );
 }
 
+function attestFileHrefIsOpenable(href: string): boolean {
+  if (!href || href === "#") return false;
+  return (
+    href.startsWith("http:")
+    || href.startsWith("https:")
+    || href.startsWith("blob:")
+    || href.startsWith("data:")
+  );
+}
+
+export function resolveAttestFileOpenHref(file: {
+  url?: string;
+  id?: string;
+}): string {
+  const candidates = [file.url, file.id].filter(
+    (s): s is string => typeof s === "string" && s.length > 0,
+  );
+  for (const c of candidates) {
+    if (attestFileHrefIsOpenable(c)) return c;
+  }
+  return "";
+}
+
+/** `data:` → Blob → Object-URL (Chromium öffnet `data:` in neuem Tab oft nicht zuverlässig). */
+async function openDataAttestViaBlobObjectUrl(
+  dataUrl: string,
+  fileNameForDownload: string,
+): Promise<void> {
+  try {
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const child = window.open(objectUrl, "_blank", "noopener,noreferrer");
+    if (!child) {
+      URL.revokeObjectURL(objectUrl);
+      const fallback = document.createElement("a");
+      fallback.href = dataUrl;
+      fallback.download = fileNameForDownload;
+      fallback.rel = "noopener noreferrer";
+      fallback.click();
+      return;
+    }
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 180_000);
+  } catch {
+    const fallback = document.createElement("a");
+    fallback.href = dataUrl;
+    fallback.download = fileNameForDownload;
+    fallback.rel = "noopener noreferrer";
+    fallback.click();
+  }
+}
+
+let attestOpenLastHref = "";
+let attestOpenLastAt = 0;
+/** Nur kurz: doppelte Events derselben URL (z. B. innerhalb eines Ticks / aux+click). */
+const ATTEST_OPEN_DEBOUNCE_MS = 400;
+
+/**
+ * Öffnet Attest-Links genau einmal pro Nutzeraktion (schützt vor doppelten Events
+ * z. B. auxclick+click oder schnellen Doppelklicks).
+ */
+export async function openAttestHrefInNewTabOnce(
+  href: string,
+  fileNameForDownload: string,
+): Promise<void> {
+  const now = Date.now();
+  if (
+    attestOpenLastHref === href
+    && now - attestOpenLastAt < ATTEST_OPEN_DEBOUNCE_MS
+  ) {
+    return;
+  }
+  attestOpenLastHref = href;
+  attestOpenLastAt = now;
+
+  if (href.startsWith("data:")) {
+    await openDataAttestViaBlobObjectUrl(href, fileNameForDownload);
+    return;
+  }
+  window.open(href, "_blank", "noopener,noreferrer");
+}
+
 export function ReviewFileRow({
   title,
   subtitle,
   href,
-  onNavigate,
+  file,
 }: {
   title: string;
   subtitle: string;
-  href: string;
-  onNavigate?: (e: ReactMouseEvent<HTMLAnchorElement>) => void;
+  /** Legacy: fester Link. Bevorzugt `file` setzen (R1/R2 Attest-Block). */
+  href?: string;
+  file?: { url?: string; id?: string };
 }) {
-  return (
-    <a
-      href={href}
-      target={href === "#" ? undefined : "_blank"}
-      rel={href === "#" ? undefined : "noreferrer"}
-      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-4 py-3 text-sm shadow-xs transition-colors hover:bg-muted/40"
-      onClick={onNavigate}
-    >
+  const resolvedHref = file ? resolveAttestFileOpenHref(file) : (href ?? "#");
+  const openable = attestFileHrefIsOpenable(resolvedHref);
+
+  const linkTitle = openable
+    ? "In neuem Tab öffnen"
+    : "Für diese Datei liegt kein öffnbarer Link vor (z. B. nach erneutem Login oder bei sehr grossen Dateien nur in derselben Sitzung).";
+
+  const inner = (
+    <>
       <span className="flex min-w-0 items-center gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted">
           <FileText className="size-5 text-muted-foreground" aria-hidden />
         </span>
         <span className="min-w-0">
-          <span className="block truncate font-medium text-foreground">{title}</span>
+          <span
+            className={cn(
+              "block truncate font-medium text-foreground",
+              openable && "decoration-dotted underline-offset-2 group-hover:underline",
+            )}
+          >
+            {title}
+          </span>
           <span className="text-xs text-muted-foreground">{subtitle}</span>
         </span>
       </span>
-      <ExternalLink className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-    </a>
+      <ExternalLink
+        className={cn(
+          "size-4 shrink-0 transition-colors",
+          openable
+            ? "text-muted-foreground group-hover:text-foreground"
+            : "text-muted-foreground/40",
+        )}
+        aria-hidden
+      />
+    </>
+  );
+
+  const shellClass = cn(
+    "flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-4 py-3 text-sm shadow-xs",
+  );
+  const shellClassOpenable = cn(shellClass, "group");
+  const interactiveOpenableClass = cn(
+    shellClassOpenable,
+    "cursor-pointer transition-all hover:border-muted-foreground/30 hover:bg-muted/55 hover:shadow-sm",
+    "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+  );
+
+  if (openable) {
+    return (
+      <button
+        type="button"
+        title={linkTitle}
+        className={cn(interactiveOpenableClass, "w-full text-left")}
+        onClick={() => {
+          void openAttestHrefInNewTabOnce(resolvedHref, title);
+        }}
+      >
+        {inner}
+      </button>
+    );
+  }
+
+  return (
+    <div className={cn(shellClass, "cursor-default")} title={linkTitle}>
+      {inner}
+    </div>
   );
 }
 

@@ -68,10 +68,49 @@ export default async function PortalAntragserstellungPage({
 
   const startFresh = forceNew || !initial;
 
-  // Explizite Auswahl aus `/portal/home`: immer in die Block-Detailansicht.
-  // Bearbeiten ist dort nur im Kanon-Status `needs_adjustment` erlaubt.
+  let hasPriorFinalizedApplication = false;
+  if (startFresh) {
+    const { data: priorRows } = await supabase
+      .from("applications")
+      .select("id,applicant_id,status,data,created_at,updated_at")
+      .eq("applicant_id", profile.id)
+      .order("updated_at", { ascending: false })
+      .limit(40);
+    hasPriorFinalizedApplication = (priorRows ?? []).some((row) => {
+      const canonical = deriveCanonicalApplicationState(row as ApplicationRow);
+      return (
+        canonical === "in_review"
+        || canonical === "in_decision"
+        || canonical === "approved"
+        || canonical === "rejected"
+        || canonical === "needs_adjustment"
+      );
+    });
+  }
+
+  const initialCanonical =
+    initial !== undefined ? deriveCanonicalApplicationState(initial) : null;
+  const enableDraftExitToDashboard =
+    initialCanonical === "draft"
+    || initialCanonical === "consultation_recommendation"
+    || (startFresh && hasPriorFinalizedApplication);
+
+  // Explizite Auswahl aus `/portal/home`: Block-Detail nur nach Einreichung /
+  // Review; Entwurf und Beratungsphase weiter im Step-Flow (`NtaAntragDesktop`).
   if (!startFresh && initial && applicationId) {
     const canonical = deriveCanonicalApplicationState(initial);
+    if (canonical === "draft" || canonical === "consultation_recommendation") {
+      return (
+        <NtaAntragDesktop
+          userId={profile.id}
+          key={initial.id}
+          initialApplication={initial}
+          autosaveKey={`nta-antrag-step1-draft:${profile.id}:${initial.id}`}
+          forceNew={false}
+          enableDraftExitToDashboard={enableDraftExitToDashboard}
+        />
+      );
+    }
     const workspaceApplication: WorkspaceApplication = {
       ...initial,
       users: [
@@ -101,6 +140,7 @@ export default async function PortalAntragserstellungPage({
       initialApplication={startFresh ? undefined : initial}
       autosaveKey={`nta-antrag-step1-draft:${profile.id}`}
       forceNew={startFresh}
+      enableDraftExitToDashboard={enableDraftExitToDashboard}
     />
   );
 }

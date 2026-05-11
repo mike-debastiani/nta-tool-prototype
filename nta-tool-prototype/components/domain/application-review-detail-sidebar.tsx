@@ -11,7 +11,7 @@ import {
   UserCircle,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -56,6 +56,11 @@ type ApplicationReviewDetailSidebarProps = {
   onSavedCommentNavigate?: (blockId: string) => void;
   /** Optionaler Empty-State für reine Detailansichten ohne Review-Kommentarflow. */
   emptyCommentsLabel?: string;
+  /**
+   * Wenn false: kein Bereich «Kommentare» und kein Trennstrich unter den Antragdetails
+   * (z. B. R1-Portal solange nicht «Anpassung erforderlich», R2 «Beratung & Empfehlung»).
+   */
+  showCommentsSection?: boolean;
 };
 
 function formatCommentTimestamp(ts: number): string {
@@ -82,6 +87,7 @@ export function ApplicationReviewDetailSidebar({
   savedReviewComments,
   onSavedCommentNavigate,
   emptyCommentsLabel = "Klicken Sie bei einem Block auf «Anpassung anfordern», um hier eine Bemerkung zu verfassen.",
+  showCommentsSection = true,
 }: ApplicationReviewDetailSidebarProps) {
   const submitted = formatReviewSubmittedAt(application.data);
   const updated = new Date(application.updated_at).toLocaleDateString("de-CH", {
@@ -161,7 +167,12 @@ export function ApplicationReviewDetailSidebar({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#fafafa]">
-      <div className="shrink-0 space-y-4 border-b border-border px-5 py-5">
+      <div
+        className={cn(
+          "shrink-0 space-y-4 px-5 py-5",
+          showCommentsSection && "border-b border-border",
+        )}
+      >
         <h2 className="text-sm font-semibold text-foreground">Antragdetails</h2>
         <div className="space-y-0">
           {/* Status row — Notion-style pill */}
@@ -189,35 +200,37 @@ export function ApplicationReviewDetailSidebar({
         </div>
       </div>
 
-      <section
-        className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6 pt-6"
-        aria-labelledby="review-comments-heading"
-      >
-        <div className="mb-5 flex shrink-0 items-center gap-2">
-          <h3 id="review-comments-heading" className="text-lg font-medium leading-[27px] text-foreground">
-            Kommentare
-          </h3>
-        </div>
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
-          {savedReviewComments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              {emptyCommentsLabel}
-            </p>
-          ) : null}
-          {savedReviewComments.map((c) => (
-            <SavedReviewCommentCard
-              key={c.id}
-              reviewerName={assignedReviewerLabel}
-              comment={c}
-              onNavigate={
-                onSavedCommentNavigate
-                  ? () => onSavedCommentNavigate(c.blockId)
-                  : undefined
-              }
-            />
-          ))}
-        </div>
-      </section>
+      {showCommentsSection ? (
+        <section
+          className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6 pt-6"
+          aria-labelledby="review-comments-heading"
+        >
+          <div className="mb-5 flex shrink-0 items-center gap-2">
+            <h3 id="review-comments-heading" className="text-lg font-medium leading-[27px] text-foreground">
+              Kommentare
+            </h3>
+          </div>
+          <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
+            {savedReviewComments.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {emptyCommentsLabel}
+              </p>
+            ) : null}
+            {savedReviewComments.map((c) => (
+              <SavedReviewCommentCard
+                key={c.id}
+                reviewerName={assignedReviewerLabel}
+                comment={c}
+                onNavigate={
+                  onSavedCommentNavigate
+                    ? () => onSavedCommentNavigate(c.blockId)
+                    : undefined
+                }
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }
@@ -234,6 +247,23 @@ function ReviewAdjustmentDraftCard({
 }) {
   const [nowLabel] = useState(() => formatCommentTimestamp(Date.now()));
   const full = layout === "fullColumn";
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const syncTextareaHeight = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "0px";
+    const minPx = 120;
+    const maxPx =
+      typeof window !== "undefined"
+        ? Math.min(Math.round(window.innerHeight * 0.48), 480)
+        : 480;
+    el.style.height = `${Math.min(Math.max(el.scrollHeight, minPx), maxPx)}px`;
+  }, []);
+
+  useLayoutEffect(() => {
+    syncTextareaHeight();
+  }, [composer.draft, syncTextareaHeight]);
 
   return (
     <article
@@ -270,16 +300,20 @@ function ReviewAdjustmentDraftCard({
           Block: {composer.blockTitle}
         </p>
         <Textarea
+          ref={textareaRef}
           value={composer.draft}
           onChange={(e) => {
             composer.onDraftChange(e.target.value);
+            queueMicrotask(() => {
+              syncTextareaHeight();
+            });
           }}
-          placeholder="Erläutern Sie was konkret angepasst werden muss"
-          rows={full ? undefined : 6}
+          placeholder="Erläutern Sie der antragstellenden Person, was konkret angepasst werden muss"
+          rows={1}
           aria-invalid={composer.saveError}
           className={cn(
-            "resize-y rounded-lg border-border bg-background text-sm shadow-xs",
-            full ? "min-h-[180px] flex-1" : "min-h-[149px]",
+            "field-sizing-fixed resize-y overflow-y-auto rounded-lg border-border bg-background text-sm shadow-xs",
+            "min-h-[120px] max-h-[min(48dvh,480px)] w-full",
             composer.saveError && "border-destructive",
           )}
         />

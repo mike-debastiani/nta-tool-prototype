@@ -39,6 +39,8 @@ type RoleDashboardLayoutProps = {
    * mit eigener rechter Sidebar).
    */
   edgeToEdge?: boolean;
+  /** Navigationsleiste initial eingeklappt (nur Icon-Leiste). */
+  defaultSidebarCollapsed?: boolean;
 };
 
 type NavItem = {
@@ -57,17 +59,18 @@ export function RoleDashboardLayout({
   actions,
   inboxNotificationCount,
   edgeToEdge = false,
+  defaultSidebarCollapsed = false,
 }: RoleDashboardLayoutProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(defaultSidebarCollapsed);
   const workspaceToolbar = useWorkspaceR2Toolbar();
 
   const topItems = useMemo<NavItem[]>(
     () =>
       role === "R1"
         ? [
-            { label: "Home", href: "/portal/home", icon: <House className="size-4" /> },
+            { label: "Meine Anträge", href: "/portal/home", icon: <House className="size-4" /> },
             { label: "Profil", href: "/portal/home?view=profil", icon: <User className="size-4" /> },
           ]
         : [

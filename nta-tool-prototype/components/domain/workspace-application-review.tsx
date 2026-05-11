@@ -40,6 +40,7 @@ import {
   ReviewFileRow,
   ScopeChecklist,
   formatReviewFileSize,
+  sanitizeAttestFilesForDatabase,
   shortApplicationRef,
 } from "@/components/domain/application-review-blocks";
 import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
@@ -169,28 +170,38 @@ function draftBlocksFromPhases(
   return blocks;
 }
 
-function reviewBlocksComplete(
+/** Nur sichtbare Blöcke müssen bearbeitet sein (sonst bleibt der CTA fälschlich deaktiviert). */
+function reviewBlocksCompleteVisible(
   phases: Record<ReviewWorkspaceBlockId, ReviewBlockPhase>,
+  visibility: Record<ReviewWorkspaceBlockId, boolean>,
 ): boolean {
   return REVIEW_WORKSPACE_BLOCK_IDS.every((id) => {
+    if (!visibility[id]) return true;
     const p = phases[id];
     return p.phase === "confirmed" || p.phase === "adjustment";
   });
 }
 
-function snapshotBlocksFromPhases(
+/**
+ * Vollständiges Snapshot für Weiterreichung: jeder Block ist `confirmed` oder
+ * `adjustment`. Ausgeblendete Blöcke, die intern noch `pending` sind, werden
+ * als bestätigt mitgegeben (siehe `reviewBlocksCompleteVisible`).
+ */
+function snapshotBlocksForForwardPostSubmit(
   phases: Record<ReviewWorkspaceBlockId, ReviewBlockPhase>,
 ): Record<ReviewWorkspaceBlockId, R2ReviewBlockSnapshot> {
-  const blocks = {} as Record<ReviewWorkspaceBlockId, R2ReviewBlockSnapshot>;
+  const out = {} as Record<ReviewWorkspaceBlockId, R2ReviewBlockSnapshot>;
   for (const id of REVIEW_WORKSPACE_BLOCK_IDS) {
     const p = phases[id];
-    if (p.phase === "confirmed") {
-      blocks[id] = { phase: "confirmed" };
-    } else if (p.phase === "adjustment") {
-      blocks[id] = { phase: "adjustment", remark: p.remark };
+    if (p.phase === "adjustment") {
+      out[id] = { phase: "adjustment", remark: p.remark };
+    } else if (p.phase === "confirmed") {
+      out[id] = { phase: "confirmed" };
+    } else {
+      out[id] = { phase: "confirmed" };
     }
   }
-  return blocks;
+  return out;
 }
 
 function hasText(value: unknown): value is string {
@@ -314,7 +325,38 @@ export function WorkspaceApplicationReview({
     isForwarding,
   ]);
 
-  const allReviewBlocksDone = reviewBlocksComplete(blockPhases);
+  const blockVisibility = useMemo(
+    () =>
+      ({
+        applicant: showApplicantBlock,
+        attest: showAttestBlock,
+        definition: showDefinitionBlock,
+        duration: showDurationBlock,
+        scope: showScopeBlock,
+        lectureMeasures: showLectureMeasuresBlock,
+        assessmentMeasures: showAssessmentMeasuresBlock,
+      }) satisfies Record<ReviewWorkspaceBlockId, boolean>,
+    [
+      showApplicantBlock,
+      showAttestBlock,
+      showDefinitionBlock,
+      showDurationBlock,
+      showScopeBlock,
+      showLectureMeasuresBlock,
+      showAssessmentMeasuresBlock,
+    ],
+  );
+
+  const allReviewBlocksDone = useMemo(
+    () => reviewBlocksCompleteVisible(blockPhases, blockVisibility),
+    [blockPhases, blockVisibility],
+  );
+
+  const forwardCtaHasAdjustment = useMemo(
+    () =>
+      REVIEW_WORKSPACE_BLOCK_IDS.some((id) => blockPhases[id].phase === "adjustment"),
+    [blockPhases],
+  );
 
   useEffect(() => {
     if (application.status !== "in_review") {
@@ -462,7 +504,13 @@ export function WorkspaceApplicationReview({
   }, []);
 
   const handleForwardReview = async () => {
-    if (!allReviewBlocksDone || readOnly) return;
+    if (readOnly) return;
+    if (!allReviewBlocksDone) {
+      setForwardError(
+        "Bitte bestätigen Sie jeden angezeigten Block oder fordern Sie eine Anpassung an.",
+      );
+      return;
+    }
     setForwardError(null);
     suppressDraftSaveRef.current = true;
     setIsForwarding(true);
@@ -477,7 +525,7 @@ export function WorkspaceApplicationReview({
     const forwardedAt = new Date().toISOString();
     const r2PostSubmitReview: R2PostSubmitReview = {
       forwardedAt,
-      blocks: snapshotBlocksFromPhases(blockPhases),
+      blocks: snapshotBlocksForForwardPostSubmit(blockPhases),
     };
     const persistedReviewComments = savedReviewComments.map((c) => ({
       id: c.id,
@@ -546,6 +594,7 @@ export function WorkspaceApplicationReview({
         {showApplicantBlock ? (
           <InteractiveReviewBlock
           blockId="applicant"
+          composerActive={pendingComposer?.blockId === "applicant"}
           readOnly={readOnly}
           compactReadOnly={compactReadOnlyBlocks}
           title="Antragsteller"
@@ -592,6 +641,7 @@ export function WorkspaceApplicationReview({
         {showAttestBlock ? (
           <InteractiveReviewBlock
           blockId="attest"
+          composerActive={pendingComposer?.blockId === "attest"}
           readOnly={readOnly}
           compactReadOnly={compactReadOnlyBlocks}
           title="Fachärztliches Attest"
@@ -603,16 +653,18 @@ export function WorkspaceApplicationReview({
         >
           {data.attestFiles?.length ? (
             <ul className="space-y-3">
-              {data.attestFiles.map((file) => (
-                <li key={file.id ?? file.name}>
-                  <ReviewFileRow
-                    title={file.name ?? "Datei"}
-                    subtitle={formatReviewFileSize(file.size ?? 0)}
-                    href="#"
-                    onNavigate={(e) => e.preventDefault()}
-                  />
-                </li>
-              ))}
+              {data.attestFiles.map((file) => {
+                const [f] = sanitizeAttestFilesForDatabase([file]);
+                return (
+                  <li key={file.id ?? file.name}>
+                    <ReviewFileRow
+                      title={f.name ?? "Datei"}
+                      subtitle={formatReviewFileSize(f.size ?? 0)}
+                      file={f}
+                    />
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <p className="text-sm text-muted-foreground">Keine Dateien hochgeladen.</p>
@@ -639,6 +691,7 @@ export function WorkspaceApplicationReview({
         {showDefinitionBlock ? (
           <InteractiveReviewBlock
           blockId="definition"
+          composerActive={pendingComposer?.blockId === "definition"}
           readOnly={readOnly}
           compactReadOnly={compactReadOnlyBlocks}
           title="Antragsdefinition"
@@ -660,6 +713,7 @@ export function WorkspaceApplicationReview({
         {showDurationBlock ? (
           <InteractiveReviewBlock
           blockId="duration"
+          composerActive={pendingComposer?.blockId === "duration"}
           readOnly={readOnly}
           compactReadOnly={compactReadOnlyBlocks}
           title="Gültigkeitsdauer des Nachteilsausgleiches"
@@ -680,6 +734,7 @@ export function WorkspaceApplicationReview({
         {showScopeBlock ? (
           <InteractiveReviewBlock
           blockId="scope"
+          composerActive={pendingComposer?.blockId === "scope"}
           readOnly={readOnly}
           compactReadOnly={compactReadOnlyBlocks}
           title="Geltungsbereich des beantragten Nachteilsausgleiches"
@@ -700,6 +755,7 @@ export function WorkspaceApplicationReview({
         {showLectureMeasuresBlock ? (
           <InteractiveReviewBlock
           blockId="lectureMeasures"
+          composerActive={pendingComposer?.blockId === "lectureMeasures"}
           readOnly={readOnly}
           compactReadOnly={compactReadOnlyBlocks}
           title="Ausgleichsmassnahmen für Lehrveranstaltungen"
@@ -725,6 +781,7 @@ export function WorkspaceApplicationReview({
         {showAssessmentMeasuresBlock ? (
           <InteractiveReviewBlock
           blockId="assessmentMeasures"
+          composerActive={pendingComposer?.blockId === "assessmentMeasures"}
           readOnly={readOnly}
           compactReadOnly={compactReadOnlyBlocks}
           title="Ausgleichsmassnahmen für Leistungsnachweise"
@@ -748,12 +805,12 @@ export function WorkspaceApplicationReview({
 
         {bottomAction ? (
           <div className="pt-2">{bottomAction}</div>
-        ) : (
-        <div className="pt-2">
+        ) : compactReadOnlyBlocks && showReleasedRecommendationBlock ? null : (
+        <div className="flex w-full flex-col items-end gap-2 pt-2">
           <Button
             type="button"
-            className="h-11 w-full gap-2 bg-zinc-900 text-white hover:bg-zinc-800 sm:w-auto sm:min-w-[280px]"
-            disabled={!allReviewBlocksDone || readOnly || isForwarding}
+            className="h-11 gap-2 bg-zinc-900 px-5 text-white hover:bg-zinc-800 sm:min-w-[280px]"
+            disabled={readOnly || isForwarding}
             onClick={() => void handleForwardReview()}
           >
             {isForwarding ? (
@@ -761,17 +818,19 @@ export function WorkspaceApplicationReview({
                 <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
                 Wird weitergeleitet …
               </>
+            ) : forwardCtaHasAdjustment ? (
+              "Anpassungen weiterleiten"
             ) : (
               "Antrag weiterreichen"
             )}
           </Button>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {readOnly
-              ? viewMode === "readonly_decision"
+          {readOnly ? (
+            <p className="max-w-full text-right text-xs text-muted-foreground">
+              {viewMode === "readonly_decision"
                 ? "Dieser Antrag liegt zur Entscheid vor; das Review ist abgeschlossen."
-                : "Die Anpassungen wurden an die Studierendenperson weitergegeben. Sie können hier nichts mehr ändern."
-              : "Sobald jeder Block bestätigt oder mit einem Anpassungskommentar versehen ist, können Sie den Antrag weiterreichen."}
-          </p>
+                : "Die Anpassungen wurden an die Studierendenperson weitergegeben. Sie können hier nichts mehr ändern."}
+            </p>
+          ) : null}
           {draftPersistError && !readOnly ? (
             <p className="mt-2 text-sm text-destructive" role="alert">
               Entwurf konnte nicht gespeichert werden: {draftPersistError}
@@ -816,11 +875,7 @@ export function WorkspaceApplicationReview({
           }
           savedReviewComments={savedReviewComments}
           onSavedCommentNavigate={navigateFromSavedComment}
-          emptyCommentsLabel={
-            viewMode === "readonly_consultation"
-              ? "Für diesen Antrag wurden noch keine Review-Kommentare erfasst."
-              : undefined
-          }
+          showCommentsSection={viewMode !== "readonly_consultation"}
         />
       </aside>
 
@@ -920,6 +975,7 @@ function InteractiveReviewBlock({
   onReset,
   readOnly = false,
   compactReadOnly = false,
+  composerActive = false,
   children,
 }: {
   blockId: ReviewWorkspaceBlockId;
@@ -930,6 +986,8 @@ function InteractiveReviewBlock({
   onReset: () => void;
   readOnly?: boolean;
   compactReadOnly?: boolean;
+  /** Sidebar-Kommentarentwurf ist für diesen Block geöffnet — amber Card-Rahmen wie bei gespeicherter Anpassung. */
+  composerActive?: boolean;
   children: ReactNode;
 }) {
   const anchorId = reviewWorkspaceAnchorId(blockId);
@@ -1004,6 +1062,7 @@ function InteractiveReviewBlock({
     <ReviewBlockCard
       anchorId={anchorId}
       title={title}
+      cardBorderTone={composerActive ? "adjustment" : undefined}
       footer={
         readOnly && compactReadOnly ? null : readOnly ? (
           <p className="text-xs text-muted-foreground">Nur Ansicht.</p>

@@ -41,6 +41,28 @@ export type R1AdjustmentResolution = {
   resolvedAt: string;
 };
 
+/** R1 Antragsflow: persistierter UI-Schritt vor finalem Submit (Resume). */
+export type R1PortalFlowStep =
+  | "step1"
+  | "step2"
+  | "step3_booking"
+  | "step3_booked"
+  | "step3_recommendation"
+  | "step4_application"
+  | "step5_overview";
+
+export type ApplicationDefinitionData = {
+  situationDescription?: string;
+  duration?: "full_study" | "one_semester";
+  scopeSelections?: string[];
+  lectureMeasures?: string[];
+  lectureOtherEnabled?: boolean;
+  lectureOtherText?: string;
+  assessmentMeasures?: string[];
+  assessmentOtherEnabled?: boolean;
+  assessmentOtherText?: string;
+};
+
 export type ApplicationData = {
   title?: string;
   summary?: string;
@@ -59,6 +81,8 @@ export type ApplicationData = {
     name?: string;
     size?: number;
     type?: string;
+    /** Öffentliche oder blob:-URL zum Öffnen der Datei (z. B. Storage oder lokale Vorschau). */
+    url?: string;
   }[];
   consultation?: {
     status?: "booked" | "done";
@@ -86,16 +110,25 @@ export type ApplicationData = {
     /** Post-Submit-R2-Review — einziger erlaubter Ort für Draft/Snapshot (Trigger). */
     workspaceReview?: RecommendationWorkspaceReview;
   };
-  applicationDefinition?: {
-    situationDescription?: string;
-    duration?: "full_study" | "one_semester";
-    scopeSelections?: string[];
-    lectureMeasures?: string[];
-    lectureOtherEnabled?: boolean;
-    lectureOtherText?: string;
-    assessmentMeasures?: string[];
-    assessmentOtherEnabled?: boolean;
-    assessmentOtherText?: string;
+  applicationDefinition?: ApplicationDefinitionData;
+  /**
+   * R1: Entwurf der Antragsdefinition vor finalem Submit. Wird genutzt, damit
+   * `applicationDefinition` (Trigger für „In Review“ in der Ableitung) erst
+   * bei finaler Einreichung gesetzt wird.
+   */
+  r1DraftApplicationDefinition?: ApplicationDefinitionData;
+  /** R1: zuletzt aktiver Flow-Schritt für Wiederaufnahme. */
+  r1PortalFlowStep?: R1PortalFlowStep;
+  /** R1: Kenntnisnahme-Checkbox Empfehlungsschreiben (nur UI-State). */
+  r1RecommendationAcknowledged?: boolean;
+  /**
+   * R1: Kalender-Mock-Zustand vor Buchung (Termin noch nicht in `consultation`
+   * persistiert).
+   */
+  r1DraftBookingUi?: {
+    selectedBookingDateIso: string;
+    displayedMonthIso: string;
+    selectedBookingSlot: string;
   };
   finalSubmitted?: boolean;
   submittedAt?: string;

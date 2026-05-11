@@ -14,7 +14,6 @@ import {
 import {
   ArrowLeft,
   CheckCheck,
-  FileText,
   Loader2,
   MessageSquareText,
   PencilLine,
@@ -47,7 +46,10 @@ import {
   ReviewField,
   ReviewFileRow,
   ScopeChecklist,
+  createAttestFileEntryFromBrowserFile,
   formatReviewFileSize,
+  revokeAttestFileUrls,
+  sanitizeAttestFilesForDatabase,
   shortApplicationRef,
 } from "@/components/domain/application-review-blocks";
 import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
@@ -178,7 +180,7 @@ function applyEditToData(
     };
   }
   if (edit.blockId === "attest" && edit.attestFiles) {
-    next.attestFiles = edit.attestFiles;
+    next.attestFiles = sanitizeAttestFilesForDatabase(edit.attestFiles);
   }
   if (edit.definition) {
     const base = next.applicationDefinition ?? {};
@@ -217,6 +219,18 @@ function applyEditToData(
   return next;
 }
 
+function workspaceRowWithSanitizedAttests(row: WorkspaceApplication): WorkspaceApplication {
+  const files = row.data.attestFiles;
+  if (!files?.length) return row;
+  return {
+    ...row,
+    data: {
+      ...row.data,
+      attestFiles: sanitizeAttestFilesForDatabase(files),
+    },
+  };
+}
+
 function formatAutosaveTime(ts: number): string {
   return new Intl.DateTimeFormat("de-CH", {
     hour: "2-digit",
@@ -253,7 +267,9 @@ export function PortalApplicationAdjustment({
   // erfolgreichen Save aktualisieren wir ihn aus der Update-Antwort. Die
   // Server-Komponente sollte bei Wechsel des Antrags via `key={application.id}`
   // ein vollständiges Remount erzwingen.
-  const [snapshot, setSnapshot] = useState<WorkspaceApplication>(application);
+  const [snapshot, setSnapshot] = useState<WorkspaceApplication>(() =>
+    workspaceRowWithSanitizedAttests(application),
+  );
 
   const data = snapshot.data;
   const def = data.applicationDefinition;
@@ -405,7 +421,7 @@ export function PortalApplicationAdjustment({
           return;
         }
         if (updated) {
-          setSnapshot(updated as WorkspaceApplication);
+          setSnapshot(workspaceRowWithSanitizedAttests(updated as WorkspaceApplication));
         }
         setAutosaveBaseline(signature);
         setAutosave({ kind: "saved", at: Date.now() });
@@ -451,7 +467,7 @@ export function PortalApplicationAdjustment({
       return;
     }
     if (updated) {
-      setSnapshot(updated as WorkspaceApplication);
+      setSnapshot(workspaceRowWithSanitizedAttests(updated as WorkspaceApplication));
     }
     setEditing(null);
     setErrors({});
@@ -462,7 +478,7 @@ export function PortalApplicationAdjustment({
 
   const deleteApplication = async () => {
     const shouldDelete = window.confirm(
-      "Möchten Sie diesen Antrag wirklich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.",
+      "Möchten Sie diesen Antrag wirklich zurückziehen? Der Antrag wird aus dem System entfernt; dieser Vorgang kann nicht rückgängig gemacht werden.",
     );
     if (!shouldDelete) return;
 
@@ -532,46 +548,34 @@ export function PortalApplicationAdjustment({
         <div className="h-full overflow-y-auto px-6 pb-8 pt-20">
           <div className="mx-auto w-full max-w-4xl space-y-6">
             <div>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h1 className="text-xl font-semibold tracking-tight text-foreground">
-                    Antrag auf Nachteilsausgleich (NTA) –{" "}
-                    {shortApplicationRef(snapshot.id)}
-                  </h1>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {allowAdjustments ? (
-                      <>
-                        Die Fachstelle hat zu einzelnen Blöcken Anpassungen
-                        angefordert. Klicken Sie bei einem markierten Block auf{" "}
-                        <span className="font-medium text-foreground">
-                          «Anpassung vornehmen»
-                        </span>
-                        , passen Sie die Inhalte an und speichern Sie den Block.
-                      </>
-                    ) : (
-                      <>
-                        Sie sehen den Antrag in der Blockansicht. Anpassungen sind
-                        nur möglich, wenn der Antrag den Status «Anpassung
-                        erforderlich» hat.
-                      </>
-                    )}
+              <div className="min-w-0">
+                <h1 className="text-xl font-semibold tracking-tight text-foreground">
+                  Antrag auf Nachteilsausgleich (NTA) –{" "}
+                  {shortApplicationRef(snapshot.id)}
+                </h1>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {allowAdjustments ? (
+                    <>
+                      Die Fachstelle hat zu einzelnen Blöcken Anpassungen
+                      angefordert. Klicken Sie bei einem markierten Block auf{" "}
+                      <span className="font-medium text-foreground">
+                        «Anpassung vornehmen»
+                      </span>
+                      , passen Sie die Inhalte an und speichern Sie den Block.
+                    </>
+                  ) : (
+                    <>
+                      Sie sehen den Antrag in der Blockansicht. Anpassungen sind
+                      nur möglich, wenn der Antrag den Status «Anpassung
+                      erforderlich» hat.
+                    </>
+                  )}
+                </p>
+                {deleteError ? (
+                  <p className="mt-2 text-sm text-destructive" role="alert">
+                    Antrag konnte nicht zurückgezogen werden: {deleteError}
                   </p>
-                  {deleteError ? (
-                    <p className="mt-2 text-sm text-destructive" role="alert">
-                      Antrag konnte nicht gelöscht werden: {deleteError}
-                    </p>
-                  ) : null}
-                </div>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="shrink-0 gap-2"
-                  onClick={() => void deleteApplication()}
-                  disabled={deleting || saving}
-                >
-                  <Trash2 className="size-4" aria-hidden />
-                  {deleting ? "Wird gelöscht…" : "Antrag löschen"}
-                </Button>
+                ) : null}
               </div>
             </div>
 
@@ -628,8 +632,7 @@ export function PortalApplicationAdjustment({
                     <ReviewFileRow
                       title={file.name ?? "Datei"}
                       subtitle={formatReviewFileSize(file.size ?? 0)}
-                      href="#"
-                      onNavigate={(e) => e.preventDefault()}
+                      file={file}
                     />
                   </li>
                 ))}
@@ -831,6 +834,22 @@ export function PortalApplicationAdjustment({
               solange der Antrag im Status «Anpassung erforderlich» ist.
             </p>
           ) : null}
+
+          <div className="mt-6 flex flex-col items-start gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              className={cn(
+                "gap-2 rounded-full px-4 text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/15",
+                "focus-visible:border-destructive/30 focus-visible:ring-destructive/20",
+              )}
+              onClick={() => void deleteApplication()}
+              disabled={deleting || saving}
+            >
+              <Trash2 className="size-4 shrink-0" aria-hidden />
+              {deleting ? "Wird zurückgezogen…" : "Antrag zurückziehen"}
+            </Button>
+          </div>
           </div>
         </div>
       </div>
@@ -843,6 +862,7 @@ export function PortalApplicationAdjustment({
           adjustmentComposer={null}
           savedReviewComments={savedComments}
           onSavedCommentNavigate={navigateFromComment}
+          showCommentsSection={allowAdjustments}
         />
       </aside>
     </div>
@@ -992,7 +1012,7 @@ function R1BlockShell({
             ) : (
               <span />
             )}
-            <ReviewBlockFooterStatus icon={CheckCheck} label="Anpassung erfolgt" />
+            <ReviewBlockFooterStatus icon={CheckCheck} label="Anpassung gespeichert" />
           </div>
         }
       >
@@ -1272,17 +1292,19 @@ function AttestEditForm({
 
   const append = (files: FileList | null) => {
     if (!files?.length) return;
-    const next: AttestFile[] = Array.from(files).map((f) => ({
-      id: `${f.name}-${f.size}-${f.lastModified}-${crypto.randomUUID()}`,
-      name: f.name,
-      size: f.size,
-      type: f.type,
-    }));
-    onChange([...value, ...next]);
+    void (async () => {
+      const next = await Promise.all(
+        Array.from(files).map((f) => createAttestFileEntryFromBrowserFile(f)),
+      );
+      onChange([...value, ...next]);
+    })();
   };
 
-  const remove = (id?: string) =>
+  const remove = (id?: string) => {
+    const target = value.find((f) => f.id === id);
+    if (target) revokeAttestFileUrls([target]);
     onChange(value.filter((f) => f.id !== id));
+  };
 
   return (
     <div className="space-y-3">
@@ -1328,21 +1350,19 @@ function AttestEditForm({
         {value.map((file) => (
           <div
             key={file.id ?? file.name}
-            className="flex items-center gap-4 rounded-lg bg-secondary px-4 py-4"
+            className="flex items-center gap-3 rounded-lg bg-secondary px-3 py-3"
           >
-            <FileText className="size-5 shrink-0 text-muted-foreground" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-foreground">
-                {file.name}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {formatReviewFileSize(file.size ?? 0)}
-              </p>
+              <ReviewFileRow
+                title={file.name ?? "Datei"}
+                subtitle={formatReviewFileSize(file.size ?? 0)}
+                file={file}
+              />
             </div>
             <button
               type="button"
               onClick={() => remove(file.id)}
-              className="rounded-md p-2 text-destructive/80 transition hover:bg-destructive/10 hover:text-destructive"
+              className="shrink-0 self-center rounded-md p-2 text-destructive/80 transition hover:bg-destructive/10 hover:text-destructive"
               aria-label={`${file.name ?? "Datei"} entfernen`}
             >
               <Trash2 className="size-4" />
