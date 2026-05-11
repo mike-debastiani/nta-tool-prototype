@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useWorkspaceR2Toolbar } from "@/components/domain/workspace-r2-toolbar-context";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Send } from "lucide-react";
+import { type Editor } from "@tiptap/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
@@ -16,6 +17,7 @@ import {
   WorkspaceApplicationReview,
   type WorkspaceReviewViewMode,
 } from "@/components/domain/workspace-application-review";
+import { RichTextEditor } from "@/components/domain/rich-text-editor";
 
 type WorkspaceTestFlowProps = {
   userId: string;
@@ -37,13 +39,13 @@ export function WorkspaceTestFlow({
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [releasingId, setReleasingId] = useState<string | null>(null);
 
-  const formatFileSize = (sizeInBytes: number) => `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;
   const refreshApplications = useCallback(async () => {
     const { data } = await supabase
       .from("applications")
       .select(
-        "id,applicant_id,status,updated_at,data,users!applications_applicant_id_fkey(display_name,email)",
+        "id,applicant_id,status,created_at,updated_at,data,users!applications_applicant_id_fkey(display_name,email)",
       )
       .order("updated_at", { ascending: false });
 
@@ -74,7 +76,11 @@ export function WorkspaceTestFlow({
     };
   }, [refreshApplications, supabase, userId]);
 
-  async function markConsultationDone(applicationId: string) {
+  async function saveRecommendationDraft(
+    applicationId: string,
+    draftHtml: string,
+    draftText: string,
+  ) {
     setPendingId(applicationId);
     setMessage(null);
 
@@ -89,13 +95,10 @@ export function WorkspaceTestFlow({
       .update({
         data: {
           ...target.data,
-          consultation: {
-            ...target.data.consultation,
-            status: "done",
-          },
           recommendation: {
-            ready: true,
-            url: "https://www.google.com",
+            ...target.data.recommendation,
+            draftHtml,
+            draftText,
           },
         },
       })
@@ -108,17 +111,66 @@ export function WorkspaceTestFlow({
     }
 
     await refreshApplications();
-    setMessage("Beratung als durchgeführt markiert, Empfehlungsschreiben freigegeben.");
+    setMessage("Entwurf des Empfehlungsschreibens gespeichert.");
     setPendingId(null);
+  }
+
+  async function releaseRecommendation(
+    applicationId: string,
+    draftHtml: string,
+    draftText: string,
+  ) {
+    setReleasingId(applicationId);
+    setMessage(null);
+
+    const target = applications.find((a) => a.id === applicationId);
+    if (!target) {
+      setReleasingId(null);
+      return;
+    }
+
+    const trimmed = draftText.trim();
+    if (!trimmed) {
+      setMessage(
+        "Bitte verfassen Sie zuerst ein Empfehlungsschreiben, bevor Sie es freigeben.",
+      );
+      setReleasingId(null);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("applications")
+      .update({
+        data: {
+          ...target.data,
+          recommendation: {
+            ...target.data.recommendation,
+            draftHtml,
+            draftText,
+            releasedHtml: draftHtml,
+            releasedText: draftText,
+            releasedAt: new Date().toISOString(),
+            releasedBy: reviewerDisplayName,
+            ready: true,
+          },
+        },
+      })
+      .eq("id", applicationId);
+
+    if (error) {
+      setMessage(error.message);
+      setReleasingId(null);
+      return;
+    }
+
+    await refreshApplications();
+    setMessage("Empfehlungsschreiben an R1 freigegeben.");
+    setReleasingId(null);
   }
 
   const selectedApplication = applications.find(
     (application) => application.id === selectedApplicationId,
   );
-  const selectedStatusMeta = selectedApplication
-    ? getApplicationStatusMeta(selectedApplication, "R2")
-    : null;
-
   const selectedCanonicalState = selectedApplication
     ? deriveCanonicalApplicationState(selectedApplication)
     : null;
@@ -127,7 +179,8 @@ export function WorkspaceTestFlow({
     if (!setLeadingToolbarSlot) return;
 
     const reviewWorkspaceDetail =
-      selectedCanonicalState === "in_review"
+      selectedCanonicalState === "consultation_recommendation"
+      || selectedCanonicalState === "in_review"
       || selectedCanonicalState === "in_decision"
       || selectedCanonicalState === "needs_adjustment";
 
@@ -153,7 +206,9 @@ export function WorkspaceTestFlow({
   }, [selectedCanonicalState, setLeadingToolbarSlot, selectedApplication]);
 
   const workspaceReviewMode: WorkspaceReviewViewMode =
-    selectedCanonicalState === "in_decision"
+    selectedCanonicalState === "consultation_recommendation"
+      ? "readonly_consultation"
+      : selectedCanonicalState === "in_decision"
       ? "readonly_decision"
       : selectedCanonicalState === "needs_adjustment"
         ? "readonly_adjustment_pending"
@@ -213,7 +268,8 @@ export function WorkspaceTestFlow({
   }
 
   if (
-    selectedCanonicalState === "in_review"
+    selectedCanonicalState === "consultation_recommendation"
+    || selectedCanonicalState === "in_review"
     || selectedCanonicalState === "in_decision"
     || selectedCanonicalState === "needs_adjustment"
   ) {
@@ -224,202 +280,122 @@ export function WorkspaceTestFlow({
         reviewerDisplayName={reviewerDisplayName}
         viewMode={workspaceReviewMode}
         onPersisted={() => void refreshApplications()}
+        bottomAction={
+          selectedCanonicalState === "consultation_recommendation"
+          && !selectedApplication.data.recommendation?.releasedHtml ? (
+            <RecommendationDraftEditor
+              key={`${selectedApplication.id}-recommendation-editor`}
+              initialHtml={
+                selectedApplication.data.recommendation?.draftHtml ?? ""
+              }
+              saveMessage={message}
+              saving={pendingId === selectedApplication.id}
+              releasing={releasingId === selectedApplication.id}
+              onSave={(draftHtml, draftText) =>
+                saveRecommendationDraft(
+                  selectedApplication.id,
+                  draftHtml,
+                  draftText,
+                )}
+              onRelease={(draftHtml, draftText) =>
+                releaseRecommendation(
+                  selectedApplication.id,
+                  draftHtml,
+                  draftText,
+                )}
+            />
+          ) : undefined
+        }
       />
     );
   }
 
-  return (
-    <div className="px-6 py-6">
-    <Card>
-      <CardHeader>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-fit gap-2 px-0"
-          onClick={() => setSelectedApplicationId(null)}
-        >
-          <ArrowLeft className="size-4" />
-          Zurueck zur Liste
-        </Button>
-        <CardTitle>Antrag oeffnen und bearbeiten</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-4">
-          <div className="space-y-2 rounded-lg border bg-muted/20 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="font-medium">
-                {selectedApplication.data.title ?? "Ohne Titel"}
-              </h3>
-              <span
-                className={cn(
-                  "inline-flex items-center rounded-lg px-2 py-0.5 text-xs leading-4 font-semibold",
-                  selectedStatusMeta?.className,
-                )}
-              >
-                {selectedStatusMeta?.label}
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {selectedApplication.data.summary || "Keine Beschreibung hinterlegt."}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Antragsteller:{" "}
-              {selectedApplication.users[0]?.display_name ??
-                selectedApplication.users[0]?.email ??
-                selectedApplication.applicant_id}
-            </p>
-            {selectedApplication.data.consultation?.status ? (
-              <div className="rounded-md border bg-background p-3 text-xs">
-                <p className="font-medium text-foreground">Angefragter Beratungstermin</p>
-                <p className="text-muted-foreground">
-                  {selectedApplication.data.consultation.date ?? "Datum noch offen"}
-                </p>
-                <p className="text-muted-foreground">
-                  Slot: {selectedApplication.data.consultation.slot ?? "Slot noch offen"}
-                </p>
-                <p className="text-muted-foreground">
-                  Ort: {selectedApplication.data.consultation.location ?? "Ort noch offen"}
-                </p>
-              </div>
-            ) : null}
-            {selectedApplication.data.personalData ? (
-              <div className="space-y-1 rounded-md border bg-background p-3 text-xs">
-                <p className="mb-1 font-medium text-foreground">
-                  Übermittelte Antragsdaten (read-only)
-                </p>
-                <p className="text-muted-foreground">
-                  Name: {selectedApplication.data.personalData.vorname}{" "}
-                  {selectedApplication.data.personalData.name}
-                </p>
-                <p className="text-muted-foreground">
-                  E-Mail: {selectedApplication.data.personalData.email}
-                </p>
-                <p className="text-muted-foreground">
-                  Telefon: {selectedApplication.data.personalData.phone}
-                </p>
-                <p className="text-muted-foreground">
-                  Matrikel: {selectedApplication.data.personalData.matrikel}
-                </p>
-                <p className="text-muted-foreground">
-                  Studiengang: {selectedApplication.data.personalData.studiengang}
-                </p>
-                <p className="text-muted-foreground">
-                  Uploads: {selectedApplication.data.attestFiles?.length ?? 0}
-                </p>
-              </div>
-            ) : null}
-            {selectedApplication.data.attestFiles?.length ? (
-              <div className="space-y-2 rounded-md border bg-background p-3 text-xs">
-                <p className="font-medium text-foreground">Fachärztliche Atteste</p>
-                {selectedApplication.data.attestFiles.map((file) => (
-                  <a
-                    key={file.id ?? file.name}
-                    href="https://www.google.com"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center justify-between rounded-md bg-secondary px-3 py-2 text-foreground hover:underline"
-                  >
-                    <span>{file.name ?? "Datei"}</span>
-                    <span className="inline-flex items-center gap-1 text-muted-foreground">
-                      {formatFileSize(file.size ?? 0)}
-                      <ExternalLink className="size-3.5" />
-                    </span>
-                  </a>
-                ))}
-              </div>
-            ) : null}
-            {selectedApplication.data.recommendation?.url ? (
-              <div className="rounded-md border bg-background p-3 text-xs">
-                <p className="mb-1 font-medium text-foreground">Empfehlungsschreiben</p>
-                <a
-                  href={selectedApplication.data.recommendation.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-foreground underline"
-                >
-                  Dokument in neuem Tab öffnen
-                  <ExternalLink className="size-3.5" />
-                </a>
-              </div>
-            ) : null}
-            {selectedApplication.data.applicationDefinition ? (
-              <div className="space-y-1 rounded-md border bg-background p-3 text-xs">
-                <p className="mb-1 font-medium text-foreground">Antragsdefinition</p>
-                <p className="text-muted-foreground">
-                  Beschreibung:{" "}
-                  {selectedApplication.data.applicationDefinition.situationDescription ??
-                    "Keine Angabe"}
-                </p>
-                <p className="text-muted-foreground">
-                  Gültigkeit:{" "}
-                  {selectedApplication.data.applicationDefinition.duration === "full_study"
-                    ? "Gesamte Studiendauer"
-                    : selectedApplication.data.applicationDefinition.duration === "one_semester"
-                      ? "Einmalig für ein Semester"
-                      : "Keine Angabe"}
-                </p>
-                <p className="text-muted-foreground">
-                  Geltungsbereich:{" "}
-                  {selectedApplication.data.applicationDefinition.scopeSelections?.join(", ") ||
-                    "Keine Angabe"}
-                </p>
-                <p className="text-muted-foreground">
-                  Maßnahmen Lehrveranstaltungen:{" "}
-                  {[
-                    ...(selectedApplication.data.applicationDefinition.lectureMeasures ?? []),
-                    selectedApplication.data.applicationDefinition.lectureOtherEnabled
-                      ? selectedApplication.data.applicationDefinition.lectureOtherText || "Sonstige"
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(", ") || "Keine Angabe"}
-                </p>
-                <p className="text-muted-foreground">
-                  Maßnahmen Leistungsnachweise:{" "}
-                  {[
-                    ...(selectedApplication.data.applicationDefinition.assessmentMeasures ?? []),
-                    selectedApplication.data.applicationDefinition.assessmentOtherEnabled
-                      ? selectedApplication.data.applicationDefinition.assessmentOtherText ||
-                        "Sonstige"
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(", ") || "Keine Angabe"}
-                </p>
-              </div>
-            ) : null}
-          </div>
+  return null;
+}
 
-          <div className="space-y-3 rounded-lg border p-4">
-            <p className="text-sm font-medium">
-              Empfehlungsschreiben freigeben (Mock)
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Der eingereichte Antrag ist hier nur lesbar. Nach Durchführung der
-              Beratung können Sie die Empfehlung freigeben.
-            </p>
-            <div className="flex items-center justify-between gap-3">
-              <span
-                className={cn(
-                  "inline-flex items-center rounded-lg px-2 py-0.5 text-xs leading-4 font-semibold",
-                  selectedStatusMeta?.className,
-                )}
-              >
-                {selectedStatusMeta?.label}
-              </span>
-              <Button
-                variant="outline"
-                onClick={() => markConsultationDone(selectedApplication.id)}
-                disabled={pendingId === selectedApplication.id}
-              >
-                Beratung durchgeführt + Empfehlung freigeben
-              </Button>
-            </div>
+const RECOMMENDATION_PLACEHOLDER =
+  "Erstellen Sie hier das Empfehlungsschreiben für den Fall dieses Antrages.";
+
+function RecommendationDraftEditor({
+  initialHtml,
+  saveMessage,
+  saving,
+  releasing,
+  onSave,
+  onRelease,
+}: {
+  initialHtml: string;
+  saveMessage: string | null;
+  saving: boolean;
+  releasing: boolean;
+  onSave: (draftHtml: string, draftText: string) => void;
+  onRelease: (draftHtml: string, draftText: string) => void;
+}) {
+  const [editor, setEditor] = useState<Editor | null>(null);
+
+  const busy = saving || releasing;
+
+  return (
+    <section className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+      <div className="border-b border-border px-6 py-5">
+        <h2 className="text-lg font-medium text-foreground">
+          Empfehlungsschreiben erstellen
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Verfassen Sie hier das Empfehlungsschreiben für diesen Antrag und
+          geben Sie es nach Fertigstellung an die studierende Person frei.
+        </p>
+      </div>
+      <div className="space-y-4 px-6 py-5">
+        <RichTextEditor
+          initialHtml={initialHtml}
+          placeholder={RECOMMENDATION_PLACEHOLDER}
+          ariaLabel="Empfehlungsschreiben"
+          onReady={setEditor}
+        />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2"
+              disabled={busy || !editor}
+              onClick={() => {
+                if (!editor) return;
+                onSave(editor.getHTML(), editor.getText());
+              }}
+            >
+              {saving ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden />
+              ) : (
+                <Save className="size-4" aria-hidden />
+              )}
+              {saving ? "Speichert …" : "Entwurf speichern"}
+            </Button>
+            {saveMessage ? (
+              <p className="text-sm text-muted-foreground">{saveMessage}</p>
+            ) : null}
           </div>
+          <Button
+            type="button"
+            className="gap-2 bg-zinc-900 text-white hover:bg-zinc-800"
+            disabled={busy || !editor}
+            onClick={() => {
+              if (!editor) return;
+              onRelease(editor.getHTML(), editor.getText());
+            }}
+          >
+            {releasing ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden />
+            ) : (
+              <Send className="size-4" aria-hidden />
+            )}
+            {releasing
+              ? "Wird freigegeben …"
+              : "Empfehlungsschreiben freigeben"}
+          </Button>
         </div>
-        {message && <p className="text-sm text-muted-foreground">{message}</p>}
-      </CardContent>
-    </Card>
-    </div>
+      </div>
+    </section>
   );
 }

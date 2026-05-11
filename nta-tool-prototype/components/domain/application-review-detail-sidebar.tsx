@@ -54,6 +54,8 @@ type ApplicationReviewDetailSidebarProps = {
   savedReviewComments: SavedReviewComment[];
   /** Z. B. R1 Korrekturflow: Sprung zum passenden Antragsschritt / Anker. */
   onSavedCommentNavigate?: (blockId: string) => void;
+  /** Optionaler Empty-State für reine Detailansichten ohne Review-Kommentarflow. */
+  emptyCommentsLabel?: string;
 };
 
 function formatCommentTimestamp(ts: number): string {
@@ -79,6 +81,7 @@ export function ApplicationReviewDetailSidebar({
   adjustmentComposer,
   savedReviewComments,
   onSavedCommentNavigate,
+  emptyCommentsLabel = "Klicken Sie bei einem Block auf «Anpassung anfordern», um hier eine Bemerkung zu verfassen.",
 }: ApplicationReviewDetailSidebarProps) {
   const submitted = formatReviewSubmittedAt(application.data);
   const updated = new Date(application.updated_at).toLocaleDateString("de-CH", {
@@ -198,7 +201,7 @@ export function ApplicationReviewDetailSidebar({
         <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
           {savedReviewComments.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Klicken Sie bei einem Block auf «Anpassung anfordern», um hier eine Bemerkung zu verfassen.
+              {emptyCommentsLabel}
             </p>
           ) : null}
           {savedReviewComments.map((c) => (
@@ -229,7 +232,7 @@ function ReviewAdjustmentDraftCard({
   /** `fullColumn`: nutzt die volle Höhe der Sidebar-Spalte (Kommentarentwurf). */
   layout?: "embedded" | "fullColumn";
 }) {
-  const nowLabel = formatCommentTimestamp(Date.now());
+  const [nowLabel] = useState(() => formatCommentTimestamp(Date.now()));
   const full = layout === "fullColumn";
 
   return (

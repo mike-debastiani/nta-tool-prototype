@@ -70,6 +70,19 @@ export type ApplicationData = {
   recommendation?: {
     ready?: boolean;
     url?: string;
+    /** R2-Entwurf für das Empfehlungsschreiben in der Beratungsphase. */
+    draftHtml?: string;
+    draftText?: string;
+    /**
+     * Vom R2 freigegebener finaler Inhalt (HTML + Plaintext) inkl. Zeitstempel.
+     * Wird beim Klick auf „Empfehlungsschreiben freigeben" gesetzt; R1 sieht
+     * diesen Inhalt im Empfehlungs-Step.
+     */
+    releasedHtml?: string;
+    releasedText?: string;
+    releasedAt?: string;
+    /** Anzeige-Name der R2-Fachperson, welche das Schreiben freigegeben hat. */
+    releasedBy?: string;
     /** Post-Submit-R2-Review — einziger erlaubter Ort für Draft/Snapshot (Trigger). */
     workspaceReview?: RecommendationWorkspaceReview;
   };

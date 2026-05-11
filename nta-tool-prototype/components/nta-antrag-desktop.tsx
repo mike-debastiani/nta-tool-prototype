@@ -37,6 +37,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -906,6 +907,11 @@ export function NtaAntragDesktop({
   }
 
   const recommendationUrl = application?.data?.recommendation?.url ?? "https://www.google.com";
+  const releasedRecommendationHtml =
+    application?.data?.recommendation?.releasedHtml?.trim() ?? "";
+  const releasedRecommendationAuthor =
+    application?.data?.recommendation?.releasedBy?.trim()
+    || "Fachstelle für Nachteilsausgleich";
   const bookedSlot = application?.data?.consultation?.slot ?? selectedBookingSlot;
   const bookedDateShort = selectedBookingDate.toLocaleDateString("de-CH", {
     day: "2-digit",
@@ -1998,31 +2004,46 @@ export function NtaAntragDesktop({
                   </div>
                 ) : currentStep === "step3_recommendation" ? (
                   <div className="space-y-6">
-                    <div className="space-y-2">
-                      <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
-                        Empfehlungsschreiben der Fachstelle
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        Die Fachstelle hat auf Basis Ihres Beratungsgesprächs ein
-                        Empfehlungsschreiben verfasst. Öffnen Sie das Dokument,
-                        lesen Sie es durch und bestätigen Sie die Kenntnisnahme.
-                      </p>
-                    </div>
-                    <a
-                      href={recommendationUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-4 rounded-lg bg-secondary px-4 py-4"
-                    >
-                      <FileText className="size-5 text-muted-foreground" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-foreground">
-                          Empfehlungsschreiben
-                        </p>
-                        <p className="text-sm text-muted-foreground">2.9 MB</p>
+                    {releasedRecommendationHtml ? (
+                      <RecommendationReleasedAccordion
+                        variant="plain"
+                        html={releasedRecommendationHtml}
+                        releasedAt={
+                          application?.data?.recommendation?.releasedAt
+                        }
+                        authorDisplayName={releasedRecommendationAuthor}
+                      />
+                    ) : (
+                      <div className="space-y-6">
+                        <div className="space-y-2">
+                          <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
+                            Empfehlungsschreiben der Fachstelle
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground">
+                            Die Fachstelle hat auf Basis Ihres Beratungsgesprächs
+                            ein Empfehlungsschreiben verfasst. Lesen Sie es durch
+                            und bestätigen Sie die Kenntnisnahme.
+                          </p>
+                        </div>
+                        <a
+                          href={recommendationUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-4 rounded-lg bg-secondary px-4 py-4"
+                        >
+                          <FileText className="size-5 text-muted-foreground" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-foreground">
+                              Empfehlungsschreiben
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              2.9 MB
+                            </p>
+                          </div>
+                          <ExternalLink className="size-4 text-foreground" />
+                        </a>
                       </div>
-                      <ExternalLink className="size-4 text-foreground" />
-                    </a>
+                    )}
                     <label className="flex items-center gap-2 text-sm text-foreground">
                       <input
                         type="checkbox"
@@ -2561,28 +2582,43 @@ export function NtaAntragDesktop({
                     </div>
 
                     <div className="space-y-3">
-                      <p className="text-lg font-medium text-foreground">
-                        Empfehlungsschreiben der Fachstelle
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Die Fachstelle hat auf Basis Ihres Beratungsgesprächs ein
-                        Empfehlungsschreiben verfasst.
-                      </p>
-                      <a
-                        href={recommendationUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-4 rounded-lg bg-secondary px-4 py-4"
-                      >
-                        <FileText className="size-5 text-muted-foreground" />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-foreground">
-                            Empfehlungsschreiben
+                      {releasedRecommendationHtml ? (
+                        <RecommendationReleasedAccordion
+                          variant="plain"
+                          html={releasedRecommendationHtml}
+                          releasedAt={
+                            application?.data?.recommendation?.releasedAt
+                          }
+                          authorDisplayName={releasedRecommendationAuthor}
+                        />
+                      ) : (
+                        <>
+                          <p className="text-lg font-medium text-foreground">
+                            Empfehlungsschreiben der Fachstelle
                           </p>
-                          <p className="text-sm text-muted-foreground">2.9 MB</p>
-                        </div>
-                        <ExternalLink className="size-4 text-foreground" />
-                      </a>
+                          <p className="text-sm text-muted-foreground">
+                            Die Fachstelle hat auf Basis Ihres Beratungsgesprächs
+                            ein Empfehlungsschreiben verfasst.
+                          </p>
+                          <a
+                            href={recommendationUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-4 rounded-lg bg-secondary px-4 py-4"
+                          >
+                            <FileText className="size-5 text-muted-foreground" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-foreground">
+                                Empfehlungsschreiben
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                2.9 MB
+                              </p>
+                            </div>
+                            <ExternalLink className="size-4 text-foreground" />
+                          </a>
+                        </>
+                      )}
                     </div>
 
                     <div className="space-y-3">

@@ -166,3 +166,38 @@
     @apply font-sans;
   }
 }
+
+/* Tiptap (ProseMirror) editor — shadcn-styled content
+   Block/inline styles are applied inline via TipTap HTMLAttributes (so they win
+   over Tailwind preflight). The rules below only cover layout concerns that
+   need a CSS-level selector. The `.tiptap-content` class can be reused on
+   read-only render targets (e.g. dangerouslySetInnerHTML) so paragraphs/lists
+   space identically to the editor. */
+
+.tiptap.ProseMirror {
+  outline: none;
+}
+
+.tiptap.ProseMirror p,
+.tiptap-content p {
+  margin: 0 0 0.75em 0;
+  line-height: 1.6;
+}
+
+.tiptap.ProseMirror p:last-child,
+.tiptap-content p:last-child {
+  margin-bottom: 0;
+}
+
+.tiptap.ProseMirror li > p,
+.tiptap-content li > p {
+  margin: 0;
+}
+
+.tiptap.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}

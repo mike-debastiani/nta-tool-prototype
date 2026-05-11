@@ -43,6 +43,7 @@ import {
   formatReviewFileSize,
   shortApplicationRef,
 } from "@/components/domain/application-review-blocks";
+import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
 import {
   REVIEW_WORKSPACE_BLOCK_IDS,
   reviewWorkspaceAnchorId,
@@ -193,8 +194,19 @@ function snapshotBlocksFromPhases(
   return blocks;
 }
 
+function hasText(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function hasAnyValue(values: unknown[]): boolean {
+  return values.some((value) =>
+    Array.isArray(value) ? value.length > 0 : hasText(value),
+  );
+}
+
 export type WorkspaceReviewViewMode =
   | "interactive"
+  | "readonly_consultation"
   | "readonly_decision"
   | "readonly_adjustment_pending";
 
@@ -205,6 +217,8 @@ type WorkspaceApplicationReviewProps = {
   viewMode?: WorkspaceReviewViewMode;
   /** Optional: nach persistierender Aktion (z. B. Refresh der Antragsliste). */
   onPersisted?: () => void;
+  /** Optionaler CTA unterhalb der Blocks, z. B. Beratung durchgeführt. */
+  bottomAction?: ReactNode;
 };
 
 export function WorkspaceApplicationReview({
@@ -212,12 +226,58 @@ export function WorkspaceApplicationReview({
   reviewerDisplayName,
   viewMode = "interactive",
   onPersisted,
+  bottomAction,
 }: WorkspaceApplicationReviewProps) {
   const readOnly = viewMode !== "interactive";
+  const compactReadOnlyBlocks = viewMode === "readonly_consultation";
   const data = application.data;
   const statusMeta = getApplicationStatusMeta(application, "R2");
   const def = data.applicationDefinition;
   const supabase = useMemo(() => createClient(), []);
+
+  const showApplicantBlock =
+    !compactReadOnlyBlocks
+    || hasAnyValue([
+      data.personalData?.vorname,
+      data.personalData?.name,
+      data.personalData?.email,
+      data.personalData?.phone,
+      data.personalData?.matrikel,
+      data.personalData?.studiengang,
+      data.personalData?.semester,
+    ]);
+  const showAttestBlock =
+    !compactReadOnlyBlocks || Boolean(data.attestFiles?.length);
+  const showReleasedRecommendationBlock = hasText(
+    data.recommendation?.releasedHtml,
+  );
+  const showRecommendationBlock =
+    !compactReadOnlyBlocks
+    && !showReleasedRecommendationBlock
+    && hasText(data.recommendation?.url);
+  const showDefinitionBlock =
+    !compactReadOnlyBlocks || hasText(def?.situationDescription);
+  const showDurationBlock = !compactReadOnlyBlocks || Boolean(def?.duration);
+  const showScopeBlock =
+    !compactReadOnlyBlocks || Boolean(def?.scopeSelections?.length);
+  const showLectureMeasuresBlock =
+    !compactReadOnlyBlocks
+    || Boolean(def?.lectureMeasures?.length)
+    || Boolean(def?.lectureOtherEnabled && hasText(def?.lectureOtherText));
+  const showAssessmentMeasuresBlock =
+    !compactReadOnlyBlocks
+    || Boolean(def?.assessmentMeasures?.length)
+    || Boolean(def?.assessmentOtherEnabled && hasText(def?.assessmentOtherText));
+  const hasVisibleBlocks =
+    showApplicantBlock
+    || showAttestBlock
+    || showRecommendationBlock
+    || showReleasedRecommendationBlock
+    || showDefinitionBlock
+    || showDurationBlock
+    || showScopeBlock
+    || showLectureMeasuresBlock
+    || showAssessmentMeasuresBlock;
 
   const [blockPhases, setBlockPhases] = useState<
     Record<ReviewWorkspaceBlockId, ReviewBlockPhase>
@@ -479,10 +539,21 @@ export function WorkspaceApplicationReview({
           </h1>
         </div>
 
+        {!hasVisibleBlocks ? (
+          <ReviewBlockCard title="Noch keine übermittelten Angaben" footer={null}>
+            <p className="text-sm text-muted-foreground">
+              Für diese Beratungsphase wurden noch keine Antragsblöcke
+              übermittelt.
+            </p>
+          </ReviewBlockCard>
+        ) : null}
+
         {/* Step „Persönliche Angaben“ ohne Antragsart (Figma: Antragsteller) */}
-        <InteractiveReviewBlock
+        {showApplicantBlock ? (
+          <InteractiveReviewBlock
           blockId="applicant"
           readOnly={readOnly}
+          compactReadOnly={compactReadOnlyBlocks}
           title="Antragsteller"
           phase={blockPhases.applicant}
           onConfirm={() => confirmBlock("applicant")}
@@ -520,12 +591,15 @@ export function WorkspaceApplicationReview({
           ) : (
             <p className="text-sm text-muted-foreground">Keine Daten erfasst.</p>
           )}
-        </InteractiveReviewBlock>
+          </InteractiveReviewBlock>
+        ) : null}
 
         {/* Fachärztliches Attest */}
-        <InteractiveReviewBlock
+        {showAttestBlock ? (
+          <InteractiveReviewBlock
           blockId="attest"
           readOnly={readOnly}
+          compactReadOnly={compactReadOnlyBlocks}
           title="Fachärztliches Attest"
           phase={blockPhases.attest}
           onConfirm={() => confirmBlock("attest")}
@@ -549,10 +623,13 @@ export function WorkspaceApplicationReview({
           ) : (
             <p className="text-sm text-muted-foreground">Keine Dateien hochgeladen.</p>
           )}
-        </InteractiveReviewBlock>
+          </InteractiveReviewBlock>
+        ) : null}
 
-        {/* Empfehlungsschreiben — gleiche Dateikachel wie Attest, ohne Aktionen */}
-        <ReviewBlockCard title="Empfehlungsschreiben der Fachstelle" footer={null}>
+        {/* Empfehlungsschreiben — Legacy-Dateikachel, nur wenn keine freigegebene
+            Rich-Text-Empfehlung vorliegt. */}
+        {showRecommendationBlock ? (
+          <ReviewBlockCard title="Empfehlungsschreiben der Fachstelle" footer={null}>
           {data.recommendation?.url ? (
             <ul className="space-y-3">
               <li>
@@ -566,12 +643,28 @@ export function WorkspaceApplicationReview({
           ) : (
             <p className="text-sm text-muted-foreground">Kein Empfehlungsschreiben hinterlegt.</p>
           )}
-        </ReviewBlockCard>
+          </ReviewBlockCard>
+        ) : null}
+
+        {/* Empfehlungsschreiben — freigegebene Rich-Text-Variante als Accordion. */}
+        {showReleasedRecommendationBlock ? (
+          <RecommendationReleasedAccordion
+            html={data.recommendation?.releasedHtml ?? ""}
+            releasedAt={data.recommendation?.releasedAt}
+            authorDisplayName={
+              data.recommendation?.releasedBy?.trim()
+              || "Fachstelle für Nachteilsausgleich"
+            }
+            variant="card"
+          />
+        ) : null}
 
         {/* Antragsdefinition (Freitext) */}
-        <InteractiveReviewBlock
+        {showDefinitionBlock ? (
+          <InteractiveReviewBlock
           blockId="definition"
           readOnly={readOnly}
+          compactReadOnly={compactReadOnlyBlocks}
           title="Antragsdefinition"
           phase={blockPhases.definition}
           onConfirm={() => confirmBlock("definition")}
@@ -584,12 +677,15 @@ export function WorkspaceApplicationReview({
               ? def.situationDescription
               : "Keine Beschreibung hinterlegt."}
           </p>
-        </InteractiveReviewBlock>
+          </InteractiveReviewBlock>
+        ) : null}
 
         {/* Gültigkeitsdauer */}
-        <InteractiveReviewBlock
+        {showDurationBlock ? (
+          <InteractiveReviewBlock
           blockId="duration"
           readOnly={readOnly}
+          compactReadOnly={compactReadOnlyBlocks}
           title="Gültigkeitsdauer des Nachteilsausgleiches"
           phase={blockPhases.duration}
           onConfirm={() => confirmBlock("duration")}
@@ -601,12 +697,15 @@ export function WorkspaceApplicationReview({
           onReset={() => handleResetRequest("duration")}
         >
           <DurationChoiceCompare selected={def?.duration} />
-        </InteractiveReviewBlock>
+          </InteractiveReviewBlock>
+        ) : null}
 
         {/* Geltungsbereich */}
-        <InteractiveReviewBlock
+        {showScopeBlock ? (
+          <InteractiveReviewBlock
           blockId="scope"
           readOnly={readOnly}
+          compactReadOnly={compactReadOnlyBlocks}
           title="Geltungsbereich des beantragten Nachteilsausgleiches"
           phase={blockPhases.scope}
           onConfirm={() => confirmBlock("scope")}
@@ -618,12 +717,15 @@ export function WorkspaceApplicationReview({
           onReset={() => handleResetRequest("scope")}
         >
           <ScopeChecklist selected={def?.scopeSelections ?? []} />
-        </InteractiveReviewBlock>
+          </InteractiveReviewBlock>
+        ) : null}
 
         {/* Lehrveranstaltungen */}
-        <InteractiveReviewBlock
+        {showLectureMeasuresBlock ? (
+          <InteractiveReviewBlock
           blockId="lectureMeasures"
           readOnly={readOnly}
+          compactReadOnly={compactReadOnlyBlocks}
           title="Ausgleichsmassnahmen für Lehrveranstaltungen"
           phase={blockPhases.lectureMeasures}
           onConfirm={() => confirmBlock("lectureMeasures")}
@@ -640,12 +742,15 @@ export function WorkspaceApplicationReview({
             otherEnabled={def?.lectureOtherEnabled}
             otherText={def?.lectureOtherText}
           />
-        </InteractiveReviewBlock>
+          </InteractiveReviewBlock>
+        ) : null}
 
         {/* Leistungsnachweise */}
-        <InteractiveReviewBlock
+        {showAssessmentMeasuresBlock ? (
+          <InteractiveReviewBlock
           blockId="assessmentMeasures"
           readOnly={readOnly}
+          compactReadOnly={compactReadOnlyBlocks}
           title="Ausgleichsmassnahmen für Leistungsnachweise"
           phase={blockPhases.assessmentMeasures}
           onConfirm={() => confirmBlock("assessmentMeasures")}
@@ -662,8 +767,12 @@ export function WorkspaceApplicationReview({
             otherEnabled={def?.assessmentOtherEnabled}
             otherText={def?.assessmentOtherText}
           />
-        </InteractiveReviewBlock>
+          </InteractiveReviewBlock>
+        ) : null}
 
+        {bottomAction ? (
+          <div className="pt-2">{bottomAction}</div>
+        ) : (
         <div className="pt-2">
           <Button
             type="button"
@@ -698,6 +807,7 @@ export function WorkspaceApplicationReview({
             </p>
           ) : null}
         </div>
+        )}
         </div>
       </div>
 
@@ -730,6 +840,11 @@ export function WorkspaceApplicationReview({
           }
           savedReviewComments={savedReviewComments}
           onSavedCommentNavigate={navigateFromSavedComment}
+          emptyCommentsLabel={
+            viewMode === "readonly_consultation"
+              ? "Für diesen Antrag wurden noch keine Review-Kommentare erfasst."
+              : undefined
+          }
         />
       </aside>
 
@@ -828,6 +943,7 @@ function InteractiveReviewBlock({
   onRequestAdjustment,
   onReset,
   readOnly = false,
+  compactReadOnly = false,
   children,
 }: {
   blockId: ReviewWorkspaceBlockId;
@@ -837,6 +953,7 @@ function InteractiveReviewBlock({
   onRequestAdjustment: () => void;
   onReset: () => void;
   readOnly?: boolean;
+  compactReadOnly?: boolean;
   children: ReactNode;
 }) {
   const anchorId = reviewWorkspaceAnchorId(blockId);
@@ -912,7 +1029,7 @@ function InteractiveReviewBlock({
       anchorId={anchorId}
       title={title}
       footer={
-        readOnly ? (
+        readOnly && compactReadOnly ? null : readOnly ? (
           <p className="text-xs text-muted-foreground">Nur Ansicht.</p>
         ) : (
           <ReviewBlockActions
