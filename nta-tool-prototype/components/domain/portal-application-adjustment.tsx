@@ -47,10 +47,10 @@ import {
   ReviewField,
   ReviewFileRow,
   ScopeChecklist,
-  fileNameFromUrl,
   formatReviewFileSize,
   shortApplicationRef,
 } from "@/components/domain/application-review-blocks";
+import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
 import {
   REVIEW_WORKSPACE_BLOCK_IDS,
   reviewWorkspaceAnchorId,
@@ -639,24 +639,19 @@ export function PortalApplicationAdjustment({
             )}
           </R1BlockShell>
 
-          {/* Empfehlungsschreiben — read-only, keine Aktionen */}
-          <ReviewBlockCard title="Empfehlungsschreiben der Fachstelle" footer={null}>
-            {data.recommendation?.url ? (
-              <ul className="space-y-3">
-                <li>
-                  <ReviewFileRow
-                    title={fileNameFromUrl(data.recommendation.url)}
-                    subtitle="Empfehlung der Fachstelle"
-                    href={data.recommendation.url}
-                  />
-                </li>
-              </ul>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Kein Empfehlungsschreiben hinterlegt.
-              </p>
-            )}
-          </ReviewBlockCard>
+          {/* Empfehlungsschreiben — read-only Accordion mit Rich-Text-Inhalt.
+              Wird nur gerendert, wenn die Fachstelle ein Schreiben freigegeben hat. */}
+          {data.recommendation?.releasedHtml?.trim() ? (
+            <RecommendationReleasedAccordion
+              variant="card"
+              html={data.recommendation.releasedHtml}
+              releasedAt={data.recommendation.releasedAt}
+              authorDisplayName={
+                data.recommendation.releasedBy?.trim()
+                || "Fachstelle für Nachteilsausgleich"
+              }
+            />
+          ) : null}
 
           {/* Antragsdefinition */}
           <R1BlockShell {...blockProps("definition")}>
@@ -1211,7 +1206,7 @@ function PersonalEditForm({
             <SelectContent>
               {SEMESTER_NUMBERS.map((n) => (
                 <SelectItem key={n} value={String(n)}>
-                  Semester {n}
+                  {n}. Semester
                 </SelectItem>
               ))}
             </SelectContent>

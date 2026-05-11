@@ -9,7 +9,8 @@
 
 - R1 **Antragserstellung** end-to-end bis zum **finalen Submit**; danach fachlich **„In Review“**.
 - R2 kann **Beratung + Empfehlung** und im Anschluss den **Block-Review** im **Workspace** bearbeiten und mit **„Antrag weiterreichen“** in **`in_implementation`** bzw. **`needs_correction`** überführen (Schreibzugriff nur auf definierte `data`-Teile).
-- R1 **Dashboard:** Liste eigener Anträge, Read-only-Detail, Delete; **Neuer Antrag** nur mit leerem Stand über **`?new`** / **`?new=1`**.
+- **Empfehlungsschreiben** wird nicht mehr als Datei-Upload, sondern als **Rich-Text** (TipTap) direkt im Antrag verfasst. R2 nutzt dafür in der Phase „Beratung & Empfehlung“ den `RecommendationDraftEditor` (Entwurf speichern / freigeben); R1 sieht den freigegebenen Text identisch gestylt über den geteilten `RecommendationReleasedAccordion` in Step 3 und Step 5.
+- R1 **Dashboard:** Liste eigener Anträge; **Klick auf einen Antrag** öffnet stets die Block-Detailansicht `PortalApplicationAdjustment` (Layout wie R2-Review, Editieren nur im Status `needs_adjustment`). **Neuer Antrag** weiterhin über **`?new`** / **`?new=1`** mit leerem Stand.
 - **Statusdarstellung** für Badges ist **zentral** in `lib/application-status.ts` (R1/R2 konsistent; Wording z. B. bei „Anpassung“ rollenabhängig).
 - R1- und R2-Dashboard nutzen ein gemeinsames **`RoleDashboardLayout`** (einklappbare Sidebar, rollenspezifische Nav-Items).
 
@@ -32,6 +33,7 @@ Hinweise:
 
 - `app/portal/antragserstellung/page.tsx` interpretiert **jeden** Wert von `?new` als „leerer Neustart“ (`params.new !== undefined`).
 - Ohne `?new` und ohne `?applicationId` wird der **letzte** Antrag des Users **nur dann** automatisch geladen, wenn sein kanonischer Status **`draft`**, **`consultation_recommendation`** oder **`needs_adjustment`** ist. Bereits eingereichte Anträge (`in_review` / `in_decision` / `approved` / `rejected`) führen zu einem **leeren** Formular, damit R1 problemlos einen zweiten Antrag starten kann.
+- **Mit `?applicationId=<uuid>`** rendert die Page nicht mehr den Step-Flow, sondern die Block-Detailansicht `PortalApplicationAdjustment` (`components/domain/portal-application-adjustment.tsx`) — Layout analog zur R2-Review. Bearbeitung ist nur aktiv, wenn `deriveCanonicalApplicationState === "needs_adjustment"` (`allowAdjustments`); sonst Lese-Modus mit persistenter „Zurück zum Dashboard“-Aktion und Löschen-Button.
 - `/portal` kann noch auf die Antragserstellung zeigen — mit `app/` abgleichen.
 
 ### R2
@@ -48,16 +50,21 @@ Hinweise:
 | Datei | Rolle |
 |-------|--------|
 | `components/nta-antrag-desktop.tsx` | R1 Flow Step 1–6: Validierung, Autosave, Realtime (per **`application.id`** gescoped), Sidebar, Delete |
-| `app/portal/antragserstellung/page.tsx` | Steuert Initial-Load: `?new` ⇒ leer; `?applicationId` ⇒ gezielt; sonst nur **resumable** Anträge auto-laden |
-| `components/domain/student-dashboard.tsx` | R1 Dashboard (Liste, Detail, Delete; „Neuen Antrag erstellen“ → `?new=1`) |
+| `app/portal/antragserstellung/page.tsx` | Steuert Initial-Load: `?new` ⇒ leer; `?applicationId` ⇒ `PortalApplicationAdjustment`; sonst nur **resumable** Anträge auto-laden |
+| `components/domain/portal-application-adjustment.tsx` | R1 Block-Detailansicht (Layout wie R2-Review). Edit nur bei `needs_adjustment` (`allowAdjustments`); per-Block Autosave; persistenter Zurück-Button; Anker-Sprung aus Sidebar-Kommentaren |
+| `components/domain/student-dashboard.tsx` | R1 Dashboard (Liste; „Neuen Antrag erstellen“ → `?new=1`; Klick auf Eintrag → `?applicationId=<uuid>`) |
 | `app/portal/home/page.tsx` | Serverpage R1 Dashboard |
-| `components/domain/workspace-test-flow.tsx` | Workspace: Liste, Detail, Aktion Beratung/Empfehlung, Mode-Switch `review` / `readonly_decision` |
-| `components/domain/workspace-application-review.tsx` | R2 Block-Review inkl. Persistenz und Forward |
+| `components/domain/workspace-test-flow.tsx` | Workspace: Liste, View-Mode-Ableitung, `RecommendationDraftEditor` als `bottomAction` in `consultation_recommendation` |
+| `components/domain/workspace-application-review.tsx` | R2 Block-Review inkl. Persistenz, Forward, View Modes (`interactive` / `readonly_consultation` / `readonly_adjustment_pending` / `readonly_decision`) |
+| `components/domain/rich-text-editor.tsx` | TipTap-Wrapper (StarterKit + Underline/Link/TextAlign/Placeholder/Custom-Heading) mit shadcn-styled, reaktiver Toolbar (`useEditorState`) |
+| `components/domain/recommendation-released-accordion.tsx` | Geteilte Anzeige für `recommendation.releasedHtml` (Variant `card` für R2-Review, `plain` für R1-Antragsflow); Header inline mit Avatar + Freigegeben-Pill |
+| `components/ui/accordion.tsx` | shadcn-Wrapper um `radix-ui` Accordion (ohne Hover-Underline) |
 | `app/api/applications/review-forward/route.ts` | Forward-API: Statuswechsel auf `in_implementation` / `needs_correction` (RLS-konform, Session-Client) |
 | `components/domain/role-dashboard-layout.tsx` | Gemeinsames R1/R2 Dashboard-Layout (collapsible Sidebar, Workspace-Topbar R2) |
-| `lib/test-flow-types.ts` | `ApplicationData` / `applications.data` (inkl. `recommendation.workspaceReview`) |
+| `lib/test-flow-types.ts` | `ApplicationData` / `applications.data` (inkl. `recommendation.draftHtml`/`releasedHtml`/`releasedBy`, `recommendation.workspaceReview`, `r1AdjustmentResolutions`) |
 | `lib/application-status.ts` | Zentrale fachliche States + rollenabhängige Labels/Farben |
 | `lib/r2-review-persist.ts` | Helfer `dataWithoutLegacyReviewRoots` für trigger-konforme R2-Saves |
+| `lib/review-workspace-blocks.ts` | Block-IDs + `reviewWorkspaceAnchorId` (Anker-Sprung in R1/R2-Sidebar-Kommentaren) |
 | `components/domain/application-status-badge.tsx` | Badge-UI aus Status-Ableitung |
 | `utils/supabase/service-role.ts` | Optionaler Service-Role-Client (aktuell **nicht** im Forward-Pfad benötigt) |
 
@@ -78,7 +85,9 @@ Hinweise:
 ### Step 3 — Beratung & Empfehlung
 
 - Terminwahl (Kalender + Slot); nach Buchung Waiting-Screen.
-- **Empfehlung:** Realtime, sobald R2 freigibt; **Kenntnisnahme-Checkbox** Pflicht.
+- **Empfehlung:** Realtime, sobald R2 freigibt (`data.recommendation.releasedHtml` + `ready: true`); **Kenntnisnahme-Checkbox** Pflicht.
+- Anzeige des freigegebenen Schreibens über den geteilten **`RecommendationReleasedAccordion`** (Variant `plain`) — gleicher visueller Block wie auf R2-Seite. Der frühere Datei-Tile (`recommendation.url`, Hilfsfunktion `fileNameFromUrl`) ist vollständig entfernt; existierende `url`-Werte bleiben im JSON erhalten, werden aber nicht mehr gerendert.
+- Solange `releasedHtml` noch leer ist, zeigt der Step nur einen kurzen Hinweis („Die Fachstelle hat noch kein Empfehlungsschreiben freigegeben.“) — kein Datei-Fallback mehr.
 
 ### Step 4 — Antrag stellen (Definition)
 
@@ -88,7 +97,8 @@ Hinweise:
 
 - Gesamter Antrag als Review; Step-1 **locked**; Rest **editierbar**.
 - Live-Validierung: fehlende Pflichtinhalte **rot**; zugehöriger **Prozessschritt** in der Sidebar bei Fehler **rot**.
-- **Finales Senden** schreibt u. a. **`submittedAt`**, **`finalSubmitted`**, **`applicationDefinition`** in `applications.data` und führt fachlich in **„In Review“**.
+- Empfehlungsschreiben-Block nutzt denselben `RecommendationReleasedAccordion` wie Step 3 (Variant `plain`); Fallback-Text identisch.
+- **Finales Senden** schreibt u. a. **`submittedAt`**, **`finalSubmitted`**, **`applicationDefinition`** in `applications.data` und führt fachlich in **„In Review“**. Das `recommendation`-Objekt wird per Spread erhalten (`...application.data.recommendation`) und `ready: true` gesetzt — vorhandene `draftHtml`/`releasedHtml`/`releasedBy`/Legacy-`url` bleiben unangetastet.
 
 ### Step 6 — Erfolg
 
@@ -110,10 +120,11 @@ Hinweise:
 
 - Liste aller eigenen Anträge.
 - **Neuen Antrag erstellen** → komplett leer über **`?new=1`** (auch `?new` ohne Wert genügt).
-- **Korrekturen vornehmen** (`needs_adjustment`) → `?applicationId=<uuid>` öffnet genau diesen Antrag.
+- **Klick auf einen Eintrag** → `?applicationId=<uuid>` rendert immer die Block-Detailansicht `PortalApplicationAdjustment` (kein Inline-Detail im Dashboard mehr).
+  - Im Status **`needs_adjustment`**: pro Block „Anpassung vornehmen“ (Edit-Mode) + „Anpassung speichern“; per-Block Autosave; bestätigte Blöcke grün, ausstehende amber mit Original-Bemerkung der Fachstelle; Sidebar-Kommentare springen per Klick zum passenden Block (`reviewWorkspaceAnchorId`); abgeschlossene Anpassungen landen in `data.r1AdjustmentResolutions` (`R1AdjustmentResolution.resolvedAt`).
+  - In allen anderen Status: reine Lese-Ansicht (gleiches Layout, keine Edit-Buttons).
+  - **Persistenter „Zurück zum Dashboard“**-Button oben links (`absolute`) und **Löschen-Aktion** sind in jedem Status verfügbar.
 - Direktaufruf von `/portal/antragserstellung` ohne Parameter: lädt nur **resumable** Anträge automatisch; bei bereits eingereichten Anträgen erscheint ein leeres Formular (kein Re-Display des Erfolgs-Screens).
-- Detail **read-only** (keine Edit-Aktionen im aktuellen Stand).
-- **Delete:** Papierkorb-Icon + Bestätigung.
 - Sidebar wie im Layout: **collapsible** (expanded / icon-only).
 
 ---
@@ -124,10 +135,16 @@ Hinweise:
 - `personalData`
 - `attestFiles`
 - `consultation`: `status` **`booked` | `done`**, date, slot, location, advisor
-- `recommendation`: `ready`, `url`
+- `recommendation`:
+  - `ready: boolean` — Step-Gating R1 (Step 3 erreichbar).
+  - `draftHtml` / `draftText` — TipTap-Entwurf R2 (Beratungsphase, „Entwurf speichern“ im `RecommendationDraftEditor`).
+  - `releasedHtml` / `releasedText` / `releasedAt` / `releasedBy` — finaler, freigegebener Inhalt nach „Empfehlungsschreiben freigeben“; treibt den `RecommendationReleasedAccordion` (R1 + R2).
+  - `url` — Legacy-Datei-Pfad; bleibt aus Datenkompatibilität erhalten, wird **nicht mehr gerendert**.
+  - `workspaceReview` — R2-Block-Review (Draft / postSubmit / forwardedComments), siehe `Antrag_Review_Kontext.md`.
 - `applicationDefinition`
 - `finalSubmitted` (boolean, Final-Submit-Marker)
 - `submittedAt`
+- `r1AdjustmentResolutions` — pro Block (`ReviewWorkspaceBlockId`) `R1AdjustmentResolution { resolvedAt }`; gesetzt von `PortalApplicationAdjustment` bei „Anpassung speichern“, beim erneuten Einreichen zurückzusetzen.
 
 Typen: **`lib/test-flow-types.ts`**.
 
@@ -168,9 +185,17 @@ State-Badges orientieren sich an **Figma-Farbkodierung** (kompakt, ohne Border) 
 
 ## 9. R2 Workspace-Test — Leitplanken
 
-- Detailansicht **read-only** (außer definierte Aktionen).
+- Detailansicht **read-only** (außer definierte Aktionen). Im `WorkspaceApplicationReview` über `viewMode` gesteuert:
+  - `interactive` (in_review) — voller Review-Modus.
+  - `readonly_consultation` (consultation_recommendation) — Beratungsphase: zeigt nur Blöcke mit Inhalt; der **`RecommendationDraftEditor`** wird als `bottomAction` eingeblendet, solange `releasedHtml` leer ist.
+  - `readonly_adjustment_pending` (needs_adjustment) — R2 wartet auf R1-Korrektur.
+  - `readonly_decision` (in_decision / approved / rejected) — Snapshot.
 - Dokumente in **neuen Tabs** öffnen, wo vorgesehen.
-- Aktion **„Beratung durchgeführt + Empfehlung freigeben“** darf in **`applications.data`** nur ändern:
+- **Empfehlungsschreiben erstellen (Beratungsphase):**
+  - Verfasst im **`RichTextEditor`** (TipTap + shadcn-Styling).
+  - „Entwurf speichern“ (links) → `data.recommendation.draftHtml` / `draftText`.
+  - „Empfehlungsschreiben freigeben“ (rechts) → `data.recommendation.releasedHtml` / `releasedText` / `releasedAt` / `releasedBy` + `ready: true`. Nach dem Release verschwindet der Editor; statt dessen erscheint der `RecommendationReleasedAccordion`.
+- Aktion **„Beratung durchgeführt + Empfehlung freigeben“** (Legacy) und die o. g. Rich-Text-Releaseschreiben in `applications.data` ausschließlich unter:
   - `consultation`
   - `recommendation`
 - **Block-Review nach `in_review`:** Persistenz unter **`data.recommendation.workspaceReview`** (innerhalb des Trigger-erlaubten `recommendation`-Pfads). Details: `Antrag_Review_Kontext.md` § 4.

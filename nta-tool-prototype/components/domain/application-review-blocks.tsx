@@ -21,16 +21,6 @@ export function shortApplicationRef(id: string) {
   return id.replace(/-/g, "").slice(0, 8).toUpperCase();
 }
 
-export function fileNameFromUrl(url: string, fallback = "Empfehlungsschreiben"): string {
-  try {
-    const path = new URL(url).pathname.split("/").filter(Boolean).pop();
-    if (!path) return fallback;
-    return decodeURIComponent(path);
-  } catch {
-    return fallback;
-  }
-}
-
 /**
  * Visueller Tonus eines Review-Block-Footers / -Rahmens.
  * - `default`: neutraler Card-Look (für noch ausstehende Aktionen).
@@ -71,10 +61,10 @@ export function ReviewBlockCard({
 
   return (
     <section className={sectionClassName} id={anchorId}>
-      <div className="border-b border-border px-6 py-5">
+      <div className="space-y-6 px-6 pt-5 pb-5">
         <h2 className="text-lg font-medium text-foreground">{title}</h2>
+        {children}
       </div>
-      <div className="space-y-4 px-6 py-5">{children}</div>
       {footer ? <div className={footerClassName}>{footer}</div> : null}
     </section>
   );

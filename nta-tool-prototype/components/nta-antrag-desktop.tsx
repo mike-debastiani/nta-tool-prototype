@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -37,6 +38,14 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -401,10 +410,11 @@ export function NtaAntragDesktop({
   const [stepTwoFileError, setStepTwoFileError] = useState<string | null>(null);
   const [stepThreeError, setStepThreeError] = useState<string | null>(null);
   const [stepFourErrors, setStepFourErrors] = useState<ApplicationFormFieldErrors>({});
-  const [stepFiveAgreementAccepted, setStepFiveAgreementAccepted] = useState(false);
   const [stepFiveError, setStepFiveError] = useState<string | null>(null);
   const [pendingBooking, setPendingBooking] = useState(false);
   const [isDeletingApplication, setIsDeletingApplication] = useState(false);
+  const [deleteApplicationDialogOpen, setDeleteApplicationDialogOpen] =
+    useState(false);
   const [isRecommendationAcknowledged, setIsRecommendationAcknowledged] =
     useState(false);
   const [applicationFormData, setApplicationFormData] = useState<ApplicationFormData>(
@@ -418,7 +428,28 @@ export function NtaAntragDesktop({
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const overviewFileInputRef = useRef<HTMLInputElement>(null);
+  const situationDescriptionStep4Ref = useRef<HTMLTextAreaElement>(null);
+  const situationDescriptionOverviewRef = useRef<HTMLTextAreaElement>(null);
   const lastSyncedInitialApplicationId = useRef<string | undefined>(undefined);
+
+  const syncSituationDescriptionTextareaHeights = useCallback(() => {
+    for (const ref of [situationDescriptionStep4Ref, situationDescriptionOverviewRef]) {
+      const el = ref.current;
+      if (!el) continue;
+      el.style.height = "auto";
+      const minHeightPx = Number.parseFloat(getComputedStyle(el).minHeight);
+      const minH = Number.isFinite(minHeightPx) ? minHeightPx : 0;
+      el.style.height = `${Math.max(el.scrollHeight, minH)}px`;
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    syncSituationDescriptionTextareaHeights();
+  }, [
+    applicationFormData.situationDescription,
+    currentStep,
+    syncSituationDescriptionTextareaHeights,
+  ]);
 
   useEffect(() => {
     // Load persisted draft only after hydration to avoid SSR/client markup mismatch.
@@ -433,7 +464,6 @@ export function NtaAntragDesktop({
         setStepThreeError(null);
         setStepFourErrors({});
         setStepFiveError(null);
-        setStepFiveAgreementAccepted(false);
         setIsRecommendationAcknowledged(false);
         setCurrentStep("step1");
         return;
@@ -654,12 +684,7 @@ export function NtaAntragDesktop({
     return Object.keys(nextErrors).length === 0;
   };
 
-  async function handleDeleteApplication() {
-    const shouldDelete = window.confirm(
-      "Möchten Sie den aktuellen Antrag wirklich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.",
-    );
-    if (!shouldDelete) return;
-
+  async function performDeleteApplication() {
     setIsDeletingApplication(true);
 
     if (application?.id) {
@@ -679,13 +704,13 @@ export function NtaAntragDesktop({
     setStepThreeError(null);
     setStepFourErrors({});
     setStepFiveError(null);
-    setStepFiveAgreementAccepted(false);
     setIsRecommendationAcknowledged(false);
     setSelectedBookingDate(INITIAL_BOOKING_DATE);
     setDisplayedMonth(INITIAL_BOOKING_MONTH);
     setSelectedBookingSlot(BOOKING_SLOTS[4]);
     setCurrentStep("step1");
     window.localStorage.removeItem(autosaveKey);
+    setDeleteApplicationDialogOpen(false);
     setIsDeletingApplication(false);
   }
 
@@ -786,13 +811,6 @@ export function NtaAntragDesktop({
   }
 
   async function handleSubmitApplication() {
-    if (!stepFiveAgreementAccepted) {
-      setStepFiveError(
-        "Bitte bestätigen Sie die Nutzungsbedingungen und die Datenschutzerklärung.",
-      );
-      return;
-    }
-
     let targetId = application?.id ?? null;
     if (!targetId) {
       const { data, error } = await supabase.rpc("r1_submit_application", {
@@ -830,8 +848,8 @@ export function NtaAntragDesktop({
         advisor: application?.data?.consultation?.advisor ?? MOCK_ADVISOR,
       },
       recommendation: {
+        ...(application?.data?.recommendation ?? {}),
         ready: true,
-        url: recommendationUrl,
       },
       applicationDefinition: {
         situationDescription: applicationFormData.situationDescription,
@@ -906,7 +924,6 @@ export function NtaAntragDesktop({
     setCurrentStep("step6_submitted");
   }
 
-  const recommendationUrl = application?.data?.recommendation?.url ?? "https://www.google.com";
   const releasedRecommendationHtml =
     application?.data?.recommendation?.releasedHtml?.trim() ?? "";
   const releasedRecommendationAuthor =
@@ -933,7 +950,7 @@ export function NtaAntragDesktop({
   const step2Complete = formData.attestFiles.length > 0;
   const step3Complete = recommendationReleased;
   const step4Complete = isStepFourComplete(applicationFormData);
-  const step5Complete = stepFiveAgreementAccepted || currentStep === "step6_submitted";
+  const step5Complete = currentStep === "step6_submitted";
   const isOverviewStep = currentStep === "step5_overview";
   const overviewSituationInvalid =
     isOverviewStep && !applicationFormData.situationDescription.trim();
@@ -959,7 +976,8 @@ export function NtaAntragDesktop({
   const step1InvalidInOverview = isOverviewStep && !step1Complete;
   const step2InvalidInOverview = isOverviewStep && !step2Complete;
   const step4InvalidInOverview = isOverviewStep && !step4Complete;
-  const step5InvalidInOverview = isOverviewStep && !stepFiveAgreementAccepted;
+  const step5InvalidInOverview =
+    isOverviewStep && (!step1Complete || !step2Complete || !step4Complete);
 
   const canOpenStep1 = true;
   const canOpenStep2 = step1Complete;
@@ -1511,7 +1529,7 @@ export function NtaAntragDesktop({
                             <SelectContent>
                               {SEMESTER_NUMBERS.map((n) => (
                                 <SelectItem key={n} value={String(n)}>
-                                  Semester {n}
+                                  {n}. Semester
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -1705,18 +1723,18 @@ export function NtaAntragDesktop({
                       </div>
                       <div className="ml-6 flex flex-col items-start gap-2">
                         <a
-                          href="https://www.google.com"
+                          href="/attest/attest-checkliste-icf.pdf"
                           target="_blank"
-                          rel="noreferrer"
+                          rel="noopener noreferrer"
                           className="inline-flex items-center gap-2 text-sm text-foreground hover:underline"
                         >
                           Attest-Checkliste im ICF Format
                           <ExternalLink className="size-4" />
                         </a>
                         <a
-                          href="https://www.google.com"
+                          href="/attest/attest-mustervorlage.pdf"
                           target="_blank"
-                          rel="noreferrer"
+                          rel="noopener noreferrer"
                           className="inline-flex items-center gap-2 text-sm text-foreground hover:underline"
                         >
                           Attest Mustervorlage
@@ -2014,34 +2032,15 @@ export function NtaAntragDesktop({
                         authorDisplayName={releasedRecommendationAuthor}
                       />
                     ) : (
-                      <div className="space-y-6">
-                        <div className="space-y-2">
-                          <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
-                            Empfehlungsschreiben der Fachstelle
-                          </CardTitle>
-                          <p className="text-sm text-muted-foreground">
-                            Die Fachstelle hat auf Basis Ihres Beratungsgesprächs
-                            ein Empfehlungsschreiben verfasst. Lesen Sie es durch
-                            und bestätigen Sie die Kenntnisnahme.
-                          </p>
-                        </div>
-                        <a
-                          href={recommendationUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center gap-4 rounded-lg bg-secondary px-4 py-4"
-                        >
-                          <FileText className="size-5 text-muted-foreground" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-foreground">
-                              Empfehlungsschreiben
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              2.9 MB
-                            </p>
-                          </div>
-                          <ExternalLink className="size-4 text-foreground" />
-                        </a>
+                      <div className="space-y-2">
+                        <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
+                          Empfehlungsschreiben der Fachstelle
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Die Fachstelle hat noch kein Empfehlungsschreiben
+                          freigegeben. Sobald die Freigabe erfolgt ist, erscheint
+                          es hier zur Kenntnisnahme.
+                        </p>
                       </div>
                     )}
                     <label className="flex items-center gap-2 text-sm text-foreground">
@@ -2081,6 +2080,7 @@ export function NtaAntragDesktop({
                           Sie auf Ihre Erfahrungen in der Schule und im Alltag zurückgreifen.
                         </p>
                         <textarea
+                          ref={situationDescriptionStep4Ref}
                           value={applicationFormData.situationDescription}
                           onChange={(event) =>
                             setApplicationFormData((previous) => ({
@@ -2089,8 +2089,9 @@ export function NtaAntragDesktop({
                             }))
                           }
                           placeholder="Auswirkungen auf das Studium..."
+                          rows={1}
                           className={cn(
-                            "min-h-[92px] w-full rounded-lg border bg-background px-3 py-2 text-sm shadow-xs outline-none transition",
+                            "min-h-[116px] w-full resize-none overflow-hidden rounded-lg border bg-background px-3 py-2 text-sm shadow-xs outline-none transition",
                             stepFourErrors.situationDescription
                               ? "border-destructive"
                               : "border-border focus:border-ring",
@@ -2597,26 +2598,9 @@ export function NtaAntragDesktop({
                             Empfehlungsschreiben der Fachstelle
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            Die Fachstelle hat auf Basis Ihres Beratungsgesprächs
-                            ein Empfehlungsschreiben verfasst.
+                            Die Fachstelle hat noch kein Empfehlungsschreiben
+                            freigegeben.
                           </p>
-                          <a
-                            href={recommendationUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex items-center gap-4 rounded-lg bg-secondary px-4 py-4"
-                          >
-                            <FileText className="size-5 text-muted-foreground" />
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium text-foreground">
-                                Empfehlungsschreiben
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                2.9 MB
-                              </p>
-                            </div>
-                            <ExternalLink className="size-4 text-foreground" />
-                          </a>
                         </>
                       )}
                     </div>
@@ -2632,6 +2616,7 @@ export function NtaAntragDesktop({
                         Leistungsnachweise.
                       </p>
                       <textarea
+                        ref={situationDescriptionOverviewRef}
                         value={applicationFormData.situationDescription}
                         onChange={(event) =>
                           setApplicationFormData((previous) => ({
@@ -2639,8 +2624,9 @@ export function NtaAntragDesktop({
                             situationDescription: event.target.value,
                           }))
                         }
+                        rows={1}
                         className={cn(
-                          "min-h-[120px] w-full rounded-lg border bg-background px-3 py-2 text-sm shadow-xs outline-none focus:border-ring",
+                          "min-h-[120px] w-full resize-none overflow-hidden rounded-lg border bg-background px-3 py-2 text-sm shadow-xs outline-none focus:border-ring",
                           overviewSituationInvalid ? "border-destructive" : "border-border",
                         )}
                       />
@@ -2933,18 +2919,6 @@ export function NtaAntragDesktop({
                         </a>{" "}
                         zu.
                       </p>
-                      <label className="mt-2 flex items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={stepFiveAgreementAccepted}
-                          onChange={(event) => {
-                            setStepFiveAgreementAccepted(event.target.checked);
-                            setStepFiveError(null);
-                          }}
-                          className="size-4 accent-primary"
-                        />
-                        Ich bestätige die Angaben.
-                      </label>
                       {stepFiveError ? (
                         <p className="mt-1 text-xs text-destructive">{stepFiveError}</p>
                       ) : null}
@@ -2957,7 +2931,7 @@ export function NtaAntragDesktop({
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={handleDeleteApplication}
+                        onClick={() => setDeleteApplicationDialogOpen(true)}
                         disabled={isDeletingApplication}
                         className="rounded-md p-2 text-destructive/70 transition hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
                         aria-label="Antrag löschen"
@@ -3057,6 +3031,42 @@ export function NtaAntragDesktop({
           </aside>
         ) : null}
       </div>
+
+      <Dialog
+        open={deleteApplicationDialogOpen}
+        onOpenChange={(open) => {
+          if (!open && isDeletingApplication) return;
+          setDeleteApplicationDialogOpen(open);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Antrag löschen?</DialogTitle>
+            <DialogDescription>
+              Möchten Sie den aktuellen Antrag wirklich löschen? Dieser Vorgang kann nicht
+              rückgängig gemacht werden.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isDeletingApplication}
+              onClick={() => setDeleteApplicationDialogOpen(false)}
+            >
+              Abbrechen
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isDeletingApplication}
+              onClick={() => void performDeleteApplication()}
+            >
+              {isDeletingApplication ? "Wird gelöscht…" : "Löschen"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

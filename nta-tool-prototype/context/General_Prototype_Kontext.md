@@ -17,15 +17,19 @@ Funktionaler Web-Prototyp zur **Simulation** des Nachteilsausgleich-Prozesses (N
 
 | Schicht | Technologie |
 |--------|-------------|
-| Framework | **Next.js** (App Router), **React** |
+| Framework | **Next.js** (App Router, Turbopack-Build), **React** |
 | Sprache | TypeScript |
 | Styling | **Tailwind CSS v4** (Design-Tokens über CSS-Variablen) |
-| UI | **shadcn**-nahe Komponenten unter `components/ui/` (u. a. **radix-ui**) |
+| UI | **shadcn**-nahe Komponenten unter `components/ui/` (u. a. **radix-ui** Accordion/Dialog/Select) |
+| Rich-Text | **TipTap v3** (`@tiptap/react`, `@tiptap/starter-kit`, `@tiptap/extension-heading`/`-underline`/`-link`/`-text-align`/`-placeholder`, `@tiptap/core` für `mergeAttributes`) — siehe `components/domain/rich-text-editor.tsx` |
 | Backend | **Supabase** (Postgres, Auth, Realtime; Storage je nach Feature) |
 | Auth | Supabase E-Mail/Passwort; Logins teils als SSO **inszeniert** |
-| Paketmanager | pnpm |
+| Paketmanager | npm (im Repo ist ein **npm-Workspace** eingerichtet — Runtime-Abhängigkeiten müssen in `nta-tool-prototype/package.json` deklariert sein, sonst scheitert Turbopack/Vercel beim Build) |
 
-**Hinweis:** `Prototyp_Funktionen.md` nennt u. a. Next 15 und Zustand als Zielkonvention — im aktuellen `nta-tool-prototype` bitte **package.json** und bestehende Patterns im Repo als Quelle der Wahrheit nutzen.
+**Hinweise:**
+
+- `Prototyp_Funktionen.md` nennt u. a. Next 15 und Zustand als Zielkonvention — im aktuellen `nta-tool-prototype` bitte **package.json** und bestehende Patterns im Repo als Quelle der Wahrheit nutzen.
+- Das Repo ist ein **npm-Workspace** (`workspaces: ["nta-tool-prototype"]`). Build/Dev wird über das Root-Skript `npm run build --workspace=nta-tool-prototype` ausgeführt. **Wichtig:** Alle Runtime-Dependencies (z. B. TipTap-Pakete) gehören in `nta-tool-prototype/package.json`, nicht in das Root-`package.json` — Vercel installiert beim Build nur die Pakete des Workspace-Targets und Turbopack kann sonst Imports nicht auflösen.
 
 ---
 
@@ -92,10 +96,10 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 
 - Zentrale Entität: **`applications`** mit JSONB **`data`**, Status-Spalte, Timestamps.
 - Berechtigungen: **Postgres RLS** und **Trigger** — Frontend ersetzt das nicht. Wichtig:
-  - **R2-Trigger** `enforce_r2_application_update_columns` erlaubt R2 nur Schreibzugriff auf `data.consultation` und `data.recommendation`. R2-Reviewdaten liegen daher unter `data.recommendation.workspaceReview` (siehe `Antrag_Review_Kontext.md` § 4).
+  - **R2-Trigger** `enforce_r2_application_update_columns` erlaubt R2 nur Schreibzugriff auf `data.consultation` und `data.recommendation`. Konsequenz: **alle** R2-Schreibpfade (Empfehlungs-Drafting via `draftHtml`/`draftText`, Freigabe via `releasedHtml`/`releasedText`/`releasedAt`/`releasedBy`, Post-Submit-Block-Review via `workspaceReview`) liegen unterhalb von `data.recommendation` (siehe `Antrag_Review_Kontext.md` § 4).
   - **SELECT-Policy** `applications_select_r2_worklist` deckt seit Migration `extend_workspace_select_to_decision_states` zusätzlich `in_implementation`, `approved`, `rejected` ab — Voraussetzung dafür, dass R2 nach „Antrag weiterreichen“ den nun in „In Entscheid“ befindlichen Antrag noch sieht und der `UPDATE` nicht am `RETURNING`-SELECT scheitert.
   - **Status-Übergänge** über reguläre Session-Clients: ein dedizierter `SUPABASE_SERVICE_ROLE_KEY` ist im Forward-Pfad nicht nötig (`utils/supabase/service-role.ts` bleibt nur als optionaler Helper bestehen).
-- Details zu Feldern im Antrags-JSON: `Antragerstellung_Kontext.md` und `lib/test-flow-types.ts`; Review-spezifische Pfade → `Antrag_Review_Kontext.md` / Migrationen.
+- Details zu Feldern im Antrags-JSON: `Antragerstellung_Kontext.md` und `lib/test-flow-types.ts`; Review-/Empfehlungs-Pfade → `Antrag_Review_Kontext.md` / Migrationen.
 
 ---
 
@@ -103,11 +107,17 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 
 | Pfad | Inhalt |
 |------|--------|
-| `app/` | Routen (Portal, Workspace, Logins) |
-| `components/domain/` | Fachliche UI (Dashboard, Workspace-Flow, Layouts, Badges) |
-| `components/ui/` | Generische UI-Bausteine |
+| `app/` | Routen (Portal, Workspace, Logins, API) |
+| `app/api/applications/review-forward/route.ts` | RLS-konformer Forward auf `in_implementation` / `needs_correction` |
+| `components/domain/` | Fachliche UI (Dashboard, Workspace-Flow, Layouts, Badges, **Block-Review**, **Empfehlungs-Editor & -Accordion**, R1-Anpassungsansicht) |
+| `components/domain/rich-text-editor.tsx` | TipTap-Wrapper für das Empfehlungsschreiben |
+| `components/domain/recommendation-released-accordion.tsx` | Geteilte Anzeige des freigegebenen Empfehlungsschreibens (R1 + R2) |
+| `components/domain/portal-application-adjustment.tsx` | R1 Block-Detailansicht (Status-abhängig Read-only / Edit) |
+| `components/ui/` | Generische UI-Bausteine (u. a. neuer `accordion.tsx`) |
 | `lib/application-status.ts` | Zentrale Status-Ableitung für Badges |
-| `lib/test-flow-types.ts` | Typisierung `ApplicationData` / Prototyp-JSON |
+| `lib/test-flow-types.ts` | Typisierung `ApplicationData` / Prototyp-JSON (inkl. `recommendation.draftHtml`/`releasedHtml`/`releasedBy`, `r1AdjustmentResolutions`, `workspaceReview`) |
+| `lib/r2-review-persist.ts` | Helfer für trigger-konforme R2-Saves |
+| `lib/review-workspace-blocks.ts` | Block-IDs + Anker-Sprung-Hilfen |
 | `utils/supabase/` | Server/Client/Middleware Supabase |
 | `context/*.md` | Menschliche Kontext-Dokumente für AI und Team |
 

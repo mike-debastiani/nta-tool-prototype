@@ -39,7 +39,6 @@ import {
   ReviewField,
   ReviewFileRow,
   ScopeChecklist,
-  fileNameFromUrl,
   formatReviewFileSize,
   shortApplicationRef,
 } from "@/components/domain/application-review-blocks";
@@ -251,10 +250,6 @@ export function WorkspaceApplicationReview({
   const showReleasedRecommendationBlock = hasText(
     data.recommendation?.releasedHtml,
   );
-  const showRecommendationBlock =
-    !compactReadOnlyBlocks
-    && !showReleasedRecommendationBlock
-    && hasText(data.recommendation?.url);
   const showDefinitionBlock =
     !compactReadOnlyBlocks || hasText(def?.situationDescription);
   const showDurationBlock = !compactReadOnlyBlocks || Boolean(def?.duration);
@@ -271,7 +266,6 @@ export function WorkspaceApplicationReview({
   const hasVisibleBlocks =
     showApplicantBlock
     || showAttestBlock
-    || showRecommendationBlock
     || showReleasedRecommendationBlock
     || showDefinitionBlock
     || showDurationBlock
@@ -626,27 +620,9 @@ export function WorkspaceApplicationReview({
           </InteractiveReviewBlock>
         ) : null}
 
-        {/* Empfehlungsschreiben — Legacy-Dateikachel, nur wenn keine freigegebene
-            Rich-Text-Empfehlung vorliegt. */}
-        {showRecommendationBlock ? (
-          <ReviewBlockCard title="Empfehlungsschreiben der Fachstelle" footer={null}>
-          {data.recommendation?.url ? (
-            <ul className="space-y-3">
-              <li>
-                <ReviewFileRow
-                  title={fileNameFromUrl(data.recommendation.url)}
-                  subtitle="Empfehlung der Fachstelle"
-                  href={data.recommendation.url}
-                />
-              </li>
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground">Kein Empfehlungsschreiben hinterlegt.</p>
-          )}
-          </ReviewBlockCard>
-        ) : null}
-
-        {/* Empfehlungsschreiben — freigegebene Rich-Text-Variante als Accordion. */}
+        {/* Empfehlungsschreiben — freigegebene Rich-Text-Variante als Accordion.
+            Der frühere Legacy-Block (Datei-Kachel über `recommendation.url`) wurde
+            entfernt; es existiert nur noch dieser eine Block-Pfad. */}
         {showReleasedRecommendationBlock ? (
           <RecommendationReleasedAccordion
             html={data.recommendation?.releasedHtml ?? ""}

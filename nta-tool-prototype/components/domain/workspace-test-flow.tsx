@@ -337,16 +337,16 @@ function RecommendationDraftEditor({
 
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
-      <div className="border-b border-border px-6 py-5">
+      <div className="space-y-1 px-6 pt-5 pb-4">
         <h2 className="text-lg font-medium text-foreground">
           Empfehlungsschreiben erstellen
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Verfassen Sie hier das Empfehlungsschreiben für diesen Antrag und
           geben Sie es nach Fertigstellung an die studierende Person frei.
         </p>
       </div>
-      <div className="space-y-4 px-6 py-5">
+      <div className="space-y-4 px-6 pb-5">
         <RichTextEditor
           initialHtml={initialHtml}
           placeholder={RECOMMENDATION_PLACEHOLDER}

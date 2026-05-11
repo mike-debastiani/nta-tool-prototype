@@ -1,6 +1,5 @@
 "use client";
 
-import { CheckCheck } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -71,11 +70,24 @@ export function RecommendationReleasedAccordion({
             <h2 className="text-lg font-medium text-foreground">
               Empfehlungsschreiben der Fachstelle
             </h2>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-100 px-2.5 py-1 text-xs font-medium text-teal-700">
-              <CheckCheck className="size-3.5" aria-hidden />
-              Freigegeben
-              {releasedAtLabel ? ` · ${releasedAtLabel}` : ""}
-            </span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  Erstellt durch:
+                </span>
+                <span
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground"
+                  title={authorDisplayName}
+                  aria-label={`Erstellt durch ${authorDisplayName}`}
+                >
+                  {initials}
+                </span>
+              </div>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-100 px-2.5 py-1 text-xs font-medium text-teal-700">
+                Freigegeben am: 
+                {releasedAtLabel ? `   ${releasedAtLabel}` : ""}
+              </span>
+            </div>
           </div>
         </AccordionTrigger>
         <AccordionContent
@@ -85,22 +97,6 @@ export function RecommendationReleasedAccordion({
             className="tiptap-content text-sm leading-6 text-foreground"
             dangerouslySetInnerHTML={{ __html: html }}
           />
-          <div className="mt-6 flex items-center gap-3 border-t border-border pt-4">
-            <span
-              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground"
-              aria-hidden
-            >
-              {initials}
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-foreground">
-                {authorDisplayName}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Verfasst durch die Fachstelle
-              </p>
-            </div>
-          </div>
         </AccordionContent>
       </AccordionItem>
     </Accordion>
