@@ -79,6 +79,12 @@ import {
   type ReviewWorkspaceBlockId,
 } from "@/lib/review-workspace-blocks";
 import {
+  ASSESSMENT_MEASURE_OPTIONS,
+  LECTURE_MEASURE_OPTIONS,
+  type AssessmentMeasureKey,
+  type LectureMeasureKey,
+} from "@/lib/application-review-labels";
+import {
   type ApplicationData,
   type ApplicationDefinitionData,
   type ApplicationRow,
@@ -152,15 +158,13 @@ type StepOneField =
 
 type ApplicationDuration = "full_study" | "one_semester";
 
-type ApplicationMeasureKey = "m1" | "m2" | "m3" | "m4";
-
 type ApplicationFormData = {
   situationDescription: string;
   duration: ApplicationDuration | "";
   scopeSelections: string[];
-  lectureMeasures: ApplicationMeasureKey[];
+  lectureMeasures: LectureMeasureKey[];
   lectureOtherLines: string[];
-  assessmentMeasures: ApplicationMeasureKey[];
+  assessmentMeasures: AssessmentMeasureKey[];
   assessmentOtherLines: string[];
 };
 
@@ -215,13 +219,6 @@ const APPLICATION_SCOPE_OPTIONS = [
   "Schriftliche Arbeiten",
   "Während Lehrveranstaltungen",
   "Praktika",
-] as const;
-
-const APPLICATION_MEASURE_OPTIONS = [
-  { key: "m1", label: "Massnahme 1" },
-  { key: "m2", label: "Massnahme 2" },
-  { key: "m3", label: "Massnahme 3" },
-  { key: "m4", label: "Massnahme 4" },
 ] as const;
 
 const DEFAULT_APPLICATION_FORM_DATA: ApplicationFormData = {
@@ -348,18 +345,25 @@ function applicationFormDataFromRow(
   const ad =
     row.data?.r1DraftApplicationDefinition ?? row.data?.applicationDefinition;
   if (!ad) return DEFAULT_APPLICATION_FORM_DATA;
-  const measureKeys: ApplicationMeasureKey[] = ["m1", "m2", "m3", "m4"];
-  const pickMeasures = (raw: string[] | undefined) =>
-    (raw ?? []).filter((k): k is ApplicationMeasureKey =>
-      measureKeys.includes(k as ApplicationMeasureKey),
-    );
+  const lectureKeySet = new Set(
+    LECTURE_MEASURE_OPTIONS.map((o) => o.key),
+  ) as ReadonlySet<string>;
+  const assessmentKeySet = new Set(
+    ASSESSMENT_MEASURE_OPTIONS.map((o) => o.key),
+  ) as ReadonlySet<string>;
+  const pickLectureMeasures = (raw: string[] | undefined): LectureMeasureKey[] =>
+    (raw ?? []).filter((k): k is LectureMeasureKey => lectureKeySet.has(k));
+  const pickAssessmentMeasures = (
+    raw: string[] | undefined,
+  ): AssessmentMeasureKey[] =>
+    (raw ?? []).filter((k): k is AssessmentMeasureKey => assessmentKeySet.has(k));
   return {
     situationDescription: ad.situationDescription ?? "",
     duration: (ad.duration as ApplicationDuration | "") ?? "",
     scopeSelections: [...(ad.scopeSelections ?? [])],
-    lectureMeasures: pickMeasures(ad.lectureMeasures),
+    lectureMeasures: pickLectureMeasures(ad.lectureMeasures),
     lectureOtherLines: lectureOtherLinesFromDefinition(ad) ?? [""],
-    assessmentMeasures: pickMeasures(ad.assessmentMeasures),
+    assessmentMeasures: pickAssessmentMeasures(ad.assessmentMeasures),
     assessmentOtherLines: assessmentOtherLinesFromDefinition(ad) ?? [""],
   };
 }
@@ -1511,7 +1515,7 @@ export function NtaAntragDesktop({
                 <CircleHelp className="mt-0.5 size-4 shrink-0 text-foreground" />
                 <div className="min-w-0 text-xs leading-4 text-foreground">
                   <p className="font-medium">Fragen oder Unklarheiten?</p>
-                  <p className="mt-0.5">kontaktieren Sie unsere Fachstelle unter</p>
+                  <p className="mt-0.5">Kontaktieren Sie unsere Fachstelle unter</p>
                   <div className="mt-3 space-y-2.5">
                     <a
                       href="mailto:Kontaktstelle@hochschule.ch"
@@ -2355,24 +2359,26 @@ export function NtaAntragDesktop({
                   </div>
                 ) : currentStep === "step4_application" ? (
                   <div className="space-y-8">
-                    <div className="space-y-5">
-                      <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
+                    <div>
+                      <CardTitle className="mb-8 text-xl font-medium leading-[27px] text-foreground">
                         Antragsstellung
                       </CardTitle>
 
                       <div
                         id={reviewWorkspaceAnchorId("definition")}
-                        className="scroll-mt-4 space-y-2"
+                        className="mb-8 scroll-mt-4"
                       >
-                        <p className="text-sm font-medium text-foreground">
-                          Beschreibung der gesundheitlichen Situation und Nachteile
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Beschreiben Sie Ihre gesundheitliche Situation und die
-                          behinderungsbedingten Nachteile auf studienrelevante Aktivitäten und
-                          Leistungsnachweise. Haben Sie noch keine Studienerfahrung, so können
-                          Sie auf Ihre Erfahrungen in der Schule und im Alltag zurückgreifen.
-                        </p>
+                        <div className="space-y-1">
+                          <p className="mb-0 text-base font-medium text-foreground">
+                            Beschreibung der gesundheitlichen Situation und Nachteile
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Beschreiben Sie Ihre gesundheitliche Situation und die
+                            behinderungsbedingten Nachteile auf studienrelevante Aktivitäten und
+                            Leistungsnachweise. Haben Sie noch keine Studienerfahrung, so können
+                            Sie auf Ihre Erfahrungen in der Schule und im Alltag zurückgreifen.
+                          </p>
+                        </div>
                         <textarea
                           ref={situationDescriptionStep4Ref}
                           value={applicationFormData.situationDescription}
@@ -2385,7 +2391,7 @@ export function NtaAntragDesktop({
                           placeholder="Auswirkungen auf das Studium..."
                           rows={1}
                           className={cn(
-                            "min-h-[116px] w-full resize-none overflow-hidden rounded-lg border bg-background px-3 py-2 text-sm shadow-xs outline-none transition",
+                            "mt-4 min-h-[116px] w-full resize-none overflow-hidden rounded-lg border bg-background px-3 py-2 text-sm shadow-xs outline-none transition",
                             stepFourErrors.situationDescription
                               ? "border-destructive"
                               : "border-border focus:border-ring",
@@ -2400,16 +2406,18 @@ export function NtaAntragDesktop({
 
                       <div
                         id={reviewWorkspaceAnchorId("duration")}
-                        className="scroll-mt-4 space-y-2"
+                        className="mb-8 scroll-mt-4"
                       >
-                        <p className="text-sm font-medium text-foreground">
-                          Gültigkeitsdauer des beantragten Nachteilsausgleiches
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Ihr Nachteilsausgleich kann für ein einzelnes Semester oder für die
-                          gesamte Studienzeit beantragt werden.
-                        </p>
-                        <div className="space-y-2">
+                        <div className="space-y-1">
+                          <p className="mb-0 text-base font-medium text-foreground">
+                            Gültigkeitsdauer des beantragten Nachteilsausgleiches
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Ihr Nachteilsausgleich kann für ein einzelnes Semester oder für die
+                            gesamte Studienzeit beantragt werden.
+                          </p>
+                        </div>
+                        <div className="mt-4 space-y-2">
                           {(
                             [
                               {
@@ -2428,7 +2436,12 @@ export function NtaAntragDesktop({
                           ).map((option) => (
                             <label
                               key={option.value}
-                              className="flex items-start gap-3 rounded-[10px] border border-border px-3 py-3"
+                              className={cn(
+                                "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3",
+                                applicationFormData.duration === option.value
+                                  ? "border-foreground"
+                                  : "border-border",
+                              )}
                             >
                               <input
                                 type="radio"
@@ -2460,16 +2473,18 @@ export function NtaAntragDesktop({
 
                       <div
                         id={reviewWorkspaceAnchorId("scope")}
-                        className="scroll-mt-4 space-y-2"
+                        className="mb-8 scroll-mt-4"
                       >
-                        <p className="text-sm font-medium text-foreground">
-                          Geltungsbereich des beantragten Nachteilsausgleiches
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Wählen Sie aus, für welche Arten von Leistungsnachweisen der
-                          Nachteilsausgleich gelten soll.
-                        </p>
-                        <div className="space-y-2">
+                        <div className="space-y-1">
+                          <p className="mb-0 text-base font-medium text-foreground">
+                            Geltungsbereich des beantragten Nachteilsausgleiches
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Wählen Sie aus, für welche Arten von Leistungsnachweisen der
+                            Nachteilsausgleich gelten soll.
+                          </p>
+                        </div>
+                        <div className="mt-4 space-y-2">
                           {APPLICATION_SCOPE_OPTIONS.map((option) => (
                             <label key={option} className="flex items-center gap-3 text-sm">
                               <input
@@ -2500,36 +2515,56 @@ export function NtaAntragDesktop({
 
                       <div
                         id={reviewWorkspaceAnchorId("lectureMeasures")}
-                        className="scroll-mt-4 space-y-2"
+                        className="mb-8 scroll-mt-4"
                       >
-                        <p className="text-sm font-medium text-foreground">
-                          Ausgleichsmassnahme für Lehrveranstaltungen
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Wählen Sie die Massnahmen aus, die Sie während Lehrveranstaltungen
-                          benötigen.
-                        </p>
-                        <div className="max-w-[330px] space-y-2">
-                          {APPLICATION_MEASURE_OPTIONS.map((option) => (
-                            <label key={option.key} className="flex items-center gap-3 text-sm">
-                              <input
-                                type="checkbox"
-                                checked={applicationFormData.lectureMeasures.includes(option.key)}
-                                onChange={(event) =>
-                                  setApplicationFormData((previous) => ({
-                                    ...previous,
-                                    lectureMeasures: event.target.checked
-                                      ? [...previous.lectureMeasures, option.key]
-                                      : previous.lectureMeasures.filter(
-                                          (entry) => entry !== option.key,
-                                        ),
-                                  }))
-                                }
-                                className="size-4 accent-primary"
-                              />
-                              <span>{option.label}</span>
-                            </label>
-                          ))}
+                        <div className="space-y-1">
+                          <p className="mb-0 text-base font-medium text-foreground">
+                            Ausgleichsmassnahme für Lehrveranstaltungen
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Wählen Sie die Massnahmen aus, die Sie während Lehrveranstaltungen
+                            benötigen.
+                          </p>
+                        </div>
+                        <div className="mt-4 max-w-xl space-y-2">
+                          {LECTURE_MEASURE_OPTIONS.map((option) => {
+                            const isChecked = applicationFormData.lectureMeasures.includes(
+                              option.key,
+                            );
+                            return (
+                              <label
+                                key={option.key}
+                                className={cn(
+                                  "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
+                                  isChecked ? "border-foreground" : "border-border",
+                                )}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={(event) =>
+                                    setApplicationFormData((previous) => ({
+                                      ...previous,
+                                      lectureMeasures: event.target.checked
+                                        ? [...previous.lectureMeasures, option.key]
+                                        : previous.lectureMeasures.filter(
+                                            (entry) => entry !== option.key,
+                                          ),
+                                    }))
+                                  }
+                                  className="mt-0.5 size-4 shrink-0 accent-primary"
+                                />
+                                <span className="space-y-1">
+                                  <span className="block text-sm text-foreground">
+                                    {option.title}
+                                  </span>
+                                  <span className="block text-xs text-muted-foreground">
+                                    {option.description}
+                                  </span>
+                                </span>
+                              </label>
+                            );
+                          })}
                           <CustomMeasureLinesField
                             idPrefix="step4-lecture-other"
                             lines={applicationFormData.lectureOtherLines}
@@ -2557,38 +2592,56 @@ export function NtaAntragDesktop({
 
                       <div
                         id={reviewWorkspaceAnchorId("assessmentMeasures")}
-                        className="scroll-mt-4 space-y-2"
+                        className="mb-8 scroll-mt-4"
                       >
-                        <p className="text-sm font-medium text-foreground">
-                          Ausgleichsmassnahme für Leistungsnachweise
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Wählen Sie die Massnahmen aus, die Sie bei Prüfungen und anderen
-                          Leistungsnachweisen benötigen.
-                        </p>
-                        <div className="max-w-[330px] space-y-2">
-                          {APPLICATION_MEASURE_OPTIONS.map((option) => (
-                            <label key={option.key} className="flex items-center gap-3 text-sm">
-                              <input
-                                type="checkbox"
-                                checked={applicationFormData.assessmentMeasures.includes(
-                                  option.key,
+                        <div className="space-y-1">
+                          <p className="mb-0 text-base font-medium text-foreground">
+                            Ausgleichsmassnahme für Leistungsnachweise
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Wählen Sie die Massnahmen aus, die Sie bei Prüfungen und anderen
+                            Leistungsnachweisen benötigen.
+                          </p>
+                        </div>
+                        <div className="mt-4 max-w-xl space-y-2">
+                          {ASSESSMENT_MEASURE_OPTIONS.map((option) => {
+                            const isChecked = applicationFormData.assessmentMeasures.includes(
+                              option.key,
+                            );
+                            return (
+                              <label
+                                key={option.key}
+                                className={cn(
+                                  "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
+                                  isChecked ? "border-foreground" : "border-border",
                                 )}
-                                onChange={(event) =>
-                                  setApplicationFormData((previous) => ({
-                                    ...previous,
-                                    assessmentMeasures: event.target.checked
-                                      ? [...previous.assessmentMeasures, option.key]
-                                      : previous.assessmentMeasures.filter(
-                                          (entry) => entry !== option.key,
-                                        ),
-                                  }))
-                                }
-                                className="size-4 accent-primary"
-                              />
-                              <span>{option.label}</span>
-                            </label>
-                          ))}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={(event) =>
+                                    setApplicationFormData((previous) => ({
+                                      ...previous,
+                                      assessmentMeasures: event.target.checked
+                                        ? [...previous.assessmentMeasures, option.key]
+                                        : previous.assessmentMeasures.filter(
+                                            (entry) => entry !== option.key,
+                                          ),
+                                    }))
+                                  }
+                                  className="mt-0.5 size-4 shrink-0 accent-primary"
+                                />
+                                <span className="space-y-1">
+                                  <span className="block text-sm text-foreground">
+                                    {option.title}
+                                  </span>
+                                  <span className="block text-xs text-muted-foreground">
+                                    {option.description}
+                                  </span>
+                                </span>
+                              </label>
+                            );
+                          })}
                           <CustomMeasureLinesField
                             idPrefix="step4-assessment-other"
                             lines={applicationFormData.assessmentOtherLines}
@@ -2876,14 +2929,16 @@ export function NtaAntragDesktop({
 
                     <div className="space-y-3">
                       <p className="text-lg font-medium text-foreground">Antragsdefinition</p>
-                      <p className="text-sm font-medium text-foreground">
-                        Beschreibung der gesundheitlichen Situation und Nachteile
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Beschreiben Sie Ihre gesundheitliche Situation und die
-                        behinderungsbedingten Nachteile auf studienrelevante Aktivitäten und
-                        Leistungsnachweise.
-                      </p>
+                      <div className="space-y-1">
+                        <p className="text-base font-medium text-foreground">
+                          Beschreibung der gesundheitlichen Situation und Nachteile
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Beschreiben Sie Ihre gesundheitliche Situation und die
+                          behinderungsbedingten Nachteile auf studienrelevante Aktivitäten und
+                          Leistungsnachweise.
+                        </p>
+                      </div>
                       <textarea
                         ref={situationDescriptionOverviewRef}
                         value={applicationFormData.situationDescription}
@@ -2895,7 +2950,7 @@ export function NtaAntragDesktop({
                         }
                         rows={1}
                         className={cn(
-                          "min-h-[120px] w-full resize-none overflow-hidden rounded-lg border bg-background px-3 py-2 text-sm shadow-xs outline-none focus:border-ring",
+                          "mt-3 min-h-[120px] w-full resize-none overflow-hidden rounded-lg border bg-background px-3 py-2 text-sm shadow-xs outline-none focus:border-ring",
                           overviewSituationInvalid ? "border-destructive" : "border-border",
                         )}
                       />
@@ -2903,17 +2958,19 @@ export function NtaAntragDesktop({
                         <p className="text-xs text-destructive">Dieses Feld ist erforderlich.</p>
                       ) : null}
 
-                      <div className="space-y-2 pt-1">
-                        <p className="text-sm font-medium text-foreground">
-                          Gültigkeitsdauer des beantragten Nachteilsausgleiches
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Ihr Nachteilsausgleich kann für ein einzelnes Semester oder für die
-                          gesamte Studienzeit beantragt werden.
-                        </p>
+                      <div className="pt-1">
+                        <div className="space-y-1">
+                          <p className="text-base font-medium text-foreground">
+                            Gültigkeitsdauer des beantragten Nachteilsausgleiches
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Ihr Nachteilsausgleich kann für ein einzelnes Semester oder für die
+                            gesamte Studienzeit beantragt werden.
+                          </p>
+                        </div>
                         <div
                           className={cn(
-                            "space-y-2 rounded-lg",
+                            "mt-3 space-y-2 rounded-lg",
                             overviewDurationInvalid && "border border-destructive p-2",
                           )}
                         >
@@ -2935,7 +2992,12 @@ export function NtaAntragDesktop({
                           ).map((option) => (
                             <label
                               key={option.value}
-                              className="flex items-start gap-3 rounded-[10px] border border-border px-3 py-3"
+                              className={cn(
+                                "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3",
+                                applicationFormData.duration === option.value
+                                  ? "border-foreground"
+                                  : "border-border",
+                              )}
                             >
                               <input
                                 type="radio"
@@ -2967,17 +3029,19 @@ export function NtaAntragDesktop({
                         ) : null}
                       </div>
 
-                      <div className="space-y-2 pt-1">
-                        <p className="text-sm font-medium text-foreground">
-                          Geltungsbereich des beantragten Nachteilsausgleiches
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Wählen Sie aus, für welche Arten von Leistungsnachweisen der
-                          Nachteilsausgleich gelten soll.
-                        </p>
+                      <div className="pt-1">
+                        <div className="space-y-1">
+                          <p className="text-base font-medium text-foreground">
+                            Geltungsbereich des beantragten Nachteilsausgleiches
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Wählen Sie aus, für welche Arten von Leistungsnachweisen der
+                            Nachteilsausgleich gelten soll.
+                          </p>
+                        </div>
                         <div
                           className={cn(
-                            "space-y-2 rounded-lg",
+                            "mt-3 space-y-2 rounded-lg",
                             overviewScopeInvalid && "border border-destructive p-2",
                           )}
                         >
@@ -3009,40 +3073,60 @@ export function NtaAntragDesktop({
                         ) : null}
                       </div>
 
-                      <div className="space-y-2 pt-1">
-                        <p className="text-sm font-medium text-foreground">
-                          Ausgleichsmassnahme für Lehrveranstaltungen
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Wählen Sie die Massnahmen aus, die Sie während Lehrveranstaltungen
-                          benötigen.
-                        </p>
+                      <div className="pt-1">
+                        <div className="space-y-1">
+                          <p className="text-base font-medium text-foreground">
+                            Ausgleichsmassnahme für Lehrveranstaltungen
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Wählen Sie die Massnahmen aus, die Sie während Lehrveranstaltungen
+                            benötigen.
+                          </p>
+                        </div>
                         <div
                           className={cn(
-                            "max-w-[330px] space-y-2 rounded-lg",
+                            "mt-3 max-w-xl space-y-2 rounded-lg",
                             overviewLectureMeasuresInvalid && "border border-destructive p-2",
                           )}
                         >
-                          {APPLICATION_MEASURE_OPTIONS.map((option) => (
-                            <label key={option.key} className="flex items-center gap-3 text-sm">
-                              <input
-                                type="checkbox"
-                                checked={applicationFormData.lectureMeasures.includes(option.key)}
-                                onChange={(event) =>
-                                  setApplicationFormData((previous) => ({
-                                    ...previous,
-                                    lectureMeasures: event.target.checked
-                                      ? [...previous.lectureMeasures, option.key]
-                                      : previous.lectureMeasures.filter(
-                                          (entry) => entry !== option.key,
-                                        ),
-                                  }))
-                                }
-                                className="size-4 accent-primary"
-                              />
-                              <span>{option.label}</span>
-                            </label>
-                          ))}
+                          {LECTURE_MEASURE_OPTIONS.map((option) => {
+                            const isChecked = applicationFormData.lectureMeasures.includes(
+                              option.key,
+                            );
+                            return (
+                              <label
+                                key={option.key}
+                                className={cn(
+                                  "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
+                                  isChecked ? "border-foreground" : "border-border",
+                                )}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={(event) =>
+                                    setApplicationFormData((previous) => ({
+                                      ...previous,
+                                      lectureMeasures: event.target.checked
+                                        ? [...previous.lectureMeasures, option.key]
+                                        : previous.lectureMeasures.filter(
+                                            (entry) => entry !== option.key,
+                                          ),
+                                    }))
+                                  }
+                                  className="mt-0.5 size-4 shrink-0 accent-primary"
+                                />
+                                <span className="space-y-1">
+                                  <span className="block text-sm text-foreground">
+                                    {option.title}
+                                  </span>
+                                  <span className="block text-xs text-muted-foreground">
+                                    {option.description}
+                                  </span>
+                                </span>
+                              </label>
+                            );
+                          })}
                           <CustomMeasureLinesField
                             idPrefix="overview-lecture-other"
                             lines={applicationFormData.lectureOtherLines}
@@ -3062,43 +3146,61 @@ export function NtaAntragDesktop({
                         ) : null}
                       </div>
 
-                      <div className="space-y-2 pt-1">
-                        <p className="text-sm font-medium text-foreground">
-                          Ausgleichsmassnahme für Leistungsnachweise
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Wählen Sie die Massnahmen aus, die Sie bei Prüfungen und anderen
-                          Leistungsnachweisen benötigen.
-                        </p>
+                      <div className="pt-1">
+                        <div className="space-y-1">
+                          <p className="text-base font-medium text-foreground">
+                            Ausgleichsmassnahme für Leistungsnachweise
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Wählen Sie die Massnahmen aus, die Sie bei Prüfungen und anderen
+                            Leistungsnachweisen benötigen.
+                          </p>
+                        </div>
                         <div
                           className={cn(
-                            "max-w-[330px] space-y-2 rounded-lg",
+                            "mt-3 max-w-xl space-y-2 rounded-lg",
                             overviewAssessmentMeasuresInvalid &&
                               "border border-destructive p-2",
                           )}
                         >
-                          {APPLICATION_MEASURE_OPTIONS.map((option) => (
-                            <label key={option.key} className="flex items-center gap-3 text-sm">
-                              <input
-                                type="checkbox"
-                                checked={applicationFormData.assessmentMeasures.includes(
-                                  option.key,
+                          {ASSESSMENT_MEASURE_OPTIONS.map((option) => {
+                            const isChecked = applicationFormData.assessmentMeasures.includes(
+                              option.key,
+                            );
+                            return (
+                              <label
+                                key={option.key}
+                                className={cn(
+                                  "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
+                                  isChecked ? "border-foreground" : "border-border",
                                 )}
-                                onChange={(event) =>
-                                  setApplicationFormData((previous) => ({
-                                    ...previous,
-                                    assessmentMeasures: event.target.checked
-                                      ? [...previous.assessmentMeasures, option.key]
-                                      : previous.assessmentMeasures.filter(
-                                          (entry) => entry !== option.key,
-                                        ),
-                                  }))
-                                }
-                                className="size-4 accent-primary"
-                              />
-                              <span>{option.label}</span>
-                            </label>
-                          ))}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={(event) =>
+                                    setApplicationFormData((previous) => ({
+                                      ...previous,
+                                      assessmentMeasures: event.target.checked
+                                        ? [...previous.assessmentMeasures, option.key]
+                                        : previous.assessmentMeasures.filter(
+                                            (entry) => entry !== option.key,
+                                          ),
+                                    }))
+                                  }
+                                  className="mt-0.5 size-4 shrink-0 accent-primary"
+                                />
+                                <span className="space-y-1">
+                                  <span className="block text-sm text-foreground">
+                                    {option.title}
+                                  </span>
+                                  <span className="block text-xs text-muted-foreground">
+                                    {option.description}
+                                  </span>
+                                </span>
+                              </label>
+                            );
+                          })}
                           <CustomMeasureLinesField
                             idPrefix="overview-assessment-other"
                             lines={applicationFormData.assessmentOtherLines}

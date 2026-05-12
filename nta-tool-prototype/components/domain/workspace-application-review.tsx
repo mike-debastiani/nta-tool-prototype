@@ -34,8 +34,9 @@ import {
   type SavedReviewComment,
 } from "@/components/domain/application-review-detail-sidebar";
 import {
-  APPLICATION_MEASURE_OPTIONS,
+  ASSESSMENT_MEASURE_OPTIONS,
   DurationChoiceCompare,
+  LECTURE_MEASURE_OPTIONS,
   MeasureChecklist,
   ReviewBlockCard,
   ReviewBlockFooterStatus,
@@ -921,7 +922,7 @@ export function WorkspaceApplicationReview({
           onReset={() => handleResetRequest("lectureMeasures")}
         >
           <MeasureChecklist
-            options={APPLICATION_MEASURE_OPTIONS}
+            options={LECTURE_MEASURE_OPTIONS}
             selectedKeys={def?.lectureMeasures ?? []}
             otherLines={def?.lectureOtherLines}
             otherEnabled={def?.lectureOtherEnabled}
@@ -948,7 +949,7 @@ export function WorkspaceApplicationReview({
           onReset={() => handleResetRequest("assessmentMeasures")}
         >
           <MeasureChecklist
-            options={APPLICATION_MEASURE_OPTIONS}
+            options={ASSESSMENT_MEASURE_OPTIONS}
             selectedKeys={def?.assessmentMeasures ?? []}
             otherLines={def?.assessmentOtherLines}
             otherEnabled={def?.assessmentOtherEnabled}

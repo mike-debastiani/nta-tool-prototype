@@ -41,8 +41,10 @@ import {
   type SavedReviewComment,
 } from "@/components/domain/application-review-detail-sidebar";
 import {
-  APPLICATION_MEASURE_OPTIONS,
   APPLICATION_SCOPE_OPTIONS,
+  ASSESSMENT_MEASURE_OPTIONS,
+  LECTURE_MEASURE_OPTIONS,
+  type ApplicationMeasureOption,
   DurationChoiceCompare,
   MeasureChecklist,
   ReviewBlockCard,
@@ -984,6 +986,7 @@ export function PortalApplicationAdjustment({
             {editing?.blockId === "lectureMeasures" && editing.definition ? (
               <MeasuresEditForm
                 groupId="lecture"
+                options={LECTURE_MEASURE_OPTIONS}
                 value={{
                   measures: editing.definition.lectureMeasures,
                   otherLines: editing.definition.lectureOtherLines,
@@ -1010,7 +1013,7 @@ export function PortalApplicationAdjustment({
               />
             ) : (
               <MeasureChecklist
-                options={APPLICATION_MEASURE_OPTIONS}
+                options={LECTURE_MEASURE_OPTIONS}
                 selectedKeys={def?.lectureMeasures ?? []}
                 otherLines={def?.lectureOtherLines}
                 otherEnabled={def?.lectureOtherEnabled}
@@ -1024,6 +1027,7 @@ export function PortalApplicationAdjustment({
             {editing?.blockId === "assessmentMeasures" && editing.definition ? (
               <MeasuresEditForm
                 groupId="assessment"
+                options={ASSESSMENT_MEASURE_OPTIONS}
                 value={{
                   measures: editing.definition.assessmentMeasures,
                   otherLines: editing.definition.assessmentOtherLines,
@@ -1050,7 +1054,7 @@ export function PortalApplicationAdjustment({
               />
             ) : (
               <MeasureChecklist
-                options={APPLICATION_MEASURE_OPTIONS}
+                options={ASSESSMENT_MEASURE_OPTIONS}
                 selectedKeys={def?.assessmentMeasures ?? []}
                 otherLines={def?.assessmentOtherLines}
                 otherEnabled={def?.assessmentOtherEnabled}
@@ -1683,11 +1687,13 @@ type MeasuresEditValue = {
 
 function MeasuresEditForm({
   groupId,
+  options,
   value,
   errors,
   onChange,
 }: {
   groupId: "lecture" | "assessment";
+  options: readonly ApplicationMeasureOption[];
   value: MeasuresEditValue;
   errors: { measures?: string };
   onChange: (patch: Partial<MeasuresEditValue>) => void;
@@ -1700,10 +1706,16 @@ function MeasuresEditForm({
   return (
     <div className="space-y-2">
       <div className="space-y-2">
-        {APPLICATION_MEASURE_OPTIONS.map((opt) => {
+        {options.map((opt) => {
           const isOn = set.has(opt.key);
           return (
-            <label key={`${groupId}-${opt.key}`} className="flex items-center gap-3 text-sm">
+            <label
+              key={`${groupId}-${opt.key}`}
+              className={cn(
+                "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
+                isOn ? "border-foreground" : "border-border",
+              )}
+            >
               <input
                 type="checkbox"
                 checked={isOn}
@@ -1714,9 +1726,12 @@ function MeasuresEditForm({
                       : value.measures.filter((m) => m !== opt.key),
                   })
                 }
-                className="size-4 accent-primary"
+                className="mt-0.5 size-4 shrink-0 accent-primary"
               />
-              <span>{opt.label}</span>
+              <span className="space-y-1">
+                <span className="block text-sm text-foreground">{opt.title}</span>
+                <span className="block text-xs text-muted-foreground">{opt.description}</span>
+              </span>
             </label>
           );
         })}

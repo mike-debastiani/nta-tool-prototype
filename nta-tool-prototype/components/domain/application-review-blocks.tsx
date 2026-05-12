@@ -4,8 +4,10 @@ import { type ComponentType, type ReactNode } from "react";
 import { Check, ExternalLink, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
-  APPLICATION_MEASURE_OPTIONS,
+  type ApplicationMeasureOption,
   APPLICATION_SCOPE_OPTIONS,
+  ASSESSMENT_MEASURE_OPTIONS,
+  LECTURE_MEASURE_OPTIONS,
 } from "@/lib/application-review-labels";
 
 export function formatReviewFileSize(sizeInBytes: number) {
@@ -585,7 +587,7 @@ export function MeasureChecklist({
   otherEnabled,
   otherText,
 }: {
-  options: readonly { key: string; label: string }[];
+  options: readonly ApplicationMeasureOption[];
   selectedKeys: string[];
   /** Bevorzugt — mehrere «Sonstige»-Zeilen. */
   otherLines?: string[];
@@ -611,32 +613,40 @@ export function MeasureChecklist({
             <li key={option.key}>
               <div
                 className={cn(
-                  "flex items-start gap-3 rounded-[10px] border px-3 py-3",
-                  isOn
-                    ? "border-border border-solid bg-card shadow-xs"
-                    : "border-border border-dashed bg-muted/50 opacity-70",
+                  "flex items-start gap-3 rounded-[10px] border bg-card px-3 py-3 shadow-xs",
+                  isOn ? "border-foreground" : "border-border",
                 )}
               >
                 <ReviewBlockCheckboxMarker checked={isOn} />
-                <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
-                  <span
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <span
+                      className={cn(
+                        "text-sm font-medium leading-5",
+                        isOn
+                          ? "text-foreground"
+                          : "text-muted-foreground line-through decoration-solid",
+                      )}
+                    >
+                      {option.title}
+                    </span>
+                    <span
+                      className={cn(
+                        "shrink-0 text-right text-xs font-medium leading-4",
+                        isOn ? "text-foreground" : "text-muted-foreground",
+                      )}
+                    >
+                      {isOn ? "wurde gewählt" : "wurde nicht gewählt"}
+                    </span>
+                  </div>
+                  <p
                     className={cn(
-                      "text-sm leading-5",
-                      isOn
-                        ? "text-foreground"
-                        : "text-muted-foreground line-through decoration-solid",
+                      "text-xs leading-relaxed text-muted-foreground",
+                      !isOn && "line-through decoration-solid",
                     )}
                   >
-                    {option.label}
-                  </span>
-                  <span
-                    className={cn(
-                      "shrink-0 text-right text-xs font-medium leading-4",
-                      isOn ? "text-foreground" : "text-muted-foreground",
-                    )}
-                  >
-                    {isOn ? "wurde gewählt" : "wurde nicht gewählt"}
-                  </span>
+                    {option.description}
+                  </p>
                 </div>
               </div>
             </li>
@@ -647,10 +657,8 @@ export function MeasureChecklist({
         <div
           key={`other-${idx}`}
           className={cn(
-            "flex items-start gap-3 rounded-[10px] border px-3 py-3",
-            line
-              ? "border-border border-solid bg-card shadow-xs"
-              : "border-border border-dashed bg-muted/50 opacity-70",
+            "flex items-start gap-3 rounded-[10px] border bg-card px-3 py-3 shadow-xs",
+            line ? "border-foreground" : "border-border",
           )}
         >
           <ReviewBlockCheckboxMarker checked={Boolean(line)} />
@@ -685,4 +693,9 @@ export function MeasureChecklist({
   );
 }
 
-export { APPLICATION_MEASURE_OPTIONS, APPLICATION_SCOPE_OPTIONS };
+export {
+  APPLICATION_SCOPE_OPTIONS,
+  ASSESSMENT_MEASURE_OPTIONS,
+  LECTURE_MEASURE_OPTIONS,
+};
+export type { ApplicationMeasureOption };

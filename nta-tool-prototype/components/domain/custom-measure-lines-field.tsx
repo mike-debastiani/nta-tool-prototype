@@ -39,7 +39,7 @@ export function CustomMeasureLinesField({
   };
 
   return (
-    <div className="flex max-w-[330px] flex-col gap-2">
+    <div className="flex max-w-xl flex-col gap-2">
       {rows.map((line, index) => {
         const isTrailingEmptySlot =
           index === rows.length - 1 && line.trim() === "";
@@ -51,11 +51,14 @@ export function CustomMeasureLinesField({
         return (
           <div
             key={`${idPrefix}-row-${index}`}
-            className="flex items-center gap-3 text-sm"
+            className={cn(
+              "flex items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
+              hasText ? "border-foreground" : "border-border",
+            )}
           >
             <input
               type="checkbox"
-              className="size-4 shrink-0 accent-primary"
+              className="mt-0.5 size-4 shrink-0 accent-primary"
               checked={hasText}
               disabled={disabled}
               onChange={(e) => {
@@ -80,7 +83,7 @@ export function CustomMeasureLinesField({
               onChange={(e) => handleChange(index, e.target.value)}
               placeholder={placeholder}
               className={cn(
-                "h-8 min-w-0 flex-1",
+                "h-8 min-w-0 flex-1 border-border bg-background",
                 error && isTrailingEmptySlot && "border-destructive",
               )}
               aria-invalid={Boolean(error && isTrailingEmptySlot)}
