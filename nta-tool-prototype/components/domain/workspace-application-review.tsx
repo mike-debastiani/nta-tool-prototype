@@ -69,6 +69,10 @@ import {
   getApplicationStatusMeta,
 } from "@/lib/application-status";
 import {
+  ASSESSMENT_MEASURES_KEINE_DESCRIPTION,
+  LECTURE_MEASURES_KEINE_DESCRIPTION,
+} from "@/lib/application-review-labels";
+import {
   definitionShowsAssessmentCustomMeasures,
   definitionShowsLectureCustomMeasures,
 } from "@/lib/measure-custom-lines";
@@ -329,10 +333,12 @@ export function WorkspaceApplicationReview({
   const showLectureMeasuresBlock =
     !compactReadOnlyBlocks
     || Boolean(def?.lectureMeasures?.length)
+    || Boolean(def?.lectureMeasuresKeine)
     || definitionShowsLectureCustomMeasures(def);
   const showAssessmentMeasuresBlock =
     !compactReadOnlyBlocks
     || Boolean(def?.assessmentMeasures?.length)
+    || Boolean(def?.assessmentMeasuresKeine)
     || definitionShowsAssessmentCustomMeasures(def);
   const hasVisibleBlocks =
     showApplicantBlock
@@ -927,6 +933,8 @@ export function WorkspaceApplicationReview({
             otherLines={def?.lectureOtherLines}
             otherEnabled={def?.lectureOtherEnabled}
             otherText={def?.lectureOtherText}
+            measuresKeine={Boolean(def?.lectureMeasuresKeine)}
+            keineDescription={LECTURE_MEASURES_KEINE_DESCRIPTION}
           />
           </InteractiveReviewBlock>
         ) : null}
@@ -954,6 +962,8 @@ export function WorkspaceApplicationReview({
             otherLines={def?.assessmentOtherLines}
             otherEnabled={def?.assessmentOtherEnabled}
             otherText={def?.assessmentOtherText}
+            measuresKeine={Boolean(def?.assessmentMeasuresKeine)}
+            keineDescription={ASSESSMENT_MEASURES_KEINE_DESCRIPTION}
           />
           </InteractiveReviewBlock>
         ) : null}

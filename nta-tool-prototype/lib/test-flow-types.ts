@@ -64,12 +64,16 @@ export type ApplicationDefinitionData = {
   duration?: "full_study" | "one_semester";
   scopeSelections?: string[];
   lectureMeasures?: string[];
+  /** Antrag Schritt 4: Nutzer hat «Keine» für Lehrveranstaltungen gewählt. */
+  lectureMeasuresKeine?: boolean;
   /** „Sonstige“ Massnahmen (persistiert, ohne leere Einträge). */
   lectureOtherLines?: string[];
   /** Legacy — bei Lesen nach `lectureOtherLines` migrieren. */
   lectureOtherEnabled?: boolean;
   lectureOtherText?: string;
   assessmentMeasures?: string[];
+  /** Antrag Schritt 4: Nutzer hat «Keine» für Leistungsnachweise gewählt. */
+  assessmentMeasuresKeine?: boolean;
   assessmentOtherLines?: string[];
   assessmentOtherEnabled?: boolean;
   assessmentOtherText?: string;

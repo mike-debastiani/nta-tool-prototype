@@ -16,8 +16,48 @@ export type ApplicationMeasureOption = {
   readonly description: string;
 };
 
-/** Ausgleichsmassnahmen für Lehrveranstaltungen (Keys m1–m7 in `lectureMeasures`). */
+/** Ausgleichsmassnahmen für Lehrveranstaltungen (Keys m1–m6 in `lectureMeasures`). */
 export const LECTURE_MEASURE_OPTIONS = [
+  {
+    key: "m1",
+    title: "Zusätzliche Pausen",
+    description:
+      "Möglichkeit, während Lehrveranstaltungen zusätzliche Pausen einzulegen.",
+  },
+  {
+    key: "m2",
+    title: "Einzelarbeit statt Gruppenarbeit",
+    description:
+      "Gruppenarbeiten können durch gleichwertige Einzelarbeiten ersetzt werden.",
+  },
+  {
+    key: "m3",
+    title: "Angepasste Präsenzpflicht",
+    description:
+      "Die Präsenzpflicht wird individuell angepasst, z.B. durch reduzierte Anwesenheitspflicht oder alternative Nachweisformen.",
+  },
+  {
+    key: "m4",
+    title: "Audioaufnahme-Erlaubnis",
+    description:
+      "Lehrveranstaltungen dürfen zu persönlichen Lernzwecken aufgezeichnet werden.",
+  },
+  {
+    key: "m5",
+    title: "Reservierter Sitzplatz",
+    description:
+      "Ein fester Sitzplatz wird reserviert, z.B. in der Nähe des Ausgangs, eines Fensters oder der Lehrperson.",
+  },
+  {
+    key: "m6",
+    title: "Kein unaufgefordertes Aufrufen",
+    description:
+      "Die Lehrperson verzichtet darauf, die betroffene Person unaufgefordert mündlich aufzurufen.",
+  },
+] as const satisfies readonly ApplicationMeasureOption[];
+
+/** Ausgleichsmassnahmen für Leistungsnachweise (Keys m1–m7 in `assessmentMeasures`). */
+export const ASSESSMENT_MEASURE_OPTIONS = [
   {
     key: "m1",
     title: "Einsatz technischer Hilfsmittel",
@@ -62,45 +102,12 @@ export const LECTURE_MEASURE_OPTIONS = [
   },
 ] as const satisfies readonly ApplicationMeasureOption[];
 
-/** Ausgleichsmassnahmen für Leistungsnachweise (Keys m1–m6 in `assessmentMeasures`). */
-export const ASSESSMENT_MEASURE_OPTIONS = [
-  {
-    key: "m1",
-    title: "Zusätzliche Pausen",
-    description:
-      "Möglichkeit, während Lehrveranstaltungen zusätzliche Pausen einzulegen.",
-  },
-  {
-    key: "m2",
-    title: "Einzelarbeit statt Gruppenarbeit",
-    description:
-      "Gruppenarbeiten können durch gleichwertige Einzelarbeiten ersetzt werden.",
-  },
-  {
-    key: "m3",
-    title: "Angepasste Präsenzpflicht",
-    description:
-      "Die Präsenzpflicht wird individuell angepasst, z.B. durch reduzierte Anwesenheitspflicht oder alternative Nachweisformen.",
-  },
-  {
-    key: "m4",
-    title: "Audioaufnahme-Erlaubnis",
-    description:
-      "Lehrveranstaltungen dürfen zu persönlichen Lernzwecken aufgezeichnet werden.",
-  },
-  {
-    key: "m5",
-    title: "Reservierter Sitzplatz",
-    description:
-      "Ein fester Sitzplatz wird reserviert, z.B. in der Nähe des Ausgangs, eines Fensters oder der Lehrperson.",
-  },
-  {
-    key: "m6",
-    title: "Kein unaufgefordertes Aufrufen",
-    description:
-      "Die Lehrperson verzichtet darauf, die betroffene Person unaufgefordert mündlich aufzurufen.",
-  },
-] as const satisfies readonly ApplicationMeasureOption[];
+/** Anzeigetext «Keine»-Kachel in Review/Anpassung (stimmt mit Antragsformular überein). */
+export const LECTURE_MEASURES_KEINE_DESCRIPTION =
+  "Ich benötige keine Ausgleichsmassnahmen für Lehrveranstaltungen.";
+
+export const ASSESSMENT_MEASURES_KEINE_DESCRIPTION =
+  "Ich benötige keine Ausgleichsmassnahmen für Leistungsnachweise.";
 
 export type LectureMeasureKey = (typeof LECTURE_MEASURE_OPTIONS)[number]["key"];
 export type AssessmentMeasureKey = (typeof ASSESSMENT_MEASURE_OPTIONS)[number]["key"];

@@ -163,8 +163,10 @@ type ApplicationFormData = {
   duration: ApplicationDuration | "";
   scopeSelections: string[];
   lectureMeasures: LectureMeasureKey[];
+  lectureMeasuresKeine: boolean;
   lectureOtherLines: string[];
   assessmentMeasures: AssessmentMeasureKey[];
+  assessmentMeasuresKeine: boolean;
   assessmentOtherLines: string[];
 };
 
@@ -226,8 +228,10 @@ const DEFAULT_APPLICATION_FORM_DATA: ApplicationFormData = {
   duration: "",
   scopeSelections: [],
   lectureMeasures: [],
+  lectureMeasuresKeine: false,
   lectureOtherLines: [""],
   assessmentMeasures: [],
+  assessmentMeasuresKeine: false,
   assessmentOtherLines: [""],
 };
 
@@ -241,8 +245,10 @@ function collectPersistedApplicationDefinition(
     duration: form.duration || undefined,
     scopeSelections: [...form.scopeSelections],
     lectureMeasures: [...form.lectureMeasures],
+    ...(form.lectureMeasuresKeine ? { lectureMeasuresKeine: true } : {}),
     ...(lectureOtherLines ? { lectureOtherLines } : {}),
     assessmentMeasures: [...form.assessmentMeasures],
+    ...(form.assessmentMeasuresKeine ? { assessmentMeasuresKeine: true } : {}),
     ...(assessmentOtherLines ? { assessmentOtherLines } : {}),
   };
 }
@@ -309,13 +315,15 @@ function isStepFourComplete(data: ApplicationFormData) {
   if (!data.duration) return false;
   if (data.scopeSelections.length === 0) return false;
   if (
-    data.lectureMeasures.length === 0
+    !data.lectureMeasuresKeine
+    && data.lectureMeasures.length === 0
     && !hasMeasureOtherSelection(data.lectureOtherLines)
   ) {
     return false;
   }
   if (
-    data.assessmentMeasures.length === 0
+    !data.assessmentMeasuresKeine
+    && data.assessmentMeasures.length === 0
     && !hasMeasureOtherSelection(data.assessmentOtherLines)
   ) {
     return false;
@@ -362,8 +370,10 @@ function applicationFormDataFromRow(
     duration: (ad.duration as ApplicationDuration | "") ?? "",
     scopeSelections: [...(ad.scopeSelections ?? [])],
     lectureMeasures: pickLectureMeasures(ad.lectureMeasures),
+    lectureMeasuresKeine: Boolean(ad.lectureMeasuresKeine),
     lectureOtherLines: lectureOtherLinesFromDefinition(ad) ?? [""],
     assessmentMeasures: pickAssessmentMeasures(ad.assessmentMeasures),
+    assessmentMeasuresKeine: Boolean(ad.assessmentMeasuresKeine),
     assessmentOtherLines: assessmentOtherLinesFromDefinition(ad) ?? [""],
   };
 }
@@ -819,16 +829,20 @@ export function NtaAntragDesktop({
       nextErrors.scopeSelections = "Bitte wählen Sie mindestens eine Option aus.";
     }
     if (
-      applicationFormData.lectureMeasures.length === 0
+      !applicationFormData.lectureMeasuresKeine
+      && applicationFormData.lectureMeasures.length === 0
       && !hasMeasureOtherSelection(applicationFormData.lectureOtherLines)
     ) {
-      nextErrors.lectureMeasures = "Bitte wählen Sie mindestens eine Option aus.";
+      nextErrors.lectureMeasures =
+        "Bitte wählen Sie «Keine», mindestens eine Massnahme oder eine Sonstige-Angabe.";
     }
     if (
-      applicationFormData.assessmentMeasures.length === 0
+      !applicationFormData.assessmentMeasuresKeine
+      && applicationFormData.assessmentMeasures.length === 0
       && !hasMeasureOtherSelection(applicationFormData.assessmentOtherLines)
     ) {
-      nextErrors.assessmentMeasures = "Bitte wählen Sie mindestens eine Option aus.";
+      nextErrors.assessmentMeasures =
+        "Bitte wählen Sie «Keine», mindestens eine Massnahme oder eine Sonstige-Angabe.";
     }
 
     setStepFourErrors(nextErrors);
@@ -1215,10 +1229,12 @@ export function NtaAntragDesktop({
     isOverviewStep && applicationFormData.scopeSelections.length === 0;
   const overviewLectureMeasuresInvalid =
     isOverviewStep &&
+    !applicationFormData.lectureMeasuresKeine &&
     applicationFormData.lectureMeasures.length === 0 &&
     !hasMeasureOtherSelection(applicationFormData.lectureOtherLines);
   const overviewAssessmentMeasuresInvalid =
     isOverviewStep &&
+    !applicationFormData.assessmentMeasuresKeine &&
     applicationFormData.assessmentMeasures.length === 0 &&
     !hasMeasureOtherSelection(applicationFormData.assessmentOtherLines);
   const step1InvalidInOverview = isOverviewStep && !step1Complete;
@@ -2527,6 +2543,36 @@ export function NtaAntragDesktop({
                           </p>
                         </div>
                         <div className="mt-4 max-w-xl space-y-2">
+                          <label
+                            className={cn(
+                              "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
+                              applicationFormData.lectureMeasuresKeine
+                                ? "border-foreground"
+                                : "border-border",
+                            )}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={applicationFormData.lectureMeasuresKeine}
+                              onChange={(event) =>
+                                setApplicationFormData((previous) => ({
+                                  ...previous,
+                                  lectureMeasuresKeine: event.target.checked,
+                                  lectureMeasures: [],
+                                  lectureOtherLines: event.target.checked
+                                    ? [""]
+                                    : previous.lectureOtherLines,
+                                }))
+                              }
+                              className="mt-0.5 size-4 shrink-0 accent-primary"
+                            />
+                            <span className="space-y-1">
+                              <span className="block text-sm text-foreground">Keine</span>
+                              <span className="block text-xs text-muted-foreground">
+                                Ich benötige keine Ausgleichsmassnahmen für Lehrveranstaltungen.
+                              </span>
+                            </span>
+                          </label>
                           {LECTURE_MEASURE_OPTIONS.map((option) => {
                             const isChecked = applicationFormData.lectureMeasures.includes(
                               option.key,
@@ -2545,6 +2591,7 @@ export function NtaAntragDesktop({
                                   onChange={(event) =>
                                     setApplicationFormData((previous) => ({
                                       ...previous,
+                                      lectureMeasuresKeine: false,
                                       lectureMeasures: event.target.checked
                                         ? [...previous.lectureMeasures, option.key]
                                         : previous.lectureMeasures.filter(
@@ -2572,10 +2619,14 @@ export function NtaAntragDesktop({
                               setApplicationFormData((previous) => ({
                                 ...previous,
                                 lectureOtherLines: next,
+                                ...(hasMeasureOtherSelection(next)
+                                  ? { lectureMeasuresKeine: false }
+                                  : {}),
                               }))
                             }
                             error={
                               Boolean(stepFourErrors.lectureMeasures)
+                              && !applicationFormData.lectureMeasuresKeine
                               && applicationFormData.lectureMeasures.length === 0
                               && !hasMeasureOtherSelection(
                                 applicationFormData.lectureOtherLines,
@@ -2604,6 +2655,36 @@ export function NtaAntragDesktop({
                           </p>
                         </div>
                         <div className="mt-4 max-w-xl space-y-2">
+                          <label
+                            className={cn(
+                              "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
+                              applicationFormData.assessmentMeasuresKeine
+                                ? "border-foreground"
+                                : "border-border",
+                            )}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={applicationFormData.assessmentMeasuresKeine}
+                              onChange={(event) =>
+                                setApplicationFormData((previous) => ({
+                                  ...previous,
+                                  assessmentMeasuresKeine: event.target.checked,
+                                  assessmentMeasures: [],
+                                  assessmentOtherLines: event.target.checked
+                                    ? [""]
+                                    : previous.assessmentOtherLines,
+                                }))
+                              }
+                              className="mt-0.5 size-4 shrink-0 accent-primary"
+                            />
+                            <span className="space-y-1">
+                              <span className="block text-sm text-foreground">Keine</span>
+                              <span className="block text-xs text-muted-foreground">
+                                Ich benötige keine Ausgleichsmassnahmen für Leistungsnachweise.
+                              </span>
+                            </span>
+                          </label>
                           {ASSESSMENT_MEASURE_OPTIONS.map((option) => {
                             const isChecked = applicationFormData.assessmentMeasures.includes(
                               option.key,
@@ -2622,6 +2703,7 @@ export function NtaAntragDesktop({
                                   onChange={(event) =>
                                     setApplicationFormData((previous) => ({
                                       ...previous,
+                                      assessmentMeasuresKeine: false,
                                       assessmentMeasures: event.target.checked
                                         ? [...previous.assessmentMeasures, option.key]
                                         : previous.assessmentMeasures.filter(
@@ -2649,10 +2731,14 @@ export function NtaAntragDesktop({
                               setApplicationFormData((previous) => ({
                                 ...previous,
                                 assessmentOtherLines: next,
+                                ...(hasMeasureOtherSelection(next)
+                                  ? { assessmentMeasuresKeine: false }
+                                  : {}),
                               }))
                             }
                             error={
                               Boolean(stepFourErrors.assessmentMeasures)
+                              && !applicationFormData.assessmentMeasuresKeine
                               && applicationFormData.assessmentMeasures.length === 0
                               && !hasMeasureOtherSelection(
                                 applicationFormData.assessmentOtherLines,
@@ -3089,6 +3175,36 @@ export function NtaAntragDesktop({
                             overviewLectureMeasuresInvalid && "border border-destructive p-2",
                           )}
                         >
+                          <label
+                            className={cn(
+                              "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
+                              applicationFormData.lectureMeasuresKeine
+                                ? "border-foreground"
+                                : "border-border",
+                            )}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={applicationFormData.lectureMeasuresKeine}
+                              onChange={(event) =>
+                                setApplicationFormData((previous) => ({
+                                  ...previous,
+                                  lectureMeasuresKeine: event.target.checked,
+                                  lectureMeasures: [],
+                                  lectureOtherLines: event.target.checked
+                                    ? [""]
+                                    : previous.lectureOtherLines,
+                                }))
+                              }
+                              className="mt-0.5 size-4 shrink-0 accent-primary"
+                            />
+                            <span className="space-y-1">
+                              <span className="block text-sm text-foreground">Keine</span>
+                              <span className="block text-xs text-muted-foreground">
+                                Ich benötige keine Ausgleichsmassnahmen für Lehrveranstaltungen.
+                              </span>
+                            </span>
+                          </label>
                           {LECTURE_MEASURE_OPTIONS.map((option) => {
                             const isChecked = applicationFormData.lectureMeasures.includes(
                               option.key,
@@ -3107,6 +3223,7 @@ export function NtaAntragDesktop({
                                   onChange={(event) =>
                                     setApplicationFormData((previous) => ({
                                       ...previous,
+                                      lectureMeasuresKeine: false,
                                       lectureMeasures: event.target.checked
                                         ? [...previous.lectureMeasures, option.key]
                                         : previous.lectureMeasures.filter(
@@ -3134,6 +3251,9 @@ export function NtaAntragDesktop({
                               setApplicationFormData((previous) => ({
                                 ...previous,
                                 lectureOtherLines: next,
+                                ...(hasMeasureOtherSelection(next)
+                                  ? { lectureMeasuresKeine: false }
+                                  : {}),
                               }))
                             }
                             error={overviewLectureMeasuresInvalid}
@@ -3141,7 +3261,8 @@ export function NtaAntragDesktop({
                         </div>
                         {overviewLectureMeasuresInvalid ? (
                           <p className="text-xs text-destructive">
-                            Bitte wählen Sie mindestens eine Option aus.
+                            Bitte wählen Sie «Keine», mindestens eine Massnahme oder eine
+                            Sonstige-Angabe.
                           </p>
                         ) : null}
                       </div>
@@ -3163,6 +3284,36 @@ export function NtaAntragDesktop({
                               "border border-destructive p-2",
                           )}
                         >
+                          <label
+                            className={cn(
+                              "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
+                              applicationFormData.assessmentMeasuresKeine
+                                ? "border-foreground"
+                                : "border-border",
+                            )}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={applicationFormData.assessmentMeasuresKeine}
+                              onChange={(event) =>
+                                setApplicationFormData((previous) => ({
+                                  ...previous,
+                                  assessmentMeasuresKeine: event.target.checked,
+                                  assessmentMeasures: [],
+                                  assessmentOtherLines: event.target.checked
+                                    ? [""]
+                                    : previous.assessmentOtherLines,
+                                }))
+                              }
+                              className="mt-0.5 size-4 shrink-0 accent-primary"
+                            />
+                            <span className="space-y-1">
+                              <span className="block text-sm text-foreground">Keine</span>
+                              <span className="block text-xs text-muted-foreground">
+                                Ich benötige keine Ausgleichsmassnahmen für Leistungsnachweise.
+                              </span>
+                            </span>
+                          </label>
                           {ASSESSMENT_MEASURE_OPTIONS.map((option) => {
                             const isChecked = applicationFormData.assessmentMeasures.includes(
                               option.key,
@@ -3181,6 +3332,7 @@ export function NtaAntragDesktop({
                                   onChange={(event) =>
                                     setApplicationFormData((previous) => ({
                                       ...previous,
+                                      assessmentMeasuresKeine: false,
                                       assessmentMeasures: event.target.checked
                                         ? [...previous.assessmentMeasures, option.key]
                                         : previous.assessmentMeasures.filter(
@@ -3208,6 +3360,9 @@ export function NtaAntragDesktop({
                               setApplicationFormData((previous) => ({
                                 ...previous,
                                 assessmentOtherLines: next,
+                                ...(hasMeasureOtherSelection(next)
+                                  ? { assessmentMeasuresKeine: false }
+                                  : {}),
                               }))
                             }
                             error={overviewAssessmentMeasuresInvalid}
@@ -3215,7 +3370,8 @@ export function NtaAntragDesktop({
                         </div>
                         {overviewAssessmentMeasuresInvalid ? (
                           <p className="text-xs text-destructive">
-                            Bitte wählen Sie mindestens eine Option aus.
+                            Bitte wählen Sie «Keine», mindestens eine Massnahme oder eine
+                            Sonstige-Angabe.
                           </p>
                         ) : null}
                       </div>

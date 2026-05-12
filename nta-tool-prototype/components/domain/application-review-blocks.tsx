@@ -586,6 +586,9 @@ export function MeasureChecklist({
   otherLines,
   otherEnabled,
   otherText,
+  measuresKeine,
+  keineTitle = "Keine",
+  keineDescription,
 }: {
   options: readonly ApplicationMeasureOption[];
   selectedKeys: string[];
@@ -594,6 +597,10 @@ export function MeasureChecklist({
   /** Legacy-Einzelfeld */
   otherEnabled?: boolean;
   otherText?: string;
+  /** Antrag: explizit «Keine Massnahme» gewählt. */
+  measuresKeine?: boolean;
+  keineTitle?: string;
+  keineDescription?: string;
 }) {
   const set = new Set(selectedKeys);
   const resolvedOthers = (() => {
@@ -607,6 +614,33 @@ export function MeasureChecklist({
   return (
     <div className="space-y-4">
       <ul className="space-y-1.5">
+        {measuresKeine ? (
+          <li key="__keine__">
+            <div
+              className={cn(
+                "flex items-start gap-3 rounded-[10px] border bg-card px-3 py-3 shadow-xs",
+                "border-foreground",
+              )}
+            >
+              <ReviewBlockCheckboxMarker checked />
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="text-sm font-medium leading-5 text-foreground">
+                    {keineTitle}
+                  </span>
+                  <span className="shrink-0 text-right text-xs font-medium leading-4 text-foreground">
+                    wurde gewählt
+                  </span>
+                </div>
+                {keineDescription ? (
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    {keineDescription}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          </li>
+        ) : null}
         {options.map((option) => {
           const isOn = set.has(option.key);
           return (

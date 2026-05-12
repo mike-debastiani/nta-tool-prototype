@@ -58,6 +58,10 @@ import {
   sanitizeAttestFilesForDatabase,
   shortApplicationRef,
 } from "@/components/domain/application-review-blocks";
+import {
+  ASSESSMENT_MEASURES_KEINE_DESCRIPTION,
+  LECTURE_MEASURES_KEINE_DESCRIPTION,
+} from "@/lib/application-review-labels";
 import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
 import {
   REVIEW_WORKSPACE_BLOCK_IDS,
@@ -125,8 +129,10 @@ type EditingDefinition = {
   duration: "" | "full_study" | "one_semester";
   scopeSelections: string[];
   lectureMeasures: string[];
+  lectureMeasuresKeine: boolean;
   lectureOtherLines: string[];
   assessmentMeasures: string[];
+  assessmentMeasuresKeine: boolean;
   assessmentOtherLines: string[];
 };
 
@@ -224,6 +230,11 @@ function applyEditToData(
       delete nextDef.lectureOtherText;
       delete nextDef.lectureOtherLines;
       if (persisted) nextDef.lectureOtherLines = persisted;
+      if (edit.definition.lectureMeasuresKeine) {
+        nextDef.lectureMeasuresKeine = true;
+      } else {
+        delete nextDef.lectureMeasuresKeine;
+      }
       next.applicationDefinition = nextDef;
     } else if (edit.blockId === "assessmentMeasures") {
       const persisted = persistMeasureOtherLines(edit.definition.assessmentOtherLines);
@@ -232,6 +243,11 @@ function applyEditToData(
       delete nextDef.assessmentOtherText;
       delete nextDef.assessmentOtherLines;
       if (persisted) nextDef.assessmentOtherLines = persisted;
+      if (edit.definition.assessmentMeasuresKeine) {
+        nextDef.assessmentMeasuresKeine = true;
+      } else {
+        delete nextDef.assessmentMeasuresKeine;
+      }
       next.applicationDefinition = nextDef;
     }
   }
@@ -499,8 +515,10 @@ export function PortalApplicationAdjustment({
         duration: (def?.duration ?? "") as EditingDefinition["duration"],
         scopeSelections: [...(def?.scopeSelections ?? [])],
         lectureMeasures: [...(def?.lectureMeasures ?? [])],
+        lectureMeasuresKeine: Boolean(def?.lectureMeasuresKeine),
         lectureOtherLines: lectureOtherLinesFromDefinition(def),
         assessmentMeasures: [...(def?.assessmentMeasures ?? [])],
+        assessmentMeasuresKeine: Boolean(def?.assessmentMeasuresKeine),
         assessmentOtherLines: assessmentOtherLinesFromDefinition(def),
       },
     };
@@ -546,18 +564,22 @@ export function PortalApplicationAdjustment({
       }
       if (edit.blockId === "lectureMeasures") {
         if (
-          d.lectureMeasures.length === 0
+          !d.lectureMeasuresKeine
+          && d.lectureMeasures.length === 0
           && !hasMeasureOtherSelection(d.lectureOtherLines)
         ) {
-          e.lectureMeasures = "Mindestens eine Option";
+          e.lectureMeasures =
+            "«Keine», mindestens eine Massnahme oder Sonstige-Angabe erforderlich.";
         }
       }
       if (edit.blockId === "assessmentMeasures") {
         if (
-          d.assessmentMeasures.length === 0
+          !d.assessmentMeasuresKeine
+          && d.assessmentMeasures.length === 0
           && !hasMeasureOtherSelection(d.assessmentOtherLines)
         ) {
-          e.assessmentMeasures = "Mindestens eine Option";
+          e.assessmentMeasures =
+            "«Keine», mindestens eine Massnahme oder Sonstige-Angabe erforderlich.";
         }
       }
     }
@@ -987,9 +1009,11 @@ export function PortalApplicationAdjustment({
               <MeasuresEditForm
                 groupId="lecture"
                 options={LECTURE_MEASURE_OPTIONS}
+                keineDescription={LECTURE_MEASURES_KEINE_DESCRIPTION}
                 value={{
                   measures: editing.definition.lectureMeasures,
                   otherLines: editing.definition.lectureOtherLines,
+                  measuresKeine: editing.definition.lectureMeasuresKeine,
                 }}
                 errors={{
                   measures: errors.lectureMeasures,
@@ -1005,6 +1029,8 @@ export function PortalApplicationAdjustment({
                               patch.measures ?? prev.definition.lectureMeasures,
                             lectureOtherLines:
                               patch.otherLines ?? prev.definition.lectureOtherLines,
+                            lectureMeasuresKeine:
+                              patch.measuresKeine ?? prev.definition.lectureMeasuresKeine,
                           },
                         }
                       : prev,
@@ -1018,6 +1044,8 @@ export function PortalApplicationAdjustment({
                 otherLines={def?.lectureOtherLines}
                 otherEnabled={def?.lectureOtherEnabled}
                 otherText={def?.lectureOtherText}
+                measuresKeine={Boolean(def?.lectureMeasuresKeine)}
+                keineDescription={LECTURE_MEASURES_KEINE_DESCRIPTION}
               />
             )}
           </R1BlockShell>
@@ -1028,9 +1056,11 @@ export function PortalApplicationAdjustment({
               <MeasuresEditForm
                 groupId="assessment"
                 options={ASSESSMENT_MEASURE_OPTIONS}
+                keineDescription={ASSESSMENT_MEASURES_KEINE_DESCRIPTION}
                 value={{
                   measures: editing.definition.assessmentMeasures,
                   otherLines: editing.definition.assessmentOtherLines,
+                  measuresKeine: editing.definition.assessmentMeasuresKeine,
                 }}
                 errors={{
                   measures: errors.assessmentMeasures,
@@ -1046,6 +1076,8 @@ export function PortalApplicationAdjustment({
                               patch.measures ?? prev.definition.assessmentMeasures,
                             assessmentOtherLines:
                               patch.otherLines ?? prev.definition.assessmentOtherLines,
+                            assessmentMeasuresKeine:
+                              patch.measuresKeine ?? prev.definition.assessmentMeasuresKeine,
                           },
                         }
                       : prev,
@@ -1059,6 +1091,8 @@ export function PortalApplicationAdjustment({
                 otherLines={def?.assessmentOtherLines}
                 otherEnabled={def?.assessmentOtherEnabled}
                 otherText={def?.assessmentOtherText}
+                measuresKeine={Boolean(def?.assessmentMeasuresKeine)}
+                keineDescription={ASSESSMENT_MEASURES_KEINE_DESCRIPTION}
               />
             )}
           </R1BlockShell>
@@ -1683,17 +1717,20 @@ function ScopeEditForm({
 type MeasuresEditValue = {
   measures: string[];
   otherLines: string[];
+  measuresKeine: boolean;
 };
 
 function MeasuresEditForm({
   groupId,
   options,
+  keineDescription,
   value,
   errors,
   onChange,
 }: {
   groupId: "lecture" | "assessment";
   options: readonly ApplicationMeasureOption[];
+  keineDescription: string;
   value: MeasuresEditValue;
   errors: { measures?: string };
   onChange: (patch: Partial<MeasuresEditValue>) => void;
@@ -1701,11 +1738,35 @@ function MeasuresEditForm({
   const set = new Set(value.measures);
   const selectionInvalid =
     Boolean(errors.measures)
+    && !value.measuresKeine
     && value.measures.length === 0
     && !hasMeasureOtherSelection(value.otherLines);
   return (
     <div className="space-y-2">
       <div className="space-y-2">
+        <label
+          className={cn(
+            "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
+            value.measuresKeine ? "border-foreground" : "border-border",
+          )}
+        >
+          <input
+            type="checkbox"
+            checked={value.measuresKeine}
+            onChange={(e) =>
+              onChange({
+                measuresKeine: e.target.checked,
+                measures: [],
+                otherLines: e.target.checked ? [""] : value.otherLines,
+              })
+            }
+            className="mt-0.5 size-4 shrink-0 accent-primary"
+          />
+          <span className="space-y-1">
+            <span className="block text-sm text-foreground">Keine</span>
+            <span className="block text-xs text-muted-foreground">{keineDescription}</span>
+          </span>
+        </label>
         {options.map((opt) => {
           const isOn = set.has(opt.key);
           return (
@@ -1721,6 +1782,7 @@ function MeasuresEditForm({
                 checked={isOn}
                 onChange={(e) =>
                   onChange({
+                    measuresKeine: false,
                     measures: e.target.checked
                       ? [...value.measures, opt.key]
                       : value.measures.filter((m) => m !== opt.key),
@@ -1738,7 +1800,12 @@ function MeasuresEditForm({
         <CustomMeasureLinesField
           idPrefix={`${groupId}-other`}
           lines={value.otherLines ?? [""]}
-          onChange={(next) => onChange({ otherLines: next })}
+          onChange={(next) =>
+            onChange({
+              otherLines: next,
+              ...(hasMeasureOtherSelection(next) ? { measuresKeine: false } : {}),
+            })
+          }
           error={selectionInvalid}
         />
       </div>
