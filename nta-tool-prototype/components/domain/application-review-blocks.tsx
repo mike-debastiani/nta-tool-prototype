@@ -581,15 +581,27 @@ export function ScopeChecklist({ selected }: { selected: string[] }) {
 export function MeasureChecklist({
   options,
   selectedKeys,
+  otherLines,
   otherEnabled,
   otherText,
 }: {
   options: readonly { key: string; label: string }[];
   selectedKeys: string[];
+  /** Bevorzugt — mehrere «Sonstige»-Zeilen. */
+  otherLines?: string[];
+  /** Legacy-Einzelfeld */
   otherEnabled?: boolean;
   otherText?: string;
 }) {
   const set = new Set(selectedKeys);
+  const resolvedOthers = (() => {
+    const fromLines = (otherLines ?? []).map((t) => t.trim()).filter(Boolean);
+    if (fromLines.length > 0) return fromLines;
+    const legacy = otherText?.trim();
+    if (legacy && otherEnabled !== false) return [legacy];
+    return [];
+  })();
+
   return (
     <div className="space-y-4">
       <ul className="space-y-1.5">
@@ -631,16 +643,17 @@ export function MeasureChecklist({
           );
         })}
       </ul>
-      {otherEnabled ? (
+      {resolvedOthers.map((line, idx) => (
         <div
+          key={`other-${idx}`}
           className={cn(
             "flex items-start gap-3 rounded-[10px] border px-3 py-3",
-            otherText?.trim()
+            line
               ? "border-border border-solid bg-card shadow-xs"
               : "border-border border-dashed bg-muted/50 opacity-70",
           )}
         >
-          <ReviewBlockCheckboxMarker checked={Boolean(otherText?.trim())} />
+          <ReviewBlockCheckboxMarker checked={Boolean(line)} />
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-3">
               <p className="text-xs font-medium leading-4 text-muted-foreground">
@@ -649,25 +662,25 @@ export function MeasureChecklist({
               <span
                 className={cn(
                   "shrink-0 text-right text-xs font-medium leading-4",
-                  otherText?.trim() ? "text-foreground" : "text-muted-foreground",
+                  line ? "text-foreground" : "text-muted-foreground",
                 )}
               >
-                {otherText?.trim() ? "wurde ergänzt" : "wurde nicht gewählt"}
+                {line ? "wurde ergänzt" : "wurde nicht gewählt"}
               </span>
             </div>
             <p
               className={cn(
                 "mt-1 text-sm leading-5",
-                otherText?.trim()
+                line
                   ? "text-foreground"
                   : "text-muted-foreground line-through decoration-solid",
               )}
             >
-              {otherText?.trim() || "Keine Angabe"}
+              {line || "Keine Angabe"}
             </p>
           </div>
         </div>
-      ) : null}
+      ))}
     </div>
   );
 }

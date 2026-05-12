@@ -67,6 +67,10 @@ import {
   type ApplicationStatus,
   getApplicationStatusMeta,
 } from "@/lib/application-status";
+import {
+  definitionShowsAssessmentCustomMeasures,
+  definitionShowsLectureCustomMeasures,
+} from "@/lib/measure-custom-lines";
 import { broadcastApplicationRowUpdated } from "@/lib/application-realtime-sync";
 import { workspaceReviewPostSubmitHydrationKey } from "@/lib/workspace-review-hydration-key";
 
@@ -324,11 +328,11 @@ export function WorkspaceApplicationReview({
   const showLectureMeasuresBlock =
     !compactReadOnlyBlocks
     || Boolean(def?.lectureMeasures?.length)
-    || Boolean(def?.lectureOtherEnabled && hasText(def?.lectureOtherText));
+    || definitionShowsLectureCustomMeasures(def);
   const showAssessmentMeasuresBlock =
     !compactReadOnlyBlocks
     || Boolean(def?.assessmentMeasures?.length)
-    || Boolean(def?.assessmentOtherEnabled && hasText(def?.assessmentOtherText));
+    || definitionShowsAssessmentCustomMeasures(def);
   const hasVisibleBlocks =
     showApplicantBlock
     || showAttestBlock
@@ -919,6 +923,7 @@ export function WorkspaceApplicationReview({
           <MeasureChecklist
             options={APPLICATION_MEASURE_OPTIONS}
             selectedKeys={def?.lectureMeasures ?? []}
+            otherLines={def?.lectureOtherLines}
             otherEnabled={def?.lectureOtherEnabled}
             otherText={def?.lectureOtherText}
           />
@@ -945,6 +950,7 @@ export function WorkspaceApplicationReview({
           <MeasureChecklist
             options={APPLICATION_MEASURE_OPTIONS}
             selectedKeys={def?.assessmentMeasures ?? []}
+            otherLines={def?.assessmentOtherLines}
             otherEnabled={def?.assessmentOtherEnabled}
             otherText={def?.assessmentOtherText}
           />

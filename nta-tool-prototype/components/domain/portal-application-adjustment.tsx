@@ -72,10 +72,17 @@ import { createClient } from "@/utils/supabase/client";
 import { cn } from "@/lib/utils";
 import { getApplicationStatusMeta } from "@/lib/application-status";
 import {
+  lectureOtherLinesFromDefinition,
+  assessmentOtherLinesFromDefinition,
+  hasMeasureOtherSelection,
+  persistMeasureOtherLines,
+} from "@/lib/measure-custom-lines";
+import {
   APPLICATION_ROW_BROADCAST_EVENT,
   applicationRowBroadcastChannelName,
 } from "@/lib/application-realtime-sync";
 import { r1AllRequestedAdjustmentsSaved } from "@/lib/r1-adjustment-release";
+import { CustomMeasureLinesField } from "@/components/domain/custom-measure-lines-field";
 
 type R2BlockPhase =
   | { phase: "confirmed" }
@@ -116,11 +123,9 @@ type EditingDefinition = {
   duration: "" | "full_study" | "one_semester";
   scopeSelections: string[];
   lectureMeasures: string[];
-  lectureOtherEnabled: boolean;
-  lectureOtherText: string;
+  lectureOtherLines: string[];
   assessmentMeasures: string[];
-  assessmentOtherEnabled: boolean;
-  assessmentOtherText: string;
+  assessmentOtherLines: string[];
 };
 
 type EditingState = {
@@ -211,19 +216,21 @@ function applyEditToData(
         scopeSelections: edit.definition.scopeSelections,
       };
     } else if (edit.blockId === "lectureMeasures") {
-      next.applicationDefinition = {
-        ...base,
-        lectureMeasures: edit.definition.lectureMeasures,
-        lectureOtherEnabled: edit.definition.lectureOtherEnabled,
-        lectureOtherText: edit.definition.lectureOtherText,
-      };
+      const persisted = persistMeasureOtherLines(edit.definition.lectureOtherLines);
+      const nextDef = { ...base, lectureMeasures: edit.definition.lectureMeasures };
+      delete nextDef.lectureOtherEnabled;
+      delete nextDef.lectureOtherText;
+      delete nextDef.lectureOtherLines;
+      if (persisted) nextDef.lectureOtherLines = persisted;
+      next.applicationDefinition = nextDef;
     } else if (edit.blockId === "assessmentMeasures") {
-      next.applicationDefinition = {
-        ...base,
-        assessmentMeasures: edit.definition.assessmentMeasures,
-        assessmentOtherEnabled: edit.definition.assessmentOtherEnabled,
-        assessmentOtherText: edit.definition.assessmentOtherText,
-      };
+      const persisted = persistMeasureOtherLines(edit.definition.assessmentOtherLines);
+      const nextDef = { ...base, assessmentMeasures: edit.definition.assessmentMeasures };
+      delete nextDef.assessmentOtherEnabled;
+      delete nextDef.assessmentOtherText;
+      delete nextDef.assessmentOtherLines;
+      if (persisted) nextDef.assessmentOtherLines = persisted;
+      next.applicationDefinition = nextDef;
     }
   }
 
@@ -490,11 +497,9 @@ export function PortalApplicationAdjustment({
         duration: (def?.duration ?? "") as EditingDefinition["duration"],
         scopeSelections: [...(def?.scopeSelections ?? [])],
         lectureMeasures: [...(def?.lectureMeasures ?? [])],
-        lectureOtherEnabled: Boolean(def?.lectureOtherEnabled),
-        lectureOtherText: def?.lectureOtherText ?? "",
+        lectureOtherLines: lectureOtherLinesFromDefinition(def),
         assessmentMeasures: [...(def?.assessmentMeasures ?? [])],
-        assessmentOtherEnabled: Boolean(def?.assessmentOtherEnabled),
-        assessmentOtherText: def?.assessmentOtherText ?? "",
+        assessmentOtherLines: assessmentOtherLinesFromDefinition(def),
       },
     };
     setAutosaveBaseline(JSON.stringify(nextEdit));
@@ -538,16 +543,20 @@ export function PortalApplicationAdjustment({
         e.scope = "Mindestens eine Option";
       }
       if (edit.blockId === "lectureMeasures") {
-        if (d.lectureMeasures.length === 0 && !d.lectureOtherEnabled)
+        if (
+          d.lectureMeasures.length === 0
+          && !hasMeasureOtherSelection(d.lectureOtherLines)
+        ) {
           e.lectureMeasures = "Mindestens eine Option";
-        if (d.lectureOtherEnabled && !d.lectureOtherText.trim())
-          e.lectureOtherText = "Bitte spezifizieren";
+        }
       }
       if (edit.blockId === "assessmentMeasures") {
-        if (d.assessmentMeasures.length === 0 && !d.assessmentOtherEnabled)
+        if (
+          d.assessmentMeasures.length === 0
+          && !hasMeasureOtherSelection(d.assessmentOtherLines)
+        ) {
           e.assessmentMeasures = "Mindestens eine Option";
-        if (d.assessmentOtherEnabled && !d.assessmentOtherText.trim())
-          e.assessmentOtherText = "Bitte spezifizieren";
+        }
       }
     }
     return e;
@@ -977,12 +986,10 @@ export function PortalApplicationAdjustment({
                 groupId="lecture"
                 value={{
                   measures: editing.definition.lectureMeasures,
-                  otherEnabled: editing.definition.lectureOtherEnabled,
-                  otherText: editing.definition.lectureOtherText,
+                  otherLines: editing.definition.lectureOtherLines,
                 }}
                 errors={{
                   measures: errors.lectureMeasures,
-                  otherText: errors.lectureOtherText,
                 }}
                 onChange={(patch) =>
                   setEditing((prev) =>
@@ -993,10 +1000,8 @@ export function PortalApplicationAdjustment({
                             ...prev.definition,
                             lectureMeasures:
                               patch.measures ?? prev.definition.lectureMeasures,
-                            lectureOtherEnabled:
-                              patch.otherEnabled ?? prev.definition.lectureOtherEnabled,
-                            lectureOtherText:
-                              patch.otherText ?? prev.definition.lectureOtherText,
+                            lectureOtherLines:
+                              patch.otherLines ?? prev.definition.lectureOtherLines,
                           },
                         }
                       : prev,
@@ -1007,6 +1012,7 @@ export function PortalApplicationAdjustment({
               <MeasureChecklist
                 options={APPLICATION_MEASURE_OPTIONS}
                 selectedKeys={def?.lectureMeasures ?? []}
+                otherLines={def?.lectureOtherLines}
                 otherEnabled={def?.lectureOtherEnabled}
                 otherText={def?.lectureOtherText}
               />
@@ -1020,12 +1026,10 @@ export function PortalApplicationAdjustment({
                 groupId="assessment"
                 value={{
                   measures: editing.definition.assessmentMeasures,
-                  otherEnabled: editing.definition.assessmentOtherEnabled,
-                  otherText: editing.definition.assessmentOtherText,
+                  otherLines: editing.definition.assessmentOtherLines,
                 }}
                 errors={{
                   measures: errors.assessmentMeasures,
-                  otherText: errors.assessmentOtherText,
                 }}
                 onChange={(patch) =>
                   setEditing((prev) =>
@@ -1036,10 +1040,8 @@ export function PortalApplicationAdjustment({
                             ...prev.definition,
                             assessmentMeasures:
                               patch.measures ?? prev.definition.assessmentMeasures,
-                            assessmentOtherEnabled:
-                              patch.otherEnabled ?? prev.definition.assessmentOtherEnabled,
-                            assessmentOtherText:
-                              patch.otherText ?? prev.definition.assessmentOtherText,
+                            assessmentOtherLines:
+                              patch.otherLines ?? prev.definition.assessmentOtherLines,
                           },
                         }
                       : prev,
@@ -1050,6 +1052,7 @@ export function PortalApplicationAdjustment({
               <MeasureChecklist
                 options={APPLICATION_MEASURE_OPTIONS}
                 selectedKeys={def?.assessmentMeasures ?? []}
+                otherLines={def?.assessmentOtherLines}
                 otherEnabled={def?.assessmentOtherEnabled}
                 otherText={def?.assessmentOtherText}
               />
@@ -1675,8 +1678,7 @@ function ScopeEditForm({
 
 type MeasuresEditValue = {
   measures: string[];
-  otherEnabled: boolean;
-  otherText: string;
+  otherLines: string[];
 };
 
 function MeasuresEditForm({
@@ -1687,13 +1689,17 @@ function MeasuresEditForm({
 }: {
   groupId: "lecture" | "assessment";
   value: MeasuresEditValue;
-  errors: { measures?: string; otherText?: string };
+  errors: { measures?: string };
   onChange: (patch: Partial<MeasuresEditValue>) => void;
 }) {
   const set = new Set(value.measures);
+  const selectionInvalid =
+    Boolean(errors.measures)
+    && value.measures.length === 0
+    && !hasMeasureOtherSelection(value.otherLines);
   return (
     <div className="space-y-2">
-      <div className="max-w-[330px] space-y-2">
+      <div className="space-y-2">
         {APPLICATION_MEASURE_OPTIONS.map((opt) => {
           const isOn = set.has(opt.key);
           return (
@@ -1714,27 +1720,15 @@ function MeasuresEditForm({
             </label>
           );
         })}
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            checked={value.otherEnabled}
-            onChange={(e) => onChange({ otherEnabled: e.target.checked })}
-            className="size-4 accent-primary"
-          />
-          <Input
-            value={value.otherText}
-            onChange={(e) => onChange({ otherText: e.target.value })}
-            placeholder="Sonstige …"
-            disabled={!value.otherEnabled}
-            className={cn("h-8", errors.otherText && "border-destructive")}
-          />
-        </div>
+        <CustomMeasureLinesField
+          idPrefix={`${groupId}-other`}
+          lines={value.otherLines ?? [""]}
+          onChange={(next) => onChange({ otherLines: next })}
+          error={selectionInvalid}
+        />
       </div>
       {errors.measures ? (
         <p className="text-xs text-destructive">{errors.measures}</p>
-      ) : null}
-      {errors.otherText ? (
-        <p className="text-xs text-destructive">{errors.otherText}</p>
       ) : null}
     </div>
   );

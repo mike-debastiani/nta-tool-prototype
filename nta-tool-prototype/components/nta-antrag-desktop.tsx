@@ -85,6 +85,13 @@ import {
   type R1PortalFlowStep,
   type WorkspaceApplication,
 } from "@/lib/test-flow-types";
+import { CustomMeasureLinesField } from "@/components/domain/custom-measure-lines-field";
+import {
+  assessmentOtherLinesFromDefinition,
+  hasMeasureOtherSelection,
+  lectureOtherLinesFromDefinition,
+  persistMeasureOtherLines,
+} from "@/lib/measure-custom-lines";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
 
@@ -152,11 +159,9 @@ type ApplicationFormData = {
   duration: ApplicationDuration | "";
   scopeSelections: string[];
   lectureMeasures: ApplicationMeasureKey[];
-  lectureOtherEnabled: boolean;
-  lectureOtherText: string;
+  lectureOtherLines: string[];
   assessmentMeasures: ApplicationMeasureKey[];
-  assessmentOtherEnabled: boolean;
-  assessmentOtherText: string;
+  assessmentOtherLines: string[];
 };
 
 type ApplicationFormFieldErrors = {
@@ -164,9 +169,7 @@ type ApplicationFormFieldErrors = {
   duration?: string;
   scopeSelections?: string;
   lectureMeasures?: string;
-  lectureOtherText?: string;
   assessmentMeasures?: string;
-  assessmentOtherText?: string;
 };
 
 const INITIAL_BOOKING_MONTH = new Date(2026, 4, 1);
@@ -226,12 +229,26 @@ const DEFAULT_APPLICATION_FORM_DATA: ApplicationFormData = {
   duration: "",
   scopeSelections: [],
   lectureMeasures: [],
-  lectureOtherEnabled: false,
-  lectureOtherText: "",
+  lectureOtherLines: [""],
   assessmentMeasures: [],
-  assessmentOtherEnabled: false,
-  assessmentOtherText: "",
+  assessmentOtherLines: [""],
 };
+
+function collectPersistedApplicationDefinition(
+  form: ApplicationFormData,
+): ApplicationDefinitionData {
+  const lectureOtherLines = persistMeasureOtherLines(form.lectureOtherLines ?? []);
+  const assessmentOtherLines = persistMeasureOtherLines(form.assessmentOtherLines ?? []);
+  return {
+    situationDescription: form.situationDescription,
+    duration: form.duration || undefined,
+    scopeSelections: [...form.scopeSelections],
+    lectureMeasures: [...form.lectureMeasures],
+    ...(lectureOtherLines ? { lectureOtherLines } : {}),
+    assessmentMeasures: [...form.assessmentMeasures],
+    ...(assessmentOtherLines ? { assessmentOtherLines } : {}),
+  };
+}
 
 function mergeWithDefaults(value?: Partial<NtaAntragFormData>): NtaAntragFormData {
   return {
@@ -294,10 +311,18 @@ function isStepFourComplete(data: ApplicationFormData) {
   if (!data.situationDescription.trim()) return false;
   if (!data.duration) return false;
   if (data.scopeSelections.length === 0) return false;
-  if (data.lectureMeasures.length === 0 && !data.lectureOtherEnabled) return false;
-  if (data.lectureOtherEnabled && !data.lectureOtherText.trim()) return false;
-  if (data.assessmentMeasures.length === 0 && !data.assessmentOtherEnabled) return false;
-  if (data.assessmentOtherEnabled && !data.assessmentOtherText.trim()) return false;
+  if (
+    data.lectureMeasures.length === 0
+    && !hasMeasureOtherSelection(data.lectureOtherLines)
+  ) {
+    return false;
+  }
+  if (
+    data.assessmentMeasures.length === 0
+    && !hasMeasureOtherSelection(data.assessmentOtherLines)
+  ) {
+    return false;
+  }
   return true;
 }
 
@@ -333,11 +358,9 @@ function applicationFormDataFromRow(
     duration: (ad.duration as ApplicationDuration | "") ?? "",
     scopeSelections: [...(ad.scopeSelections ?? [])],
     lectureMeasures: pickMeasures(ad.lectureMeasures),
-    lectureOtherEnabled: Boolean(ad.lectureOtherEnabled),
-    lectureOtherText: ad.lectureOtherText ?? "",
+    lectureOtherLines: lectureOtherLinesFromDefinition(ad) ?? [""],
     assessmentMeasures: pickMeasures(ad.assessmentMeasures),
-    assessmentOtherEnabled: Boolean(ad.assessmentOtherEnabled),
-    assessmentOtherText: ad.assessmentOtherText ?? "",
+    assessmentOtherLines: assessmentOtherLinesFromDefinition(ad) ?? [""],
   };
 }
 
@@ -792,28 +815,16 @@ export function NtaAntragDesktop({
       nextErrors.scopeSelections = "Bitte wählen Sie mindestens eine Option aus.";
     }
     if (
-      applicationFormData.lectureMeasures.length === 0 &&
-      !applicationFormData.lectureOtherEnabled
+      applicationFormData.lectureMeasures.length === 0
+      && !hasMeasureOtherSelection(applicationFormData.lectureOtherLines)
     ) {
       nextErrors.lectureMeasures = "Bitte wählen Sie mindestens eine Option aus.";
     }
     if (
-      applicationFormData.lectureOtherEnabled &&
-      !applicationFormData.lectureOtherText.trim()
-    ) {
-      nextErrors.lectureOtherText = "Bitte spezifizieren Sie die sonstige Massnahme.";
-    }
-    if (
-      applicationFormData.assessmentMeasures.length === 0 &&
-      !applicationFormData.assessmentOtherEnabled
+      applicationFormData.assessmentMeasures.length === 0
+      && !hasMeasureOtherSelection(applicationFormData.assessmentOtherLines)
     ) {
       nextErrors.assessmentMeasures = "Bitte wählen Sie mindestens eine Option aus.";
-    }
-    if (
-      applicationFormData.assessmentOtherEnabled &&
-      !applicationFormData.assessmentOtherText.trim()
-    ) {
-      nextErrors.assessmentOtherText = "Bitte spezifizieren Sie die sonstige Massnahme.";
     }
 
     setStepFourErrors(nextErrors);
@@ -880,17 +891,7 @@ export function NtaAntragDesktop({
         return;
       }
 
-      const draftDef: ApplicationDefinitionData = {
-        situationDescription: applicationFormData.situationDescription,
-        duration: applicationFormData.duration || undefined,
-        scopeSelections: [...applicationFormData.scopeSelections],
-        lectureMeasures: [...applicationFormData.lectureMeasures],
-        lectureOtherEnabled: applicationFormData.lectureOtherEnabled,
-        lectureOtherText: applicationFormData.lectureOtherText,
-        assessmentMeasures: [...applicationFormData.assessmentMeasures],
-        assessmentOtherEnabled: applicationFormData.assessmentOtherEnabled,
-        assessmentOtherText: applicationFormData.assessmentOtherText,
-      };
+      const draftDef = collectPersistedApplicationDefinition(applicationFormData);
 
       const stepForPersist: R1PortalFlowStep =
         currentStep === "step6_submitted"
@@ -1116,17 +1117,7 @@ export function NtaAntragDesktop({
         ...(application?.data?.recommendation ?? {}),
         ready: true,
       },
-      applicationDefinition: {
-        situationDescription: applicationFormData.situationDescription,
-        duration: applicationFormData.duration || undefined,
-        scopeSelections: applicationFormData.scopeSelections,
-        lectureMeasures: applicationFormData.lectureMeasures,
-        lectureOtherEnabled: applicationFormData.lectureOtherEnabled,
-        lectureOtherText: applicationFormData.lectureOtherText,
-        assessmentMeasures: applicationFormData.assessmentMeasures,
-        assessmentOtherEnabled: applicationFormData.assessmentOtherEnabled,
-        assessmentOtherText: applicationFormData.assessmentOtherText,
-      },
+      applicationDefinition: collectPersistedApplicationDefinition(applicationFormData),
       finalSubmitted: true,
       submittedAt,
     };
@@ -1152,17 +1143,7 @@ export function NtaAntragDesktop({
         antragsart: formData.antragsart,
       },
       attestFiles: sanitizeAttestFilesForDatabase(formData.attestFiles),
-      applicationDefinition: {
-        situationDescription: applicationFormData.situationDescription,
-        duration: applicationFormData.duration || undefined,
-        scopeSelections: applicationFormData.scopeSelections,
-        lectureMeasures: applicationFormData.lectureMeasures,
-        lectureOtherEnabled: applicationFormData.lectureOtherEnabled,
-        lectureOtherText: applicationFormData.lectureOtherText,
-        assessmentMeasures: applicationFormData.assessmentMeasures,
-        assessmentOtherEnabled: applicationFormData.assessmentOtherEnabled,
-        assessmentOtherText: applicationFormData.assessmentOtherText,
-      },
+      applicationDefinition: collectPersistedApplicationDefinition(applicationFormData),
       finalSubmitted: true,
       submittedAt,
     };
@@ -1228,22 +1209,14 @@ export function NtaAntragDesktop({
   const overviewDurationInvalid = isOverviewStep && !applicationFormData.duration;
   const overviewScopeInvalid =
     isOverviewStep && applicationFormData.scopeSelections.length === 0;
-  const overviewLectureSelectionInvalid =
+  const overviewLectureMeasuresInvalid =
     isOverviewStep &&
     applicationFormData.lectureMeasures.length === 0 &&
-    !applicationFormData.lectureOtherEnabled;
-  const overviewLectureOtherTextInvalid =
-    isOverviewStep &&
-    applicationFormData.lectureOtherEnabled &&
-    !applicationFormData.lectureOtherText.trim();
-  const overviewAssessmentSelectionInvalid =
+    !hasMeasureOtherSelection(applicationFormData.lectureOtherLines);
+  const overviewAssessmentMeasuresInvalid =
     isOverviewStep &&
     applicationFormData.assessmentMeasures.length === 0 &&
-    !applicationFormData.assessmentOtherEnabled;
-  const overviewAssessmentOtherTextInvalid =
-    isOverviewStep &&
-    applicationFormData.assessmentOtherEnabled &&
-    !applicationFormData.assessmentOtherText.trim();
+    !hasMeasureOtherSelection(applicationFormData.assessmentOtherLines);
   const step1InvalidInOverview = isOverviewStep && !step1Complete;
   const step2InvalidInOverview = isOverviewStep && !step2Complete;
   const step4InvalidInOverview = isOverviewStep && !step4Complete;
@@ -2557,43 +2530,27 @@ export function NtaAntragDesktop({
                               <span>{option.label}</span>
                             </label>
                           ))}
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={applicationFormData.lectureOtherEnabled}
-                              onChange={(event) =>
-                                setApplicationFormData((previous) => ({
-                                  ...previous,
-                                  lectureOtherEnabled: event.target.checked,
-                                }))
-                              }
-                              className="size-4 accent-primary"
-                            />
-                            <Input
-                              value={applicationFormData.lectureOtherText}
-                              onChange={(event) =>
-                                setApplicationFormData((previous) => ({
-                                  ...previous,
-                                  lectureOtherText: event.target.value,
-                                }))
-                              }
-                              placeholder="Sonstige ..."
-                              disabled={!applicationFormData.lectureOtherEnabled}
-                              className={cn(
-                                "h-8",
-                                stepFourErrors.lectureOtherText && "border-destructive",
-                              )}
-                            />
-                          </div>
+                          <CustomMeasureLinesField
+                            idPrefix="step4-lecture-other"
+                            lines={applicationFormData.lectureOtherLines}
+                            onChange={(next) =>
+                              setApplicationFormData((previous) => ({
+                                ...previous,
+                                lectureOtherLines: next,
+                              }))
+                            }
+                            error={
+                              Boolean(stepFourErrors.lectureMeasures)
+                              && applicationFormData.lectureMeasures.length === 0
+                              && !hasMeasureOtherSelection(
+                                applicationFormData.lectureOtherLines,
+                              )
+                            }
+                          />
                         </div>
                         {stepFourErrors.lectureMeasures ? (
                           <p className="text-xs text-destructive">
                             {stepFourErrors.lectureMeasures}
-                          </p>
-                        ) : null}
-                        {stepFourErrors.lectureOtherText ? (
-                          <p className="text-xs text-destructive">
-                            {stepFourErrors.lectureOtherText}
                           </p>
                         ) : null}
                       </div>
@@ -2632,43 +2589,27 @@ export function NtaAntragDesktop({
                               <span>{option.label}</span>
                             </label>
                           ))}
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={applicationFormData.assessmentOtherEnabled}
-                              onChange={(event) =>
-                                setApplicationFormData((previous) => ({
-                                  ...previous,
-                                  assessmentOtherEnabled: event.target.checked,
-                                }))
-                              }
-                              className="size-4 accent-primary"
-                            />
-                            <Input
-                              value={applicationFormData.assessmentOtherText}
-                              onChange={(event) =>
-                                setApplicationFormData((previous) => ({
-                                  ...previous,
-                                  assessmentOtherText: event.target.value,
-                                }))
-                              }
-                              placeholder="Sonstige ..."
-                              disabled={!applicationFormData.assessmentOtherEnabled}
-                              className={cn(
-                                "h-8",
-                                stepFourErrors.assessmentOtherText && "border-destructive",
-                              )}
-                            />
-                          </div>
+                          <CustomMeasureLinesField
+                            idPrefix="step4-assessment-other"
+                            lines={applicationFormData.assessmentOtherLines}
+                            onChange={(next) =>
+                              setApplicationFormData((previous) => ({
+                                ...previous,
+                                assessmentOtherLines: next,
+                              }))
+                            }
+                            error={
+                              Boolean(stepFourErrors.assessmentMeasures)
+                              && applicationFormData.assessmentMeasures.length === 0
+                              && !hasMeasureOtherSelection(
+                                applicationFormData.assessmentOtherLines,
+                              )
+                            }
+                          />
                         </div>
                         {stepFourErrors.assessmentMeasures ? (
                           <p className="text-xs text-destructive">
                             {stepFourErrors.assessmentMeasures}
-                          </p>
-                        ) : null}
-                        {stepFourErrors.assessmentOtherText ? (
-                          <p className="text-xs text-destructive">
-                            {stepFourErrors.assessmentOtherText}
                           </p>
                         ) : null}
                       </div>
@@ -3079,9 +3020,7 @@ export function NtaAntragDesktop({
                         <div
                           className={cn(
                             "max-w-[330px] space-y-2 rounded-lg",
-                            (overviewLectureSelectionInvalid ||
-                              overviewLectureOtherTextInvalid) &&
-                              "border border-destructive p-2",
+                            overviewLectureMeasuresInvalid && "border border-destructive p-2",
                           )}
                         >
                           {APPLICATION_MEASURE_OPTIONS.map((option) => (
@@ -3104,43 +3043,21 @@ export function NtaAntragDesktop({
                               <span>{option.label}</span>
                             </label>
                           ))}
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={applicationFormData.lectureOtherEnabled}
-                              onChange={(event) =>
-                                setApplicationFormData((previous) => ({
-                                  ...previous,
-                                  lectureOtherEnabled: event.target.checked,
-                                }))
-                              }
-                              className="size-4 accent-primary"
-                            />
-                            <Input
-                              value={applicationFormData.lectureOtherText}
-                              onChange={(event) =>
-                                setApplicationFormData((previous) => ({
-                                  ...previous,
-                                  lectureOtherText: event.target.value,
-                                }))
-                              }
-                              placeholder="Sonstige ..."
-                              disabled={!applicationFormData.lectureOtherEnabled}
-                              className={cn(
-                                "h-8",
-                                overviewLectureOtherTextInvalid && "border-destructive",
-                              )}
-                            />
-                          </div>
+                          <CustomMeasureLinesField
+                            idPrefix="overview-lecture-other"
+                            lines={applicationFormData.lectureOtherLines}
+                            onChange={(next) =>
+                              setApplicationFormData((previous) => ({
+                                ...previous,
+                                lectureOtherLines: next,
+                              }))
+                            }
+                            error={overviewLectureMeasuresInvalid}
+                          />
                         </div>
-                        {overviewLectureSelectionInvalid ? (
+                        {overviewLectureMeasuresInvalid ? (
                           <p className="text-xs text-destructive">
                             Bitte wählen Sie mindestens eine Option aus.
-                          </p>
-                        ) : null}
-                        {overviewLectureOtherTextInvalid ? (
-                          <p className="text-xs text-destructive">
-                            Bitte spezifizieren Sie die sonstige Massnahme.
                           </p>
                         ) : null}
                       </div>
@@ -3156,8 +3073,7 @@ export function NtaAntragDesktop({
                         <div
                           className={cn(
                             "max-w-[330px] space-y-2 rounded-lg",
-                            (overviewAssessmentSelectionInvalid ||
-                              overviewAssessmentOtherTextInvalid) &&
+                            overviewAssessmentMeasuresInvalid &&
                               "border border-destructive p-2",
                           )}
                         >
@@ -3183,43 +3099,21 @@ export function NtaAntragDesktop({
                               <span>{option.label}</span>
                             </label>
                           ))}
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={applicationFormData.assessmentOtherEnabled}
-                              onChange={(event) =>
-                                setApplicationFormData((previous) => ({
-                                  ...previous,
-                                  assessmentOtherEnabled: event.target.checked,
-                                }))
-                              }
-                              className="size-4 accent-primary"
-                            />
-                            <Input
-                              value={applicationFormData.assessmentOtherText}
-                              onChange={(event) =>
-                                setApplicationFormData((previous) => ({
-                                  ...previous,
-                                  assessmentOtherText: event.target.value,
-                                }))
-                              }
-                              placeholder="Sonstige ..."
-                              disabled={!applicationFormData.assessmentOtherEnabled}
-                              className={cn(
-                                "h-8",
-                                overviewAssessmentOtherTextInvalid && "border-destructive",
-                              )}
-                            />
-                          </div>
+                          <CustomMeasureLinesField
+                            idPrefix="overview-assessment-other"
+                            lines={applicationFormData.assessmentOtherLines}
+                            onChange={(next) =>
+                              setApplicationFormData((previous) => ({
+                                ...previous,
+                                assessmentOtherLines: next,
+                              }))
+                            }
+                            error={overviewAssessmentMeasuresInvalid}
+                          />
                         </div>
-                        {overviewAssessmentSelectionInvalid ? (
+                        {overviewAssessmentMeasuresInvalid ? (
                           <p className="text-xs text-destructive">
                             Bitte wählen Sie mindestens eine Option aus.
-                          </p>
-                        ) : null}
-                        {overviewAssessmentOtherTextInvalid ? (
-                          <p className="text-xs text-destructive">
-                            Bitte spezifizieren Sie die sonstige Massnahme.
                           </p>
                         ) : null}
                       </div>

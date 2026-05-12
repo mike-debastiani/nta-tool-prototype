@@ -64,9 +64,13 @@ export type ApplicationDefinitionData = {
   duration?: "full_study" | "one_semester";
   scopeSelections?: string[];
   lectureMeasures?: string[];
+  /** „Sonstige“ Massnahmen (persistiert, ohne leere Einträge). */
+  lectureOtherLines?: string[];
+  /** Legacy — bei Lesen nach `lectureOtherLines` migrieren. */
   lectureOtherEnabled?: boolean;
   lectureOtherText?: string;
   assessmentMeasures?: string[];
+  assessmentOtherLines?: string[];
   assessmentOtherEnabled?: boolean;
   assessmentOtherText?: string;
 };
