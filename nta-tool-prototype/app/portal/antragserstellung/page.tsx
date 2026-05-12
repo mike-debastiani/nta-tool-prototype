@@ -68,32 +68,13 @@ export default async function PortalAntragserstellungPage({
 
   const startFresh = forceNew || !initial;
 
-  let hasPriorFinalizedApplication = false;
-  if (startFresh) {
-    const { data: priorRows } = await supabase
-      .from("applications")
-      .select("id,applicant_id,status,data,created_at,updated_at")
-      .eq("applicant_id", profile.id)
-      .order("updated_at", { ascending: false })
-      .limit(40);
-    hasPriorFinalizedApplication = (priorRows ?? []).some((row) => {
-      const canonical = deriveCanonicalApplicationState(row as ApplicationRow);
-      return (
-        canonical === "in_review"
-        || canonical === "in_decision"
-        || canonical === "approved"
-        || canonical === "rejected"
-        || canonical === "needs_adjustment"
-      );
-    });
-  }
-
   const initialCanonical =
     initial !== undefined ? deriveCanonicalApplicationState(initial) : null;
+  /** Show draft-exit „Schliessen“ on fresh form too (first visit with zero applications). */
   const enableDraftExitToDashboard =
     initialCanonical === "draft"
     || initialCanonical === "consultation_recommendation"
-    || (startFresh && hasPriorFinalizedApplication);
+    || startFresh;
 
   // Explizite Auswahl aus `/portal/home`: Block-Detail nur nach Einreichung /
   // Review; Entwurf und Beratungsphase weiter im Step-Flow (`NtaAntragDesktop`).

@@ -32,6 +32,8 @@ export type StatusDerivationInput = {
     };
     recommendation?: {
       ready?: boolean;
+      /** Gesetzt nach R2-Freigabe — nur für Badge-/Label-Overrides, nicht für Ableitung. */
+      releasedHtml?: string;
     };
   } | null;
 };
@@ -54,12 +56,16 @@ const canonicalStatusLabelR2: Partial<Record<CanonicalApplicationState, string>>
 export const statusBadgeClass: Record<CanonicalApplicationState, string> = {
   draft: "bg-zinc-100 text-zinc-500",
   consultation_recommendation: "bg-sky-100 text-sky-500",
-  in_review: "bg-blue-200 text-blue-500",
+  in_review: "bg-blue-100 text-blue-500",
   needs_adjustment: "bg-orange-100 text-orange-400",
   in_decision: "bg-purple-100 text-purple-600",
   approved: "bg-green-100 text-green-700",
   rejected: "bg-red-200 text-red-700",
 };
+
+/** R2 badge after Empfehlung freigegeben — matches Figma Prototyp shadcn Kit node 3723:10336 (neutral-100 / neutral-500). */
+const R2_RECOMMENDATION_RELEASED_BADGE_CLASS =
+  "bg-neutral-100 text-neutral-500";
 
 export function deriveCanonicalApplicationState(
   application: StatusDerivationInput,
@@ -121,6 +127,21 @@ export function getApplicationStatusMeta(
   audience: StatusAudience = "R1",
 ) {
   const canonicalState = deriveCanonicalApplicationState(application);
+  const recommendationReleased =
+    Boolean(application.data?.recommendation?.releasedHtml?.trim());
+
+  if (
+    audience === "R2"
+    && canonicalState === "consultation_recommendation"
+    && recommendationReleased
+  ) {
+    return {
+      canonicalState,
+      label: "Empfehlung verfasst",
+      className: R2_RECOMMENDATION_RELEASED_BADGE_CLASS,
+    };
+  }
+
   return {
     canonicalState,
     label: getStatusLabelForAudience(canonicalState, audience),

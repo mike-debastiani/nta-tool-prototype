@@ -12,10 +12,13 @@ import {
 import {
   Check,
   CheckCheck,
+  CircleAlert,
+  Info,
   Loader2,
   MessageSquarePlus,
   MessageSquareText,
   RotateCcw,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -654,6 +657,76 @@ export function WorkspaceApplicationReview({
           <h1 className="text-xl font-semibold tracking-tight text-foreground">
             Antrag auf Nachteilsausgleich (NTA) – {shortApplicationRef(application.id)}
           </h1>
+          {statusMeta.canonicalState === "consultation_recommendation"
+          && !hasText(data.recommendation?.releasedHtml) ? (
+            <div className="mt-4 rounded-lg bg-sky-100 px-4 py-3">
+              <div className="flex gap-3 text-left">
+                <div className="flex shrink-0 items-start pt-0.5">
+                  <CircleAlert className="size-4 text-sky-500" strokeWidth={2} aria-hidden />
+                </div>
+                <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-sky-500">
+                  Nach einem erfolgreich durchgeführten Beratungsgespräch ist ein Empfehlungsschreiben
+                  zu verfassen. Sobald Sie dieses freigeben, wird der Antrag für die antragstellende
+                  Person freigeschaltet.
+                </p>
+              </div>
+            </div>
+          ) : null}
+          {statusMeta.canonicalState === "consultation_recommendation"
+          && hasText(data.recommendation?.releasedHtml) ? (
+            <div className="mt-4 rounded-lg bg-neutral-100 px-4 py-3">
+              <div className="flex gap-3 text-left">
+                <div className="flex shrink-0 items-start pt-0.5">
+                  <Info className="size-4 text-neutral-500" strokeWidth={2} aria-hidden />
+                </div>
+                <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-neutral-500">
+                  Das Empfehlungsschreiben wurde verfasst und die Antragstellung für die antragstellende
+                  Person freigeschaltet. Sie werden benachrichtigt, sobald der Antrag zur Prüfung
+                  eingeht.
+                </p>
+              </div>
+            </div>
+          ) : null}
+          {statusMeta.canonicalState === "in_review" ? (
+            <div className="mt-4 rounded-lg bg-blue-200 px-4 py-3">
+              <div className="flex gap-3 text-left">
+                <div className="flex shrink-0 items-start pt-0.5">
+                  <Info className="size-4 text-blue-500" strokeWidth={2} aria-hidden />
+                </div>
+                <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-blue-500">
+                  Überprüfen Sie die Angaben auf Vollständigkeit und leiten Sie den Antrag weiter oder
+                  senden Sie ihn zur Nachbesserung zurück.
+                </p>
+              </div>
+            </div>
+          ) : null}
+          {statusMeta.canonicalState === "needs_adjustment" ? (
+            <div className="mt-4 rounded-lg bg-orange-100 px-4 py-3">
+              <div className="flex gap-3 text-left">
+                <div className="flex shrink-0 items-start pt-0.5">
+                  <Info className="size-4 text-orange-400" strokeWidth={2} aria-hidden />
+                </div>
+                <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-orange-400">
+                  Dieser Antrag wurde zur Nachbesserung an die antragstellende Person zurückgesendet.
+                  Sie werden benachrichtigt, sobald die Anpassungen eingereicht wurden.
+                </p>
+              </div>
+            </div>
+          ) : null}
+          {statusMeta.canonicalState === "in_decision" ? (
+            <div className="mt-4 rounded-lg bg-purple-100 px-4 py-3">
+              <div className="flex gap-3 text-left">
+                <div className="flex shrink-0 items-start pt-0.5">
+                  <Info className="size-4 text-purple-600" strokeWidth={2} aria-hidden />
+                </div>
+                <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-purple-600">
+                  Der Antrag wurde an die Entscheidungsinstanz weitergeleitet und kann nicht mehr
+                  bearbeitet werden. Wird der Antrag bewilligt oder abgelehnt, werden Sie benachrichtigt.
+                  Bei einer Ablehnung ist eine Begründung pro Abschnitt hinterlegt.
+                </p>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         {!hasVisibleBlocks ? (
@@ -882,11 +955,11 @@ export function WorkspaceApplicationReview({
           <div className="pt-2">{bottomAction}</div>
         ) : compactReadOnlyBlocks && showReleasedRecommendationBlock ? null : (
         <div className="flex w-full flex-col items-end gap-2 pt-2">
-          {!readOnly && allReviewBlocksDone ? (
+          {!readOnly ? (
             <Button
               type="button"
-              className="h-11 gap-2 bg-zinc-900 px-5 text-white hover:bg-zinc-800 sm:min-w-[280px]"
-              disabled={isForwarding}
+              className="h-11 w-fit gap-2 bg-zinc-900 px-5 text-white hover:bg-zinc-800"
+              disabled={!allReviewBlocksDone || isForwarding}
               onClick={() => void handleForwardReview()}
             >
               {isForwarding ? (
@@ -894,10 +967,13 @@ export function WorkspaceApplicationReview({
                   <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
                   Wird weitergeleitet …
                 </>
-              ) : forwardCtaHasAdjustment ? (
-                "Anpassungen weiterleiten"
               ) : (
-                "Antrag weiterreichen"
+                <>
+                  <Send className="size-4 shrink-0" aria-hidden />
+                  {forwardCtaHasAdjustment
+                    ? "Anpassungen weiterleiten"
+                    : "Antrag weiterreichen"}
+                </>
               )}
             </Button>
           ) : null}

@@ -27,6 +27,7 @@ import {
   Mail,
   Lock,
   Phone,
+  Send,
   Stethoscope,
   Trash2,
   Upload,
@@ -1248,6 +1249,7 @@ export function NtaAntragDesktop({
   const step4InvalidInOverview = isOverviewStep && !step4Complete;
   const step5InvalidInOverview =
     isOverviewStep && (!step1Complete || !step2Complete || !step4Complete);
+  const canSubmitFromOverview = step1Complete && step2Complete && step4Complete;
 
   const canOpenStep1 = true;
   const canOpenStep2 = step1Complete;
@@ -1594,6 +1596,7 @@ export function NtaAntragDesktop({
                 return;
               }
               if (currentStep === "step5_overview") {
+                if (!canSubmitFromOverview) return;
                 void handleSubmitApplication();
                 return;
               }
@@ -2679,15 +2682,18 @@ export function NtaAntragDesktop({
                         Antrag erfolgreich eingereicht
                       </CardTitle>
                       <p className="text-sm text-muted-foreground">
-                        Ihr Antrag wurde übermittelt und befindet sich jetzt im Status In Review.
+                      Ihr Antrag wurde erfolgreich eingereicht und befindet sich nun im Status Review. Den aktuellen Status finden Sie jederzeit unter «Meine Anträge».
                       </p>
                     </div>
-                    <div className="mx-auto w-full max-w-[544px] rounded-lg border border-blue-400 bg-blue-100 px-4 py-3 text-sm">
-                      <div className="flex items-start gap-2 text-left">
-                        <Info className="mt-0.5 size-4 shrink-0" />
-                        <p>
-                          Sie werden benachrichtigt, sobald die Fachstelle Ihren Antrag
-                          bearbeitet hat.
+                    <div className="mx-auto w-full max-w-[544px] rounded-lg border border-blue-500 bg-blue-100 px-4 py-3">
+                      <div className="flex gap-3 text-left">
+                        <div className="flex shrink-0 items-start pt-0.5">
+                          <Info className="size-4 text-blue-500" strokeWidth={2} aria-hidden />
+                        </div>
+                        <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-blue-500">
+                          Die Fachstelle prüft Ihren Antrag auf Vollständigkeit. Die Bearbeitung dauert
+                          in der Regel 5–10 Werktage. Sie werden per E-Mail informiert, sobald es
+                          Neuigkeiten gibt.
                         </p>
                       </div>
                     </div>
@@ -3325,7 +3331,12 @@ export function NtaAntragDesktop({
                           Übersicht
                         </Button>
                       ) : currentStep === "step5_overview" ? (
-                        <Button type="submit" className="min-h-9 px-4">
+                        <Button
+                          type="submit"
+                          className="min-h-9 gap-2 px-4"
+                          disabled={!canSubmitFromOverview}
+                        >
+                          <Send className="size-4 shrink-0" aria-hidden />
                           Ausgleich beantragen
                         </Button>
                       ) : (

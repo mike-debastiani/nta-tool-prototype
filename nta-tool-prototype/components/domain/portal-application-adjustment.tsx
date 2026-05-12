@@ -15,9 +15,13 @@ import {
 import {
   ArrowLeft,
   CheckCheck,
+  CircleAlert,
+  Info,
+  Loader2,
   MessageSquareText,
   PencilLine,
   Save,
+  Send,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -278,6 +282,8 @@ export function PortalApplicationAdjustment({
     Record<ReviewWorkspaceBlockId, R1AdjustmentResolution>
   >;
   const statusMeta = getApplicationStatusMeta(snapshot, "R1");
+  const isInReviewPortal = statusMeta.canonicalState === "in_review";
+  const isInDecisionPortal = statusMeta.canonicalState === "in_decision";
   // Entscheidend ist der aktuelle kanonische Status des Snapshots (Realtime),
   // nicht nur der Server-Prop-Zustand beim ersten Render.
   const canEditBlocks = statusMeta.canonicalState === "needs_adjustment";
@@ -631,6 +637,7 @@ export function PortalApplicationAdjustment({
   };
 
   const releaseAdjustmentsForReview = async () => {
+    if (!r1AllRequestedAdjustmentsSaved(data)) return;
     setReleaseError(null);
     setReleaseSubmitting(true);
     try {
@@ -752,24 +759,46 @@ export function PortalApplicationAdjustment({
                   Antrag auf Nachteilsausgleich (NTA) –{" "}
                   {shortApplicationRef(snapshot.id)}
                 </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {canEditBlocks ? (
-                    <>
-                      Die Fachstelle hat zu einzelnen Blöcken Anpassungen
-                      angefordert. Klicken Sie bei einem markierten Block auf{" "}
-                      <span className="font-medium text-foreground">
-                        «Anpassung vornehmen»
-                      </span>
-                      , passen Sie die Inhalte an und speichern Sie den Block.
-                    </>
-                  ) : (
-                    <>
-                      Sie sehen den Antrag in der Blockansicht. Anpassungen sind
-                      nur möglich, wenn der Antrag den Status «Anpassung
-                      erforderlich» hat.
-                    </>
-                  )}
-                </p>
+                {isInReviewPortal ? (
+                  <div className="mt-4 rounded-lg bg-blue-100 px-4 py-3">
+                    <div className="flex gap-3 text-left">
+                      <div className="flex shrink-0 items-start pt-0.5">
+                        <Info className="size-4 text-blue-500" strokeWidth={2} aria-hidden />
+                      </div>
+                      <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-blue-500">
+                        Die Fachstelle prüft Ihren Antrag auf Vollständigkeit. Die Bearbeitung dauert
+                        in der Regel 5–10 Werktage. Sie werden per E-Mail informiert, sobald es
+                        Neuigkeiten gibt.
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
+                {canEditBlocks ? (
+                  <div className="mt-4 rounded-lg bg-orange-100 px-4 py-3">
+                    <div className="flex gap-3 text-left">
+                      <div className="flex shrink-0 items-start pt-0.5">
+                        <CircleAlert className="size-4 text-orange-400" strokeWidth={2} aria-hidden />
+                      </div>
+                      <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-orange-400">
+                        Die Fachstelle hat Ihren Antrag geprüft und Nachbesserungen festgestellt. Nehmen
+                        Sie die markierten Anpassungen vor und reichen Sie den Antrag erneut ein.
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
+                {isInDecisionPortal ? (
+                  <div className="mt-4 rounded-lg bg-purple-100 px-4 py-3">
+                    <div className="flex gap-3 text-left">
+                      <div className="flex shrink-0 items-start pt-0.5">
+                        <Info className="size-4 text-purple-600" strokeWidth={2} aria-hidden />
+                      </div>
+                      <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-purple-600">
+                        Die Entscheidungsinstanz prüft Ihren Antrag. Die Bearbeitung dauert in der Regel
+                        5–10 Werktage. Sie werden per E-Mail informiert, sobald es Neuigkeiten gibt.
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
                 {deleteError ? (
                   <p className="mt-2 text-sm text-destructive" role="alert">
                     Antrag konnte nicht zurückgezogen werden: {deleteError}
@@ -1041,16 +1070,29 @@ export function PortalApplicationAdjustment({
               <Trash2 className="size-4 shrink-0" aria-hidden />
               {deleting ? "Wird zurückgezogen…" : "Antrag zurückziehen"}
             </Button>
-            {canEditBlocks && r1AllRequestedAdjustmentsSaved(data) ? (
+            {canEditBlocks ? (
               <Button
                 type="button"
-                className="h-10 shrink-0 bg-zinc-900 px-5 text-white hover:bg-zinc-800 disabled:opacity-60"
-                disabled={releaseSubmitting || saving || Boolean(editing)}
+                className="h-10 shrink-0 gap-2 bg-zinc-900 px-5 text-white hover:bg-zinc-800 disabled:opacity-60"
+                disabled={
+                  !r1AllRequestedAdjustmentsSaved(data)
+                  || releaseSubmitting
+                  || saving
+                  || Boolean(editing)
+                }
                 onClick={() => void releaseAdjustmentsForReview()}
               >
-                {releaseSubmitting
-                  ? "Wird freigegeben…"
-                  : "Anpassungen für Review freigeben"}
+                {releaseSubmitting ? (
+                  <>
+                    <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
+                    Wird freigegeben…
+                  </>
+                ) : (
+                  <>
+                    <Send className="size-4 shrink-0" aria-hidden />
+                    Anpassungen für Review freigeben
+                  </>
+                )}
               </Button>
             ) : null}
           </div>

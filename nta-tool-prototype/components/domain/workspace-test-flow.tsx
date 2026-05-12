@@ -20,6 +20,9 @@ import {
 } from "@/components/domain/workspace-application-review";
 import { RichTextEditor } from "@/components/domain/rich-text-editor";
 
+/** Removed product copy — never show between draft / release actions. */
+const SUPPRESS_EDITOR_NOTICE = "Empfehlungsschreiben an R1 freigegeben.";
+
 type WorkspaceTestFlowProps = {
   userId: string;
   /** Logged-in reviewer name for „Zugewiesen an“ in the review sidebar. */
@@ -41,6 +44,12 @@ export function WorkspaceTestFlow({
   const [message, setMessage] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [releasingId, setReleasingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMessage((current) =>
+      current === SUPPRESS_EDITOR_NOTICE ? null : current,
+    );
+  }, []);
 
   const refreshApplications = useCallback(async () => {
     const { data } = await supabase
@@ -165,7 +174,7 @@ export function WorkspaceTestFlow({
     }
 
     await refreshApplications();
-    setMessage("Empfehlungsschreiben an R1 freigegeben.");
+    setMessage(null);
     setReleasingId(null);
   }
 
@@ -289,7 +298,9 @@ export function WorkspaceTestFlow({
               initialHtml={
                 selectedApplication.data.recommendation?.draftHtml ?? ""
               }
-              saveMessage={message}
+              saveMessage={
+                message !== SUPPRESS_EDITOR_NOTICE ? message : null
+              }
               saving={pendingId === selectedApplication.id}
               releasing={releasingId === selectedApplication.id}
               onSave={(draftHtml, draftText) =>
@@ -333,8 +344,25 @@ function RecommendationDraftEditor({
   onRelease: (draftHtml: string, draftText: string) => void;
 }) {
   const [editor, setEditor] = useState<Editor | null>(null);
+  const [hasRecommendationBody, setHasRecommendationBody] = useState(false);
+
+  useEffect(() => {
+    if (!editor) {
+      setHasRecommendationBody(false);
+      return;
+    }
+    const sync = () => {
+      setHasRecommendationBody(editor.getText().trim().length > 0);
+    };
+    sync();
+    editor.on("update", sync);
+    return () => {
+      editor.off("update", sync);
+    };
+  }, [editor]);
 
   const busy = saving || releasing;
+  const canRelease = hasRecommendationBody && !busy && Boolean(editor);
 
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
@@ -380,9 +408,9 @@ function RecommendationDraftEditor({
           <Button
             type="button"
             className="gap-2 bg-zinc-900 text-white hover:bg-zinc-800"
-            disabled={busy || !editor}
+            disabled={!canRelease}
             onClick={() => {
-              if (!editor) return;
+              if (!editor || !hasRecommendationBody) return;
               onRelease(editor.getHTML(), editor.getText());
             }}
           >
