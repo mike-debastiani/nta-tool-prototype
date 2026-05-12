@@ -20,14 +20,14 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 
 | Schicht | Technologie |
 |---|---|
-| Framework | Next.js 15, App Router |
+| Framework | Next.js (App Router) — **Ist-Repo:** `nta-tool-prototype/package.json` (z. B. Next 16) als Quelle der Wahrheit |
 | Sprache | TypeScript (strict) |
 | Styling | Tailwind CSS v4 (CSS-Variablen für Tokens) |
 | Komponenten | shadcn/ui (in `/components/ui/`) |
-| Client-State | Zustand (nur für transienten UI-State) |
+| Client-State | React `useState` / `useRef` im Prototyp; Zustand nur wo explizit genutzt |
 | Backend | Supabase (Postgres, Auth, Realtime, Storage) |
 | Auth | Supabase E-Mail/Passwort (UI als SSO inszeniert) |
-| Package Manager | pnpm |
+| Package Manager | **Ist-Repo:** npm (Workspace `nta-tool-prototype`); Vision/Doku kann pnpm nennen — Build immer gegen `package.json` prüfen |
 | Deployment | Vercel + GitHub |
 
 **Nicht erlaubt ohne Rücksprache:**
@@ -67,8 +67,8 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 
 | Rolle | Bereich | Was sie tut |
 |---|---|---|
-| R1 — Studierende:r | `/portal` | Antrag stellen, Korrekturen vornehmen, bewilligten NTA einsehen |
-| R2 — Zentrale Fachstelle | `/workspace` | Beraten, Empfehlung verfassen, Antrag annotieren, an R3 weiterleiten |
+| R1 — Studierende:r | `/portal` | Antrag stellen, nach R2-Feedback **Block-Anpassungen** (`PortalApplicationAdjustment`), Freigabe zurück an Fachstelle, bewilligten NTA einsehen |
+| R2 — Zentrale Fachstelle | `/workspace` | Beraten, Empfehlung verfassen, **Block-Review** nach Einreichung, Antrag an Entscheid / zur Korrektur weiterleiten |
 | R3 — Dezentrale Entscheidungsinstanz | `/workspace` | Bewilligen/ablehnen, Verfügung versenden, Anpassungen einfordern |
 | R5 — Prüfungsadministration | `/workspace` | Massnahmen-Listen pro Prüfung, Umsetzung organisieren |
 | R6 — Modulverantwortliche | `/workspace` | Massnahmen für eigene Module einsehen (ohne medizinische Details) |
@@ -89,9 +89,10 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 
 ### F2 — Multi-Step Antrag-Erstellung (R1)
 
-Linearer 4-Step-Flow mit Stepper-Visualisierung:
+**Zielbild:** linearer Step-Flow mit Stepper.  
+**Ist (`nta-antrag-desktop.tsx`):** **sechs** Schritte inkl. Übersicht und Erfolgsscreen (Persönliche Angaben → Attest → Beratung & Empfehlung → Antrag stellen → Übersicht → Erfolg); Details und Status-Gating → `Antragerstellung_Kontext.md`.
 
-| Step | Inhalt |
+| Step (Zielbild-Kürzel) | Inhalt |
 |---|---|
 | 1 | Persönliche Angaben (vorausgefüllt aus Auth, editierbar), Antragsart, Studienangaben |
 | 2 | Fachärztliche Dokumente hochladen (mehrere PDFs möglich), Hilfestellung-Callout zu externen Resources oberhalb |
@@ -137,6 +138,10 @@ Linearer 4-Step-Flow mit Stepper-Visualisierung:
 
 ### F6 — Annotations-System (R2/R3 → R1 Korrektur-Loop)
 
+**Ist im Prototyp (Abweichung von Feld-Annotationen):** Statt einzelner Feld-Marker ein **Block-Review** im Workspace (`WorkspaceApplicationReview`): sieben inhaltliche Blöcke, je **Bestätigen** oder **Anpassung mit Bemerkung**; Persistenz unter `data.recommendation.workspaceReview`; Weiterleitung an R1 über `review-forward`; R1 bearbeitet in `PortalApplicationAdjustment`; Rückkehr in den R2-Review-Loop über **`r1-release-adjustments`** inkl. Phase **`pending_after_adjustment`** (gesperrte Fachstellen-Bemerkung). Vollständiger Ablauf → **`Antrag_Review_Kontext.md`**.
+
+**Vision / Zielbild (Feld-Ebene):**
+
 **Markieren (R2/R3):**
 - Jedes Feld im Antrag hat im Review-Modus einen "Markieren"-Button
 - Klick öffnet Annotation-Dialog mit Bemerkungstext
@@ -160,9 +165,10 @@ Linearer 4-Step-Flow mit Stepper-Visualisierung:
 ### F7 — Realtime-Sync zwischen Geräten
 
 - Aktionen einer Rolle in <1 Sekunde bei anderen Rollen sichtbar
-- Realisiert via Supabase Realtime Subscriptions auf relevante Tabellen
-- Source of Truth: Supabase. Zustand nur für transienten UI-State und optimistische Updates
-- Beispiele:
+- **Ist:** u. a. **Supabase Realtime Broadcast** auf Kanal `application-row:<applicationId>` (`lib/application-realtime-sync.ts`) nach R2-Forward und R1-Freigabe; Listener im Portal-Adjustment mit Refetch / `router.refresh`. **Student-Dashboard:** Polling der Antragsliste für frische Status-Badges. R1-Antragsflow: weiterhin **Subscription** auf `applications` mit `id=eq.<applicationId>` wo implementiert (`Antragerstellung_Kontext.md`).
+- **Vision:** zusätzlich Subscriptions auf `applications`/`postgres_changes` überall dort, wo Broadcast nicht reicht; Activity-Log (`application_events`) bleibt Zielbild (F8).
+- Source of Truth: Supabase. Lokaler UI-State nur transient.
+- Beispiele (Zielbild):
   - R1 reicht ein → R2-Inbox aktualisiert
   - R2 markiert Feld → R1-Sidebar aktualisiert
   - R3 bewilligt → R1-Status aktualisiert

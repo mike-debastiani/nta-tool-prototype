@@ -1,8 +1,8 @@
 # Kontext: Antrag Review (nach finaler Einreichung, R2) — NTA Prototyp
 
 > **Zweck:** Zentrale Referenz für Chats zur **Review-Ansicht nach finalem R1-Submit**, **UI**, **Client-State**, **Sidebar-Kommentare**, **Code-Ankern** sowie dem **Empfehlungsschreiben-Drafting / -Release** (Rich-Text) zwischen R2 und R1.  
-> **Backend:** R2-Review-Persistenz, Forward-Aktion (`in_implementation` / `needs_correction`) und Empfehlungs-Inhalte unter `data.recommendation.*` sind RLS-/Trigger-konform — siehe Abschnitt [Daten & Backend](#4-daten--backend).  
-> **Verwandt:** `Antragerstellung_Kontext.md` · `General_Prototype_Kontext.md` · `Prototyp_Funktionen.md` (F6 Korrektur-Loop)
+> **Backend:** R2-Review-Persistenz, Forward-Aktion (`in_implementation` / `needs_correction`), R1-Freigabe zurück in den Review-Loop (`in_review`), Empfehlungs-Inhalte unter `data.recommendation.*` — RLS-/Trigger-konform; siehe [Daten & Backend](#4-daten--backend).  
+> **Verwandt:** `Antragerstellung_Kontext.md` · `General_Prototype_Kontext.md` · `Prototyp_Funktionen.md` (F6/F7 vs. Ist-Block-Review)
 
 ---
 
@@ -21,17 +21,19 @@
 - Antrag mit kanonischem Status **„In Review“** öffnen → **Review-Ansicht** (`WorkspaceApplicationReview`).
 - Pro **Block:** **Bestätigen** oder **Anpassung anfordern** (mit **Pflichtbemerkung** über die Sidebar; siehe unten).
 - **Umgesetzt:** Block-Footer, Sidebar-Kommentar-Composer, Chronik, Zurücksetzen mit Bestätigung bei Anpassung; **Persistenz** des Entwurfs in `data.recommendation.workspaceReview.draft` (debounced) und **Weiterreichen** über `/api/applications/review-forward` mit Statuswechsel auf `in_implementation` (alles bestätigt) bzw. `needs_correction` (mind. eine Anpassung).
-- **Read-only nach Forward:** Sobald `applications.status` ∈ {`in_implementation`, `approved`, `rejected`} ist, rendert `WorkspaceApplicationReview` im Modus **`readonly_decision`**: keine Footer-Aktionen, kein Composer, Chronik aus `recommendation.workspaceReview.forwardedComments`. Voraussetzung dafür ist die erweiterte SELECT-Policy `applications_select_r2_worklist` (siehe § 4).
-- **Noch Zielbild:** Wechsel `needs_correction → in_review` nach erneuter R1-Freigabe sowie der globale Entscheidungs-Übergang (R3/R4) hängen am `application-status.ts`-Pfad und der RPC-Erweiterung.
+- **Read-only nach Forward:** Sobald `applications.status` ∈ {`in_implementation`, `approved`, `rejected`} ist, rendert `WorkspaceApplicationReview` im Modus **`readonly_decision`**: kein **Weiterreich**-CTA, kein Composer, Chronik aus `recommendation.workspaceReview.forwardedComments`. (Weitere read-only Modi: `readonly_adjustment_pending`, `readonly_consultation` — siehe View-Modes.) Voraussetzung für Lesen nach Entscheid ist die SELECT-Policy `applications_select_r2_worklist` (siehe § 4).
+- **Rückkehr in den Review-Loop:** R1 kann nach erledigten Anpassungen den Antrag mit **`POST /api/applications/r1-release-adjustments`** (nur Antragsteller, Status `needs_correction` / `needs_adjustment`) wieder auf **`in_review`** setzen; `workspaceReview.postSubmit` wird aus den gespeicherten R1-Anpassungen neu aufgebaut (`lib/r1-adjustment-release.ts`: u. a. `adjustment` → `pending_after_adjustment` mit `lockedRemark`, `draft` entfernt, `r1AdjustmentResolutions` geleert). Anschließend **Broadcast** (`lib/application-realtime-sync.ts`) + Refetch im Portal.
+- **Hydration / mehrere Review-Zyklen:** Solange `status` wiederholt `in_review` ist, reicht ein React-Key aus `id + status` nicht — es wird **`workspaceReviewPostSubmitHydrationKey`** (`lib/workspace-review-hydration-key.ts`) in `workspace-test-flow.tsx` an den Key von `WorkspaceApplicationReview` gehängt; zusätzlich synchronisiert die Review-Komponente lokalen State per `useEffect`, wenn sich dieser Fingerabdruck ändert (fehlertolerante Hydration unbekannter Snapshot-Phasen in `hydrateBlockPhasesFromApplication`).
+- **Noch offen (Produkt/Backend):** globaler Entscheidungs-Übergang R3 (`approved` / `rejected`) und weitergehende Automatisierung jenseits des aktuellen Block-Reviews.
 
 ### R1
 
 - **„In Review“** ohne offene Anpassungen: Antrag **read-only** in Block-Detailansicht.
 - Nach **Anpassungsanforderung:** R1 **„Anpassung erforderlich“**, R2-Label **„Anpassung ausstehend“** (`needs_adjustment`; Labels `getStatusLabelForAudience`).
-- **Umgesetzt:** Klick auf einen Antrag im R1-Dashboard öffnet **immer** die Block-Detailansicht **`PortalApplicationAdjustment`** (`components/domain/portal-application-adjustment.tsx`) unter `/portal/antragserstellung?applicationId=<uuid>` — identisches Layout wie die R2-Review (Block-Liste links, Antrag-Sidebar rechts). Bearbeitung ist **nur** im kanonischen Status `needs_adjustment` erlaubt (`allowAdjustments`-Prop); in allen anderen Status ist sie ein reiner Lese-Modus. Per Block-Composer (Sidebar-Kommentar oder „Anpassung vornehmen“) springt R1 zur passenden Stelle (`reviewWorkspaceAnchorId`); bestätigte Blöcke werden grün gerahmt, ausstehende amber mit Originalbemerkung der Fachstelle.
+- **Umgesetzt:** Klick auf einen Antrag im R1-Dashboard öffnet **immer** die Block-Detailansicht **`PortalApplicationAdjustment`** (`components/domain/portal-application-adjustment.tsx`) unter `/portal/antragserstellung?applicationId=<uuid>` — identisches Layout wie die R2-Review (Block-Liste links, Antrag-Sidebar rechts). Bearbeitung ist **nur** aktiv, wenn `deriveCanonicalApplicationState === "needs_adjustment"` (im Code u. a. `canEditBlocks`); in allen anderen Status ist die Ansicht read-only. Per Sidebar-Kommentar / „Anpassung vornehmen“ springt R1 zur passenden Stelle (`reviewWorkspaceAnchorId`); bestätigte Blöcke grün, angeforderte Anpassungen amber mit R2-Bemerkung.
 - **Autosave:** Pro betroffenem Block schreibt R1 debounced in `data.applicationDefinition` / `data.personalData` / `data.attestFiles`; abgeschlossene Anpassungen sind in `data.r1AdjustmentResolutions` (Typ `R1AdjustmentResolution` mit `resolvedAt`) markiert, damit die UI „Anpassung erfolgt“ anzeigt, ohne die Original-Bemerkung von R2 zu verlieren.
 - **Persistenter Zurück-Button** oben links („Zurück zum Dashboard“) und **Löschen-Aktion** sind in jedem Status verfügbar.
-- **Noch (Zielbild):** Erneute Freigabe zur Review (`needs_adjustment → in_review`) inklusive Quittierung der `r1AdjustmentResolutions` und Reset des R2-Drafts.
+- **Umgesetzt:** Wenn alle von R2 angeforderten Anpassungs-Blöcke mindestens einmal gespeichert sind (`r1AllRequestedAdjustmentsSaved` in `lib/r1-adjustment-release.ts`), kann R1 **„Anpassungen für Review freigeben“** auslösen → API oben → `in_review`. UI: schwarzer Button, rechts in einer Zeile mit **„Antrag zurückziehen“** (keine umgebenden Erklärungstexte mehr in diesem Bereich).
 
 ### Loop & Entscheid
 
@@ -59,10 +61,12 @@
   - `workspaceReview` — siehe nächster Unterpunkt.
 - **Persistenz Block-Review (Prototyp, jetzt):** Phasen, Bemerkungen und Chronik liegen unter **`data.recommendation.workspaceReview`** (innerhalb des erlaubten Trigger-Pfads). Schemas in `lib/test-flow-types.ts`:
   - `data.recommendation.workspaceReview.draft`: laufender R2-Entwurf (`R2ReviewDraft` — `updatedAt`, `blocks`, `reviewComments`); wird debounced gespeichert (`persistReviewDraft` in `workspace-application-review.tsx`, ~500 ms).
-  - `data.recommendation.workspaceReview.postSubmit`: Snapshot beim **Weiterreichen** (`R2PostSubmitReview` — `forwardedAt`, `blocks`).
+  - `data.recommendation.workspaceReview.postSubmit`: Snapshot beim **Weiterreichen** (`R2PostSubmitReview` — `forwardedAt`, `blocks`). Block-`phase` inkl. **`pending_after_adjustment`** (`lockedRemark`) nach R1-Freigabe einer Korrekturrunde — R2 sieht die Fachstellen-Bemerkung gesperrt, bis er erneut „Anpassung anfordert“ (dann neuer Kommentar / neues `adjustment`).
   - `data.recommendation.workspaceReview.forwardedComments`: persistierte Kommentar-Chronik beim Weiterreichen.
 - **Legacy-Wurzelfelder** (`reviewComments`, `r2PostSubmitReview`, `r2ReviewDraft` direkt in `data`) werden vor jedem Save mit **`dataWithoutLegacyReviewRoots`** (`lib/r2-review-persist.ts`) entfernt — sonst feuert der Trigger.
-- **Forward-Aktion** geht über die API-Route **`app/api/applications/review-forward/route.ts`** (Session-Client, RLS-konform — kein `SUPABASE_SERVICE_ROLE_KEY` nötig). Setzt `applications.status` auf `in_implementation` (alle Blöcke bestätigt) bzw. `needs_correction` (mind. eine Anpassung) und schreibt `recommendation.workspaceReview` final.
+- **Forward-Aktion** geht über **`app/api/applications/review-forward/route.ts`** (Session-Client, RLS-konform — kein `SUPABASE_SERVICE_ROLE_KEY` nötig). Payload: `applicationId`, `nextStatus` (`in_implementation` \| `needs_correction`), `workspaceReview` inkl. `postSubmit` + `forwardedComments`. Setzt `applications.status` entsprechend und schreibt `recommendation.workspaceReview` final.  
+  **Trigger-Pitfall:** Root-Felder in `data` außerhalb `consultation` / `recommendation` dürfen von R2 **nicht** verändert werden. Insbesondere darf **`r1AdjustmentResolutions`** beim Forward **nicht** aus dem Merge entfernt werden (sonst `R2 may not change data except recommendation/consultation`); Zurücksetzen erfolgt bei R1 über **`r1-release-adjustments`**.
+- **R1-Freigabe-API:** **`app/api/applications/r1-release-adjustments/route.ts`** — setzt Status `in_review`, merged `buildWorkspaceReviewAfterR1AdjustmentRelease`, leert `r1AdjustmentResolutions`, broadcastet Zeilen-Update.
 - **RLS-Anker:** `applications_select_r2_worklist` umfasst seit Migration `extend_workspace_select_to_decision_states` auch **`in_implementation` / `approved` / `rejected`**, damit R2 den weitergereichten Antrag nach dem Statuswechsel im Workspace im Modus `readonly_decision` weiter sehen kann (Details siehe `Antragerstellung_Kontext.md` § 10).
 
 ---
@@ -83,7 +87,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 | `interactive` | `in_review` | Volle Review: Footer-Aktionen (Bestätigen / Anpassung anfordern / Zurücksetzen), Sidebar-Composer, Forward-Button. Draft-Autosave aktiv. |
 | `readonly_consultation` | `consultation_recommendation` | Kompaktes Lesefeld: **nur Blöcke mit Inhalt** werden angezeigt (`compactReadOnlyBlocks`). Keine Footer-Aktionen, leere Kommentarliste mit eigenem Empty-Label. Darunter `RecommendationDraftEditor` als `bottomAction`, solange `releasedHtml` leer ist. |
 | `readonly_adjustment_pending` | `needs_adjustment` | Read-only auf R2-Seite, während R1 die angeforderten Anpassungen vornimmt. Statuszeile statt Buttons. |
-| `readonly_decision` | `in_decision` / `approved` / `rejected` | Snapshot nach Forward: rendert `recommendation.workspaceReview.postSubmit` + `forwardedComments`; keine Editier-Aktionen. |
+| `readonly_decision` | `in_decision` (kanonisch; Quell-Status u. a. **`in_implementation`**, **`in_decision`**) | Snapshot nach R2-Forward in die Entscheid: `postSubmit` + `forwardedComments`; keine Editier-Aktionen. (`WorkspaceTestFlow` öffnet die Vollansicht derzeit nicht für kanonisch `approved` / `rejected` — dort endet die Navigation ggf. auf der Liste.) |
 
 ### Empfehlungsschreiben — Drafting & Release (R2)
 
@@ -102,6 +106,10 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 | Detail-Sidebar | `components/domain/application-review-detail-sidebar.tsx` | Antragdetails, Kommentar-Composer (Vollspalte), Chronik |
 | Persistenz-Helfer | `lib/r2-review-persist.ts` | `dataWithoutLegacyReviewRoots`, Pfade unter `recommendation.workspaceReview` |
 | Forward-API | `app/api/applications/review-forward/route.ts` | Session-Client-Update auf `in_implementation` / `needs_correction`, schreibt finale Review-Snapshots |
+| R1-Release API | `app/api/applications/r1-release-adjustments/route.ts` | Antragsteller: `needs_correction` \| `needs_adjustment` → `in_review`, merged `workspaceReview`, Broadcast |
+| Release-Logik | `lib/r1-adjustment-release.ts` | `r1AllRequestedAdjustmentsSaved`, `buildWorkspaceReviewAfterR1AdjustmentRelease` (inkl. Legacy nur `r2PostSubmitReview`) |
+| Hydration-Key | `lib/workspace-review-hydration-key.ts` | Stabiler Fingerprint von `postSubmit` für Remount / Re-Hydration bei wiederholtem `in_review` |
+| Zeilen-Sync | `lib/application-realtime-sync.ts` | Broadcast-Kanal `application-row:<id>` nach mutierenden API-Aufrufen (R2-Forward, R1-Release) |
 | Review-Block-Definition | `lib/review-workspace-blocks.ts` | Geteilte Block-IDs, Default-Phasen, Anker-Hilfen (`reviewWorkspaceAnchorId`) |
 | Labels / Konstanten | `lib/application-review-labels.ts` | Scope, Massnahmen, Hilfsfunktionen |
 | Status | `lib/application-status.ts` | Ableitung, Meta für Sidebar-Badge |
@@ -123,7 +131,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 6. **Geltungsbereich** — `APPLICATION_SCOPE_OPTIONS`.
 7. **Ausgleichsmassnahmen LV / Leistungsnachweise** — wie Antragsformular inkl. Sonstige.
 
-**IDs im Code (`ReviewBlockId`):** `applicant` · `attest` · `definition` · `duration` · `scope` · `lectureMeasures` · `assessmentMeasures`
+**IDs im Code (`ReviewWorkspaceBlockId` in `lib/review-workspace-blocks.ts`):** `applicant` · `attest` · `definition` · `duration` · `scope` · `lectureMeasures` · `assessmentMeasures`
 
 ### Block-Phasen (lokal, `ReviewBlockPhase`)
 
@@ -132,6 +140,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 | `pending` | Standard-Karte (`ReviewBlockCard`), Footer: **Anpassung anfordern** + **Bestätigen**. |
 | `confirmed` | Außenrahmen teal (`footerTone="confirmed"`), Footer-Balken teal, **Zurücksetzen** + „Reviewed & Bestätigt“. |
 | `adjustment` | Außenrahmen amber, Footer amber, Bemerkung im Inhalt, **Zurücksetzen** + „Anpassung angefordert“. |
+| `pending_after_adjustment` | Nach R1-Freigabe: erneut wie offenes Review; Fachstellen-Bemerkung als **gesperrte** Hinweiszeile (`lockedRemark` / `displayRemark`), bis R2 erneut eine Anpassung fordert. |
 
 - **Bestätigen:** setzt Block auf `confirmed`.
 - **Anpassung anfordern:** öffnet **nicht** mehr einen Modal-Dialog; setzt Sidebar in den **Kommentar-Composer** (siehe unten).
@@ -148,7 +157,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 **Normale Ansicht (kein aktiver Entwurf):**
 
 - Oben: **Antragdetails** (Status-Pill, Antragsteller inkl. ID-Kopie, Eingereicht, Aktualisiert, Zugewiesen an, Antrags-ID).
-- Unten: **Kommentare** — Hinweis oder **Chronik** gespeicherter Block-Kommentare (`SavedReviewComment`: `id`, `blockId`, `blockTitle`, `body`, `createdAt`).
+- Unten: **Kommentare** — Hinweis oder **Chronik** gespeicherter Block-Kommentare (`SavedReviewComment`: `id`, `blockId`, `blockTitle`, `body`, `createdAt`, optional **`authorDisplayName`** — persistiert im Draft und bei Weiterreichung in `forwardedComments` / `ReviewCommentPersisted`).
 
 **Aktiver Kommentarentwurf (`adjustmentComposer` gesetzt):**
 
@@ -159,11 +168,12 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 
 **Figma-Referenz Sidebar-Kommentar:** Node `3550:7067` (Kit „Prototyp shadcn“).
 
-### Gesamtbutton unter den Blöcken
+### Gesamtbutton unter den Blöcken (R2, `interactive` / `in_review`)
 
-- **„Antrag weiterreichen“** (alle Blöcke `confirmed`): grün, ruft `POST /api/applications/review-forward` mit `forwardKind="confirm_all"` → `applications.status = in_implementation`. Anschließend rendert die Ansicht `readonly_decision` (siehe oben).
-- **„Anpassungen anfordern“** (mind. ein Block `adjustment`, Rest `confirmed`): amber, ruft dieselbe Route mit `forwardKind="request_adjustments"` → `applications.status = needs_correction` und persistiert die Kommentar-Chronik. Rückkehr zu `in_review` durch R1-Korrektur ist Zielbild.
-- Solange noch Blöcke `pending` sind, bleibt der Button disabled (Vermeidung halber Forwards).
+- Der CTA erscheint **nur**, wenn **alle sichtbaren** Review-Blöcke bearbeitet sind (`reviewBlocksCompleteVisible`: je sichtbarem Block `confirmed` oder `adjustment` mit Bemerkung). Liegen noch Blöcke auf `pending` (bzw. `pending_after_adjustment` ohne erneute Aktion), wird **kein** Button gerendert (nicht nur `disabled`).
+- **„Antrag weiterreichen“** — alle sichtbaren Blöcke `confirmed` → `POST /api/applications/review-forward` mit `nextStatus: "in_implementation"` → kanonisch **In Entscheid**.
+- **„Anpassungen weiterleiten“** — mindestens ein Block `adjustment` → dieselbe Route mit `nextStatus: "needs_correction"` (fachlich Anpassung an R1); persistiert `postSubmit` und `forwardedComments`.
+- Nach erfolgreichem Forward: ohne erneutes Laden **kein** Weiterreich-Button mehr (Status ≠ `in_review` bzw. read-only); **kein** erklärender Fließtext unter dem Button (nur noch ggf. technische Fehlermeldungen zu Draft-Speicherung / Forward).
 
 ### Workspace-Chrome (Review)
 
@@ -202,11 +212,10 @@ Details Sidebar-Einklapp-Logik / Z-Index: `role-dashboard-layout.tsx` und frühe
 
 | Thema | Hinweis |
 |--------|---------|
-| **`needs_adjustment → in_review`** | R1-Resubmit aus `PortalApplicationAdjustment`: Quittierung der `r1AdjustmentResolutions`, Reset des R2-Drafts, Rückkehr in den Review-Loop |
-| **Entscheid-Übergang** | `in_implementation → approved/rejected` (Rolle R3 vs. Produktbegriff R4); aktuell sind die Status nur lesend für R2 freigegeben |
-| **Dateien** | echte Storage-URLs für Attest (Empfehlungsschreiben läuft jetzt über Rich-Text statt Datei-Upload) |
-| **Realtime / F6** | Abgleich mit `Prototyp_Funktionen.md`, `application_events` / Annotationen |
+| **Entscheid-Übergang** | `in_implementation → approved/rejected` (R3); aktuell Endzustand für R2 read-only |
+| **Dateien** | echte Storage-URLs für Attest (Empfehlungsschreiben über Rich-Text) |
+| **Realtime / F6** | Ist: Broadcast + gezielter Refetch / Dashboard-Polling; Vision: `application_events`, Feld-Annotationen siehe `Prototyp_Funktionen.md` |
 
 ---
 
-*Letzte Aktualisierung: TipTap-basiertes Empfehlungsschreiben (Drafting via `RecommendationDraftEditor`, Release in `data.recommendation.releasedHtml`/`releasedBy`/`releasedAt`), geteilter `RecommendationReleasedAccordion`-Block (R1 + R2), View-Modes `readonly_consultation`/`readonly_adjustment_pending`/`readonly_decision`, R1-Block-Detailansicht `PortalApplicationAdjustment`, Legacy-URL-Empfehlungsblock entfernt, `ReviewBlockCard`-Header ohne Divider.*
+*Letzte Aktualisierung: Multi-Zyklus-Review (`pending_after_adjustment`), `r1-release-adjustments`, trigger-sicherer `review-forward`, `workspaceReviewPostSubmitHydrationKey`, Broadcast `application-realtime-sync`, R2-CTA nur bei vollständigem Review ohne Footer-Fließtext, R1-Freigabe-UI vereinfacht, Kommentar-`authorDisplayName`, TipTap-Empfehlung, View-Modes, `PortalApplicationAdjustment`.*

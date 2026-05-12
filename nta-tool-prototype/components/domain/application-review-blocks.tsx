@@ -415,6 +415,44 @@ export function ReviewFileRow({
   );
 }
 
+/** Visual markers — neutral zinc/black per Figma Review Block (not teal „success“). */
+function ReviewBlockCheckboxMarker({ checked }: { checked: boolean }) {
+  return (
+    <span
+      className="relative mt-0.5 flex size-4 shrink-0 items-center justify-center"
+      aria-hidden
+    >
+      {checked ? (
+        <span className="flex size-4 items-center justify-center rounded-sm border border-zinc-900 bg-zinc-900 text-white">
+          <Check className="size-3 stroke-[3]" />
+        </span>
+      ) : (
+        <span className="box-border flex size-3.5 items-center justify-center rounded-sm border border-zinc-300 bg-background shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]" />
+      )}
+    </span>
+  );
+}
+
+function ReviewBlockRadioMarker({ checked }: { checked: boolean }) {
+  return (
+    <span
+      className="relative mt-0.5 flex size-4 shrink-0 items-center justify-center"
+      aria-hidden
+    >
+      <span
+        className={cn(
+          "flex size-4 items-center justify-center rounded-full border-2 bg-background",
+          checked
+            ? "border-zinc-900"
+            : "border-zinc-300 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]",
+        )}
+      >
+        {checked ? <span className="size-2 rounded-full bg-zinc-900" /> : null}
+      </span>
+    </span>
+  );
+}
+
 /**
  * Read-only Vergleichsdarstellung „Gesamte Studiendauer“ vs. „Einmalig …“.
  * Wird sowohl von der R2-Review-Kachel als auch von der R1-Adjustment-Ansicht
@@ -449,51 +487,44 @@ export function DurationChoiceCompare({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       {options.map((opt) => {
         const isSelected = selected === opt.id;
         return (
           <div
             key={opt.id}
             className={cn(
-              "rounded-lg border px-4 py-3 transition-colors",
+              "flex gap-3 rounded-[10px] border px-3 py-3 transition-colors",
               isSelected
-                ? "border-teal-300 bg-teal-50/90 shadow-xs"
-                : "border-zinc-200 bg-zinc-50/80 opacity-80",
+                ? "border-border border-solid bg-card shadow-xs"
+                : "border-border border-dashed bg-muted/50 opacity-70",
             )}
           >
-            <div className="flex items-start gap-3">
-              <span
-                className={cn(
-                  "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-2",
-                  isSelected
-                    ? "border-teal-600 bg-teal-600 text-white"
-                    : "border-zinc-300 bg-white text-transparent",
-                )}
-                aria-hidden
-              >
-                <Check className="size-3 stroke-[3]" />
-              </span>
-              <div>
+            <ReviewBlockRadioMarker checked={isSelected} />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-3">
                 <p
                   className={cn(
-                    "text-sm font-medium",
-                    isSelected ? "text-teal-950" : "text-muted-foreground",
+                    "text-sm leading-5",
+                    isSelected
+                      ? "text-foreground"
+                      : "text-muted-foreground line-through decoration-solid",
                   )}
                 >
                   {opt.title}
-                  {isSelected ? (
-                    <span className="ml-2 text-xs font-semibold uppercase tracking-wide text-teal-700">
-                      Gewählt
-                    </span>
-                  ) : (
-                    <span className="ml-2 text-xs font-medium text-muted-foreground">
-                      Nicht gewählt
-                    </span>
-                  )}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">{opt.hint}</p>
+                <p
+                  className={cn(
+                    "shrink-0 text-right text-xs font-medium leading-4",
+                    isSelected ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {isSelected ? "wurde gewählt" : "wurde nicht gewählt"}
+                </p>
               </div>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                {opt.hint}
+              </p>
             </div>
           </div>
         );
@@ -505,44 +536,39 @@ export function DurationChoiceCompare({
 export function ScopeChecklist({ selected }: { selected: string[] }) {
   const set = new Set(selected);
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-1.5">
       {APPLICATION_SCOPE_OPTIONS.map((option) => {
         const isOn = set.has(option);
         return (
           <li key={option}>
             <div
               className={cn(
-                "flex items-start gap-3 rounded-lg border px-3 py-2.5",
+                "flex items-start gap-3 rounded-[10px] border px-3 py-3",
                 isOn
-                  ? "border-teal-200 bg-teal-50/90 shadow-xs"
-                  : "border-dashed border-zinc-200 bg-zinc-50/60",
+                  ? "border-border border-solid bg-card shadow-xs"
+                  : "border-border border-dashed bg-muted/50 opacity-70",
               )}
             >
-              <span
-                className={cn(
-                  "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border",
-                  isOn
-                    ? "border-teal-600 bg-teal-600 text-white"
-                    : "border-zinc-300 bg-white text-zinc-300",
-                )}
-                aria-hidden
-              >
-                {isOn ? <Check className="size-3.5 stroke-[3]" /> : null}
-              </span>
-              <div className="min-w-0 flex-1">
+              <ReviewBlockCheckboxMarker checked={isOn} />
+              <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
                 <span
                   className={cn(
-                    "text-sm font-medium",
+                    "text-sm leading-5",
                     isOn
-                      ? "text-teal-950"
-                      : "text-muted-foreground line-through decoration-zinc-400/80",
+                      ? "text-foreground"
+                      : "text-muted-foreground line-through decoration-solid",
                   )}
                 >
                   {option}
                 </span>
-                <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  {isOn ? "Vom Studierenden gewählt" : "Nicht gewählt"}
-                </p>
+                <span
+                  className={cn(
+                    "shrink-0 text-right text-xs font-medium leading-4",
+                    isOn ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {isOn ? "wurde gewählt" : "wurde nicht gewählt"}
+                </span>
               </div>
             </div>
           </li>
@@ -566,44 +592,39 @@ export function MeasureChecklist({
   const set = new Set(selectedKeys);
   return (
     <div className="space-y-4">
-      <ul className="space-y-2">
+      <ul className="space-y-1.5">
         {options.map((option) => {
           const isOn = set.has(option.key);
           return (
             <li key={option.key}>
               <div
                 className={cn(
-                  "flex items-start gap-3 rounded-lg border px-3 py-2.5",
+                  "flex items-start gap-3 rounded-[10px] border px-3 py-3",
                   isOn
-                    ? "border-teal-200 bg-teal-50/90 shadow-xs"
-                    : "border-dashed border-zinc-200 bg-zinc-50/60",
+                    ? "border-border border-solid bg-card shadow-xs"
+                    : "border-border border-dashed bg-muted/50 opacity-70",
                 )}
               >
-                <span
-                  className={cn(
-                    "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border",
-                    isOn
-                      ? "border-teal-600 bg-teal-600 text-white"
-                      : "border-zinc-300 bg-white text-zinc-300",
-                  )}
-                  aria-hidden
-                >
-                  {isOn ? <Check className="size-3.5 stroke-[3]" /> : null}
-                </span>
-                <div className="min-w-0 flex-1">
+                <ReviewBlockCheckboxMarker checked={isOn} />
+                <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
                   <span
                     className={cn(
-                      "text-sm font-medium",
+                      "text-sm leading-5",
                       isOn
-                        ? "text-teal-950"
-                        : "text-muted-foreground line-through decoration-zinc-400/80",
+                        ? "text-foreground"
+                        : "text-muted-foreground line-through decoration-solid",
                     )}
                   >
                     {option.label}
                   </span>
-                  <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                    {isOn ? "Vom Studierenden gewählt" : "Nicht gewählt"}
-                  </p>
+                  <span
+                    className={cn(
+                      "shrink-0 text-right text-xs font-medium leading-4",
+                      isOn ? "text-foreground" : "text-muted-foreground",
+                    )}
+                  >
+                    {isOn ? "wurde gewählt" : "wurde nicht gewählt"}
+                  </span>
                 </div>
               </div>
             </li>
@@ -613,28 +634,38 @@ export function MeasureChecklist({
       {otherEnabled ? (
         <div
           className={cn(
-            "rounded-lg border px-3 py-3",
+            "flex items-start gap-3 rounded-[10px] border px-3 py-3",
             otherText?.trim()
-              ? "border-teal-200 bg-teal-50/90 shadow-xs"
-              : "border-dashed border-zinc-200 bg-zinc-50/60",
+              ? "border-border border-solid bg-card shadow-xs"
+              : "border-border border-dashed bg-muted/50 opacity-70",
           )}
         >
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Sonstige Massnahme
-          </p>
-          <p
-            className={cn(
-              "mt-1 text-sm",
-              otherText?.trim()
-                ? "font-medium text-teal-950"
-                : "text-muted-foreground line-through decoration-zinc-400/80",
-            )}
-          >
-            {otherText?.trim() || "Keine Angabe"}
-          </p>
-          <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            {otherText?.trim() ? "Vom Studierenden ergänzt" : "Nicht gewählt"}
-          </p>
+          <ReviewBlockCheckboxMarker checked={Boolean(otherText?.trim())} />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-xs font-medium leading-4 text-muted-foreground">
+                Sonstige Massnahme
+              </p>
+              <span
+                className={cn(
+                  "shrink-0 text-right text-xs font-medium leading-4",
+                  otherText?.trim() ? "text-foreground" : "text-muted-foreground",
+                )}
+              >
+                {otherText?.trim() ? "wurde ergänzt" : "wurde nicht gewählt"}
+              </span>
+            </div>
+            <p
+              className={cn(
+                "mt-1 text-sm leading-5",
+                otherText?.trim()
+                  ? "text-foreground"
+                  : "text-muted-foreground line-through decoration-solid",
+              )}
+            >
+              {otherText?.trim() || "Keine Angabe"}
+            </p>
+          </div>
         </div>
       ) : null}
     </div>

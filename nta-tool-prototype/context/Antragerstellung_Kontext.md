@@ -1,7 +1,7 @@
 # Kontext: Antragserstellung (R1) & R2-Beratung — Prototyp NTA
 
 > **Zweck:** Operative Referenz für Chats zu **Anpassungen und Integrationen** rund um den **Antragsflow R1** bis zur finalen Einreichung, die **Status-/Badge-Logik**, den **Workspace-Test R2** (Beratung/Empfehlung) sowie **RLS/Trigger**.  
-> **Nicht** hier: ausführlicher **Review-/Korrektur-Loop** nach Einreichung → `Antrag_Review_Kontext.md` (wenn befüllt). Gesamtprototyp → `General_Prototype_Kontext.md`. Zielbild-Funktionen → `Prototyp_Funktionen.md`.
+> **Review-/Korrektur-Loop** nach Einreichung (R2 Block-Review, R1-Anpassungen, erneuter Review-Zyklus) → **`Antrag_Review_Kontext.md`**. Gesamtprototyp → `General_Prototype_Kontext.md`. Zielbild-Funktionen → `Prototyp_Funktionen.md`.
 
 ---
 
@@ -33,7 +33,7 @@ Hinweise:
 
 - `app/portal/antragserstellung/page.tsx` interpretiert **jeden** Wert von `?new` als „leerer Neustart“ (`params.new !== undefined`).
 - Ohne `?new` und ohne `?applicationId` wird der **letzte** Antrag des Users **nur dann** automatisch geladen, wenn sein kanonischer Status **`draft`**, **`consultation_recommendation`** oder **`needs_adjustment`** ist. Bereits eingereichte Anträge (`in_review` / `in_decision` / `approved` / `rejected`) führen zu einem **leeren** Formular, damit R1 problemlos einen zweiten Antrag starten kann.
-- **Mit `?applicationId=<uuid>`** rendert die Page nicht mehr den Step-Flow, sondern die Block-Detailansicht `PortalApplicationAdjustment` (`components/domain/portal-application-adjustment.tsx`) — Layout analog zur R2-Review. Bearbeitung ist nur aktiv, wenn `deriveCanonicalApplicationState === "needs_adjustment"` (`allowAdjustments`); sonst Lese-Modus mit persistenter „Zurück zum Dashboard“-Aktion und Löschen-Button.
+- **Mit `?applicationId=<uuid>`** rendert die Page nicht mehr den Step-Flow, sondern die Block-Detailansicht `PortalApplicationAdjustment` — Layout analog zur R2-Review. Bearbeitung ist nur aktiv, wenn `deriveCanonicalApplicationState === "needs_adjustment"` (im Portal z. B. `canEditBlocks`); sonst Lese-Modus mit „Zurück zum Dashboard“ und **Antrag zurückziehen**. Nach Aktionen von R2/R1 kann sich der Status per **Broadcast** (`application-realtime-sync`) bzw. **Router-Refresh** aktualisieren; das **Student-Dashboard** pollt zusätzlich die eigene Antragsliste (sichtbare Status-Badges).
 - `/portal` kann noch auf die Antragserstellung zeigen — mit `app/` abgleichen.
 
 ### R2
@@ -51,15 +51,19 @@ Hinweise:
 |-------|--------|
 | `components/nta-antrag-desktop.tsx` | R1 Flow Step 1–6: Validierung, Autosave, Realtime (per **`application.id`** gescoped), Sidebar, Delete |
 | `app/portal/antragserstellung/page.tsx` | Steuert Initial-Load: `?new` ⇒ leer; `?applicationId` ⇒ `PortalApplicationAdjustment`; sonst nur **resumable** Anträge auto-laden |
-| `components/domain/portal-application-adjustment.tsx` | R1 Block-Detailansicht (Layout wie R2-Review). Edit nur bei `needs_adjustment` (`allowAdjustments`); per-Block Autosave; persistenter Zurück-Button; Anker-Sprung aus Sidebar-Kommentaren |
-| `components/domain/student-dashboard.tsx` | R1 Dashboard (Liste; „Neuen Antrag erstellen“ → `?new=1`; Klick auf Eintrag → `?applicationId=<uuid>`) |
+| `components/domain/portal-application-adjustment.tsx` | R1 Block-Detailansicht (Layout wie R2-Review). Edit nur bei kanonisch `needs_adjustment`; per-Block Autosave; Freigabe **„Anpassungen für Review freigeben“** → `POST /api/applications/r1-release-adjustments`; Realtime-Broadcast-Listener + Refetch |
+| `components/domain/student-dashboard.tsx` | R1 Dashboard (Liste; Klick → `?applicationId=<uuid>`); **Polling** der Anträge des eingeloggten Antragstellers für aktuelle `status`/Badges |
 | `app/portal/home/page.tsx` | Serverpage R1 Dashboard |
 | `components/domain/workspace-test-flow.tsx` | Workspace: Liste, View-Mode-Ableitung, `RecommendationDraftEditor` als `bottomAction` in `consultation_recommendation` |
 | `components/domain/workspace-application-review.tsx` | R2 Block-Review inkl. Persistenz, Forward, View Modes (`interactive` / `readonly_consultation` / `readonly_adjustment_pending` / `readonly_decision`) |
 | `components/domain/rich-text-editor.tsx` | TipTap-Wrapper (StarterKit + Underline/Link/TextAlign/Placeholder/Custom-Heading) mit shadcn-styled, reaktiver Toolbar (`useEditorState`) |
 | `components/domain/recommendation-released-accordion.tsx` | Geteilte Anzeige für `recommendation.releasedHtml` (Variant `card` für R2-Review, `plain` für R1-Antragsflow); Header inline mit Avatar + Freigegeben-Pill |
 | `components/ui/accordion.tsx` | shadcn-Wrapper um `radix-ui` Accordion (ohne Hover-Underline) |
-| `app/api/applications/review-forward/route.ts` | Forward-API: Statuswechsel auf `in_implementation` / `needs_correction` (RLS-konform, Session-Client) |
+| `app/api/applications/review-forward/route.ts` | R2 Forward: `in_implementation` / `needs_correction` (RLS-konform); merged `data` muss **`r1AdjustmentResolutions`** nicht streichen (Trigger) |
+| `app/api/applications/r1-release-adjustments/route.ts` | R1: `needs_correction` \| `needs_adjustment` → `in_review`, merged `workspaceReview`, geleerte Resolutions, Broadcast |
+| `lib/r1-adjustment-release.ts` | Bedingungen und Build von `postSubmit` nach R1-Freigabe (`pending_after_adjustment`, Filter `forwardedComments`) |
+| `lib/workspace-review-hydration-key.ts` | Fingerabdruck `postSubmit` für stabile R2-Remounts bei wiederholtem `in_review` |
+| `lib/application-realtime-sync.ts` | Broadcast-Kanal pro `applicationId` nach mutierenden Updates |
 | `components/domain/role-dashboard-layout.tsx` | Gemeinsames R1/R2 Dashboard-Layout (collapsible Sidebar, Workspace-Topbar R2) |
 | `lib/test-flow-types.ts` | `ApplicationData` / `applications.data` (inkl. `recommendation.draftHtml`/`releasedHtml`/`releasedBy`, `recommendation.workspaceReview`, `r1AdjustmentResolutions`) |
 | `lib/application-status.ts` | Zentrale fachliche States + rollenabhängige Labels/Farben |
@@ -140,11 +144,11 @@ Hinweise:
   - `draftHtml` / `draftText` — TipTap-Entwurf R2 (Beratungsphase, „Entwurf speichern“ im `RecommendationDraftEditor`).
   - `releasedHtml` / `releasedText` / `releasedAt` / `releasedBy` — finaler, freigegebener Inhalt nach „Empfehlungsschreiben freigeben“; treibt den `RecommendationReleasedAccordion` (R1 + R2).
   - `url` — Legacy-Datei-Pfad; bleibt aus Datenkompatibilität erhalten, wird **nicht mehr gerendert**.
-  - `workspaceReview` — R2-Block-Review (Draft / postSubmit / forwardedComments), siehe `Antrag_Review_Kontext.md`.
+  - `workspaceReview` — R2-Block-Review (Draft / postSubmit / forwardedComments); Block-Phasen inkl. **`pending_after_adjustment`** nach R1-Freigabe — siehe `Antrag_Review_Kontext.md`.
 - `applicationDefinition`
 - `finalSubmitted` (boolean, Final-Submit-Marker)
 - `submittedAt`
-- `r1AdjustmentResolutions` — pro Block (`ReviewWorkspaceBlockId`) `R1AdjustmentResolution { resolvedAt }`; gesetzt von `PortalApplicationAdjustment` bei „Anpassung speichern“, beim erneuten Einreichen zurückzusetzen.
+- `r1AdjustmentResolutions` — pro Block `R1AdjustmentResolution { resolvedAt }`; gesetzt von `PortalApplicationAdjustment` bei „Anpassung speichern“; wird bei **„Anpassungen für Review freigeben“** (`r1-release-adjustments`) auf `{}` zurückgesetzt (nicht von R2 beim Forward entfernt — Trigger).
 
 Typen: **`lib/test-flow-types.ts`**.
 
@@ -163,7 +167,7 @@ Verbindlich (Figma-State-Canvas + Produktregel):
 | **In Entscheid** | R2 hat „Antrag weiterreichen“ ausgelöst; technisch **`in_implementation`**. |
 | **Bewilligt** / **Abgelehnt** | Abschluss nach Entscheid (`approved` / `rejected`). |
 
-**Technisch umgesetzt (Ableitung):** Entwurf, Beratung & Empfehlung, In Review, **`in_implementation` → In Entscheid** über `app/api/applications/review-forward/route.ts`. **`needs_correction → in_review`** nach R1-Korrektur sowie der Entscheidungsschritt **`approved` / `rejected`** sind im Statusmodell vorgesehen, aber UI-/Trigger-seitig noch nicht final verdrahtet.
+**Technisch umgesetzt:** Entwurf, Beratung & Empfehlung, In Review; R2-Forward **`in_review` → `in_implementation`** (In Entscheid) bzw. **`in_review` → `needs_correction`** (R1-Anpassungspfad, kanonisch „Anpassung erforderlich“) über `review-forward/route.ts`. **Rückkehr `needs_correction` \| `needs_adjustment` → `in_review`** nach erledigten Anpassungen über **`r1-release-adjustments/route.ts`**. **`approved` / `rejected`** (R3-Entscheid) im Modell vorgesehen; Umsetzung im Workspace nach Bedarf.
 
 ### Ableitungslogik (verbindlich)
 
@@ -199,10 +203,10 @@ State-Badges orientieren sich an **Figma-Farbkodierung** (kompakt, ohne Border) 
   - `consultation`
   - `recommendation`
 - **Block-Review nach `in_review`:** Persistenz unter **`data.recommendation.workspaceReview`** (innerhalb des Trigger-erlaubten `recommendation`-Pfads). Details: `Antrag_Review_Kontext.md` § 4.
-- **„Antrag weiterreichen“** geht über **`POST /api/applications/review-forward`** mit Session-Client:
-  - Alle Blöcke `confirmed` ⇒ `applications.status = in_implementation` (kanonisch „In Entscheid“).
-  - Mind. ein Block `adjustment` ⇒ `applications.status = needs_correction` (kanonisch „Anpassung erforderlich“).
-  - Schreibt zugleich `recommendation.workspaceReview.postSubmit` und `forwardedComments`.
+- **„Antrag weiterreichen“ / „Anpassungen weiterleiten“** (nur sichtbar, wenn alle angezeigten Blöcke `confirmed` oder `adjustment` sind): **`POST /api/applications/review-forward`** mit Session-Client, Body u. a. `nextStatus`, `workspaceReview`:
+  - Alle sichtbaren Blöcke `confirmed` ⇒ `nextStatus: "in_implementation"` (kanonisch „In Entscheid“).
+  - Mind. ein Block `adjustment` ⇒ `nextStatus: "needs_correction"` (kanonisch R1 „Anpassung erforderlich“ / R2 „Anpassung ausstehend“).
+  - Schreibt `recommendation.workspaceReview.postSubmit` und `forwardedComments`. **`r1AdjustmentResolutions`** bleibt im JSON erhalten (Trigger); Leeren nur via R1-Release-API.
 - Diese Aktionen ändern den technischen **`applications.status`** **nicht** in einer Weise, die R1-**Finalsubmit** blockiert (RLS-konform).
 - Andere `data`-Felder für R2: **trigger-/policy-seitig gesperrt**.
 
@@ -214,7 +218,7 @@ State-Badges orientieren sich an **Figma-Farbkodierung** (kompakt, ohne Border) 
 - **UPDATE**-Policy `applications_update_r2_worklist` deckt den Übergang aus `in_review` heraus (`USING`); `WITH CHECK` erlaubt die Ziel-Status `in_implementation` / `needs_correction`.
 - R1 darf eigenen Antrag nur in **erlaubten Status** updaten (`applications_update_r1_own_limited`).
 - **Konsequenz:** Beratungsphase darf technisch **nicht** in einem Status landen, der den **späteren Final-Submit** durch R1 blockiert. Umgesetzter Pfad: Beratung im Workspace u. a. bei **`submitted`**, finaler Submit R1 → **`in_review`** → R2-Forward → **`in_implementation`** / **`needs_correction`**.
-- Trigger **`enforce_r2_application_update_columns`:** R2 darf in `applications.data` nur **`consultation`** / **`recommendation`** ändern — nicht `summary`, `applicationDefinition`, `personalData`, etc. Vor jedem Save daher **`dataWithoutLegacyReviewRoots`** (`lib/r2-review-persist.ts`) auf das Daten-Objekt anwenden.
+- Trigger **`enforce_r2_application_update_columns`:** R2 darf in `applications.data` nur **`consultation`** / **`recommendation`** ändern — nicht `summary`, `applicationDefinition`, `personalData`, `r1AdjustmentResolutions` (Root) **entfernen oder inhaltlich ändern**. Vor R2-Saves **`dataWithoutLegacyReviewRoots`** (`lib/r2-review-persist.ts`); Forward-Route merged volles `base` aus `row.data` ohne Streichen von `r1AdjustmentResolutions`.
 
 ---
 
@@ -236,5 +240,5 @@ State-Badges orientieren sich an **Figma-Farbkodierung** (kompakt, ohne Border) 
 | Datei | Nutzen |
 |-------|--------|
 | `General_Prototype_Kontext.md` | Tech, Rollen, Architektur, Scope |
-| `Antrag_Review_Kontext.md` | Review nach Einreichung (Platzhalter) |
+| `Antrag_Review_Kontext.md` | R2-Block-Review, Forward, R1-Freigabe-Loop, Persistenz, UI-Details |
 | `Prototyp_Funktionen.md` | Langfristige Funktionsvision |

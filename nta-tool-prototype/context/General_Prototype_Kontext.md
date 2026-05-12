@@ -1,7 +1,7 @@
 # General Prototype Context — NTA Tool (HSLU Bachelor)
 
 > **Zweck:** Übergeordneter Kontext für neue Chats: Was der Prototyp ist, wie er technisch sitzt, welche Rollen und Bereiche es gibt, und welche Grenzen gelten.  
-> **Detail-Tiefe:** Antrag R1, R2-Beratung, Status, RLS → `Antragerstellung_Kontext.md`; Review nach Einreichung (geplant) → `Antrag_Review_Kontext.md`. Ausführliche Funktions-Landkarte: `Prototyp_Funktionen.md`.
+> **Detail-Tiefe:** Antrag R1, R2-Beratung, Status, RLS → `Antragerstellung_Kontext.md`; **R2-Block-Review nach Einreichung**, Korrekturrunden, R1-Freigabe zurück in `in_review` → `Antrag_Review_Kontext.md`. Zielbild vs. Ist: `Prototyp_Funktionen.md`.
 
 ---
 
@@ -70,8 +70,8 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | F3 | Schema-driven Forms (Zielbild; Konfig unter `lib/config/` wo vorhanden) |
 | F4 | Beratung asynchron / Empfehlung R2 |
 | F5 | Workspace R2–R6 |
-| F6 | Annotations / Korrektur-Loop (geplant/teilweise) |
-| F7 | Realtime zwischen Clients |
+| F6 | Annotations / Korrektur-Loop (Vision); **Ist:** Block-Level-Review im Workspace + R1 `PortalApplicationAdjustment` + `r1-release-adjustments` (siehe `Antrag_Review_Kontext.md`) |
+| F7 | Realtime zwischen Clients (**Ist:** u. a. Broadcast `application-realtime-sync` + Refetch/Polling wo nötig) |
 | F8 | Aktivitäts-Log (`application_events` o. ä.) |
 | F9 | File-Uploads (Storage) |
 | F10 | Simulierte E-Mail / Inbox |
@@ -96,7 +96,7 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 
 - Zentrale Entität: **`applications`** mit JSONB **`data`**, Status-Spalte, Timestamps.
 - Berechtigungen: **Postgres RLS** und **Trigger** — Frontend ersetzt das nicht. Wichtig:
-  - **R2-Trigger** `enforce_r2_application_update_columns` erlaubt R2 nur Schreibzugriff auf `data.consultation` und `data.recommendation`. Konsequenz: **alle** R2-Schreibpfade (Empfehlungs-Drafting via `draftHtml`/`draftText`, Freigabe via `releasedHtml`/`releasedText`/`releasedAt`/`releasedBy`, Post-Submit-Block-Review via `workspaceReview`) liegen unterhalb von `data.recommendation` (siehe `Antrag_Review_Kontext.md` § 4).
+  - **R2-Trigger** `enforce_r2_application_update_columns` erlaubt R2 nur Schreibzugriff auf `data.consultation` und `data.recommendation`. Konsequenz: **alle** R2-Schreibpfade (Empfehlungs-Drafting via `draftHtml`/`draftText`, Freigabe via `releasedHtml`/`releasedText`/`releasedAt`/`releasedBy`, Post-Submit-Block-Review via `workspaceReview`) liegen unterhalb von `data.recommendation`. Root-Felder wie **`r1AdjustmentResolutions`** dürfen beim R2-Update **nicht** entfallen oder verändert werden — Forward-Route merged daher das volle `data`-Subset; siehe `Antrag_Review_Kontext.md` § 4.
   - **SELECT-Policy** `applications_select_r2_worklist` deckt seit Migration `extend_workspace_select_to_decision_states` zusätzlich `in_implementation`, `approved`, `rejected` ab — Voraussetzung dafür, dass R2 nach „Antrag weiterreichen“ den nun in „In Entscheid“ befindlichen Antrag noch sieht und der `UPDATE` nicht am `RETURNING`-SELECT scheitert.
   - **Status-Übergänge** über reguläre Session-Clients: ein dedizierter `SUPABASE_SERVICE_ROLE_KEY` ist im Forward-Pfad nicht nötig (`utils/supabase/service-role.ts` bleibt nur als optionaler Helper bestehen).
 - Details zu Feldern im Antrags-JSON: `Antragerstellung_Kontext.md` und `lib/test-flow-types.ts`; Review-/Empfehlungs-Pfade → `Antrag_Review_Kontext.md` / Migrationen.
@@ -108,7 +108,11 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | Pfad | Inhalt |
 |------|--------|
 | `app/` | Routen (Portal, Workspace, Logins, API) |
-| `app/api/applications/review-forward/route.ts` | RLS-konformer Forward auf `in_implementation` / `needs_correction` |
+| `app/api/applications/review-forward/route.ts` | RLS-konformer R2-Forward auf `in_implementation` / `needs_correction` |
+| `app/api/applications/r1-release-adjustments/route.ts` | R1: zurück nach `in_review` inkl. `workspaceReview`-Merge |
+| `lib/r1-adjustment-release.ts` | Regeln und Builder für Post-Submit nach R1-Freigabe |
+| `lib/workspace-review-hydration-key.ts` | Fingerprint für wiederholtes `in_review` (R2-UI) |
+| `lib/application-realtime-sync.ts` | Broadcast-Helfer nach mutierenden Schritten |
 | `components/domain/` | Fachliche UI (Dashboard, Workspace-Flow, Layouts, Badges, **Block-Review**, **Empfehlungs-Editor & -Accordion**, R1-Anpassungsansicht) |
 | `components/domain/rich-text-editor.tsx` | TipTap-Wrapper für das Empfehlungsschreiben |
 | `components/domain/recommendation-released-accordion.tsx` | Geteilte Anzeige des freigegebenen Empfehlungsschreibens (R1 + R2) |
