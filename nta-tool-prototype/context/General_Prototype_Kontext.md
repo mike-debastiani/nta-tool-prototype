@@ -1,7 +1,7 @@
 # General Prototype Context — NTA Tool (HSLU Bachelor)
 
 > **Zweck:** Übergeordneter Kontext für neue Chats: Was der Prototyp ist, wie er technisch sitzt, welche Rollen und Bereiche es gibt, und welche Grenzen gelten.  
-> **Detail-Tiefe:** Antrag R1, R2-Beratung, Status, RLS → `Antragerstellung_Kontext.md`; **R2-Block-Review nach Einreichung**, Korrekturrunden, R1-Freigabe zurück in `in_review` → `Antrag_Review_Kontext.md`. Zielbild vs. Ist: `Prototyp_Funktionen.md`.
+> **Detail-Tiefe:** Antrag R1, R2-Beratung, Status, RLS → `Antragerstellung_Kontext.md`; **R2-Block-Review nach Einreichung**, Korrekturrunden, R1-Freigabe zurück in `in_review` → `Antrag_Review_Kontext.md`; **R4 Bewilligung / Entscheid** → `Antrag_Bewilligung_Kontext.md`. Zielbild vs. Ist: `Prototyp_Funktionen.md`.
 
 ---
 
@@ -52,10 +52,11 @@ Eine Codebase, ein Supabase-Backend; Trennung über Routen und Layouts (`RoleDas
 |-------|-------------------|------------------|
 | **R1** | `/portal` | Antrag stellen, Status verfolgen, ggf. später Korrekturen (Review-Flow geplant). |
 | **R2** | `/workspace` | Zentrale Fachstelle: Beratung, Empfehlung, im Prototyp begrenzte Schreibzugriffe auf `applications.data`. |
-| **R3** | `/workspace` | Dezentrale Entscheid (Bewilligung/Ablehnung, Anpassungen) — im Gesamtkonzept; Umsetzungsgrad siehe Repo. |
+| **R3** | `/workspace` | Workspace-Rolle (Prototyp); fachliche Entscheid-Simulation teils parallel zu **R4** — Umsetzungsgrad siehe Repo. |
+| **R4** | `/workspace` | **Entscheidungsinstanz (Bewilligung)** im Code: gleiche Shell wie R2 (`RoleDashboardLayout`), Inbox-Liste, Block-Review read-only ausserhalb `in_implementation`, Bewilligungs-UI in `in_implementation` — siehe `Antrag_Bewilligung_Kontext.md`. |
 | **R5 / R6** | `/workspace` | Prüfungsadministration / Modulverantwortliche — reduzierte oder geplante Sichten. |
 
-**Hinweis:** In älterer Doku wurde R4 erwähnt; im Funktionen-Dokument ist die **dezentrale Entscheidinstanz als R3** geführt. Bei Abgleich mit Code/RLS immer aktuelle Policies und `requireUserProfile`-Rollen prüfen.
+**Hinweis:** `Prototyp_Funktionen.md` führt die dezentrale Entscheid teils als **R3**; im **Ist-Code** ist die Bewilligungsinstanz **`R4`** mit eigenen APIs/RLS-Policies. Bei Abgleich immer `requireUserProfile`, Routen und Supabase-Policies prüfen.
 
 ---
 
@@ -98,7 +99,9 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 - Berechtigungen: **Postgres RLS** und **Trigger** — Frontend ersetzt das nicht. Wichtig:
   - **R2-Trigger** `enforce_r2_application_update_columns` erlaubt R2 nur Schreibzugriff auf `data.consultation` und `data.recommendation`. Konsequenz: **alle** R2-Schreibpfade (Empfehlungs-Drafting via `draftHtml`/`draftText`, Freigabe via `releasedHtml`/`releasedText`/`releasedAt`/`releasedBy`, Post-Submit-Block-Review via `workspaceReview`) liegen unterhalb von `data.recommendation`. Root-Felder wie **`r1AdjustmentResolutions`** dürfen beim R2-Update **nicht** entfallen oder verändert werden — Forward-Route merged daher das volle `data`-Subset; siehe `Antrag_Review_Kontext.md` § 4.
   - **SELECT-Policy** `applications_select_r2_worklist` deckt seit Migration `extend_workspace_select_to_decision_states` zusätzlich `in_implementation`, `approved`, `rejected` ab — Voraussetzung dafür, dass R2 nach „Antrag weiterreichen“ den nun in „In Entscheid“ befindlichen Antrag noch sieht und der `UPDATE` nicht am `RETURNING`-SELECT scheitert.
-  - **Status-Übergänge** über reguläre Session-Clients: ein dedizierter `SUPABASE_SERVICE_ROLE_KEY` ist im Forward-Pfad nicht nötig (`utils/supabase/service-role.ts` bleibt nur als optionaler Helper bestehen).
+  - **R4 Workspace-Lesen:** additive Policies `applications_select_r4_workspace` und `users_select_r4_workspace_applicants` (Migration `supabase/migrations/20260513190000_r4_workspace_select_policies.sql`). **R4 Workspace-Schreiben:** Policy **`applications_update_r4_decision`** (Migration `20260514120000_applications_update_r4_decision.sql`) — `USING` nur `in_implementation`, `WITH CHECK` `in_implementation` oder `approved`. **Pflicht:** Bedingung über **`current_user_role()`** (`SECURITY DEFINER`, bereits im Schema) — **niemals** `EXISTS (SELECT … FROM public.users …)` innerhalb von RLS auf `users`/`applications`, sonst Postgres **„infinite recursion detected in policy for relation users“**.
+  - **Login:** `components/domain/login-card.tsx` lädt nach `signInWithPassword` zuerst **`getSession()`**, damit der folgende `users`-Select mit JWT/RLS als `authenticated` läuft.
+  - **Status-Übergänge** über reguläre Session-Clients: ein dedizierter `SUPABASE_SERVICE_ROLE_KEY` ist im Forward-Pfad nicht nötig (`utils/supabase/service-role.ts` bleibt optional, u. a. für `fetchWorkspaceApplicationsList` wenn R4-Policies in einer Umgebung noch fehlen).
 - Details zu Feldern im Antrags-JSON: `Antragerstellung_Kontext.md` und `lib/test-flow-types.ts`; Review-/Empfehlungs-Pfade → `Antrag_Review_Kontext.md` / Migrationen.
 
 ---
@@ -109,6 +112,11 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 |------|--------|
 | `app/` | Routen (Portal, Workspace, Logins, API) |
 | `app/api/applications/review-forward/route.ts` | RLS-konformer R2-Forward auf `in_implementation` / `needs_correction` |
+| `app/api/workspace/applications/route.ts` | `GET` — Session + Rolle R2–R6, gleiche Liste wie Server-Page (`fetchWorkspaceApplicationsList`) |
+| `lib/workspace-applications-list.ts` | Server: Antragsliste Workspace; optional Service-Role nur für R4 wenn Key gesetzt |
+| `lib/user-initials.ts` | Initialen für Workspace-Avatar aus `display_name` / E-Mail |
+| `components/domain/login-card.tsx` | Student/Staff-Login: Supabase Auth + Profil `users.role`, Redirect |
+| `app/workspace/page.tsx` | `requireUserProfile` R2–R6, `fetchWorkspaceApplicationsList`, `initialsFromProfile`, `WorkspaceTestFlow` |
 | `app/api/applications/r1-release-adjustments/route.ts` | R1: zurück nach `in_review` inkl. `workspaceReview`-Merge |
 | `lib/r1-adjustment-release.ts` | Regeln und Builder für Post-Submit nach R1-Freigabe |
 | `lib/workspace-review-hydration-key.ts` | Fingerprint für wiederholtes `in_review` (R2-UI) |
@@ -121,6 +129,8 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `lib/application-status.ts` | Zentrale Status-Ableitung für Badges |
 | `lib/test-flow-types.ts` | Typisierung `ApplicationData` / Prototyp-JSON (inkl. `recommendation.draftHtml`/`releasedHtml`/`releasedBy`, `r1AdjustmentResolutions`, `workspaceReview`) |
 | `lib/r2-review-persist.ts` | Helfer für trigger-konforme R2-Saves |
+| `lib/r4-decision-state.ts` | R4 Zeilen-Merge, Sichtbarkeit, `mergeR4DecisionReviewRespectingLocalDirty` / `localR4BlockDiffersFromServerMerge` (Client vs. Server-Reconcile) |
+| `lib/r4-workspace-supabase-persist.ts` | R4: persist/complete über Browser-Supabase-Client (Session + RLS) |
 | `lib/review-workspace-blocks.ts` | Block-IDs + Anker-Sprung-Hilfen |
 | `utils/supabase/` | Server/Client/Middleware Supabase |
 | `context/*.md` | Menschliche Kontext-Dokumente für AI und Team |
@@ -132,7 +142,7 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 1. **Scope:** Muss-have vs. später (siehe Funktionen + „nicht im Scope“).
 2. **Route & Rolle:** Wer darf die Seite sehen? Welches Layout?
 3. **Daten:** Welche Tabellen/JSON-Pfade? RLS und R2-Trigger beachten (R2-Schreiben nur unter `data.consultation` / `data.recommendation`).
-4. **Realtime:** Muss sich ein anderer Client aktualisieren? Subscriptions möglichst **eng scopen** (z. B. `id=eq.<applicationId>`), damit fremde Updates lokalen UI-State nicht überschreiben.
+4. **Realtime:** Muss sich ein anderer Client aktualisieren? Subscriptions möglichst **eng scopen** (z. B. `id=eq.<applicationId>`), damit fremde Updates lokalen UI-State nicht überschreiben. **R4-Bewilligung:** Schalter-State lebt in `data.r4DecisionReview`; nach Persist/Complete Broadcast + Refetch — lokale Reconcile-Logik in `WorkspaceR4DecisionView` verhindert, dass veraltete Snapshots noch nicht persistierte Schalter überschreiben (Details `Antrag_Bewilligung_Kontext.md` § 7).
 5. **Status-Übergänge:** Bei `UPDATE` immer prüfen, ob der **neue** Zeilenzustand für den ausführenden Rollen-User per SELECT-Policy noch sichtbar ist (sonst RLS-Violation).
 6. **Konsistenz:** Status und Freischaltlogik **datenbasiert** (nicht nur UI-Step) — siehe `Antragerstellung_Kontext.md`.
 
@@ -145,3 +155,4 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `Prototyp_Funktionen.md` | Ausführliche Funktions- und Architektur-Beschreibung |
 | `Antragerstellung_Kontext.md` | Antrag R1, R2-Beratung/Empfehlung/Forward, Status, Daten, RLS |
 | `Antrag_Review_Kontext.md` | R2-Block-Review nach Einreichung inkl. Persistenz und Forward in „In Entscheid“ |
+| `Antrag_Bewilligung_Kontext.md` | R4 Entscheidungsinstanz: Bewilligungs-UI, APIs, Workspace-RLS |

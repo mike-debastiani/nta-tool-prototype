@@ -1,0 +1,21 @@
+-- Optional: extend workspace SELECT on applications so role R4 sees the same worklist as R2–R6.
+-- Apply in Supabase SQL Editor if R4 users get an empty inbox while R2 sees rows.
+--
+-- Your project policy name may differ; adjust the USING clause to match
+-- `applications_select_r2_worklist` from your schema (see context docs).
+--
+-- Example pattern (replace the EXISTS subquery with your real policy body):
+--
+-- DROP POLICY IF EXISTS "applications_select_r2_worklist" ON public.applications;
+-- CREATE POLICY "applications_select_r2_worklist" ON public.applications
+--   FOR SELECT TO authenticated
+--   USING (
+--     EXISTS (
+--       SELECT 1 FROM public.users u
+--       WHERE u.id = auth.uid()
+--         AND u.role IN ('R2', 'R3', 'R4', 'R5', 'R6')
+--     )
+--     AND ( /* your existing status / visibility conditions */ true )
+--   );
+
+SELECT 1; -- no-op so `supabase db push` does not fail if file is picked up

@@ -59,6 +59,33 @@ export type R1PortalFlowStep =
   | "step4_application"
   | "step5_overview";
 
+/** R4-Bewilligung: editierbare Review-Blöcke (ohne Antragsteller/Attest/Definition/Empfehlung). */
+export type R4DecisionReviewBlockId =
+  | "duration"
+  | "scope"
+  | "lectureMeasures"
+  | "assessmentMeasures";
+
+/** Eine Zeile (Dauer-Option, Geltungsbereich oder Massnahme) mit R4-Schalterzustand. */
+export type R4DecisionRow = {
+  key: string;
+  title: string;
+  description?: string;
+  studentSelected: boolean;
+  r4Approved: boolean;
+};
+
+export type R4DecisionBlockSnapshot = {
+  confirmed: boolean;
+  rows: R4DecisionRow[];
+};
+
+export type R4DecisionReview = {
+  blocks: Partial<Record<R4DecisionReviewBlockId, R4DecisionBlockSnapshot>>;
+  /** ISO-8601 — letzte Persistenz durch R4 */
+  updatedAt?: string;
+};
+
 export type ApplicationDefinitionData = {
   situationDescription?: string;
   duration?: "full_study" | "one_semester";
@@ -156,6 +183,13 @@ export type ApplicationData = {
   r1AdjustmentResolutions?: Partial<
     Record<import("@/lib/review-workspace-blocks").ReviewWorkspaceBlockId, R1AdjustmentResolution>
   >;
+  /**
+   * R4 Entscheidungsinstanz: Bewilligung pro sichtbarem Block (Dauer, Geltung,
+   * Massnahmen). Liegt absichtlich ausserhalb von `recommendation`, damit R2-Trigger
+   * (`consultation` / `recommendation` only) nicht greifen.
+   */
+  r4DecisionReview?: R4DecisionReview;
+
   /**
    * @deprecated Alte Speicherung — lesen nur noch für Migration; schreiben unter
    * `recommendation.workspaceReview`.

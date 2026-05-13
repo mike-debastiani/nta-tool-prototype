@@ -23,8 +23,10 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 type RoleDashboardLayoutProps = {
-  role: "R1" | "R2";
+  role: "R1" | "R2" | "R3" | "R4" | "R5" | "R6";
   userLabel: string;
+  /** Initialen im Workspace-Header-Avatar (R2–R6). */
+  workspaceAccountInitials?: string;
   children: ReactNode;
   actions?: ReactNode;
   /**
@@ -55,6 +57,7 @@ const BASE_ITEM_CLASS =
 export function RoleDashboardLayout({
   role,
   userLabel,
+  workspaceAccountInitials = "NF",
   children,
   actions,
   inboxNotificationCount,
@@ -65,6 +68,7 @@ export function RoleDashboardLayout({
   const searchParams = useSearchParams();
   const [collapsed, setCollapsed] = useState(defaultSidebarCollapsed);
   const workspaceToolbar = useWorkspaceR2Toolbar();
+  const isWorkspaceShell = role !== "R1";
 
   const topItems = useMemo<NavItem[]>(
     () =>
@@ -275,7 +279,7 @@ export function RoleDashboardLayout({
       </aside>
 
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {role === "R2" ? (
+        {isWorkspaceShell ? (
           <div className="sticky top-0 z-30 flex w-full shrink-0 items-center gap-4 border-b border-border bg-background px-6 py-3">
             <div className="flex min-w-0 shrink-0 items-center">
               {workspaceToolbar?.leadingSlot}
@@ -314,11 +318,11 @@ export function RoleDashboardLayout({
                   </span>
                 ) : null}
               </Link>
-              <WorkspaceAccountMenu initials="NF" />
+              <WorkspaceAccountMenu initials={workspaceAccountInitials} />
             </div>
           </div>
         ) : null}
-        {role === "R2" || edgeToEdge ? (
+        {isWorkspaceShell || edgeToEdge ? (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-8">

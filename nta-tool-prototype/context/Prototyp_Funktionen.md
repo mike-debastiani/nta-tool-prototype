@@ -69,11 +69,12 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 |---|---|---|
 | R1 — Studierende:r | `/portal` | Antrag stellen, nach R2-Feedback **Block-Anpassungen** (`PortalApplicationAdjustment`), Freigabe zurück an Fachstelle, bewilligten NTA einsehen |
 | R2 — Zentrale Fachstelle | `/workspace` | Beraten, Empfehlung verfassen, **Block-Review** nach Einreichung, Antrag an Entscheid / zur Korrektur weiterleiten |
-| R3 — Dezentrale Entscheidungsinstanz | `/workspace` | Bewilligen/ablehnen, Verfügung versenden, Anpassungen einfordern |
+| R3 — Workspace-Rolle | `/workspace` | Im Prototyp weiterhin im Policy-Set mit R2 gruppiert; fachliche „dezentrale Entscheid“-Simulation siehe auch **R4** |
+| **R4 — Entscheidungsinstanz (Ist-Code)** | `/workspace` | Bewilligungsflow nach R2-Forward: gleiche Workspace-Shell wie R2, eigene UI in `in_implementation`, RLS-Policies — **`Antrag_Bewilligung_Kontext.md`** |
 | R5 — Prüfungsadministration | `/workspace` | Massnahmen-Listen pro Prüfung, Umsetzung organisieren |
 | R6 — Modulverantwortliche | `/workspace` | Massnahmen für eigene Module einsehen (ohne medizinische Details) |
 
-**Hinweis:** R4 wurde aus dem Modell entfernt. R3 entspricht der dezentralen Entscheidungsinstanz (z.B. Studiengangsleitung).
+**Hinweis:** Ältere Vision in diesem Dokument nannte die Entscheidinstanz als **R3**. Der **aktuelle Code** verwendet **`R4`** für den Bewilligungs-Workspace inkl. APIs und Supabase-Policies; Abgleich immer mit `General_Prototype_Kontext.md` und dem Repo.
 
 ---
 
@@ -81,10 +82,9 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 
 ### F1 — Inszenierte Logins
 
-- Zwei Login-Routes: `/student/login` (EDU-ID + Microsoft Buttons), `/staff/login` (nur Microsoft)
-- Buttons öffnen Modal mit E-Mail/Passwort-Feld, optisch wie SSO inszeniert
-- Technisch: Supabase `signInWithPassword()`
-- Nach Login: Rolle aus `users`-Tabelle lesen, entsprechend redirecten
+- Zwei Login-Routes: `/student/login` (R1), `/staff/login` (R2–R6 inkl. R4) — E-Mail/Passwort, optisch wie SSO inszeniert
+- Technisch: Supabase `signInWithPassword()`, danach **`getSession()`** bevor `public.users` für **`role`** abgefragt wird (sonst leeres Profil / RLS ohne JWT)
+- Nach Login: Rolle aus `users`-Tabelle lesen, entsprechend redirecten (`R1` → Portal, sonst → Workspace)
 - Kein echtes OAuth, keine 1:1-Klone der Microsoft/EDU-ID-Branding (markenrechtlich heikel)
 
 ### F2 — Multi-Step Antrag-Erstellung (R1)
@@ -129,11 +129,10 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 
 ### F5 — Workspace pro Verwaltungsrolle (R2-R6)
 
-- Eine `/workspace`-Hülle, rollenspezifische Sichten innerhalb
-- R2 sieht Beratungs-Inbox, kann annotieren, Empfehlungen verfassen, weiterleiten
-- R3 sieht Entscheidungs-Inbox, kann bewilligen/ablehnen oder Anpassungen einfordern
-- R5 sieht Listen-Views mit Filtern (reduzierter Umfang)
-- R6 sieht Modul-Listen mit Massnahmen, ohne medizinische Dokumente
+- Eine `/workspace`-Hülle (`RoleDashboardLayout`), rollenspezifische Sichten innerhalb
+- R2 sieht Beratungs-/Review-Inbox, Empfehlungen, Block-Review, Weiterleitung an Entscheid
+- **R4 (Ist-Code):** Entscheidungs-Inbox wie R2 lesbar; in `in_implementation` Bewilligungs-UI (`WorkspaceR4DecisionView`); Zwischenstand **debounced** nach `data.r4DecisionReview`, Abschluss → `approved`; Client-Reconcile gegen Server-Snapshots siehe `Antrag_Bewilligung_Kontext.md` § 7 — Details → `Antrag_Bewilligung_Kontext.md`
+- R3/R5/R6: reduzierte oder geplante Sichten; RLS gruppiert R2/R3/R5/R6 in Worklist-Policies, R4 separat (siehe Kontext DB)
 - Berechtigungen via RLS-Policies durchgesetzt, nicht im Frontend
 
 ### F6 — Annotations-System (R2/R3 → R1 Korrektur-Loop)
@@ -304,7 +303,7 @@ Cursor sollte vor Code-Änderungen kurz prüfen:
 1. **Scope:** Ist das Must-have, Should-have oder Won't-have laut Funktionen-Liste oben?
 2. **Bereich:** Ist das `/student`, `/staff` oder `/admin`? Geschützt oder öffentlich?
 3. **Rolle:** Welche Rolle interagiert hier? Welche darf was sehen?
-4. **Datenmodell:** Welche Tabelle(n) sind betroffen? Gibt es schon eine RLS-Policy dafür?
+4. **Datenmodell:** Welche Tabelle(n) sind betroffen? Gibt es schon eine RLS-Policy dafür? Neue Policies auf **`public.users`:** Rolle über **`current_user_role()`** ausdrücken — **nicht** `EXISTS (SELECT … FROM users …)` in derselben Tabelle (Postgres-Rekursion).
 5. **Realtime:** Soll diese Aktion via Realtime an andere Clients propagiert werden?
 6. **Komponenten:** Gibt es eine passende shadcn-Komponente?
 7. **State:** Lebt das in Supabase (persistent) oder Zustand (transient)?

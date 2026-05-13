@@ -1,15 +1,15 @@
 # Kontext: Antrag Review (nach finaler Einreichung, R2) — NTA Prototyp
 
 > **Zweck:** Zentrale Referenz für Chats zur **Review-Ansicht nach finalem R1-Submit**, **UI**, **Client-State**, **Sidebar-Kommentare**, **Code-Ankern** sowie dem **Empfehlungsschreiben-Drafting / -Release** (Rich-Text) zwischen R2 und R1.  
-> **Backend:** R2-Review-Persistenz, Forward-Aktion (`in_implementation` / `needs_correction`), R1-Freigabe zurück in den Review-Loop (`in_review`), Empfehlungs-Inhalte unter `data.recommendation.*` — RLS-/Trigger-konform; siehe [Daten & Backend](#4-daten--backend).  
-> **Verwandt:** `Antragerstellung_Kontext.md` · `General_Prototype_Kontext.md` · `Prototyp_Funktionen.md` (F6/F7 vs. Ist-Block-Review)
+> **Backend:** R2-Review-Persistenz, Forward-Aktion (`in_implementation` / `needs_correction`), R1-Freigabe zurück in den Review-Loop (`in_review`), Empfehlungs-Inhalte unter `data.recommendation.*` — RLS-/Trigger-konform; **R4**-Lesepolicies ergänzend zu R2 (`Antrag_Bewilligung_Kontext.md`). Siehe [Daten & Backend](#4-daten--backend).  
+> **Verwandt:** `Antragerstellung_Kontext.md` · `General_Prototype_Kontext.md` · `Antrag_Bewilligung_Kontext.md` (R4) · `Prototyp_Funktionen.md` (F6/F7 vs. Ist-Block-Review)
 
 ---
 
 ## 1. Ausgangslage (fachlich)
 
 - Nach **finalem Submit** durch R1 ist der Antrag fachlich **„In Review“** (Submit-Marker und Ableitung in `lib/application-status.ts`; Details `Antragerstellung_Kontext.md`).
-- **Review nach Einreichung** wird in dieser Phase **nur von R2** im Workspace bearbeitet (kein paralleler R3-Review hier).
+- **Review nach Einreichung** wird in dieser Phase primär von **R2** im Workspace bearbeitet; **R4** kann dieselben Anträge je Status lesen bzw. in `in_implementation` bewilligen (`Antrag_Bewilligung_Kontext.md`).
 - **Workspace-Einstieg:** **`/workspace`** (Route **`/workspace/test`** entfernt; alles unter `/workspace`).
 
 ---
@@ -37,7 +37,7 @@
 
 ### Loop & Entscheid
 
-- Wiederholung bis **alle relevanten Blöcke von R2 bestätigt** → **Weiterleitung Entscheid** (Produktsprache vs. Repo: R3/R4 — beim Implementieren abstimmen).
+- Wiederholung bis **alle relevanten Blöcke von R2 bestätigt** → **Weiterleitung Entscheid** (Produktsprache: Entscheidungsinstanz im Code als **R4**; siehe `Antrag_Bewilligung_Kontext.md`).
 
 ---
 
@@ -66,8 +66,9 @@
 - **Legacy-Wurzelfelder** (`reviewComments`, `r2PostSubmitReview`, `r2ReviewDraft` direkt in `data`) werden vor jedem Save mit **`dataWithoutLegacyReviewRoots`** (`lib/r2-review-persist.ts`) entfernt — sonst feuert der Trigger.
 - **Forward-Aktion** geht über **`app/api/applications/review-forward/route.ts`** (Session-Client, RLS-konform — kein `SUPABASE_SERVICE_ROLE_KEY` nötig). Payload: `applicationId`, `nextStatus` (`in_implementation` \| `needs_correction`), `workspaceReview` inkl. `postSubmit` + `forwardedComments`. Setzt `applications.status` entsprechend und schreibt `recommendation.workspaceReview` final.  
   **Trigger-Pitfall:** Root-Felder in `data` außerhalb `consultation` / `recommendation` dürfen von R2 **nicht** verändert werden. Insbesondere darf **`r1AdjustmentResolutions`** beim Forward **nicht** aus dem Merge entfernt werden (sonst `R2 may not change data except recommendation/consultation`); Zurücksetzen erfolgt bei R1 über **`r1-release-adjustments`**.
+- **R4-Bewilligung (separater JSON-Pfad):** Entscheidungs-Schalter und Block-Bestätigungen liegen unter **`data.r4DecisionReview`** (nicht unter `recommendation`, damit kein Konflikt mit dem R2-Trigger). Typen und Merge-Helfer: `lib/test-flow-types.ts`, `lib/r4-decision-state.ts`; UI-Flow `Antrag_Bewilligung_Kontext.md`.
 - **R1-Freigabe-API:** **`app/api/applications/r1-release-adjustments/route.ts`** — setzt Status `in_review`, merged `buildWorkspaceReviewAfterR1AdjustmentRelease`, leert `r1AdjustmentResolutions`, broadcastet Zeilen-Update.
-- **RLS-Anker:** `applications_select_r2_worklist` umfasst seit Migration `extend_workspace_select_to_decision_states` auch **`in_implementation` / `approved` / `rejected`**, damit R2 den weitergereichten Antrag nach dem Statuswechsel im Workspace im Modus `readonly_decision` weiter sehen kann (Details siehe `Antragerstellung_Kontext.md` § 10).
+- **RLS-Anker:** `applications_select_r2_worklist` umfasst seit Migration `extend_workspace_select_to_decision_states` auch **`in_implementation` / `approved` / `rejected`**, damit R2 den weitergereichten Antrag nach dem Statuswechsel im Workspace im Modus `readonly_decision` weiter sehen kann (Details siehe `Antragerstellung_Kontext.md` § 10). Parallel: **`applications_select_r4_workspace`** + **`users_select_r4_workspace_applicants`** für **R4** (immer mit **`current_user_role()`**, siehe `Antrag_Bewilligung_Kontext.md` § 6 / `Antragerstellung_Kontext.md` § 10).
 
 ---
 
@@ -75,7 +76,7 @@
 
 ### Auslösung Review-Ansicht
 
-- **`workspace-test-flow.tsx`:** Ausgewählter Antrag mit `deriveCanonicalApplicationState ∈ { consultation_recommendation, in_review, in_decision, needs_adjustment }` → **`WorkspaceApplicationReview`** (unterschiedliche View Modes, siehe unten). Reine Listenstatus (`draft`, `approved`/`rejected` ohne Detail-Bedarf) bleiben auf der Listenkarte.
+- **`workspace-test-flow.tsx`:** Ausgewählter Antrag mit `deriveCanonicalApplicationState ∈ { consultation_recommendation, in_review, in_decision, needs_adjustment, approved, rejected }` → **`WorkspaceApplicationReview`** (unterschiedliche View Modes; **R4:** `workspaceViewerRole="R4"`, eingeschränkte Interaktion). In **`in_implementation`** zusätzlich für **R4** → **`WorkspaceR4DecisionView`**. Toolbar **„Zurück zur Liste“** für alle genannten Detail-States inkl. `approved`/`rejected`. Reine Listen-States ohne Detail (`draft`, …) bleiben auf der Karte.
 - Die alte „Empfehlung freigeben“-Karte ist abgelöst durch den `WorkspaceApplicationReview` mit `viewMode="readonly_consultation"` + `RecommendationDraftEditor` als `bottomAction`.
 
 ### View Modes (`WorkspaceReviewViewMode`)
@@ -87,7 +88,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 | `interactive` | `in_review` | Volle Review: Footer-Aktionen (Bestätigen / Anpassung anfordern / Zurücksetzen), Sidebar-Composer, Forward-Button. Draft-Autosave aktiv. |
 | `readonly_consultation` | `consultation_recommendation` | Kompaktes Lesefeld: **nur Blöcke mit Inhalt** werden angezeigt (`compactReadOnlyBlocks`). Keine Footer-Aktionen, leere Kommentarliste mit eigenem Empty-Label. Darunter `RecommendationDraftEditor` als `bottomAction`, solange `releasedHtml` leer ist. |
 | `readonly_adjustment_pending` | `needs_adjustment` | Read-only auf R2-Seite, während R1 die angeforderten Anpassungen vornimmt. Statuszeile statt Buttons. |
-| `readonly_decision` | `in_decision` (kanonisch; Quell-Status u. a. **`in_implementation`**, **`in_decision`**) | Snapshot nach R2-Forward in die Entscheid: `postSubmit` + `forwardedComments`; keine Editier-Aktionen. (`WorkspaceTestFlow` öffnet die Vollansicht derzeit nicht für kanonisch `approved` / `rejected` — dort endet die Navigation ggf. auf der Liste.) |
+| `readonly_decision` | `in_decision` (Quell-Status u. a. **`in_implementation`**, **`in_decision`**) sowie kanonisch **`approved`** / **`rejected`** | Snapshot / Abschluss: keine Editier-Aktionen; für **`approved`**/**`rejected`** weiterhin Vollansicht mit Toolbar-Zurück. |
 
 ### Empfehlungsschreiben — Drafting & Release (R2)
 
@@ -109,7 +110,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 | R1-Release API | `app/api/applications/r1-release-adjustments/route.ts` | Antragsteller: `needs_correction` \| `needs_adjustment` → `in_review`, merged `workspaceReview`, Broadcast |
 | Release-Logik | `lib/r1-adjustment-release.ts` | `r1AllRequestedAdjustmentsSaved`, `buildWorkspaceReviewAfterR1AdjustmentRelease` (inkl. Legacy nur `r2PostSubmitReview`) |
 | Hydration-Key | `lib/workspace-review-hydration-key.ts` | Stabiler Fingerprint von `postSubmit` für Remount / Re-Hydration bei wiederholtem `in_review` |
-| Zeilen-Sync | `lib/application-realtime-sync.ts` | Broadcast-Kanal `application-row:<id>` nach mutierenden API-Aufrufen (R2-Forward, R1-Release) |
+| Zeilen-Sync | `lib/application-realtime-sync.ts` | Broadcast-Kanal `application-row:<id>` nach mutierenden API-Aufrufen (R2-Forward, R1-Release, **R4 persist/complete** im Workspace) |
 | Review-Block-Definition | `lib/review-workspace-blocks.ts` | Geteilte Block-IDs, Default-Phasen, Anker-Hilfen (`reviewWorkspaceAnchorId`) |
 | Labels / Konstanten | `lib/application-review-labels.ts` | Scope, Massnahmen, Hilfsfunktionen |
 | Status | `lib/application-status.ts` | Ableitung, Meta für Sidebar-Badge |
@@ -119,7 +120,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 | Released-Accordion | `components/domain/recommendation-released-accordion.tsx` | Geteilter Read-Only-Block (Variant `card` für R2, `plain` für R1) für `releasedHtml`/`releasedAt`/`releasedBy` |
 | Accordion-Primitive | `components/ui/accordion.tsx` | shadcn-Wrapper um `radix-ui` Accordion (ohne Hover-Underline) |
 | R1-Anpassungsansicht | `components/domain/portal-application-adjustment.tsx` | Block-Detail R1 unter `/portal/antragserstellung?applicationId=…`; identisches Layout, Edit nur bei `needs_adjustment` (`allowAdjustments`) |
-| Layout | `components/domain/role-dashboard-layout.tsx` | Gemeinsames R1/R2-Shell |
+| Layout | `components/domain/role-dashboard-layout.tsx` | Gemeinsames R1/R2–R6 Shell; **Workspace-Topbar** (Suche, Inbox, Avatar) für alle **R2–R6**; Nav unterscheidet R1 vs. Workspace |
 
 ### Review-Blöcke (Reihenfolge)
 
@@ -203,7 +204,7 @@ Details Sidebar-Einklapp-Logik / Z-Index: `role-dashboard-layout.tsx` und frühe
 
 ## 7. Server / Page
 
-- **`app/workspace/page.tsx`:** `WorkspaceR2ToolbarProvider`, `RoleDashboardLayout role="R2"`, `WorkspaceTestFlow` mit `reviewerDisplayName` (Anzeige „Zugewiesen an“ / Kommentar-Karte).
+- **`app/workspace/page.tsx`:** `WorkspaceR2ToolbarProvider`, `RoleDashboardLayout` mit **`role={profile.role}`** (R2–R6), `workspaceAccountInitials` aus `initialsFromProfile`, **`fetchWorkspaceApplicationsList`** für die initiale Liste, `WorkspaceTestFlow` mit **`workspaceRole={profile.role}`** und `reviewerDisplayName`.
 - Review-Vollansicht ohne äußeren `px-6`-Listen-Wrapper (volle Fläche); Liste nutzt weiter `px-6 py-6` im Flow.
 
 ---
@@ -218,4 +219,4 @@ Details Sidebar-Einklapp-Logik / Z-Index: `role-dashboard-layout.tsx` und frühe
 
 ---
 
-*Letzte Aktualisierung: Multi-Zyklus-Review (`pending_after_adjustment`), `r1-release-adjustments`, trigger-sicherer `review-forward`, `workspaceReviewPostSubmitHydrationKey`, Broadcast `application-realtime-sync`, R2-CTA nur bei vollständigem Review ohne Footer-Fließtext, R1-Freigabe-UI vereinfacht, Kommentar-`authorDisplayName`, TipTap-Empfehlung, View-Modes, `PortalApplicationAdjustment`.*
+*Letzte Aktualisierung: Broadcast auch nach R4 persist/complete; Verweis auf R4-Reconcile (`Antrag_Bewilligung_Kontext.md` § 7).*

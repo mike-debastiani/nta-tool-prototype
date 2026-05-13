@@ -10,7 +10,7 @@ import { createClient } from "@/utils/supabase/client";
 
 type LoginCardProps = {
   title: string;
-  allowedRoles: ("R1" | "R2" | "R3" | "R5" | "R6")[];
+  allowedRoles: ("R1" | "R2" | "R3" | "R4" | "R5" | "R6")[];
 };
 
 export function LoginCard({ title, allowedRoles }: LoginCardProps) {
@@ -38,19 +38,42 @@ export function LoginCard({ title, allowedRoles }: LoginCardProps) {
       return;
     }
 
+    // Session/JWT muss für den nächsten PostgREST-Aufruf gesetzt sein (sonst RLS wie «anon» → leeres Profil).
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.getSession();
+    if (sessionError || !sessionData.session) {
+      await supabase.auth.signOut();
+      setError(
+        sessionError?.message
+          ?? "Sitzung konnte nicht erstellt werden. Bitte erneut versuchen.",
+      );
+      setPending(false);
+      return;
+    }
+
     const { data: profile, error: profileError } = await supabase
       .from("users")
       .select("role")
       .eq("id", data.user.id)
-      .maybeSingle<{ role: "R1" | "R2" | "R3" | "R5" | "R6" }>();
+      .maybeSingle<{ role: "R1" | "R2" | "R3" | "R4" | "R5" | "R6" }>();
 
-    if (profileError || !profile || !allowedRoles.includes(profile.role)) {
+    if (profileError) {
+      await supabase.auth.signOut();
+      setError(
+        `Profil konnte nicht geladen werden: ${profileError.message}`,
+      );
+      setPending(false);
+      return;
+    }
+
+    if (!profile || !allowedRoles.includes(profile.role)) {
       await supabase.auth.signOut();
       setError("Dieser Account hat keinen Zugriff auf diesen Login.");
       setPending(false);
       return;
     }
 
+    setPending(false);
     router.push(
       profile.role === "R1" ? "/portal/antragserstellung" : "/workspace",
     );

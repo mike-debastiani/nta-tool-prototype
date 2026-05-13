@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
@@ -74,6 +75,8 @@ type ApplicationReviewDetailSidebarProps = {
    * (z. B. R1-Portal solange nicht «Anpassung erforderlich», R2 «Beratung & Empfehlung»).
    */
   showCommentsSection?: boolean;
+  /** R4: Kontakt-Cards statt Kommentarbereich. */
+  secondarySection?: "comments" | "r4_contacts";
 };
 
 function formatCommentTimestamp(ts: number): string {
@@ -101,6 +104,7 @@ export function ApplicationReviewDetailSidebar({
   onSavedCommentNavigate,
   emptyCommentsLabel = "Klicken Sie bei einem Block auf «Anpassung anfordern», um hier eine Bemerkung zu verfassen.",
   showCommentsSection = true,
+  secondarySection = "comments",
 }: ApplicationReviewDetailSidebarProps) {
   const submitted = formatReviewSubmittedAt(application.data);
   const updated = new Date(application.updated_at).toLocaleDateString("de-CH", {
@@ -233,7 +237,7 @@ export function ApplicationReviewDetailSidebar({
         </div>
       </div>
 
-      {showCommentsSection ? (
+      {showCommentsSection && secondarySection === "comments" ? (
         <section
           className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6 pt-6"
           aria-labelledby="review-comments-heading"
@@ -262,6 +266,9 @@ export function ApplicationReviewDetailSidebar({
             ))}
           </div>
         </section>
+      ) : null}
+      {showCommentsSection && secondarySection === "r4_contacts" ? (
+        <R4ContactsSection application={application} />
       ) : null}
     </div>
   );
@@ -503,6 +510,50 @@ function resolveApplicantDisplayName(application: WorkspaceApplication): string 
   if (u?.display_name?.trim()) return u.display_name.trim();
   if (u?.email?.trim()) return u.email.trim();
   return "Antragsteller";
+}
+
+function R4ContactsSection({ application }: { application: WorkspaceApplication }) {
+  const pd = application.data.personalData;
+  const applicantName = resolveApplicantDisplayName(application);
+  const applicantEmail = pd?.email?.trim() || application.users[0]?.email || "—";
+  const fachstelleName =
+    application.data.consultation?.advisor?.trim()
+    || application.data.recommendation?.releasedBy?.trim()
+    || "NTA Fachstelle";
+
+  return (
+    <section
+      className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 pb-6 pt-6"
+      aria-labelledby="r4-contacts-heading"
+    >
+      <h3 id="r4-contacts-heading" className="mb-4 text-lg font-medium leading-[27px] text-foreground">
+        Kontakte
+      </h3>
+      <div className="space-y-4">
+        <Card className="shadow-xs">
+          <CardHeader className="space-y-1 pb-2">
+            <CardTitle className="text-sm font-semibold text-foreground">Antragstellende Person</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1 text-sm">
+            <p className="font-medium text-foreground">{applicantName}</p>
+            <p className="text-muted-foreground">{applicantEmail}</p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-xs">
+          <CardHeader className="space-y-1 pb-2">
+            <CardTitle className="text-sm font-semibold text-foreground">Kontaktperson Fachstelle</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <p className="font-medium text-foreground">{fachstelleName}</p>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Bei inhaltlichen Rückfragen während der Bewilligung können Sie diese Person konsultieren.
+            </p>
+            <p className="text-muted-foreground">fachstelle@hochschule.example</p>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
+  );
 }
 
 function ApplicantNameWithId({ application }: { application: WorkspaceApplication }) {

@@ -66,6 +66,7 @@ import { createClient } from "@/utils/supabase/client";
 import { cn } from "@/lib/utils";
 import {
   type ApplicationStatus,
+  type StatusAudience,
   getApplicationStatusMeta,
 } from "@/lib/application-status";
 import {
@@ -293,6 +294,11 @@ type WorkspaceApplicationReviewProps = {
   onPersisted?: () => void;
   /** Optionaler CTA unterhalb der Blocks, z. B. Beratung durchgeführt. */
   bottomAction?: ReactNode;
+  /**
+   * R4: gleiche Block-Ansicht wie R2, aber Nur-Lese-Hinweise und Status-Badge für die
+   * Entscheidungsinstanz (`R4` in `getApplicationStatusMeta`). Standard: R2.
+   */
+  workspaceViewerRole?: "R2" | "R4";
 };
 
 export function WorkspaceApplicationReview({
@@ -301,11 +307,15 @@ export function WorkspaceApplicationReview({
   viewMode = "interactive",
   onPersisted,
   bottomAction,
+  workspaceViewerRole = "R2",
 }: WorkspaceApplicationReviewProps) {
   const readOnly = viewMode !== "interactive";
   const compactReadOnlyBlocks = viewMode === "readonly_consultation";
   const data = application.data;
-  const statusMeta = getApplicationStatusMeta(application, "R2");
+  const statusAudience: StatusAudience =
+    workspaceViewerRole === "R4" ? "R4" : "R2";
+  const statusMeta = getApplicationStatusMeta(application, statusAudience);
+  const r4ReadOnlyCopy = workspaceViewerRole === "R4";
   const def = data.applicationDefinition;
   const supabase = useMemo(() => createClient(), []);
 
@@ -670,70 +680,201 @@ export function WorkspaceApplicationReview({
           </h1>
           {statusMeta.canonicalState === "consultation_recommendation"
           && !hasText(data.recommendation?.releasedHtml) ? (
-            <div className="mt-4 rounded-lg bg-sky-100 px-4 py-3">
+            <div
+              className={cn(
+                "mt-4 rounded-lg px-4 py-3",
+                r4ReadOnlyCopy ? "bg-muted" : "bg-sky-100",
+              )}
+            >
               <div className="flex gap-3 text-left">
                 <div className="flex shrink-0 items-start pt-0.5">
-                  <CircleAlert className="size-4 text-sky-500" strokeWidth={2} aria-hidden />
+                  <CircleAlert
+                    className={cn(
+                      "size-4",
+                      r4ReadOnlyCopy ? "text-muted-foreground" : "text-sky-500",
+                    )}
+                    strokeWidth={2}
+                    aria-hidden
+                  />
                 </div>
-                <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-sky-500">
-                  Nach einem erfolgreich durchgeführten Beratungsgespräch ist ein Empfehlungsschreiben
-                  zu verfassen. Sobald Sie dieses freigeben, wird der Antrag für die antragstellende
-                  Person freigeschaltet.
+                <p
+                  className={cn(
+                    "min-w-0 flex-1 text-sm font-medium leading-5",
+                    r4ReadOnlyCopy ? "text-muted-foreground" : "text-sky-500",
+                  )}
+                >
+                  {r4ReadOnlyCopy ? (
+                    <>
+                      Sie sehen diese Angaben nur zur Information. Beratung und Empfehlungsschreiben
+                      bearbeitet die Fachstelle.
+                    </>
+                  ) : (
+                    <>
+                      Nach einem erfolgreich durchgeführten Beratungsgespräch ist ein Empfehlungsschreiben
+                      zu verfassen. Sobald Sie dieses freigeben, wird der Antrag für die antragstellende
+                      Person freigeschaltet.
+                    </>
+                  )}
                 </p>
               </div>
             </div>
           ) : null}
           {statusMeta.canonicalState === "consultation_recommendation"
           && hasText(data.recommendation?.releasedHtml) ? (
-            <div className="mt-4 rounded-lg bg-neutral-100 px-4 py-3">
+            <div
+              className={cn(
+                "mt-4 rounded-lg px-4 py-3",
+                r4ReadOnlyCopy ? "bg-muted" : "bg-neutral-100",
+              )}
+            >
               <div className="flex gap-3 text-left">
                 <div className="flex shrink-0 items-start pt-0.5">
-                  <Info className="size-4 text-neutral-500" strokeWidth={2} aria-hidden />
+                  <Info
+                    className={cn(
+                      "size-4",
+                      r4ReadOnlyCopy ? "text-muted-foreground" : "text-neutral-500",
+                    )}
+                    strokeWidth={2}
+                    aria-hidden
+                  />
                 </div>
-                <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-neutral-500">
-                  Das Empfehlungsschreiben wurde verfasst und die Antragstellung für die antragstellende
-                  Person freigeschaltet. Sie werden benachrichtigt, sobald der Antrag zur Prüfung
-                  eingeht.
+                <p
+                  className={cn(
+                    "min-w-0 flex-1 text-sm font-medium leading-5",
+                    r4ReadOnlyCopy ? "text-muted-foreground" : "text-neutral-500",
+                  )}
+                >
+                  {r4ReadOnlyCopy ? (
+                    <>
+                      Sie sehen diese Angaben nur zur Information. Die weiteren Schritte bis zur
+                      Einreichung führt die antragstellende Person aus.
+                    </>
+                  ) : (
+                    <>
+                      Das Empfehlungsschreiben wurde verfasst und die Antragstellung für die antragstellende
+                      Person freigeschaltet. Sie werden benachrichtigt, sobald der Antrag zur Prüfung
+                      eingeht.
+                    </>
+                  )}
                 </p>
               </div>
             </div>
           ) : null}
           {statusMeta.canonicalState === "in_review" ? (
-            <div className="mt-4 rounded-lg bg-blue-200 px-4 py-3">
+            <div
+              className={cn(
+                "mt-4 rounded-lg px-4 py-3",
+                r4ReadOnlyCopy ? "bg-muted" : "bg-blue-100",
+              )}
+            >
               <div className="flex gap-3 text-left">
                 <div className="flex shrink-0 items-start pt-0.5">
-                  <Info className="size-4 text-blue-500" strokeWidth={2} aria-hidden />
+                  <Info
+                    className={cn(
+                      "size-4",
+                      r4ReadOnlyCopy ? "text-muted-foreground" : "text-blue-500",
+                    )}
+                    strokeWidth={2}
+                    aria-hidden
+                  />
                 </div>
-                <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-blue-500">
-                  Überprüfen Sie die Angaben auf Vollständigkeit und leiten Sie den Antrag weiter oder
-                  senden Sie ihn zur Nachbesserung zurück.
+                <p
+                  className={cn(
+                    "min-w-0 flex-1 text-sm font-medium leading-5",
+                    r4ReadOnlyCopy ? "text-muted-foreground" : "text-blue-500",
+                  )}
+                >
+                  {r4ReadOnlyCopy ? (
+                    <>
+                      Sie sehen diese Angaben nur zur Information. Prüfung, Review und Weiterleitung
+                      obliegen der Fachstelle.
+                    </>
+                  ) : (
+                    <>
+                      Überprüfen Sie die Angaben auf Vollständigkeit und leiten Sie den Antrag weiter oder
+                      senden Sie ihn zur Nachbesserung zurück.
+                    </>
+                  )}
                 </p>
               </div>
             </div>
           ) : null}
           {statusMeta.canonicalState === "needs_adjustment" ? (
-            <div className="mt-4 rounded-lg bg-orange-100 px-4 py-3">
+            <div
+              className={cn(
+                "mt-4 rounded-lg px-4 py-3",
+                r4ReadOnlyCopy ? "bg-muted" : "bg-orange-100",
+              )}
+            >
               <div className="flex gap-3 text-left">
                 <div className="flex shrink-0 items-start pt-0.5">
-                  <Info className="size-4 text-orange-400" strokeWidth={2} aria-hidden />
+                  <Info
+                    className={cn(
+                      "size-4",
+                      r4ReadOnlyCopy ? "text-muted-foreground" : "text-orange-400",
+                    )}
+                    strokeWidth={2}
+                    aria-hidden
+                  />
                 </div>
-                <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-orange-400">
-                  Dieser Antrag wurde zur Nachbesserung an die antragstellende Person zurückgesendet.
-                  Sie werden benachrichtigt, sobald die Anpassungen eingereicht wurden.
+                <p
+                  className={cn(
+                    "min-w-0 flex-1 text-sm font-medium leading-5",
+                    r4ReadOnlyCopy ? "text-muted-foreground" : "text-orange-400",
+                  )}
+                >
+                  {r4ReadOnlyCopy ? (
+                    <>
+                      Sie sehen diese Angaben nur zur Information. Nachbesserungen nimmt die
+                      antragstellende Person vor.
+                    </>
+                  ) : (
+                    <>
+                      Dieser Antrag wurde zur Nachbesserung an die antragstellende Person zurückgesendet.
+                      Sie werden benachrichtigt, sobald die Anpassungen eingereicht wurden.
+                    </>
+                  )}
                 </p>
               </div>
             </div>
           ) : null}
           {statusMeta.canonicalState === "in_decision" ? (
-            <div className="mt-4 rounded-lg bg-purple-100 px-4 py-3">
+            <div
+              className={cn(
+                "mt-4 rounded-lg px-4 py-3",
+                r4ReadOnlyCopy ? "bg-muted" : "bg-purple-100",
+              )}
+            >
               <div className="flex gap-3 text-left">
                 <div className="flex shrink-0 items-start pt-0.5">
-                  <Info className="size-4 text-purple-600" strokeWidth={2} aria-hidden />
+                  <Info
+                    className={cn(
+                      "size-4",
+                      r4ReadOnlyCopy ? "text-muted-foreground" : "text-purple-600",
+                    )}
+                    strokeWidth={2}
+                    aria-hidden
+                  />
                 </div>
-                <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-purple-600">
-                  Der Antrag wurde an die Entscheidungsinstanz weitergeleitet und kann nicht mehr
-                  bearbeitet werden. Wird der Antrag bewilligt oder abgelehnt, werden Sie benachrichtigt.
-                  Bei einer Ablehnung ist eine Begründung pro Abschnitt hinterlegt.
+                <p
+                  className={cn(
+                    "min-w-0 flex-1 text-sm font-medium leading-5",
+                    r4ReadOnlyCopy ? "text-muted-foreground" : "text-purple-600",
+                  )}
+                >
+                  {r4ReadOnlyCopy ? (
+                    <>
+                      Sie sehen diese Angaben nur zur Information. Sobald die Fachstelle den Antrag in die
+                      Entscheidung weitergeleitet hat und der Eintrag hier den Status «Entscheid
+                      ausstehend» erreicht, stehen Ihnen die Bewilligungsfunktionen zur Verfügung.
+                    </>
+                  ) : (
+                    <>
+                      Der Antrag wurde an die Entscheidungsinstanz weitergeleitet und kann nicht mehr
+                      bearbeitet werden. Wird der Antrag bewilligt oder abgelehnt, werden Sie benachrichtigt.
+                      Bei einer Ablehnung ist eine Begründung pro Abschnitt hinterlegt.
+                    </>
+                  )}
                 </p>
               </div>
             </div>

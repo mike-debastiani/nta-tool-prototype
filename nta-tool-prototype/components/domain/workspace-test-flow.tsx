@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWorkspaceR2Toolbar } from "@/components/domain/workspace-r2-toolbar-context";
 import { ArrowLeft, Loader2, Save, Send } from "lucide-react";
 import { type Editor } from "@tiptap/react";
@@ -18,7 +18,9 @@ import {
   WorkspaceApplicationReview,
   type WorkspaceReviewViewMode,
 } from "@/components/domain/workspace-application-review";
+import { WorkspaceR4DecisionView } from "@/components/domain/workspace-r4-decision-view";
 import { RichTextEditor } from "@/components/domain/rich-text-editor";
+import { type UserRole } from "@/lib/auth";
 
 /** Removed product copy — never show between draft / release actions. */
 const SUPPRESS_EDITOR_NOTICE = "Empfehlungsschreiben an R1 freigegeben.";
@@ -28,12 +30,15 @@ type WorkspaceTestFlowProps = {
   /** Logged-in reviewer name for „Zugewiesen an“ in the review sidebar. */
   reviewerDisplayName: string;
   initialApplications: WorkspaceApplication[];
+  /** Aktuelle Workspace-Rolle (R4 erhält Bewilligungs-Ansicht). */
+  workspaceRole: UserRole;
 };
 
 export function WorkspaceTestFlow({
   userId,
   reviewerDisplayName,
   initialApplications,
+  workspaceRole,
 }: WorkspaceTestFlowProps) {
   const setLeadingToolbarSlot = useWorkspaceR2Toolbar()?.setLeadingSlot;
 
@@ -45,6 +50,9 @@ export function WorkspaceTestFlow({
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [releasingId, setReleasingId] = useState<string | null>(null);
 
+  /** Verhindert, dass eine ältere Listen-GET eine neuere überschreibt (z. B. Realtime + onPersisted parallel). */
+  const refreshApplicationsSeq = useRef(0);
+
   useEffect(() => {
     setMessage((current) =>
       current === SUPPRESS_EDITOR_NOTICE ? null : current,
@@ -52,18 +60,22 @@ export function WorkspaceTestFlow({
   }, []);
 
   const refreshApplications = useCallback(async () => {
-    const { data } = await supabase
-      .from("applications")
-      .select(
-        "id,applicant_id,status,created_at,updated_at,data,users!applications_applicant_id_fkey(display_name,email)",
-      )
-      .order("updated_at", { ascending: false });
-
-    if (data) {
-      const nextApplications = data as WorkspaceApplication[];
-      setApplications(nextApplications);
+    const seq = ++refreshApplicationsSeq.current;
+    try {
+      const res = await fetch("/api/workspace/applications", {
+        credentials: "same-origin",
+      });
+      if (!res.ok) return;
+      const payload = (await res.json()) as {
+        applications?: WorkspaceApplication[];
+      };
+      if (payload.applications && seq === refreshApplicationsSeq.current) {
+        setApplications(payload.applications);
+      }
+    } catch {
+      /* ignore */
     }
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     const channel = supabase
@@ -192,7 +204,9 @@ export function WorkspaceTestFlow({
       selectedCanonicalState === "consultation_recommendation"
       || selectedCanonicalState === "in_review"
       || selectedCanonicalState === "in_decision"
-      || selectedCanonicalState === "needs_adjustment";
+      || selectedCanonicalState === "needs_adjustment"
+      || selectedCanonicalState === "approved"
+      || selectedCanonicalState === "rejected";
 
     if (!reviewWorkspaceDetail) {
       setLeadingToolbarSlot(null);
@@ -222,7 +236,10 @@ export function WorkspaceTestFlow({
       ? "readonly_decision"
       : selectedCanonicalState === "needs_adjustment"
         ? "readonly_adjustment_pending"
-        : "interactive";
+        : selectedCanonicalState === "approved"
+          || selectedCanonicalState === "rejected"
+          ? "readonly_decision"
+          : "interactive";
 
   if (!selectedApplication) {
     return (
@@ -238,7 +255,10 @@ export function WorkspaceTestFlow({
             </p>
           )}
           {applications.map((application) => {
-            const statusMeta = getApplicationStatusMeta(application, "R2");
+            const statusMeta = getApplicationStatusMeta(
+              application,
+              workspaceRole === "R4" ? "R4" : "R2",
+            );
             return (
               <button
                 key={application.id}
@@ -282,42 +302,66 @@ export function WorkspaceTestFlow({
     || selectedCanonicalState === "in_review"
     || selectedCanonicalState === "in_decision"
     || selectedCanonicalState === "needs_adjustment"
+    || selectedCanonicalState === "approved"
+    || selectedCanonicalState === "rejected"
   ) {
+    const r4EntscheidEditing =
+      workspaceRole === "R4" && selectedApplication.status === "in_implementation";
+
+    if (r4EntscheidEditing) {
+      return (
+        <WorkspaceR4DecisionView
+          key={`${selectedApplication.id}-${selectedApplication.status}`}
+          application={selectedApplication}
+          reviewerDisplayName={reviewerDisplayName}
+          onPersisted={() => void refreshApplications()}
+        />
+      );
+    }
+
+    const r4ViewMode: WorkspaceReviewViewMode =
+      workspaceRole === "R4" && workspaceReviewMode === "interactive"
+        ? "readonly_decision"
+        : workspaceReviewMode;
+
+    const recommendationBottomAction =
+      selectedCanonicalState === "consultation_recommendation"
+      && !selectedApplication.data.recommendation?.releasedHtml
+      && workspaceRole !== "R4" ? (
+        <RecommendationDraftEditor
+          key={`${selectedApplication.id}-recommendation-editor`}
+          initialHtml={
+            selectedApplication.data.recommendation?.draftHtml ?? ""
+          }
+          saveMessage={
+            message !== SUPPRESS_EDITOR_NOTICE ? message : null
+          }
+          saving={pendingId === selectedApplication.id}
+          releasing={releasingId === selectedApplication.id}
+          onSave={(draftHtml, draftText) =>
+            saveRecommendationDraft(
+              selectedApplication.id,
+              draftHtml,
+              draftText,
+            )}
+          onRelease={(draftHtml, draftText) =>
+            releaseRecommendation(
+              selectedApplication.id,
+              draftHtml,
+              draftText,
+            )}
+        />
+      ) : undefined;
+
     return (
       <WorkspaceApplicationReview
         key={`${selectedApplication.id}-${selectedApplication.status}-${workspaceReviewPostSubmitHydrationKey(selectedApplication)}`}
         application={selectedApplication}
         reviewerDisplayName={reviewerDisplayName}
-        viewMode={workspaceReviewMode}
+        viewMode={r4ViewMode}
+        workspaceViewerRole={workspaceRole === "R4" ? "R4" : "R2"}
         onPersisted={() => void refreshApplications()}
-        bottomAction={
-          selectedCanonicalState === "consultation_recommendation"
-          && !selectedApplication.data.recommendation?.releasedHtml ? (
-            <RecommendationDraftEditor
-              key={`${selectedApplication.id}-recommendation-editor`}
-              initialHtml={
-                selectedApplication.data.recommendation?.draftHtml ?? ""
-              }
-              saveMessage={
-                message !== SUPPRESS_EDITOR_NOTICE ? message : null
-              }
-              saving={pendingId === selectedApplication.id}
-              releasing={releasingId === selectedApplication.id}
-              onSave={(draftHtml, draftText) =>
-                saveRecommendationDraft(
-                  selectedApplication.id,
-                  draftHtml,
-                  draftText,
-                )}
-              onRelease={(draftHtml, draftText) =>
-                releaseRecommendation(
-                  selectedApplication.id,
-                  draftHtml,
-                  draftText,
-                )}
-            />
-          ) : undefined
-        }
+        bottomAction={recommendationBottomAction}
       />
     );
   }

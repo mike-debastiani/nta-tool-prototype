@@ -9,7 +9,7 @@ export type ApplicationStatus =
   | "rejected"
   | "in_implementation";
 
-export type StatusAudience = "R1" | "R2";
+export type StatusAudience = "R1" | "R2" | "R4";
 
 export type CanonicalApplicationState =
   | "draft"
@@ -43,7 +43,7 @@ const canonicalStatusLabel: Record<CanonicalApplicationState, string> = {
   consultation_recommendation: "Beratung & Empfehlung",
   in_review: "In Review",
   needs_adjustment: "Anpassung erforderlich",
-  in_decision: "In Entscheidung",
+  in_decision: "In Entscheid",
   approved: "Bewilligt",
   rejected: "Abgelehnt",
 };
@@ -51,6 +51,10 @@ const canonicalStatusLabel: Record<CanonicalApplicationState, string> = {
 const canonicalStatusLabelR2: Partial<Record<CanonicalApplicationState, string>> = {
   in_review: "Review erforderlich",
   needs_adjustment: "Anpassung angefordert",
+};
+
+const canonicalStatusLabelR4: Partial<Record<CanonicalApplicationState, string>> = {
+  in_decision: "Entscheid ausstehend",
 };
 
 export const statusBadgeClass: Record<CanonicalApplicationState, string> = {
@@ -118,6 +122,9 @@ export function getStatusLabelForAudience(
 ) {
   if (audience === "R2" && canonicalStatusLabelR2[state]) {
     return canonicalStatusLabelR2[state] as string;
+  }
+  if (audience === "R4" && canonicalStatusLabelR4[state]) {
+    return canonicalStatusLabelR4[state] as string;
   }
   return canonicalStatusLabel[state];
 }

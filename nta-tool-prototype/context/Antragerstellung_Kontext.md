@@ -1,7 +1,7 @@
 # Kontext: Antragserstellung (R1) & R2-Beratung — Prototyp NTA
 
 > **Zweck:** Operative Referenz für Chats zu **Anpassungen und Integrationen** rund um den **Antragsflow R1** bis zur finalen Einreichung, die **Status-/Badge-Logik**, den **Workspace-Test R2** (Beratung/Empfehlung) sowie **RLS/Trigger**.  
-> **Review-/Korrektur-Loop** nach Einreichung (R2 Block-Review, R1-Anpassungen, erneuter Review-Zyklus) → **`Antrag_Review_Kontext.md`**. Gesamtprototyp → `General_Prototype_Kontext.md`. Zielbild-Funktionen → `Prototyp_Funktionen.md`.
+> **Review-/Korrektur-Loop** nach Einreichung (R2 Block-Review, R1-Anpassungen, erneuter Review-Zyklus) → **`Antrag_Review_Kontext.md`**. **R4 Bewilligung** → **`Antrag_Bewilligung_Kontext.md`**. Gesamtprototyp → `General_Prototype_Kontext.md`. Zielbild-Funktionen → `Prototyp_Funktionen.md`.
 
 ---
 
@@ -43,7 +43,10 @@ Hinweise:
 | Login | `/staff/login` |
 | Workspace (R2–R6) | `/workspace` |
 
----
+### Login (Student & Staff)
+
+- **`components/domain/login-card.tsx`:** `signInWithPassword`, danach **`auth.getSession()`** (JWT muss für den nächsten PostgREST-Aufruf stehen), erst dann **`from("users").select("role")`** für erlaubte Rollen. Bei DB-Fehlern: Meldung **„Profil konnte nicht geladen werden: …“**; bei falscher Rolle: **„Dieser Account hat keinen Zugriff auf diesen Login.“**
+- **RLS-Falle:** Policies auf `public.users` dürfen die **eigene** Tabelle nicht in `EXISTS (SELECT … FROM users …)` aus RLS heraus erneut lesen — nutze **`current_user_role()`** (siehe § 10). Rekursion äussert sich als **„infinite recursion detected in policy for relation users“** (auch beim R1-Login sichtbar).
 
 ## 3. Kerndateien (Implementierung)
 
@@ -54,23 +57,33 @@ Hinweise:
 | `components/domain/portal-application-adjustment.tsx` | R1 Block-Detailansicht (Layout wie R2-Review). Edit nur bei kanonisch `needs_adjustment`; per-Block Autosave; Freigabe **„Anpassungen für Review freigeben“** → `POST /api/applications/r1-release-adjustments`; Realtime-Broadcast-Listener + Refetch |
 | `components/domain/student-dashboard.tsx` | R1 Dashboard (Liste; Klick → `?applicationId=<uuid>`); **Polling** der Anträge des eingeloggten Antragstellers für aktuelle `status`/Badges |
 | `app/portal/home/page.tsx` | Serverpage R1 Dashboard |
-| `components/domain/workspace-test-flow.tsx` | Workspace: Liste, View-Mode-Ableitung, `RecommendationDraftEditor` als `bottomAction` in `consultation_recommendation` |
-| `components/domain/workspace-application-review.tsx` | R2 Block-Review inkl. Persistenz, Forward, View Modes (`interactive` / `readonly_consultation` / `readonly_adjustment_pending` / `readonly_decision`) |
+| `components/domain/workspace-test-flow.tsx` | Workspace: Liste, View-Mode-Ableitung, R4-Entscheid-View in `in_implementation`, Refresh-Liste per **`GET /api/workspace/applications`**, `RecommendationDraftEditor` als `bottomAction` in `consultation_recommendation` |
+| `components/domain/workspace-application-review.tsx` | R2/R4 Block-Review inkl. Persistenz, Forward, View Modes (`interactive` / `readonly_consultation` / `readonly_adjustment_pending` / `readonly_decision`), Prop **`workspaceViewerRole`** |
+| `components/domain/workspace-r4-decision-view.tsx` | R4 Bewilligungs-UI (`in_implementation`) |
+| `app/workspace/page.tsx` | Server: `requireUserProfile` R2–R6, `fetchWorkspaceApplicationsList`, `RoleDashboardLayout` + `workspaceAccountInitials`, `WorkspaceTestFlow` |
+| `app/api/workspace/applications/route.ts` | `GET` Antragsliste für Workspace-Rollen (Refresh / konsistent mit Server-Page) |
+| `lib/workspace-applications-list.ts` | Gemeinsame Select-Logik (optional Service-Role für R4 wenn gesetzt) |
+| `lib/user-initials.ts` | Initialen für Workspace-Avatar |
+| `components/domain/login-card.tsx` | Student/Staff-Login inkl. `getSession()` nach Sign-In |
+| `components/domain/role-dashboard-layout.tsx` | Gemeinsames R1/Workspace-Dashboard (Sidebar; **Topbar** Suche/Inbox/Avatar für **R2–R6**) |
 | `components/domain/rich-text-editor.tsx` | TipTap-Wrapper (StarterKit + Underline/Link/TextAlign/Placeholder/Custom-Heading) mit shadcn-styled, reaktiver Toolbar (`useEditorState`) |
 | `components/domain/recommendation-released-accordion.tsx` | Geteilte Anzeige für `recommendation.releasedHtml` (Variant `card` für R2-Review, `plain` für R1-Antragsflow); Header inline mit Avatar + Freigegeben-Pill |
 | `components/ui/accordion.tsx` | shadcn-Wrapper um `radix-ui` Accordion (ohne Hover-Underline) |
 | `app/api/applications/review-forward/route.ts` | R2 Forward: `in_implementation` / `needs_correction` (RLS-konform); merged `data` muss **`r1AdjustmentResolutions`** nicht streichen (Trigger) |
+| `app/api/applications/r4-persist-decision/route.ts` | Optional: R4 merge `r4DecisionReview` (primär Browser-Client, siehe `r4-workspace-supabase-persist`) |
+| `app/api/applications/r4-complete-decision/route.ts` | Optional: R4 Abschluss → `approved` |
 | `app/api/applications/r1-release-adjustments/route.ts` | R1: `needs_correction` \| `needs_adjustment` → `in_review`, merged `workspaceReview`, geleerte Resolutions, Broadcast |
 | `lib/r1-adjustment-release.ts` | Bedingungen und Build von `postSubmit` nach R1-Freigabe (`pending_after_adjustment`, Filter `forwardedComments`) |
 | `lib/workspace-review-hydration-key.ts` | Fingerabdruck `postSubmit` für stabile R2-Remounts bei wiederholtem `in_review` |
 | `lib/application-realtime-sync.ts` | Broadcast-Kanal pro `applicationId` nach mutierenden Updates |
-| `components/domain/role-dashboard-layout.tsx` | Gemeinsames R1/R2 Dashboard-Layout (collapsible Sidebar, Workspace-Topbar R2) |
-| `lib/test-flow-types.ts` | `ApplicationData` / `applications.data` (inkl. `recommendation.draftHtml`/`releasedHtml`/`releasedBy`, `recommendation.workspaceReview`, `r1AdjustmentResolutions`) |
+| `lib/test-flow-types.ts` | `ApplicationData` / `applications.data` (inkl. `recommendation.draftHtml`/`releasedHtml`/`releasedBy`, `recommendation.workspaceReview`, `r1AdjustmentResolutions`, `r4DecisionReview`) |
 | `lib/application-status.ts` | Zentrale fachliche States + rollenabhängige Labels/Farben |
 | `lib/r2-review-persist.ts` | Helfer `dataWithoutLegacyReviewRoots` für trigger-konforme R2-Saves |
+| `lib/r4-decision-state.ts` | R4: Zeilen-Merge, Sichtbarkeit, Server/Client-Reconcile (`mergeR4DecisionReviewRespectingLocalDirty`, …) |
+| `lib/r4-workspace-supabase-persist.ts` | R4: persist/complete über Browser-Supabase-Client (Session + RLS) |
 | `lib/review-workspace-blocks.ts` | Block-IDs + `reviewWorkspaceAnchorId` (Anker-Sprung in R1/R2-Sidebar-Kommentaren) |
 | `components/domain/application-status-badge.tsx` | Badge-UI aus Status-Ableitung |
-| `utils/supabase/service-role.ts` | Optionaler Service-Role-Client (aktuell **nicht** im Forward-Pfad benötigt) |
+| `utils/supabase/service-role.ts` | Optionaler Service-Role-Client (Forward **nicht** nötig; optional für R4-Listen-Fallback wenn RLS noch nicht ausgerollt) |
 
 ---
 
@@ -214,7 +227,7 @@ State-Badges orientieren sich an **Figma-Farbkodierung** (kompakt, ohne Border) 
 
 ## 10. DB / RLS / Trigger — nicht verletzen
 
-- Workspace-Policies: Zugriff für Rollen **R2, R3, R5, R6**. Die **SELECT**-Policy `applications_select_r2_worklist` umfasst seit Migration **`extend_workspace_select_to_decision_states`** auch **`in_implementation`**, **`approved`** und **`rejected`** — sonst scheitert der `UPDATE` von `in_review → in_implementation` am implizit folgenden `RETURNING`-SELECT (Postgres-RLS-Mechanik). **`SUPABASE_SERVICE_ROLE_KEY` ist für den Forward-Pfad nicht erforderlich.**
+- Workspace-Policies: Zugriff für Rollen **R2, R3, R5, R6** (bestehende `applications_select_r2_worklist`). **R4** erhält dieselbe Lesesicht auf die Inbox über die additive Migration **`20260513190000_r4_workspace_select_policies.sql`** (`applications_select_r4_workspace` sowie `users_select_r4_workspace_applicants` für Embed). **R4-Schreiben:** Migration **`20260514120000_applications_update_r4_decision.sql`** — Policy **`applications_update_r4_decision`** (`USING` `in_implementation`, `WITH CHECK` `in_implementation` oder `approved`). **Wichtig:** beide Policy-Familien nutzen **`current_user_role()`** (wie die übrigen Workspace-Policies) — **kein** `EXISTS (SELECT … FROM public.users …)` innerhalb von RLS auf `users`/`applications`, sonst Endlos-Rekursion Postgres (**Symptom u. a.:** Login kann Profil nicht laden). Die **SELECT**-Policy `applications_select_r2_worklist` umfasst seit Migration **`extend_workspace_select_to_decision_states`** auch **`in_implementation`**, **`approved`** und **`rejected`** — sonst scheitert der `UPDATE` von `in_review → in_implementation` am implizit folgenden `RETURNING`-SELECT (Postgres-RLS-Mechanik). **`SUPABASE_SERVICE_ROLE_KEY` ist für den Forward-Pfad nicht erforderlich.**
 - **UPDATE**-Policy `applications_update_r2_worklist` deckt den Übergang aus `in_review` heraus (`USING`); `WITH CHECK` erlaubt die Ziel-Status `in_implementation` / `needs_correction`.
 - R1 darf eigenen Antrag nur in **erlaubten Status** updaten (`applications_update_r1_own_limited`).
 - **Konsequenz:** Beratungsphase darf technisch **nicht** in einem Status landen, der den **späteren Final-Submit** durch R1 blockiert. Umgesetzter Pfad: Beratung im Workspace u. a. bei **`submitted`**, finaler Submit R1 → **`in_review`** → R2-Forward → **`in_implementation`** / **`needs_correction`**.
@@ -241,4 +254,5 @@ State-Badges orientieren sich an **Figma-Farbkodierung** (kompakt, ohne Border) 
 |-------|--------|
 | `General_Prototype_Kontext.md` | Tech, Rollen, Architektur, Scope |
 | `Antrag_Review_Kontext.md` | R2-Block-Review, Forward, R1-Freigabe-Loop, Persistenz, UI-Details |
+| `Antrag_Bewilligung_Kontext.md` | R4 Bewilligung, Workspace-RLS, APIs |
 | `Prototyp_Funktionen.md` | Langfristige Funktionsvision |
