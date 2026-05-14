@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { CheckCheck, Info, Loader2, Pencil, RotateCcw } from "lucide-react";
 import { ApplicationReviewDetailSidebar } from "@/components/domain/application-review-detail-sidebar";
 import {
@@ -48,8 +49,8 @@ type WorkspaceR4DecisionViewProps = {
   onPersisted?: () => void;
 };
 
-/** Debounce für R4-Zwischenstand (Schalter / Zurücksetzen), bevor `r4-persist-decision` aufgerufen wird. */
-const R4_AUTOSAVE_DEBOUNCE_MS = 650;
+/** Debounce für R4-Zwischenstand (Schalter / Zurücksetzen). Unmount / Tab-Wechsel flusht sofort (siehe Effekt unten). */
+const R4_AUTOSAVE_DEBOUNCE_MS = 500;
 
 type R4PersistOptions = {
   /** Kein `persisting`-Spinner; Schalter bleiben ohne Wartezustand bedienbar. */
@@ -229,6 +230,8 @@ export function WorkspaceR4DecisionView({
   const data = application.data;
   const def = data.applicationDefinition;
   const canEdit = application.status === "in_implementation";
+  const canEditRef = useRef(canEdit);
+  canEditRef.current = canEdit;
 
   const statusMeta = getApplicationStatusMeta(application, "R4");
 
@@ -254,15 +257,6 @@ export function WorkspaceR4DecisionView({
 
   /** Nur wechseln, wenn Server einen neuen R4-Snapshot liefert (oder anderer Antrag). Nicht `application.updated_at`: jede Zeilen-Aktualisierung würde remergen und lokale, noch nicht persistierte Schalter überschreiben. */
   const serverR4ReviewUpdatedAt = application.data?.r4DecisionReview?.updatedAt;
-
-  useEffect(() => {
-    return () => {
-      if (autosaveDebounceRef.current) {
-        clearTimeout(autosaveDebounceRef.current);
-        autosaveDebounceRef.current = null;
-      }
-    };
-  }, []);
 
   const visibility = useMemo(() => getR4BlockVisibility(data), [data]);
 
@@ -335,6 +329,33 @@ export function WorkspaceR4DecisionView({
     [application.id, onPersisted, supabase],
   );
 
+  const persistRef = useRef(persist);
+  persistRef.current = persist;
+
+  /** Timer killen und letzten Stand sofort speichern (Unmount, Tab-Wechsel, «Zurück zur Liste»). */
+  const flushPendingR4Autosave = useCallback(() => {
+    if (autosaveDebounceRef.current) {
+      clearTimeout(autosaveDebounceRef.current);
+      autosaveDebounceRef.current = null;
+    }
+    if (!canEditRef.current) return;
+    void persistRef.current(reviewRef.current, { background: true });
+  }, []);
+
+  useEffect(() => {
+    const onHide = () => flushPendingR4Autosave();
+    window.addEventListener("pagehide", onHide);
+    const onVis = () => {
+      if (document.visibilityState === "hidden") onHide();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.removeEventListener("pagehide", onHide);
+      document.removeEventListener("visibilitychange", onVis);
+      onHide();
+    };
+  }, [flushPendingR4Autosave]);
+
   const scheduleR4Autosave = useCallback(() => {
     if (!canEdit) return;
     if (autosaveDebounceRef.current) {
@@ -342,9 +363,9 @@ export function WorkspaceR4DecisionView({
     }
     autosaveDebounceRef.current = setTimeout(() => {
       autosaveDebounceRef.current = null;
-      void persist(reviewRef.current, { background: true });
+      void persistRef.current(reviewRef.current, { background: true });
     }, R4_AUTOSAVE_DEBOUNCE_MS);
-  }, [canEdit, persist]);
+  }, [canEdit]);
 
   const cancelR4AutosaveSchedule = useCallback(() => {
     if (autosaveDebounceRef.current) {
@@ -373,39 +394,41 @@ export function WorkspaceR4DecisionView({
   const handleToggleRow = (id: R4DecisionReviewBlockId, key: string) => {
     if (!canEdit) return;
 
-    setReview((prev) => {
-      const block = prev.blocks[id];
-      if (!block) return prev;
-      if (block.confirmed && !editingRef.current[id]) return prev;
+    flushSync(() => {
+      setReview((prev) => {
+        const block = prev.blocks[id];
+        if (!block) return prev;
+        if (block.confirmed && !editingRef.current[id]) return prev;
 
-      const row = block.rows.find((r) => r.key === key);
-      if (!row) return prev;
-      const nextApproved = !row.r4Approved;
+        const row = block.rows.find((r) => r.key === key);
+        if (!row) return prev;
+        const nextApproved = !row.r4Approved;
 
-      let nextRows = block.rows.map((r) =>
-        r.key === key ? { ...r, r4Approved: nextApproved } : r,
-      );
+        let nextRows = block.rows.map((r) =>
+          r.key === key ? { ...r, r4Approved: nextApproved } : r,
+        );
 
-      if (id === "duration") {
-        if (nextApproved) {
-          nextRows = nextRows.map((r) => ({
-            ...r,
-            r4Approved: r.key === key,
-          }));
+        if (id === "duration") {
+          if (nextApproved) {
+            nextRows = nextRows.map((r) => ({
+              ...r,
+              r4Approved: r.key === key,
+            }));
+          }
         }
-      }
 
-      return {
-        ...prev,
-        blocks: {
-          ...prev.blocks,
-          [id]: {
-            ...block,
-            confirmed: block.confirmed ?? false,
-            rows: nextRows,
+        return {
+          ...prev,
+          blocks: {
+            ...prev.blocks,
+            [id]: {
+              ...block,
+              confirmed: block.confirmed ?? false,
+              rows: nextRows,
+            },
           },
-        },
-      };
+        };
+      });
     });
     scheduleR4Autosave();
   };
@@ -413,7 +436,9 @@ export function WorkspaceR4DecisionView({
   const handleResetBlock = (id: R4DecisionReviewBlockId) => {
     const base = baselines[id];
     if (!base) return;
-    updateRows(id, base.rows.map((r) => ({ ...r })));
+    flushSync(() => {
+      updateRows(id, base.rows.map((r) => ({ ...r })));
+    });
     scheduleR4Autosave();
   };
 
