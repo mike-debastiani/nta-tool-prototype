@@ -1,0 +1,100 @@
+/**
+ * High Fidelity layout grid — BA-Prototyp-High-Fi
+ * Source: Figma node 3017:288 (Desktop laptop)
+ * https://www.figma.com/design/pwLFwfIPnr9ZuYcot9pyyU/BA-Prototyp-High-Fi?node-id=3017-288
+ *
+ * Desktop (≥1000px): 12 fluid columns, 48px margins, 24px gutter.
+ * Smaller viewports: proportional margins/gutters (responsive fallback).
+ */
+
+:root {
+  --hf-grid-columns: 12;
+  --hf-grid-margin: 1rem;
+  --hf-grid-gutter: 0.75rem;
+  --hf-grid-breakpoint: 1000px;
+  --hf-grid-min-width: 1000px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --hf-grid-margin: 1.5rem;
+    --hf-grid-gutter: 1rem;
+  }
+}
+
+@media (min-width: 1000px) {
+  :root {
+    --hf-grid-margin: 3rem;
+    --hf-grid-gutter: 1.5rem;
+  }
+}
+
+@theme inline {
+  --spacing-hf-grid-margin: var(--hf-grid-margin);
+  --spacing-hf-grid-gutter: var(--hf-grid-gutter);
+  --breakpoint-hf-desktop: 1000px;
+}
+
+/* Page shell: horizontal margins from Figma */
+.hf-page-grid {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: var(--hf-grid-min-width);
+  padding-inline: var(--hf-grid-margin);
+}
+
+/* 12-column fluid grid */
+.hf-grid {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(var(--hf-grid-columns), minmax(0, 1fr));
+  column-gap: var(--hf-grid-gutter);
+  row-gap: 0rem;
+}
+
+/* Horizontal padding aligned to grid margins (headers, toolbars) */
+.hf-px-page {
+  padding-inline: var(--hf-grid-margin);
+}
+
+.hf-gap-grid {
+  gap: var(--hf-grid-gutter);
+}
+
+.hf-col-span-1 { grid-column: span 1 / span 1; }
+.hf-col-span-2 { grid-column: span 2 / span 2; }
+.hf-col-span-3 { grid-column: span 3 / span 3; }
+.hf-col-span-4 { grid-column: span 4 / span 4; }
+.hf-col-span-5 { grid-column: span 5 / span 5; }
+.hf-col-span-6 { grid-column: span 6 / span 6; }
+.hf-col-span-7 { grid-column: span 7 / span 7; }
+.hf-col-span-8 { grid-column: span 8 / span 8; }
+.hf-col-span-9 { grid-column: span 9 / span 9; }
+.hf-col-span-10 { grid-column: span 10 / span 10; }
+.hf-col-span-11 { grid-column: span 11 / span 11; }
+.hf-col-span-12 { grid-column: span 12 / span 12; }
+
+.hf-col-start-1 { grid-column-start: 1; }
+.hf-col-start-2 { grid-column-start: 2; }
+.hf-col-start-3 { grid-column-start: 3; }
+.hf-col-start-4 { grid-column-start: 4; }
+.hf-col-start-5 { grid-column-start: 5; }
+.hf-col-start-6 { grid-column-start: 6; }
+.hf-col-start-7 { grid-column-start: 7; }
+.hf-col-start-8 { grid-column-start: 8; }
+.hf-col-start-9 { grid-column-start: 9; }
+.hf-col-start-10 { grid-column-start: 10; }
+.hf-col-start-11 { grid-column-start: 11; }
+.hf-col-start-12 { grid-column-start: 12; }
+
+/* Below desktop breakpoint: optional full-width collapse for multi-column cells */
+@media (max-width: 999.98px) {
+  .hf-col-collapse-below-desktop {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Exception: occupies row but inner layout is free (sidebars, split views) */
+.hf-grid-free {
+  min-width: 0;
+}

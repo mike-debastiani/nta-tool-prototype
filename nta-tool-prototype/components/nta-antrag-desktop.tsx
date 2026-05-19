@@ -12,7 +12,6 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Calendar,
   Circle,
   CircleArrowRight,
   CircleCheck,
@@ -22,7 +21,6 @@ import {
   Eye,
   FileText,
   Info,
-  MapPin,
   MessageCircle,
   Mail,
   Lock,
@@ -32,10 +30,6 @@ import {
   Trash2,
   Upload,
   User,
-  UserRound,
-  Clock3,
-  ArrowLeft,
-  ArrowRight,
   X,
 } from "lucide-react";
 
@@ -49,7 +43,37 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  R1ApplicationFlowLayout,
+  R1FlowAutosaveIndicator,
+  R1FlowContactCard,
+  R1FlowDiscardButton,
+  R1FlowField,
+  R1FlowFieldColumn,
+  R1FlowFieldColumns,
+  R1FlowFieldControl,
+  R1FlowFieldLabelGroup,
+  R1FlowFieldOptions,
+  R1FlowFieldRow,
+  R1FlowFieldStack,
+  R1FlowFormCard,
+  R1FlowFormFooter,
+  R1FlowFormSection,
+  R1FlowMainContent,
+  R1FlowProgressCard,
+  R1FlowProgressDivider,
+  R1FlowProgressStep,
+  R1FlowSectionTitle,
+  R1FlowAttestCallout,
+  R1_FLOW_PROGRESS_STEP_COUNT,
+  type R1ProgressStepVisualState,
+  r1FlowProgressStepIndex,
+} from "@/components/domain/r1-application-flow-layout";
+import { R1FlowBookingConfirmation } from "@/components/domain/r1-booking-confirmation";
+import { R1FlowBookingScheduler } from "@/components/domain/r1-booking-scheduler";
 import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
+import { R1ApplicationDefinitionSection } from "@/components/domain/r1-application-definition-section";
+import { hfTypography } from "@/lib/design-tokens/typography";
 import {
   createAttestFileEntryFromBrowserFile,
   formatReviewFileSize,
@@ -192,16 +216,94 @@ const BOOKING_SLOTS = [
 const MOCK_LOCATION = "Hauptgebäude, Raum 402, Beispielstrasse 12, 8080 Beispilien";
 const MOCK_ADVISOR = "Frau Dr. Suzanne Beispiel";
 
-type ProgressRowProps = {
-  icon: ReactNode;
-  label: string;
-  trailing: ReactNode;
-  stateClassName?: string;
-  onClick?: () => void;
-  isClickable?: boolean;
-};
-
 const SEMESTER_NUMBERS = Array.from({ length: 12 }, (_, i) => i + 1);
+
+function resolveR1ProgressVisualState({
+  isComplete,
+  isInvalidInOverview,
+  isLocked,
+  lockedPlacement = "pre-divider",
+  isPastIncomplete,
+}: {
+  isComplete: boolean;
+  isInvalidInOverview: boolean;
+  isLocked: boolean;
+  lockedPlacement?: "pre-divider" | "post-divider";
+  isPastIncomplete: boolean;
+}): R1ProgressStepVisualState {
+  if (isLocked) {
+    return lockedPlacement === "post-divider" ? "locked-post" : "locked-pre";
+  }
+  if (isComplete) return "complete";
+  if (isInvalidInOverview || isPastIncomplete) return "incomplete";
+  return "available";
+}
+
+function resolveHighestUnlockedStepIndex(
+  savedStep: R1PortalFlowStep | undefined,
+  flowStep: FlowStep,
+): number {
+  const fromCurrent =
+    flowStep === "step6_submitted"
+      ? R1_FLOW_PROGRESS_STEP_COUNT - 1
+      : r1FlowProgressStepIndex(flowStep);
+  const fromSaved =
+    savedStep && isR1PortalFlowStep(savedStep)
+      ? r1FlowProgressStepIndex(savedStep)
+      : 0;
+  return Math.max(fromCurrent, fromSaved);
+}
+
+function canOpenR1ProgressStep(
+  stepIndex: number,
+  highestUnlockedStepIndex: number,
+  gates: {
+    step1Complete: boolean;
+    step2Complete: boolean;
+    recommendationReleased: boolean;
+    recommendationAcknowledged: boolean;
+    step3Complete: boolean;
+    step4Complete: boolean;
+  },
+): boolean {
+  if (highestUnlockedStepIndex >= stepIndex) return true;
+  switch (stepIndex) {
+    case 0:
+      return true;
+    case 1:
+      return gates.step1Complete;
+    case 2:
+      return gates.step1Complete && gates.step2Complete;
+    case 3:
+      return (
+        gates.step1Complete &&
+        gates.step2Complete &&
+        gates.recommendationReleased &&
+        gates.recommendationAcknowledged
+      );
+    case 4:
+      return (
+        gates.step1Complete &&
+        gates.step2Complete &&
+        gates.step3Complete &&
+        gates.step4Complete
+      );
+    default:
+      return false;
+  }
+}
+
+/** Rot markieren, wenn ein späterer Schritt schon freigeschaltet wurde. */
+function isR1StepIncompleteVisual(
+  stepIndex: number,
+  isComplete: boolean,
+  isLocked: boolean,
+  highestUnlockedStepIndex: number,
+  isInvalidInOverview: boolean,
+): boolean {
+  if (isComplete || isLocked) return false;
+  return isInvalidInOverview || highestUnlockedStepIndex > stepIndex;
+}
 
 const DEFAULT_FORM_DATA: NtaAntragFormData = {
   vorname: "",
@@ -289,14 +391,6 @@ function formatMatrikelInput(value: string) {
   return `${first}-${second}-${third}`;
 }
 
-function formatBookingMonthLabel(date: Date) {
-  const label = date.toLocaleDateString("de-CH", {
-    month: "long",
-    year: "numeric",
-  });
-  return label.charAt(0).toUpperCase() + label.slice(1);
-}
-
 function isStepOneComplete(data: NtaAntragFormData) {
   return (
     Boolean(data.vorname.trim()) &&
@@ -378,6 +472,13 @@ function applicationFormDataFromRow(
   };
 }
 
+/** Schritte 4–5 nur nach R2-Freigabe (`releasedHtml`), nicht durch Navigation. */
+function isRecommendationReleasedToR1(
+  data: ApplicationRow["data"] | undefined,
+): boolean {
+  return Boolean(data?.recommendation?.releasedHtml?.trim());
+}
+
 function readBookingUiFromApplication(
   row: ApplicationRow | undefined,
   forceNew: boolean,
@@ -400,65 +501,21 @@ function readBookingUiFromApplication(
 }
 
 function clampFlowStepToData(desired: R1PortalFlowStep, row: ApplicationRow): FlowStep {
-  const recommendationReady = Boolean(row.data?.recommendation?.ready);
+  const recommendationReleased = isRecommendationReleasedToR1(row.data);
   const consultationStatus = row.data?.consultation?.status;
   const booked = consultationStatus === "booked" || consultationStatus === "done";
 
   if (desired === "step5_overview" || desired === "step4_application") {
-    if (!recommendationReady) return booked ? "step3_booked" : "step3_booking";
+    if (!recommendationReleased) return booked ? "step3_booked" : "step3_booking";
     return desired;
   }
   if (desired === "step3_recommendation") {
-    if (recommendationReady) return "step3_recommendation";
+    if (recommendationReleased) return "step3_recommendation";
     return booked ? "step3_booked" : "step3_booking";
   }
   if (desired === "step3_booked") return booked ? "step3_booked" : "step3_booking";
   if (desired === "step3_booking") return booked ? "step3_booked" : "step3_booking";
   return desired;
-}
-
-function ProgressRow({
-  icon,
-  label,
-  trailing,
-  stateClassName,
-  onClick,
-  isClickable = false,
-}: ProgressRowProps) {
-  return (
-    <div
-      className={cn(
-        "flex h-8 items-center justify-between rounded-md py-1 pl-3",
-        isClickable && "cursor-pointer hover:bg-muted/40",
-        stateClassName ?? "text-foreground",
-      )}
-      onClick={onClick}
-      role={isClickable ? "button" : undefined}
-      tabIndex={isClickable ? 0 : undefined}
-      onKeyDown={
-        isClickable
-          ? (event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onClick?.();
-              }
-            }
-          : undefined
-      }
-    >
-      <div className="flex min-w-0 items-center gap-2">
-        <span className="flex size-4 shrink-0 items-center justify-center text-current [&_svg]:size-4">
-          {icon}
-        </span>
-        <span className="truncate text-sm leading-5 text-current">
-          {label}
-        </span>
-      </div>
-      <span className="flex size-4 shrink-0 items-center justify-center text-current [&_svg]:size-4">
-        {trailing}
-      </span>
-    </div>
-  );
 }
 
 type RichRadioOptionProps = {
@@ -476,7 +533,9 @@ function resolveInitialFlowStep(
   if (!initialApplication) return "step1";
   const canonical = deriveCanonicalApplicationState(initialApplication);
   if (canonical === "needs_adjustment") return "step4_application";
-  const recommendationReady = Boolean(initialApplication.data?.recommendation?.ready);
+  const recommendationReleased = isRecommendationReleasedToR1(
+    initialApplication.data,
+  );
   const consultationStatus = initialApplication.data?.consultation?.status;
   const isSubmitted = Boolean(initialApplication.data?.submittedAt);
   if (isSubmitted) return "step6_submitted";
@@ -485,7 +544,7 @@ function resolveInitialFlowStep(
   if (isR1PortalFlowStep(saved)) {
     return clampFlowStepToData(saved, initialApplication);
   }
-  if (recommendationReady) return "step3_recommendation";
+  if (recommendationReleased) return "step3_recommendation";
   if (consultationStatus === "booked" || consultationStatus === "done") {
     return "step3_booked";
   }
@@ -501,21 +560,25 @@ function RichRadioOption({
   return (
     <label
       className={cn(
-        "flex w-full items-start gap-3 rounded-xl border px-3 py-3 text-left transition-colors",
-        checked ? "border-border bg-card" : "border-border bg-card opacity-60",
+        "flex w-full cursor-pointer items-start gap-3 rounded-[10px] border border-stone-250 bg-background px-3 py-3 text-left transition-colors",
       )}
     >
       <input
         type="radio"
         checked={checked}
         onChange={onChange}
-        className="mt-0.5 h-4 w-4 accent-primary"
+        className="mt-0.5 size-4 shrink-0 accent-foreground"
       />
-      <span className="flex flex-col gap-1">
-        <span className="text-sm leading-5 text-foreground">{title}</span>
-        <span className="text-xs leading-4 text-muted-foreground">
-          {description}
+      <span className="flex min-w-0 flex-col gap-1.5">
+        <span
+          className={cn(
+            hfTypography.paragraphSmallMedium,
+            checked ? "text-foreground-alt" : "text-stone-500",
+          )}
+        >
+          {title}
         </span>
+        <span className={hfTypography.paragraphMini}>{description}</span>
       </span>
     </label>
   );
@@ -558,6 +621,12 @@ export function NtaAntragDesktop({
   });
   const [currentStep, setCurrentStep] = useState<FlowStep>(() =>
     resolveInitialFlowStep(initialApplication, forceNew),
+  );
+  const [highestUnlockedStepIndex, setHighestUnlockedStepIndex] = useState(() =>
+    resolveHighestUnlockedStepIndex(
+      initialApplication?.data?.r1PortalFlowStep,
+      resolveInitialFlowStep(initialApplication, forceNew),
+    ),
   );
   const [isDragActive, setIsDragActive] = useState(false);
   const [stepOneErrors, setStepOneErrors] = useState<
@@ -614,6 +683,23 @@ export function NtaAntragDesktop({
   ]);
 
   useEffect(() => {
+    const idx =
+      currentStep === "step6_submitted"
+        ? R1_FLOW_PROGRESS_STEP_COUNT - 1
+        : r1FlowProgressStepIndex(currentStep);
+    setHighestUnlockedStepIndex((previous) => Math.max(previous, idx));
+  }, [currentStep]);
+
+  useEffect(() => {
+    const saved = application?.data?.r1PortalFlowStep;
+    const idx = resolveHighestUnlockedStepIndex(
+      isR1PortalFlowStep(saved) ? saved : undefined,
+      currentStep,
+    );
+    setHighestUnlockedStepIndex((previous) => Math.max(previous, idx));
+  }, [application?.id, application?.data?.r1PortalFlowStep, currentStep]);
+
+  useEffect(() => {
     // Load persisted draft only after hydration to avoid SSR/client markup mismatch.
     const timeout = window.setTimeout(() => {
       if (forceNew) {
@@ -631,6 +717,7 @@ export function NtaAntragDesktop({
         setStepFiveError(null);
         setIsRecommendationAcknowledged(false);
         setCurrentStep("step1");
+        setHighestUnlockedStepIndex(0);
         return;
       }
       try {
@@ -690,7 +777,17 @@ export function NtaAntragDesktop({
     lastSyncedInitialApplicationId.current = id;
 
     setApplication(initialApplication);
-    setCurrentStep(resolveInitialFlowStep(initialApplication, false));
+    const nextStep = resolveInitialFlowStep(initialApplication, false);
+    setCurrentStep(nextStep);
+    setHighestUnlockedStepIndex((previous) =>
+      Math.max(
+        previous,
+        resolveHighestUnlockedStepIndex(
+          initialApplication.data?.r1PortalFlowStep,
+          nextStep,
+        ),
+      ),
+    );
 
     const pd = initialApplication.data.personalData;
     if (pd) {
@@ -754,7 +851,9 @@ export function NtaAntragDesktop({
           setCurrentStep((previousStep) => {
             if (isFinalSubmitted) return "step6_submitted";
             if (previousStep === "step6_submitted") return previousStep;
-            if (next.data?.recommendation?.ready) return "step3_recommendation";
+            if (isRecommendationReleasedToR1(next.data)) {
+              return "step3_recommendation";
+            }
             if (next.data?.consultation?.status === "booked") return "step3_booked";
             return previousStep;
           });
@@ -851,35 +950,43 @@ export function NtaAntragDesktop({
 
   async function performDeleteApplication() {
     setIsDeletingApplication(true);
+    setDraftExitError(null);
 
-    if (application?.id) {
-      const { error } = await supabase.from("applications").delete().eq("id", application.id);
-      if (error) {
-        setStepFiveError(error.message);
-        setIsDeletingApplication(false);
-        return;
+    try {
+      if (application?.id) {
+        const { error } = await supabase
+          .from("applications")
+          .delete()
+          .eq("id", application.id);
+        if (error) {
+          setDraftExitError(error.message);
+          return;
+        }
       }
-    }
 
-    setApplication(null);
-    setFormData((previous) => {
-      revokeAttestFileUrls(previous.attestFiles);
-      return DEFAULT_FORM_DATA;
-    });
-    setApplicationFormData(DEFAULT_APPLICATION_FORM_DATA);
-    setStepOneErrors({});
-    setStepTwoFileError(null);
-    setStepThreeError(null);
-    setStepFourErrors({});
-    setStepFiveError(null);
-    setIsRecommendationAcknowledged(false);
-    setSelectedBookingDate(INITIAL_BOOKING_DATE);
-    setDisplayedMonth(INITIAL_BOOKING_MONTH);
-    setSelectedBookingSlot(BOOKING_SLOTS[4]);
-    setCurrentStep("step1");
-    window.localStorage.removeItem(autosaveKey);
-    setDeleteApplicationDialogOpen(false);
-    setIsDeletingApplication(false);
+      setApplication(null);
+      setFormData((previous) => {
+        revokeAttestFileUrls(previous.attestFiles);
+        return mergeWithDefaults(initialData);
+      });
+      setApplicationFormData(DEFAULT_APPLICATION_FORM_DATA);
+      setStepOneErrors({});
+      setStepTwoFileError(null);
+      setStepThreeError(null);
+      setStepFourErrors({});
+      setStepFiveError(null);
+      setIsRecommendationAcknowledged(false);
+      setSelectedBookingDate(INITIAL_BOOKING_DATE);
+      setDisplayedMonth(INITIAL_BOOKING_MONTH);
+      setSelectedBookingSlot(BOOKING_SLOTS[4]);
+      setHighestUnlockedStepIndex(0);
+      setCurrentStep("step1");
+      window.localStorage.removeItem(autosaveKey);
+      setDeleteApplicationDialogOpen(false);
+      router.replace("/portal/home");
+    } finally {
+      setIsDeletingApplication(false);
+    }
   }
 
   async function handleDraftExitToDashboard() {
@@ -1004,7 +1111,6 @@ export function NtaAntragDesktop({
     month: "long",
     year: "numeric",
   });
-  const bookingMonthLabel = formatBookingMonthLabel(displayedMonth);
   const monthStart = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth(), 1);
   const gridStart = new Date(monthStart);
   gridStart.setDate(1 - monthStart.getDay());
@@ -1200,25 +1306,30 @@ export function NtaAntragDesktop({
     application?.data?.recommendation?.releasedBy?.trim()
     || "NTA Fachstelle";
   const bookedSlot = application?.data?.consultation?.slot ?? selectedBookingSlot;
-  const bookedDateShort = selectedBookingDate.toLocaleDateString("de-CH", {
-    day: "2-digit",
+  const bookedAdvisor = application?.data?.consultation?.advisor ?? MOCK_ADVISOR;
+  const bookedLocation = application?.data?.consultation?.location ?? MOCK_LOCATION;
+  const bookedLocationLines = bookedLocation.split(", ");
+  const bookedAppointmentDateLine = selectedBookingDate.toLocaleDateString("de-CH", {
+    weekday: "long",
+    day: "numeric",
     month: "long",
     year: "numeric",
   });
-  const bookedTimeDisplay = `${bookedSlot.replace(" - ", " – ")} Uhr`;
-  const locationLines = MOCK_LOCATION.split(", ");
-  const recommendationReleased =
-    Boolean(application?.data?.recommendation?.ready) ||
-    currentStep === "step3_recommendation" ||
-    currentStep === "step4_application" ||
-    currentStep === "step5_overview" ||
-    currentStep === "step6_submitted";
+  const bookedAppointmentTimeLine = `${bookedSlot.replace(" - ", " – ")} Uhr`;
+  const bookedMapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(bookedLocation)}`;
+  const recommendationReleased = isRecommendationReleasedToR1(application?.data);
   const stepOneLockedAfterConsultation =
     application?.data?.consultation?.status === "booked" ||
     application?.data?.consultation?.status === "done";
   const step1Complete = isStepOneComplete(formData);
   const step2Complete = formData.attestFiles.length > 0;
   const step3Complete = recommendationReleased;
+  const step3ProgressComplete =
+    recommendationReleased && isRecommendationAcknowledged;
+  const step3MissingAcknowledgment =
+    recommendationReleased &&
+    !isRecommendationAcknowledged &&
+    highestUnlockedStepIndex >= 3;
   const step4Complete = isStepFourComplete(applicationFormData);
   const step5Complete = currentStep === "step6_submitted";
   const isOverviewStep = currentStep === "step5_overview";
@@ -1240,15 +1351,29 @@ export function NtaAntragDesktop({
   const step1InvalidInOverview = isOverviewStep && !step1Complete;
   const step2InvalidInOverview = isOverviewStep && !step2Complete;
   const step4InvalidInOverview = isOverviewStep && !step4Complete;
-  const step5InvalidInOverview =
-    isOverviewStep && (!step1Complete || !step2Complete || !step4Complete);
   const canSubmitFromOverview = step1Complete && step2Complete && step4Complete;
 
-  const canOpenStep1 = true;
-  const canOpenStep2 = step1Complete;
-  const canOpenStep3 = step1Complete && step2Complete;
-  const canOpenStep4 = step1Complete && step2Complete && recommendationReleased;
-  const canOpenStep5 = step1Complete && step2Complete && step3Complete && step4Complete;
+  const progressUnlockGates = {
+    step1Complete,
+    step2Complete,
+    recommendationReleased,
+    recommendationAcknowledged: isRecommendationAcknowledged,
+    step3Complete,
+    step4Complete,
+  };
+  const canOpenStep1 = canOpenR1ProgressStep(0, highestUnlockedStepIndex, progressUnlockGates);
+  const canOpenStep2 = canOpenR1ProgressStep(1, highestUnlockedStepIndex, progressUnlockGates);
+  const canOpenStep3 = canOpenR1ProgressStep(2, highestUnlockedStepIndex, progressUnlockGates);
+  const canOpenStep4 = canOpenR1ProgressStep(3, highestUnlockedStepIndex, progressUnlockGates);
+  const canOpenStep5 = canOpenR1ProgressStep(4, highestUnlockedStepIndex, progressUnlockGates);
+
+  const r1CompletedStepCount = [
+    step1Complete,
+    step2Complete,
+    step3ProgressComplete,
+    step4Complete,
+    step5Complete,
+  ].filter(Boolean).length;
 
   const nextAvailableStep: FlowStep | null = !step1Complete
     ? "step1"
@@ -1335,232 +1460,177 @@ export function NtaAntragDesktop({
     });
   }, []);
 
+  const showFormAutosave =
+    currentStep !== "step3_booked" && currentStep !== "step6_submitted";
+
   return (
-    <div className="h-screen w-full overflow-hidden bg-background">
-      {enableDraftExitToDashboard ? (
-        <div className="pointer-events-none fixed inset-x-0 top-0 z-50 flex flex-col items-end gap-1 p-4 sm:p-6">
-          <Button
-            type="button"
-            variant="ghost"
-            className="pointer-events-auto h-9 shrink-0 gap-2 px-3 text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-            disabled={isPersistingDraftExit}
-            onClick={() => void handleDraftExitToDashboard()}
-          >
-            <X className="size-4 shrink-0 stroke-[2]" aria-hidden />
-            <span>{isPersistingDraftExit ? "Wird gespeichert …" : "Schliessen"}</span>
-          </Button>
-          {draftExitError ? (
-            <p className="pointer-events-auto max-w-sm text-right text-xs text-destructive">
-              {draftExitError}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-      <div className="grid h-screen grid-cols-12 gap-6">
-        <aside
-          className={cn(
-            "col-span-12 flex h-screen flex-col overflow-hidden border-r border-border bg-sidebar p-8",
-            showCorrectionSidebar ? "lg:col-span-3" : "lg:col-span-4",
-          )}
-        >
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Prozessfortschritt
-          </h1>
-          <nav className="mt-8 flex flex-col gap-2" aria-label="Prozessfortschritt">
-            <ProgressRow
-              icon={<User className="stroke-[1.75]" />}
+    <>
+    <R1ApplicationFlowLayout
+      showCorrectionSidebar={showCorrectionSidebar}
+      headerAutosave={showFormAutosave ? <R1FlowAutosaveIndicator /> : undefined}
+      headerClose={
+        enableDraftExitToDashboard
+          ? {
+              onClick: () => void handleDraftExitToDashboard(),
+              disabled: isPersistingDraftExit,
+              label: isPersistingDraftExit ? "Wird gespeichert …" : "Schliessen",
+            }
+          : undefined
+      }
+      sidebar={
+        <>
+          <R1FlowProgressCard completedStepCount={r1CompletedStepCount}>
+            <R1FlowProgressStep
               label="Persönliche Angaben"
-              stateClassName={
-                step1InvalidInOverview
-                  ? "text-destructive"
-                  : step1Complete
-                  ? "text-teal-600"
-                  : currentStep === "step1" || nextAvailableStep === "step1"
-                    ? "text-foreground"
-                    : "text-neutral-400"
-              }
+              iconName="user"
+              visualState={resolveR1ProgressVisualState({
+                isComplete: step1Complete,
+                isInvalidInOverview: step1InvalidInOverview,
+                isLocked: false,
+                isPastIncomplete: isR1StepIncompleteVisual(
+                  0,
+                  step1Complete,
+                  false,
+                  highestUnlockedStepIndex,
+                  step1InvalidInOverview,
+                ),
+              })}
+              isActive={currentStep === "step1"}
               isClickable={canOpenStep1}
               onClick={() => setCurrentStep("step1")}
-              trailing={
-                step1InvalidInOverview ? (
-                  <Circle className="stroke-[1.75]" />
-                ) : step1Complete ? (
-                  <CircleCheck className="stroke-[1.75]" />
-                ) : currentStep === "step1" || nextAvailableStep === "step1" ? (
-                  <CircleArrowRight className="stroke-[1.75]" />
-                ) : (
-                  <Circle className="stroke-[1.75]" />
-                )
-              }
             />
-            <ProgressRow
-              icon={<Stethoscope className="stroke-[1.75]" />}
+            <R1FlowProgressStep
               label="Fachärztliches Attest"
-              stateClassName={
-                step2InvalidInOverview
-                  ? "text-destructive"
-                  : step2Complete
-                  ? "text-teal-600"
-                  : currentStep === "step2"
-                      || nextAvailableStep === "step2"
-                    ? "text-foreground"
-                    : !step1Complete
-                    ? "text-neutral-400"
-                    : "text-neutral-400"
-              }
+              iconName="stethoscope"
+              visualState={resolveR1ProgressVisualState({
+                isComplete: step2Complete,
+                isInvalidInOverview: step2InvalidInOverview,
+                isLocked: !canOpenStep2,
+                isPastIncomplete: isR1StepIncompleteVisual(
+                  1,
+                  step2Complete,
+                  !canOpenStep2,
+                  highestUnlockedStepIndex,
+                  step2InvalidInOverview,
+                ),
+              })}
+              isActive={currentStep === "step2"}
               isClickable={canOpenStep2}
               onClick={canOpenStep2 ? () => setCurrentStep("step2") : undefined}
-              trailing={
-                step2InvalidInOverview ? (
-                  <Circle className="stroke-[1.75]" />
-                ) : step2Complete ? (
-                  <CircleCheck className="stroke-[1.75]" />
-                ) : currentStep === "step2" || nextAvailableStep === "step2" ? (
-                  <CircleArrowRight className="stroke-[1.75]" />
-                ) : !step1Complete ? (
-                  <Circle className="stroke-[1.75]" />
-                ) : (
-                  <Circle className="stroke-[1.75]" />
-                )
-              }
             />
-            <ProgressRow
-              icon={<MessageCircle className="stroke-[1.75]" />}
+            <R1FlowProgressStep
               label="Beratung und Empfehlung"
-              stateClassName={
-                step3Complete
-                  ? "text-teal-600"
-                  : isStep3Active || nextAvailableStep === "step3_recommendation"
-                    ? "text-foreground"
-                    : "text-neutral-400"
-              }
+              iconName="message-circle"
+              visualState={resolveR1ProgressVisualState({
+                isComplete: step3ProgressComplete,
+                isInvalidInOverview: false,
+                isLocked: !canOpenStep3,
+                isPastIncomplete:
+                  step3MissingAcknowledgment ||
+                  isR1StepIncompleteVisual(
+                    2,
+                    step3ProgressComplete,
+                    !canOpenStep3,
+                    highestUnlockedStepIndex,
+                    false,
+                  ),
+              })}
+              isActive={isStep3Active}
               isClickable={canOpenStep3}
               onClick={
                 canOpenStep3
-                  ? () =>
-                      setCurrentStep(
-                        currentStep === "step3_booking"
-                          ? "step3_booking"
-                          : currentStep === "step3_booked"
-                            ? "step3_booked"
-                            : "step3_recommendation",
-                      )
+                  ? () => {
+                      if (recommendationReleased) {
+                        setCurrentStep("step3_recommendation");
+                        return;
+                      }
+                      const consultationStatus =
+                        application?.data?.consultation?.status;
+                      if (
+                        consultationStatus === "booked" ||
+                        consultationStatus === "done"
+                      ) {
+                        setCurrentStep("step3_booked");
+                      } else {
+                        setCurrentStep("step3_booking");
+                      }
+                    }
                   : undefined
               }
-              trailing={
-                step3Complete ? (
-                  <CircleCheck className="stroke-[1.75]" />
-                ) : isStep3Active || nextAvailableStep === "step3_recommendation" ? (
-                  <CircleArrowRight className="stroke-[1.75]" />
-                ) : (
-                  <Circle className="stroke-[1.75]" />
-                )
-              }
             />
-            {!recommendationReleased ? (
-              <div
-                className="my-1 h-px w-full border-0 border-t border-dashed border-border"
-                aria-hidden
-              />
-            ) : null}
-            <ProgressRow
-              icon={<FileText className="stroke-[1.75]" />}
+            {!recommendationReleased ? <R1FlowProgressDivider /> : null}
+            <R1FlowProgressStep
               label="Antrag stellen"
-              stateClassName={
-                step4InvalidInOverview
-                  ? "text-destructive"
-                  : step4Complete
-                  ? "text-teal-600"
-                  : currentStep === "step4_application" || nextAvailableStep === "step4_application"
-                  ? "text-foreground"
-                  : recommendationReleased
-                    ? "text-neutral-400"
-                    : "text-neutral-200"
-              }
+              iconName="file"
+              visualState={resolveR1ProgressVisualState({
+                isComplete: step4Complete,
+                isInvalidInOverview: step4InvalidInOverview,
+                isLocked: !canOpenStep4,
+                lockedPlacement: recommendationReleased
+                  ? "pre-divider"
+                  : "post-divider",
+                isPastIncomplete: isR1StepIncompleteVisual(
+                  3,
+                  step4Complete,
+                  !canOpenStep4,
+                  highestUnlockedStepIndex,
+                  step4InvalidInOverview,
+                ),
+              })}
+              isActive={currentStep === "step4_application"}
               isClickable={canOpenStep4}
-              onClick={canOpenStep4 ? () => setCurrentStep("step4_application") : undefined}
-              trailing={
-                step4InvalidInOverview ? (
-                  <Circle className="stroke-[1.75]" />
-                ) : step4Complete ? (
-                  <CircleCheck className="stroke-[1.75]" />
-                ) : currentStep === "step4_application" || nextAvailableStep === "step4_application" ? (
-                  <CircleArrowRight className="stroke-[1.75]" />
-                ) : recommendationReleased ? (
-                  <Circle className="stroke-[1.75]" />
-                ) : (
-                  <CircleDashed className="stroke-[1.75]" />
-                )
+              onClick={
+                canOpenStep4
+                  ? () => setCurrentStep("step4_application")
+                  : recommendationReleased &&
+                      !isRecommendationAcknowledged &&
+                      highestUnlockedStepIndex < 3
+                    ? () => {
+                        setStepThreeError(
+                          "Bitte bestätigen Sie die Kenntnisnahme des Empfehlungsschreibens.",
+                        );
+                        setCurrentStep("step3_recommendation");
+                      }
+                    : undefined
               }
             />
-            <ProgressRow
-              icon={<Eye className="stroke-[1.75]" />}
+            <R1FlowProgressStep
               label="Übersicht"
-              stateClassName={
-                step5InvalidInOverview
-                  ? "text-destructive"
-                  : step5Complete
-                  ? "text-teal-600"
-                  : currentStep === "step5_overview" || nextAvailableStep === "step5_overview"
-                  ? "text-foreground"
-                  : currentStep === "step4_application"
-                    ? "text-neutral-400"
-                    : "text-neutral-200"
-              }
+              iconName="eye"
+              visualState={resolveR1ProgressVisualState({
+                isComplete: step5Complete,
+                isInvalidInOverview: false,
+                isLocked: !canOpenStep5,
+                lockedPlacement: recommendationReleased
+                  ? "pre-divider"
+                  : "post-divider",
+                isPastIncomplete: isR1StepIncompleteVisual(
+                  4,
+                  step5Complete,
+                  !canOpenStep5,
+                  highestUnlockedStepIndex,
+                  false,
+                ),
+              })}
+              isActive={currentStep === "step5_overview"}
               isClickable={canOpenStep5}
               onClick={canOpenStep5 ? () => setCurrentStep("step5_overview") : undefined}
-              trailing={
-                step5InvalidInOverview ? (
-                  <Circle className="stroke-[1.75]" />
-                ) : step5Complete ? (
-                  <CircleCheck className="stroke-[1.75]" />
-                ) : currentStep === "step5_overview" || nextAvailableStep === "step5_overview" ? (
-                  <CircleArrowRight className="stroke-[1.75]" />
-                ) : currentStep === "step4_application" ? (
-                  <Circle className="stroke-[1.75]" />
-                ) : (
-                  <CircleDashed className="stroke-[1.75]" />
-                )
-              }
             />
-          </nav>
-
-          <Card className="mt-auto rounded-lg border border-zinc-200 bg-background p-0 shadow-none ring-0">
-            <CardContent className="px-4 py-3">
-              <div className="flex items-start gap-3">
-                <CircleHelp className="mt-0.5 size-4 shrink-0 text-foreground" />
-                <div className="min-w-0 text-xs leading-4 text-foreground">
-                  <p className="font-medium">Fragen oder Unklarheiten?</p>
-                  <p className="mt-0.5">Kontaktieren Sie unsere Fachstelle unter</p>
-                  <div className="mt-3 space-y-2.5">
-                    <a
-                      href="mailto:Kontaktstelle@hochschule.ch"
-                      className="flex items-center gap-2 transition-colors hover:text-foreground/80"
-                    >
-                      <span>Kontaktstelle@hochschule.ch</span>
-                      <Mail className="size-3.5" />
-                    </a>
-                    <a
-                      href="tel:+41551203489"
-                      className="flex items-center gap-2 transition-colors hover:text-foreground/80"
-                    >
-                      <span>+41 55 120 34 89</span>
-                      <Phone className="size-3.5" />
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </aside>
-
-        <main
-          className={cn(
-            "col-span-12 h-screen overflow-y-auto px-6 pb-16 pt-[93px] lg:pr-8",
-            showCorrectionSidebar ? "lg:col-span-6" : "lg:col-span-8",
-          )}
-        >
-          <form
+          </R1FlowProgressCard>
+          <R1FlowContactCard />
+        </>
+      }
+      sidebarFooter={
+        currentStep !== "step6_submitted" ? (
+          <R1FlowDiscardButton
+            disabled={isDeletingApplication}
+            onClick={() => setDeleteApplicationDialogOpen(true)}
+          />
+        ) : null
+      }
+      main={
+        <R1FlowMainContent>
+<form
             onSubmit={(event) => {
               event.preventDefault();
               if (currentStep === "step1") {
@@ -1580,6 +1650,7 @@ export function NtaAntragDesktop({
                 return;
               }
               if (currentStep === "step3_recommendation") {
+                if (!recommendationReleased) return;
                 setCurrentStep("step4_application");
                 return;
               }
@@ -1596,21 +1667,20 @@ export function NtaAntragDesktop({
               onContinue?.(formData);
             }}
           >
-            <Card className="h-fit w-full max-w-[822px] border border-border px-6 py-6 shadow-xs">
-              <CardContent className="space-y-8 p-0">
+            <R1FlowFormCard>
                 {currentStep === "step1" ? (
                   <>
                     {!stepOneLockedAfterConsultation ? (
                       <>
                         <div
                           id={reviewWorkspaceAnchorId("applicant")}
-                          className="scroll-mt-4 space-y-6"
+                          className="scroll-mt-4"
                         >
-                          <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
+                          <R1FlowSectionTitle spacingBelow="compact">
                             Persönliche Angaben
-                          </CardTitle>
-                      <div className="grid gap-6 lg:grid-cols-2 lg:gap-x-[29px]">
-                        <div className="flex flex-col gap-1">
+                          </R1FlowSectionTitle>
+                      <R1FlowFieldRow>
+                        <R1FlowField>
                           <Label htmlFor="vorname">Vorname</Label>
                           <Input
                             id="vorname"
@@ -1642,8 +1712,8 @@ export function NtaAntragDesktop({
                               {stepOneErrors.vorname}
                             </p>
                           ) : null}
-                        </div>
-                        <div className="flex flex-col gap-1">
+                        </R1FlowField>
+                        <R1FlowField>
                           <Label htmlFor="name">Name</Label>
                           <Input
                             id="name"
@@ -1673,10 +1743,8 @@ export function NtaAntragDesktop({
                               {stepOneErrors.name}
                             </p>
                           ) : null}
-                        </div>
-                      </div>
-                      <div className="grid gap-6 lg:grid-cols-2 lg:gap-x-[29px]">
-                        <div className="flex flex-col gap-1">
+                        </R1FlowField>
+                        <R1FlowField>
                           <Label htmlFor="email">Email</Label>
                           <Input
                             id="email"
@@ -1707,8 +1775,8 @@ export function NtaAntragDesktop({
                               {stepOneErrors.email}
                             </p>
                           ) : null}
-                        </div>
-                        <div className="flex flex-col gap-1">
+                        </R1FlowField>
+                        <R1FlowField>
                           <Label htmlFor="phone">Telefonnummer</Label>
                           <Input
                             id="phone"
@@ -1739,16 +1807,16 @@ export function NtaAntragDesktop({
                               {stepOneErrors.phone}
                             </p>
                           ) : null}
-                        </div>
-                      </div>
+                        </R1FlowField>
+                      </R1FlowFieldRow>
                     </div>
 
-                    <div className="space-y-5">
-                      <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
+                    <div>
+                      <R1FlowSectionTitle spacingBelow="compact">
                         Angaben zum Studium
-                      </CardTitle>
-                      <div className="space-y-6">
-                        <div className="flex max-w-[320px] flex-col gap-1">
+                      </R1FlowSectionTitle>
+                      <R1FlowFieldStack>
+                        <R1FlowField className="max-w-[320px]">
                           <Label htmlFor="matrikel">Matrikelnummer</Label>
                           <Input
                             id="matrikel"
@@ -1780,8 +1848,8 @@ export function NtaAntragDesktop({
                               {stepOneErrors.matrikel}
                             </p>
                           ) : null}
-                        </div>
-                        <div className="flex flex-col gap-1">
+                        </R1FlowField>
+                        <R1FlowField>
                           <Label htmlFor="studiengang">Studiengang</Label>
                           <StudiengangCombobox
                             id="studiengang"
@@ -1806,8 +1874,8 @@ export function NtaAntragDesktop({
                               {stepOneErrors.studiengang}
                             </p>
                           ) : null}
-                        </div>
-                        <div className="flex flex-col gap-1">
+                        </R1FlowField>
+                        <R1FlowField>
                           <Label htmlFor="semester">Welches Semester besuchen Sie</Label>
                           <Select
                             value={formData.semester || undefined}
@@ -1849,15 +1917,15 @@ export function NtaAntragDesktop({
                               {stepOneErrors.semester}
                             </p>
                           ) : null}
-                        </div>
-                      </div>
+                        </R1FlowField>
+                      </R1FlowFieldStack>
                     </div>
 
-                    <div className="space-y-5">
-                      <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
+                    <div>
+                      <R1FlowSectionTitle spacingBelow="compact">
                         Antragsart
-                      </CardTitle>
-                      <div className="space-y-2">
+                      </R1FlowSectionTitle>
+                      <R1FlowFieldOptions>
                         {stepOneErrors.antragsart ? (
                           <p className="text-xs text-destructive">
                             {stepOneErrors.antragsart}
@@ -1885,19 +1953,19 @@ export function NtaAntragDesktop({
                             }))
                           }
                         />
-                      </div>
+                      </R1FlowFieldOptions>
                     </div>
                       </>
                     ) : (
                       <>
                         <div
                           id={reviewWorkspaceAnchorId("applicant")}
-                          className="scroll-mt-4 space-y-6"
+                          className="scroll-mt-4"
                         >
-                          <p className="text-lg font-medium text-foreground">
+                          <R1FlowSectionTitle spacingBelow="compact">
                             Persönliche Angaben
-                          </p>
-                          <div className="grid gap-6 lg:grid-cols-2 lg:gap-x-[29px]">
+                          </R1FlowSectionTitle>
+                          <R1FlowFieldRow>
                             {(
                               [
                                 { label: "Vorname", value: formData.vorname },
@@ -1906,7 +1974,7 @@ export function NtaAntragDesktop({
                                 { label: "Telefonnummer", value: formData.phone },
                               ] as const
                             ).map((item) => (
-                              <div key={item.label} className="flex flex-col gap-1">
+                              <R1FlowField key={item.label}>
                                 <Label>{item.label}</Label>
                                 <div className="flex min-h-9 items-center justify-between rounded-lg border border-border bg-background px-3 py-2 opacity-70 shadow-xs">
                                   <span className="text-sm text-muted-foreground">
@@ -1914,17 +1982,17 @@ export function NtaAntragDesktop({
                                   </span>
                                   <Lock className="size-4 text-muted-foreground" />
                                 </div>
-                              </div>
+                              </R1FlowField>
                             ))}
-                          </div>
+                          </R1FlowFieldRow>
                         </div>
 
-                        <div className="space-y-6">
-                          <p className="text-lg font-medium text-foreground">
+                        <div>
+                          <R1FlowSectionTitle spacingBelow="compact">
                             Angaben zum Studium
-                          </p>
-                          <div className="space-y-4">
-                            <div className="flex flex-col gap-1">
+                          </R1FlowSectionTitle>
+                          <R1FlowFieldStack>
+                            <R1FlowField className="max-w-[320px]">
                               <Label>Matrikelnummer</Label>
                               <div className="flex min-h-9 items-center justify-between rounded-lg border border-border bg-background px-3 py-2 opacity-70 shadow-xs">
                                 <span className="text-sm text-muted-foreground">
@@ -1932,17 +2000,17 @@ export function NtaAntragDesktop({
                                 </span>
                                 <Lock className="size-4 text-muted-foreground" />
                               </div>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <Label>Welches Semester besuchen Sie</Label>
+                            </R1FlowField>
+                            <R1FlowField>
+                              <Label>Studiengang</Label>
                               <div className="flex min-h-9 items-center justify-between rounded-lg border border-border bg-background px-3 py-2 opacity-70 shadow-xs">
                                 <span className="text-sm text-muted-foreground">
                                   {formData.studiengang}
                                 </span>
                                 <Lock className="size-4 text-muted-foreground" />
                               </div>
-                            </div>
-                            <div className="flex max-w-[320px] flex-col gap-1">
+                            </R1FlowField>
+                            <R1FlowField>
                               <Label>Welches Semester besuchen Sie</Label>
                               <div className="flex min-h-9 items-center justify-between rounded-lg border border-border bg-background px-3 py-2 opacity-70 shadow-xs">
                                 <span className="text-sm text-muted-foreground">
@@ -1952,13 +2020,13 @@ export function NtaAntragDesktop({
                                 </span>
                                 <Lock className="size-4 text-muted-foreground" />
                               </div>
-                            </div>
-                          </div>
+                            </R1FlowField>
+                          </R1FlowFieldStack>
                         </div>
 
-                        <div className="space-y-3">
-                          <p className="text-lg font-medium text-foreground">Antragsart</p>
-                          <div className="space-y-2">
+                        <div>
+                          <R1FlowSectionTitle spacingBelow="compact">Antragsart</R1FlowSectionTitle>
+                          <R1FlowFieldOptions>
                             {(
                               [
                                 {
@@ -2004,7 +2072,7 @@ export function NtaAntragDesktop({
                                 </div>
                               </div>
                             ))}
-                          </div>
+                          </R1FlowFieldOptions>
                         </div>
                       </>
                     )}
@@ -2012,12 +2080,12 @@ export function NtaAntragDesktop({
                 ) : currentStep === "step2" ? (
                   <div
                     id={reviewWorkspaceAnchorId("attest")}
-                    className="scroll-mt-4 space-y-5"
+                    className="scroll-mt-4 space-y-3"
                   >
-                    <div className="space-y-2">
-                      <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
+                    <div>
+                      <R1FlowSectionTitle spacingBelow="compact">
                         Fachärztliches Attest
-                      </CardTitle>
+                      </R1FlowSectionTitle>
                       <p className="text-sm text-muted-foreground">
                         Laden Sie Ihr fachärztliches Attest im{" "}
                         <span className="underline underline-offset-2">ICF-Format</span>{" "}
@@ -2026,32 +2094,7 @@ export function NtaAntragDesktop({
                       </p>
                     </div>
 
-                    <div className="rounded-lg border border-blue-400 bg-blue-100 px-4 py-3">
-                      <div className="mb-1 flex items-start gap-2 text-sm font-medium text-foreground">
-                        <Info className="mt-0.5 size-4 shrink-0" />
-                        <span>Bitte beachten Sie die Vorgaben des fachärztlichen Attests</span>
-                      </div>
-                      <div className="ml-6 flex flex-col items-start gap-2">
-                        <a
-                          href="/attest/attest-checkliste-icf.pdf"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 text-sm text-foreground hover:underline"
-                        >
-                          Attest-Checkliste im ICF Format
-                          <ExternalLink className="size-4" />
-                        </a>
-                        <a
-                          href="/attest/attest-mustervorlage.pdf"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 text-sm text-foreground hover:underline"
-                        >
-                          Attest Mustervorlage
-                          <ExternalLink className="size-4" />
-                        </a>
-                      </div>
-                    </div>
+                    <R1FlowAttestCallout className="mb-10" />
 
                     <div className="space-y-2">
                       <div
@@ -2095,7 +2138,7 @@ export function NtaAntragDesktop({
                       {stepTwoFileError ? (
                         <p className="text-xs text-destructive">{stepTwoFileError}</p>
                       ) : null}
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-hf-paragraph-small text-muted-foreground mb-5">
                         Empfohlene max. Grösse: 10 MB, file types: PDF & DOCX
                       </p>
                     </div>
@@ -2139,628 +2182,109 @@ export function NtaAntragDesktop({
                     </div>
                   </div>
                 ) : currentStep === "step3_booking" ? (
-                  <div className="space-y-8">
-                    <div className="space-y-2">
-                      <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
-                        Beratung buchen
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        Wählen sie einen freien Termin, um das obligatorische
-                        Beratungsgespräch wahrzunehmen.
-                      </p>
-                    </div>
-
-                    <div className="grid gap-6 lg:grid-cols-[1fr_170px]">
-                      <div>
-                        <div className="mb-4 flex items-center justify-between px-2">
-                          <button
-                            type="button"
-                            className="rounded-md border p-1.5 text-muted-foreground"
-                            onClick={() =>
-                              setDisplayedMonth(
-                                (previous) =>
-                                  new Date(
-                                    previous.getFullYear(),
-                                    previous.getMonth() - 1,
-                                    1,
-                                  ),
-                              )
-                            }
-                          >
-                            <ArrowLeft className="size-4" />
-                          </button>
-                          <p className="text-sm font-medium">{bookingMonthLabel}</p>
-                          <button
-                            type="button"
-                            className="rounded-md border p-1.5 text-muted-foreground"
-                            onClick={() =>
-                              setDisplayedMonth(
-                                (previous) =>
-                                  new Date(
-                                    previous.getFullYear(),
-                                    previous.getMonth() + 1,
-                                    1,
-                                  ),
-                              )
-                            }
-                          >
-                            <ArrowRight className="size-4" />
-                          </button>
-                        </div>
-                        <div className="grid grid-cols-7 gap-2 text-center text-xs text-muted-foreground">
-                          {["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"].map((d) => (
-                            <span key={d}>{d}</span>
-                          ))}
-                        </div>
-                        <div className="mt-2 grid grid-cols-7 gap-2">
-                          {calendarDays.map((entry) => (
-                            <button
-                              type="button"
-                              key={entry.key}
-                              onClick={() => {
-                                setSelectedBookingDate(entry.date);
-                                if (!entry.isCurrentMonth) {
-                                  setDisplayedMonth(
-                                    new Date(
-                                      entry.date.getFullYear(),
-                                      entry.date.getMonth(),
-                                      1,
-                                    ),
-                                  );
-                                }
-                              }}
-                              className={cn(
-                                "h-8 rounded-md text-sm",
-                                entry.date.toDateString() ===
-                                  selectedBookingDate.toDateString()
-                                  ? "bg-muted font-medium"
-                                  : "hover:bg-muted/50",
-                                !entry.isCurrentMonth && "text-muted-foreground",
-                              )}
-                            >
-                              {entry.date.getDate()}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        {BOOKING_SLOTS.map((slot) => (
-                          <button
-                            type="button"
-                            key={slot}
-                            onClick={() => setSelectedBookingSlot(slot)}
-                            className={cn(
-                              "w-full rounded-lg border px-3 py-2 text-sm",
-                              selectedBookingSlot === slot
-                                ? "border-foreground"
-                                : "border-border",
-                            )}
-                          >
-                            {slot}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <p className="text-base font-medium">Termindetails</p>
-                      <div className="space-y-2 text-sm text-foreground">
-                        <p className="flex items-center gap-2">
-                          <Calendar className="size-4" /> {bookingDateLabel}
-                        </p>
-                        <p className="flex items-center gap-2">
-                          <Clock3 className="size-4" /> {selectedBookingSlot} Uhr
-                        </p>
-                        <p className="flex items-start gap-2">
-                          <MapPin className="mt-0.5 size-4" /> {MOCK_LOCATION}
-                        </p>
-                      </div>
-                    </div>
-
-                    <p className="text-sm text-foreground">
-                      Indem Sie fortfahren, stimmen Sie den{" "}
-                      <a
-                        href="https://www.google.com"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="underline underline-offset-2"
-                      >
-                        Nutzungsbedingungen
-                      </a>{" "}
-                      und der{" "}
-                      <a
-                        href="https://www.google.com"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="underline underline-offset-2"
-                      >
-                        Datenschutzerklärung
-                      </a>{" "}
-                      zu.
-                    </p>
-                    {stepThreeError ? (
-                      <p className="text-xs text-destructive">{stepThreeError}</p>
-                    ) : null}
-                  </div>
+                  <R1FlowBookingScheduler
+                    displayedMonth={displayedMonth}
+                    onDisplayedMonthChange={setDisplayedMonth}
+                    selectedBookingDate={selectedBookingDate}
+                    onSelectedBookingDateChange={setSelectedBookingDate}
+                    selectedBookingSlot={selectedBookingSlot}
+                    onSelectedBookingSlotChange={setSelectedBookingSlot}
+                    slots={BOOKING_SLOTS}
+                    calendarDays={calendarDays}
+                    bookingDateLabel={bookingDateLabel}
+                    bookingTimeLabel={`${selectedBookingSlot.replace(" - ", " – ")} Uhr`}
+                    locationLines={MOCK_LOCATION.split(", ")}
+                    markerDate={INITIAL_BOOKING_DATE}
+                    error={stepThreeError}
+                  />
                 ) : currentStep === "step3_booked" ? (
-                  <div className="mx-auto w-full max-w-[620px] space-y-8 pb-2 text-center">
-                    <CircleCheck className="mx-auto size-12 text-teal-600" />
-                    <div className="space-y-3">
-                      <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
-                        Ihr Beratungsgespräch ist gebucht!
-                      </CardTitle>
-                      <div className="mx-auto w-full max-w-[544px] rounded-lg border border-blue-400 bg-blue-100 px-4 py-3 text-sm">
-                        <div className="flex items-start gap-2">
-                          <Info className="mt-0.5 size-4 shrink-0" />
-                          <p className="text-left">
-                            Sie erhalten eine Bestätigung per E-Mail. Nach der
-                            Beratung werden die weiteren Schritte Ihres Antrags
-                            freigeschaltet.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-2 pt-1">
-                      <UserRound className="mx-auto size-32 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground">Beratende Person</p>
-                      <p className="text-sm">{MOCK_ADVISOR}</p>
-                    </div>
-                    <div className="mx-auto grid max-w-[460px] gap-x-12 gap-y-3 text-left text-sm md:grid-cols-2">
-                      <p>
-                        Datum: {bookedDateShort}
-                        <br />
-                        Uhrzeit: {bookedTimeDisplay}
-                      </p>
-                      <p>
-                        {locationLines.map((line) => (
-                          <span key={line}>
-                            {line}
-                            <br />
-                          </span>
-                        ))}
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-center gap-8">
-                      <Button type="button" variant="destructive" className="min-h-9 px-4">
-                        Termin verschieben
-                      </Button>
-                      <Button type="button" variant="secondary" className="min-h-9 px-4">
-                        Zum Kalender hinzufügen
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground/90">
-                      Terminverschiebungen müssen mindestens 24 Stunden im Voraus
-                      erfolgen. Bei Notfällen und Krankheit ist eine kurzfristige
-                      Absage an beispiel@hochschule.ch möglich.
-                    </p>
-                  </div>
+                  <R1FlowBookingConfirmation
+                    advisorName={bookedAdvisor}
+                    appointmentDateLine={bookedAppointmentDateLine}
+                    appointmentTimeLine={bookedAppointmentTimeLine}
+                    locationLines={bookedLocationLines}
+                    mapsHref={bookedMapsHref}
+                    onReschedule={() => setCurrentStep("step3_booking")}
+                  />
                 ) : currentStep === "step3_recommendation" ? (
-                  <div className="space-y-6">
+                  <div className="w-full">
                     {releasedRecommendationHtml ? (
                       <RecommendationReleasedAccordion
-                        variant="plain"
+                        variant="r1"
                         html={releasedRecommendationHtml}
                         releasedAt={
                           application?.data?.recommendation?.releasedAt
                         }
                         authorDisplayName={releasedRecommendationAuthor}
-                      />
+                      >
+                        <label
+                          className={cn(
+                            "flex h-6 cursor-pointer items-center gap-3",
+                            !recommendationReleased && "cursor-not-allowed opacity-60",
+                          )}
+                          data-node-id="5247:5575"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isRecommendationAcknowledged}
+                            disabled={!recommendationReleased}
+                            onChange={(event) => {
+                              setIsRecommendationAcknowledged(event.target.checked);
+                              setStepThreeError(null);
+                            }}
+                            className="size-4 shrink-0 rounded-sm border border-stone-250 accent-stone-900 disabled:cursor-not-allowed"
+                          />
+                          <span className="text-hf-paragraph-small text-stone-900">
+                            Ich habe das Empfehlungsschreiben zur Kenntnis genommen
+                          </span>
+                        </label>
+                      </RecommendationReleasedAccordion>
                     ) : (
-                      <div className="space-y-2">
-                        <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
-                          Empfehlungsschreiben der Fachstelle
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="flex flex-col gap-3">
+                        <h2 className="text-hf-paragraph-large-medium text-stone-900">
+                          Empfehlungsschreiben
+                        </h2>
+                        <p className="text-hf-paragraph-small text-muted-foreground">
                           Die Fachstelle hat noch kein Empfehlungsschreiben
                           freigegeben. Sobald die Freigabe erfolgt ist, erscheint
                           es hier zur Kenntnisnahme.
                         </p>
+                        <label
+                          className="flex h-6 cursor-not-allowed items-center gap-3 opacity-60"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isRecommendationAcknowledged}
+                            disabled
+                            className="size-4 shrink-0 rounded-sm border border-stone-250"
+                          />
+                          <span className="text-hf-paragraph-small text-stone-900">
+                            Ich habe das Empfehlungsschreiben zur Kenntnis genommen
+                          </span>
+                        </label>
                       </div>
                     )}
-                    <label className="flex items-center gap-2 text-sm text-foreground">
-                      <input
-                        type="checkbox"
-                        checked={isRecommendationAcknowledged}
-                        onChange={(event) => {
-                          setIsRecommendationAcknowledged(event.target.checked);
-                          setStepThreeError(null);
-                        }}
-                        className="size-4 accent-primary"
-                      />
-                      Ich habe das Empfehlungsschreiben zur Kenntnis genommen.
-                    </label>
                     {stepThreeError ? (
-                      <p className="text-xs text-destructive">{stepThreeError}</p>
+                      <p className="mt-3 text-xs text-destructive">{stepThreeError}</p>
                     ) : null}
                   </div>
                 ) : currentStep === "step4_application" ? (
-                  <div className="space-y-8">
-                    <div>
-                      <CardTitle className="mb-8 text-xl font-medium leading-[27px] text-foreground">
-                        Antragsstellung
-                      </CardTitle>
-
-                      <div
-                        id={reviewWorkspaceAnchorId("definition")}
-                        className="mb-8 scroll-mt-4"
-                      >
-                        <div className="space-y-1">
-                          <p className="mb-0 text-base font-medium text-foreground">
-                            Beschreibung der gesundheitlichen Situation und Nachteile
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Beschreiben Sie Ihre gesundheitliche Situation und die
-                            behinderungsbedingten Nachteile auf studienrelevante Aktivitäten und
-                            Leistungsnachweise. Haben Sie noch keine Studienerfahrung, so können
-                            Sie auf Ihre Erfahrungen in der Schule und im Alltag zurückgreifen.
-                          </p>
-                        </div>
-                        <textarea
-                          ref={situationDescriptionStep4Ref}
-                          value={applicationFormData.situationDescription}
-                          onChange={(event) =>
-                            setApplicationFormData((previous) => ({
-                              ...previous,
-                              situationDescription: event.target.value,
-                            }))
-                          }
-                          placeholder="Auswirkungen auf das Studium..."
-                          rows={1}
-                          className={cn(
-                            "mt-4 min-h-[116px] w-full resize-none overflow-hidden rounded-lg border bg-background px-3 py-2 text-sm shadow-xs outline-none transition",
-                            stepFourErrors.situationDescription
-                              ? "border-destructive"
-                              : "border-border focus:border-ring",
-                          )}
-                        />
-                        {stepFourErrors.situationDescription ? (
-                          <p className="text-xs text-destructive">
-                            {stepFourErrors.situationDescription}
-                          </p>
-                        ) : null}
-                      </div>
-
-                      <div
-                        id={reviewWorkspaceAnchorId("duration")}
-                        className="mb-8 scroll-mt-4"
-                      >
-                        <div className="space-y-1">
-                          <p className="mb-0 text-base font-medium text-foreground">
-                            Gültigkeitsdauer des beantragten Nachteilsausgleiches
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Ihr Nachteilsausgleich kann für ein einzelnes Semester oder für die
-                            gesamte Studienzeit beantragt werden.
-                          </p>
-                        </div>
-                        <div className="mt-4 space-y-2">
-                          {(
-                            [
-                              {
-                                value: "full_study",
-                                title: "Gesamte Studiendauer",
-                                description:
-                                  "Für dauerhafte oder chronische Beeinträchtigungen",
-                              },
-                              {
-                                value: "one_semester",
-                                title: "Einmalig für ein Semester",
-                                description:
-                                  "Für episodische Erkrankungen oder zur erstmaligen Erprobung der Massnahmen",
-                              },
-                            ] as const
-                          ).map((option) => (
-                            <label
-                              key={option.value}
-                              className={cn(
-                                "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3",
-                                applicationFormData.duration === option.value
-                                  ? "border-foreground"
-                                  : "border-border",
-                              )}
-                            >
-                              <input
-                                type="radio"
-                                name="application-duration"
-                                checked={applicationFormData.duration === option.value}
-                                onChange={() =>
-                                  setApplicationFormData((previous) => ({
-                                    ...previous,
-                                    duration: option.value,
-                                  }))
-                                }
-                                className="mt-0.5 size-4 accent-primary"
-                              />
-                              <span className="space-y-1">
-                                <span className="block text-sm text-foreground">
-                                  {option.title}
-                                </span>
-                                <span className="block text-xs text-muted-foreground">
-                                  {option.description}
-                                </span>
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                        {stepFourErrors.duration ? (
-                          <p className="text-xs text-destructive">{stepFourErrors.duration}</p>
-                        ) : null}
-                      </div>
-
-                      <div
-                        id={reviewWorkspaceAnchorId("scope")}
-                        className="mb-8 scroll-mt-4"
-                      >
-                        <div className="space-y-1">
-                          <p className="mb-0 text-base font-medium text-foreground">
-                            Geltungsbereich des beantragten Nachteilsausgleiches
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Wählen Sie aus, für welche Arten von Leistungsnachweisen der
-                            Nachteilsausgleich gelten soll.
-                          </p>
-                        </div>
-                        <div className="mt-4 space-y-2">
-                          {APPLICATION_SCOPE_OPTIONS.map((option) => (
-                            <label key={option} className="flex items-center gap-3 text-sm">
-                              <input
-                                type="checkbox"
-                                checked={applicationFormData.scopeSelections.includes(option)}
-                                onChange={(event) =>
-                                  setApplicationFormData((previous) => ({
-                                    ...previous,
-                                    scopeSelections: event.target.checked
-                                      ? [...previous.scopeSelections, option]
-                                      : previous.scopeSelections.filter(
-                                          (entry) => entry !== option,
-                                        ),
-                                  }))
-                                }
-                                className="size-4 accent-primary"
-                              />
-                              <span>{option}</span>
-                            </label>
-                          ))}
-                        </div>
-                        {stepFourErrors.scopeSelections ? (
-                          <p className="text-xs text-destructive">
-                            {stepFourErrors.scopeSelections}
-                          </p>
-                        ) : null}
-                      </div>
-
-                      <div
-                        id={reviewWorkspaceAnchorId("lectureMeasures")}
-                        className="mb-8 scroll-mt-4"
-                      >
-                        <div className="space-y-1">
-                          <p className="mb-0 text-base font-medium text-foreground">
-                            Ausgleichsmassnahme für Lehrveranstaltungen
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Wählen Sie die Massnahmen aus, die Sie während Lehrveranstaltungen
-                            benötigen.
-                          </p>
-                        </div>
-                        <div className="mt-4 max-w-xl space-y-2">
-                          <label
-                            className={cn(
-                              "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
-                              applicationFormData.lectureMeasuresKeine
-                                ? "border-foreground"
-                                : "border-border",
-                            )}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={applicationFormData.lectureMeasuresKeine}
-                              onChange={(event) =>
-                                setApplicationFormData((previous) => ({
-                                  ...previous,
-                                  lectureMeasuresKeine: event.target.checked,
-                                  lectureMeasures: [],
-                                  lectureOtherLines: event.target.checked
-                                    ? [""]
-                                    : previous.lectureOtherLines,
-                                }))
-                              }
-                              className="mt-0.5 size-4 shrink-0 accent-primary"
-                            />
-                            <span className="space-y-1">
-                              <span className="block text-sm text-foreground">Keine</span>
-                              <span className="block text-xs text-muted-foreground">
-                                Ich benötige keine Ausgleichsmassnahmen für Lehrveranstaltungen.
-                              </span>
-                            </span>
-                          </label>
-                          {LECTURE_MEASURE_OPTIONS.map((option) => {
-                            const isChecked = applicationFormData.lectureMeasures.includes(
-                              option.key,
-                            );
-                            return (
-                              <label
-                                key={option.key}
-                                className={cn(
-                                  "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
-                                  isChecked ? "border-foreground" : "border-border",
-                                )}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={(event) =>
-                                    setApplicationFormData((previous) => ({
-                                      ...previous,
-                                      lectureMeasuresKeine: false,
-                                      lectureMeasures: event.target.checked
-                                        ? [...previous.lectureMeasures, option.key]
-                                        : previous.lectureMeasures.filter(
-                                            (entry) => entry !== option.key,
-                                          ),
-                                    }))
-                                  }
-                                  className="mt-0.5 size-4 shrink-0 accent-primary"
-                                />
-                                <span className="space-y-1">
-                                  <span className="block text-sm text-foreground">
-                                    {option.title}
-                                  </span>
-                                  <span className="block text-xs text-muted-foreground">
-                                    {option.description}
-                                  </span>
-                                </span>
-                              </label>
-                            );
-                          })}
-                          <CustomMeasureLinesField
-                            idPrefix="step4-lecture-other"
-                            lines={applicationFormData.lectureOtherLines}
-                            onChange={(next) =>
-                              setApplicationFormData((previous) => ({
-                                ...previous,
-                                lectureOtherLines: next,
-                                ...(hasMeasureOtherSelection(next)
-                                  ? { lectureMeasuresKeine: false }
-                                  : {}),
-                              }))
-                            }
-                            error={
-                              Boolean(stepFourErrors.lectureMeasures)
-                              && !applicationFormData.lectureMeasuresKeine
-                              && applicationFormData.lectureMeasures.length === 0
-                              && !hasMeasureOtherSelection(
-                                applicationFormData.lectureOtherLines,
-                              )
-                            }
-                          />
-                        </div>
-                        {stepFourErrors.lectureMeasures ? (
-                          <p className="text-xs text-destructive">
-                            {stepFourErrors.lectureMeasures}
-                          </p>
-                        ) : null}
-                      </div>
-
-                      <div
-                        id={reviewWorkspaceAnchorId("assessmentMeasures")}
-                        className="mb-8 scroll-mt-4"
-                      >
-                        <div className="space-y-1">
-                          <p className="mb-0 text-base font-medium text-foreground">
-                            Ausgleichsmassnahme für Leistungsnachweise
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Wählen Sie die Massnahmen aus, die Sie bei Prüfungen und anderen
-                            Leistungsnachweisen benötigen.
-                          </p>
-                        </div>
-                        <div className="mt-4 max-w-xl space-y-2">
-                          <label
-                            className={cn(
-                              "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
-                              applicationFormData.assessmentMeasuresKeine
-                                ? "border-foreground"
-                                : "border-border",
-                            )}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={applicationFormData.assessmentMeasuresKeine}
-                              onChange={(event) =>
-                                setApplicationFormData((previous) => ({
-                                  ...previous,
-                                  assessmentMeasuresKeine: event.target.checked,
-                                  assessmentMeasures: [],
-                                  assessmentOtherLines: event.target.checked
-                                    ? [""]
-                                    : previous.assessmentOtherLines,
-                                }))
-                              }
-                              className="mt-0.5 size-4 shrink-0 accent-primary"
-                            />
-                            <span className="space-y-1">
-                              <span className="block text-sm text-foreground">Keine</span>
-                              <span className="block text-xs text-muted-foreground">
-                                Ich benötige keine Ausgleichsmassnahmen für Leistungsnachweise.
-                              </span>
-                            </span>
-                          </label>
-                          {ASSESSMENT_MEASURE_OPTIONS.map((option) => {
-                            const isChecked = applicationFormData.assessmentMeasures.includes(
-                              option.key,
-                            );
-                            return (
-                              <label
-                                key={option.key}
-                                className={cn(
-                                  "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
-                                  isChecked ? "border-foreground" : "border-border",
-                                )}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={(event) =>
-                                    setApplicationFormData((previous) => ({
-                                      ...previous,
-                                      assessmentMeasuresKeine: false,
-                                      assessmentMeasures: event.target.checked
-                                        ? [...previous.assessmentMeasures, option.key]
-                                        : previous.assessmentMeasures.filter(
-                                            (entry) => entry !== option.key,
-                                          ),
-                                    }))
-                                  }
-                                  className="mt-0.5 size-4 shrink-0 accent-primary"
-                                />
-                                <span className="space-y-1">
-                                  <span className="block text-sm text-foreground">
-                                    {option.title}
-                                  </span>
-                                  <span className="block text-xs text-muted-foreground">
-                                    {option.description}
-                                  </span>
-                                </span>
-                              </label>
-                            );
-                          })}
-                          <CustomMeasureLinesField
-                            idPrefix="step4-assessment-other"
-                            lines={applicationFormData.assessmentOtherLines}
-                            onChange={(next) =>
-                              setApplicationFormData((previous) => ({
-                                ...previous,
-                                assessmentOtherLines: next,
-                                ...(hasMeasureOtherSelection(next)
-                                  ? { assessmentMeasuresKeine: false }
-                                  : {}),
-                              }))
-                            }
-                            error={
-                              Boolean(stepFourErrors.assessmentMeasures)
-                              && !applicationFormData.assessmentMeasuresKeine
-                              && applicationFormData.assessmentMeasures.length === 0
-                              && !hasMeasureOtherSelection(
-                                applicationFormData.assessmentOtherLines,
-                              )
-                            }
-                          />
-                        </div>
-                        {stepFourErrors.assessmentMeasures ? (
-                          <p className="text-xs text-destructive">
-                            {stepFourErrors.assessmentMeasures}
-                          </p>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
+                  <R1ApplicationDefinitionSection
+                    applicationFormData={applicationFormData}
+                    setApplicationFormData={setApplicationFormData}
+                    errors={stepFourErrors}
+                    situationDescriptionRef={situationDescriptionStep4Ref}
+                    durationRadioName="application-duration"
+                    lectureOtherIdPrefix="step4-lecture-other"
+                    assessmentOtherIdPrefix="step4-assessment-other"
+                  />
                 ) : currentStep === "step6_submitted" ? (
                   <div className="mx-auto w-full max-w-[620px] space-y-8 py-10 text-center">
                     <CircleCheck className="mx-auto size-12 text-teal-600" />
                     <div className="space-y-2">
-                      <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
+                      <R1FlowSectionTitle>
                         Antrag erfolgreich eingereicht
-                      </CardTitle>
+                      </R1FlowSectionTitle>
                       <p className="text-sm text-muted-foreground">
                       Ihr Antrag wurde erfolgreich eingereicht und befindet sich nun im Status Review. Den aktuellen Status finden Sie jederzeit unter «Meine Anträge».
                       </p>
@@ -2788,14 +2312,13 @@ export function NtaAntragDesktop({
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-8">
-                    <CardTitle className="text-lg font-medium leading-[27px] text-foreground">
-                      Antrag auf Nachteilsausgleich (NTA)
-                    </CardTitle>
-
-                    <div className="space-y-6">
-                      <p className="text-lg font-medium text-foreground">Persönliche Angaben</p>
-                      <div className="grid gap-6 lg:grid-cols-2 lg:gap-x-[29px]">
+                  <>
+                    <div
+                      id={reviewWorkspaceAnchorId("applicant")}
+                      className="scroll-mt-4"
+                    >
+                      <R1FlowSectionTitle spacingBelow="compact">Persönliche Angaben</R1FlowSectionTitle>
+                      <R1FlowFieldRow>
                         {(
                           [
                             { label: "Vorname", value: formData.vorname },
@@ -2804,21 +2327,21 @@ export function NtaAntragDesktop({
                             { label: "Telefonnummer", value: formData.phone },
                           ] as const
                         ).map((item) => (
-                          <div key={item.label} className="flex flex-col gap-1">
+                          <R1FlowField key={item.label}>
                             <Label>{item.label}</Label>
                             <div className="flex min-h-9 items-center justify-between rounded-lg border border-border bg-background px-3 py-2 opacity-70 shadow-xs">
                               <span className="text-sm text-muted-foreground">{item.value}</span>
                               <Lock className="size-4 text-muted-foreground" />
                             </div>
-                          </div>
+                          </R1FlowField>
                         ))}
-                      </div>
+                      </R1FlowFieldRow>
                     </div>
 
-                    <div className="space-y-6">
-                      <p className="text-lg font-medium text-foreground">Angaben zum Studium</p>
-                      <div className="space-y-4">
-                        <div className="flex flex-col gap-1">
+                    <div>
+                      <R1FlowSectionTitle spacingBelow="compact">Angaben zum Studium</R1FlowSectionTitle>
+                      <R1FlowFieldStack>
+                        <R1FlowField className="max-w-[320px]">
                           <Label>Matrikelnummer</Label>
                           <div className="flex min-h-9 items-center justify-between rounded-lg border border-border bg-background px-3 py-2 opacity-70 shadow-xs">
                             <span className="text-sm text-muted-foreground">
@@ -2826,17 +2349,17 @@ export function NtaAntragDesktop({
                             </span>
                             <Lock className="size-4 text-muted-foreground" />
                           </div>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <Label>Welches Semester besuchen Sie</Label>
+                        </R1FlowField>
+                        <R1FlowField>
+                          <Label>Studiengang</Label>
                           <div className="flex min-h-9 items-center justify-between rounded-lg border border-border bg-background px-3 py-2 opacity-70 shadow-xs">
                             <span className="text-sm text-muted-foreground">
                               {formData.studiengang}
                             </span>
                             <Lock className="size-4 text-muted-foreground" />
                           </div>
-                        </div>
-                        <div className="flex max-w-[320px] flex-col gap-1">
+                        </R1FlowField>
+                        <R1FlowField>
                           <Label>Welches Semester besuchen Sie</Label>
                           <div className="flex min-h-9 items-center justify-between rounded-lg border border-border bg-background px-3 py-2 opacity-70 shadow-xs">
                             <span className="text-sm text-muted-foreground">
@@ -2844,13 +2367,13 @@ export function NtaAntragDesktop({
                             </span>
                             <Lock className="size-4 text-muted-foreground" />
                           </div>
-                        </div>
-                      </div>
+                        </R1FlowField>
+                      </R1FlowFieldStack>
                     </div>
 
-                    <div className="space-y-3">
-                      <p className="text-lg font-medium text-foreground">Antragsart</p>
-                      <div className="space-y-2">
+                    <div>
+                      <R1FlowSectionTitle spacingBelow="compact">Antragsart</R1FlowSectionTitle>
+                      <R1FlowFieldOptions>
                         {(
                           [
                             {
@@ -2894,16 +2417,27 @@ export function NtaAntragDesktop({
                             </div>
                           </div>
                         ))}
-                      </div>
+                      </R1FlowFieldOptions>
                     </div>
 
-                    <div className="space-y-3">
-                      <p className="text-lg font-medium text-foreground">Fachärztliches Attest</p>
-                      <p className="text-sm text-muted-foreground">
-                        Laden Sie Ihr fachärztliches Attest im ICF-Format hoch. Es muss Diagnose,
-                        Auswirkungen auf studienrelevante Aktivitäten sowie empfohlene
-                        Massnahmen enthalten.
-                      </p>
+                    <div
+                      id={reviewWorkspaceAnchorId("attest")}
+                      className="scroll-mt-4 space-y-3"
+                    >
+                      <div>
+                        <R1FlowSectionTitle spacingBelow="compact">
+                          Fachärztliches Attest
+                        </R1FlowSectionTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Laden Sie Ihr fachärztliches Attest im{" "}
+                          <span className="underline underline-offset-2">ICF-Format</span>{" "}
+                          hoch. Es muss Diagnose, Auswirkungen auf studienrelevante Aktivitäten
+                          sowie empfohlene Massnahmen enthalten.
+                        </p>
+                      </div>
+
+                      <R1FlowAttestCallout className="mb-10" />
+
                       <div className="space-y-2">
                         <div
                           className={cn(
@@ -2934,7 +2468,10 @@ export function NtaAntragDesktop({
                           <Upload className="mb-2 size-6 text-foreground" />
                           <p className="text-base font-medium text-foreground">Drag & Drop</p>
                           <p className="text-sm text-muted-foreground">
-                            Hier platzieren Sie das fachärztliche Attest
+                            Datei hier hochladen
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            oder via Finder auswählen
                           </p>
                           <input
                             ref={overviewFileInputRef}
@@ -2944,15 +2481,17 @@ export function NtaAntragDesktop({
                             onChange={(event) => void appendFiles(event.target.files)}
                           />
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          Empfohlene max. Grösse: 10 MB, file types: PDF & DOCX
-                        </p>
                         {step2InvalidInOverview ? (
                           <p className="text-xs text-destructive">
                             Bitte laden Sie mindestens ein Attest hoch (obligatorisch).
                           </p>
                         ) : null}
+                        <p className="text-hf-paragraph-small text-muted-foreground mb-5">
+                          Empfohlene max. Grösse: 10 MB, file types: PDF & DOCX
+                        </p>
                       </div>
+
+                      <div className="space-y-2">
                       {formData.attestFiles.map((file) => (
                         <div
                           key={file.id}
@@ -2988,12 +2527,13 @@ export function NtaAntragDesktop({
                           </button>
                         </div>
                       ))}
+                      </div>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="w-full">
                       {releasedRecommendationHtml ? (
                         <RecommendationReleasedAccordion
-                          variant="plain"
+                          variant="r1"
                           html={releasedRecommendationHtml}
                           releasedAt={
                             application?.data?.recommendation?.releasedAt
@@ -3001,381 +2541,43 @@ export function NtaAntragDesktop({
                           authorDisplayName={releasedRecommendationAuthor}
                         />
                       ) : (
-                        <>
-                          <p className="text-lg font-medium text-foreground">
-                            Empfehlungsschreiben der Fachstelle
-                          </p>
-                          <p className="text-sm text-muted-foreground">
+                        <div className="flex flex-col gap-3">
+                          <h2 className="text-hf-paragraph-large-medium text-stone-900">
+                            Empfehlungsschreiben
+                          </h2>
+                          <p className="text-hf-paragraph-small text-muted-foreground">
                             Die Fachstelle hat noch kein Empfehlungsschreiben
                             freigegeben.
                           </p>
-                        </>
+                        </div>
                       )}
                     </div>
 
-                    <div className="space-y-3">
-                      <p className="text-lg font-medium text-foreground">Antragsdefinition</p>
-                      <div className="space-y-1">
-                        <p className="text-base font-medium text-foreground">
-                          Beschreibung der gesundheitlichen Situation und Nachteile
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Beschreiben Sie Ihre gesundheitliche Situation und die
-                          behinderungsbedingten Nachteile auf studienrelevante Aktivitäten und
-                          Leistungsnachweise.
-                        </p>
-                      </div>
-                      <textarea
-                        ref={situationDescriptionOverviewRef}
-                        value={applicationFormData.situationDescription}
-                        onChange={(event) =>
-                          setApplicationFormData((previous) => ({
-                            ...previous,
-                            situationDescription: event.target.value,
-                          }))
-                        }
-                        rows={1}
-                        className={cn(
-                          "mt-3 min-h-[120px] w-full resize-none overflow-hidden rounded-lg border bg-background px-3 py-2 text-sm shadow-xs outline-none focus:border-ring",
-                          overviewSituationInvalid ? "border-destructive" : "border-border",
-                        )}
-                      />
-                      {overviewSituationInvalid ? (
-                        <p className="text-xs text-destructive">Dieses Feld ist erforderlich.</p>
-                      ) : null}
-
-                      <div className="pt-1">
-                        <div className="space-y-1">
-                          <p className="text-base font-medium text-foreground">
-                            Gültigkeitsdauer des beantragten Nachteilsausgleiches
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Ihr Nachteilsausgleich kann für ein einzelnes Semester oder für die
-                            gesamte Studienzeit beantragt werden.
-                          </p>
-                        </div>
-                        <div
-                          className={cn(
-                            "mt-3 space-y-2 rounded-lg",
-                            overviewDurationInvalid && "border border-destructive p-2",
-                          )}
-                        >
-                          {(
-                            [
-                              {
-                                value: "full_study",
-                                title: "Gesamte Studiendauer",
-                                description:
-                                  "Für dauerhafte oder chronische Beeinträchtigungen",
-                              },
-                              {
-                                value: "one_semester",
-                                title: "Einmalig für ein Semester",
-                                description:
-                                  "Für episodische Erkrankungen oder zur erstmaligen Erprobung der Massnahmen",
-                              },
-                            ] as const
-                          ).map((option) => (
-                            <label
-                              key={option.value}
-                              className={cn(
-                                "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3",
-                                applicationFormData.duration === option.value
-                                  ? "border-foreground"
-                                  : "border-border",
-                              )}
-                            >
-                              <input
-                                type="radio"
-                                name="overview-application-duration"
-                                checked={applicationFormData.duration === option.value}
-                                onChange={() =>
-                                  setApplicationFormData((previous) => ({
-                                    ...previous,
-                                    duration: option.value,
-                                  }))
-                                }
-                                className="mt-0.5 size-4 accent-primary"
-                              />
-                              <span className="space-y-1">
-                                <span className="block text-sm text-foreground">
-                                  {option.title}
-                                </span>
-                                <span className="block text-xs text-muted-foreground">
-                                  {option.description}
-                                </span>
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                        {overviewDurationInvalid ? (
-                          <p className="text-xs text-destructive">
-                            Bitte wählen Sie eine Option aus.
-                          </p>
-                        ) : null}
-                      </div>
-
-                      <div className="pt-1">
-                        <div className="space-y-1">
-                          <p className="text-base font-medium text-foreground">
-                            Geltungsbereich des beantragten Nachteilsausgleiches
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Wählen Sie aus, für welche Arten von Leistungsnachweisen der
-                            Nachteilsausgleich gelten soll.
-                          </p>
-                        </div>
-                        <div
-                          className={cn(
-                            "mt-3 space-y-2 rounded-lg",
-                            overviewScopeInvalid && "border border-destructive p-2",
-                          )}
-                        >
-                          {APPLICATION_SCOPE_OPTIONS.map((option) => (
-                            <label key={option} className="flex items-center gap-3 text-sm">
-                              <input
-                                type="checkbox"
-                                checked={applicationFormData.scopeSelections.includes(option)}
-                                onChange={(event) =>
-                                  setApplicationFormData((previous) => ({
-                                    ...previous,
-                                    scopeSelections: event.target.checked
-                                      ? [...previous.scopeSelections, option]
-                                      : previous.scopeSelections.filter(
-                                          (entry) => entry !== option,
-                                        ),
-                                  }))
-                                }
-                                className="size-4 accent-primary"
-                              />
-                              <span>{option}</span>
-                            </label>
-                          ))}
-                        </div>
-                        {overviewScopeInvalid ? (
-                          <p className="text-xs text-destructive">
-                            Bitte wählen Sie mindestens eine Option aus.
-                          </p>
-                        ) : null}
-                      </div>
-
-                      <div className="pt-1">
-                        <div className="space-y-1">
-                          <p className="text-base font-medium text-foreground">
-                            Ausgleichsmassnahme für Lehrveranstaltungen
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Wählen Sie die Massnahmen aus, die Sie während Lehrveranstaltungen
-                            benötigen.
-                          </p>
-                        </div>
-                        <div
-                          className={cn(
-                            "mt-3 max-w-xl space-y-2 rounded-lg",
-                            overviewLectureMeasuresInvalid && "border border-destructive p-2",
-                          )}
-                        >
-                          <label
-                            className={cn(
-                              "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
-                              applicationFormData.lectureMeasuresKeine
-                                ? "border-foreground"
-                                : "border-border",
-                            )}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={applicationFormData.lectureMeasuresKeine}
-                              onChange={(event) =>
-                                setApplicationFormData((previous) => ({
-                                  ...previous,
-                                  lectureMeasuresKeine: event.target.checked,
-                                  lectureMeasures: [],
-                                  lectureOtherLines: event.target.checked
-                                    ? [""]
-                                    : previous.lectureOtherLines,
-                                }))
-                              }
-                              className="mt-0.5 size-4 shrink-0 accent-primary"
-                            />
-                            <span className="space-y-1">
-                              <span className="block text-sm text-foreground">Keine</span>
-                              <span className="block text-xs text-muted-foreground">
-                                Ich benötige keine Ausgleichsmassnahmen für Lehrveranstaltungen.
-                              </span>
-                            </span>
-                          </label>
-                          {LECTURE_MEASURE_OPTIONS.map((option) => {
-                            const isChecked = applicationFormData.lectureMeasures.includes(
-                              option.key,
-                            );
-                            return (
-                              <label
-                                key={option.key}
-                                className={cn(
-                                  "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
-                                  isChecked ? "border-foreground" : "border-border",
-                                )}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={(event) =>
-                                    setApplicationFormData((previous) => ({
-                                      ...previous,
-                                      lectureMeasuresKeine: false,
-                                      lectureMeasures: event.target.checked
-                                        ? [...previous.lectureMeasures, option.key]
-                                        : previous.lectureMeasures.filter(
-                                            (entry) => entry !== option.key,
-                                          ),
-                                    }))
-                                  }
-                                  className="mt-0.5 size-4 shrink-0 accent-primary"
-                                />
-                                <span className="space-y-1">
-                                  <span className="block text-sm text-foreground">
-                                    {option.title}
-                                  </span>
-                                  <span className="block text-xs text-muted-foreground">
-                                    {option.description}
-                                  </span>
-                                </span>
-                              </label>
-                            );
-                          })}
-                          <CustomMeasureLinesField
-                            idPrefix="overview-lecture-other"
-                            lines={applicationFormData.lectureOtherLines}
-                            onChange={(next) =>
-                              setApplicationFormData((previous) => ({
-                                ...previous,
-                                lectureOtherLines: next,
-                                ...(hasMeasureOtherSelection(next)
-                                  ? { lectureMeasuresKeine: false }
-                                  : {}),
-                              }))
-                            }
-                            error={overviewLectureMeasuresInvalid}
-                          />
-                        </div>
-                        {overviewLectureMeasuresInvalid ? (
-                          <p className="text-xs text-destructive">
-                            Bitte wählen Sie «Keine», mindestens eine Massnahme oder eine
-                            Sonstige-Angabe.
-                          </p>
-                        ) : null}
-                      </div>
-
-                      <div className="pt-1">
-                        <div className="space-y-1">
-                          <p className="text-base font-medium text-foreground">
-                            Ausgleichsmassnahme für Leistungsnachweise
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Wählen Sie die Massnahmen aus, die Sie bei Prüfungen und anderen
-                            Leistungsnachweisen benötigen.
-                          </p>
-                        </div>
-                        <div
-                          className={cn(
-                            "mt-3 max-w-xl space-y-2 rounded-lg",
-                            overviewAssessmentMeasuresInvalid &&
-                              "border border-destructive p-2",
-                          )}
-                        >
-                          <label
-                            className={cn(
-                              "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
-                              applicationFormData.assessmentMeasuresKeine
-                                ? "border-foreground"
-                                : "border-border",
-                            )}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={applicationFormData.assessmentMeasuresKeine}
-                              onChange={(event) =>
-                                setApplicationFormData((previous) => ({
-                                  ...previous,
-                                  assessmentMeasuresKeine: event.target.checked,
-                                  assessmentMeasures: [],
-                                  assessmentOtherLines: event.target.checked
-                                    ? [""]
-                                    : previous.assessmentOtherLines,
-                                }))
-                              }
-                              className="mt-0.5 size-4 shrink-0 accent-primary"
-                            />
-                            <span className="space-y-1">
-                              <span className="block text-sm text-foreground">Keine</span>
-                              <span className="block text-xs text-muted-foreground">
-                                Ich benötige keine Ausgleichsmassnahmen für Leistungsnachweise.
-                              </span>
-                            </span>
-                          </label>
-                          {ASSESSMENT_MEASURE_OPTIONS.map((option) => {
-                            const isChecked = applicationFormData.assessmentMeasures.includes(
-                              option.key,
-                            );
-                            return (
-                              <label
-                                key={option.key}
-                                className={cn(
-                                  "flex cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm",
-                                  isChecked ? "border-foreground" : "border-border",
-                                )}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={(event) =>
-                                    setApplicationFormData((previous) => ({
-                                      ...previous,
-                                      assessmentMeasuresKeine: false,
-                                      assessmentMeasures: event.target.checked
-                                        ? [...previous.assessmentMeasures, option.key]
-                                        : previous.assessmentMeasures.filter(
-                                            (entry) => entry !== option.key,
-                                          ),
-                                    }))
-                                  }
-                                  className="mt-0.5 size-4 shrink-0 accent-primary"
-                                />
-                                <span className="space-y-1">
-                                  <span className="block text-sm text-foreground">
-                                    {option.title}
-                                  </span>
-                                  <span className="block text-xs text-muted-foreground">
-                                    {option.description}
-                                  </span>
-                                </span>
-                              </label>
-                            );
-                          })}
-                          <CustomMeasureLinesField
-                            idPrefix="overview-assessment-other"
-                            lines={applicationFormData.assessmentOtherLines}
-                            onChange={(next) =>
-                              setApplicationFormData((previous) => ({
-                                ...previous,
-                                assessmentOtherLines: next,
-                                ...(hasMeasureOtherSelection(next)
-                                  ? { assessmentMeasuresKeine: false }
-                                  : {}),
-                              }))
-                            }
-                            error={overviewAssessmentMeasuresInvalid}
-                          />
-                        </div>
-                        {overviewAssessmentMeasuresInvalid ? (
-                          <p className="text-xs text-destructive">
-                            Bitte wählen Sie «Keine», mindestens eine Massnahme oder eine
-                            Sonstige-Angabe.
-                          </p>
-                        ) : null}
-                      </div>
-                    </div>
+                    <R1ApplicationDefinitionSection
+                      applicationFormData={applicationFormData}
+                      setApplicationFormData={setApplicationFormData}
+                      errors={{
+                        situationDescription: overviewSituationInvalid
+                          ? "Dieses Feld ist erforderlich."
+                          : undefined,
+                        duration: overviewDurationInvalid
+                          ? "Bitte wählen Sie eine Option aus."
+                          : undefined,
+                        scopeSelections: overviewScopeInvalid
+                          ? "Bitte wählen Sie mindestens eine Option aus."
+                          : undefined,
+                        lectureMeasures: overviewLectureMeasuresInvalid
+                          ? "Bitte wählen Sie «Keine», mindestens eine Massnahme oder eine Sonstige-Angabe."
+                          : undefined,
+                        assessmentMeasures: overviewAssessmentMeasuresInvalid
+                          ? "Bitte wählen Sie «Keine», mindestens eine Massnahme oder eine Sonstige-Angabe."
+                          : undefined,
+                      }}
+                      situationDescriptionRef={situationDescriptionOverviewRef}
+                      durationRadioName="overview-application-duration"
+                      lectureOtherIdPrefix="overview-lecture-other"
+                      assessmentOtherIdPrefix="overview-assessment-other"
+                    />
 
                     <div className="rounded-md bg-background p-2">
                       <p className="text-sm text-foreground">
@@ -3403,21 +2605,13 @@ export function NtaAntragDesktop({
                         <p className="mt-1 text-xs text-destructive">{stepFiveError}</p>
                       ) : null}
                     </div>
-                  </div>
+                  </>
                 )}
 
                 {currentStep !== "step3_booked" && currentStep !== "step6_submitted" ? (
-                  <div className="flex items-center justify-between gap-3">
+                  <R1FlowFormFooter>
+                    <div className="flex w-full items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setDeleteApplicationDialogOpen(true)}
-                        disabled={isDeletingApplication}
-                        className="rounded-md p-2 text-destructive/70 transition hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-label="Antrag löschen"
-                      >
-                        <Trash2 className="size-4" />
-                      </button>
                       {currentStep === "step2" ? (
                         <Button
                           type="button"
@@ -3466,9 +2660,6 @@ export function NtaAntragDesktop({
                       ) : null}
                     </div>
                     <div className="flex items-center gap-3">
-                      <p className="text-xs text-muted-foreground">
-                        Autosave aktiv: Entwurf wird laufend gespeichert.
-                      </p>
                       {currentStep === "step3_booking" ? (
                         <Button
                           type="button"
@@ -3497,14 +2688,16 @@ export function NtaAntragDesktop({
                         </Button>
                       )}
                     </div>
-                  </div>
+                    </div>
+                  </R1FlowFormFooter>
                 ) : null}
-              </CardContent>
-            </Card>
+            </R1FlowFormCard>
           </form>
-        </main>
-        {showCorrectionSidebar && workspaceApplicationForSidebar && statusMetaForCorrection ? (
-          <aside className="col-span-12 hidden h-screen flex-col overflow-y-auto border-l border-border bg-sidebar p-6 lg:col-span-3 lg:flex">
+        </R1FlowMainContent>
+      }
+      correctionSidebar={
+        showCorrectionSidebar && workspaceApplicationForSidebar && statusMetaForCorrection ? (
+          <div className="p-6">
             <ApplicationReviewDetailSidebar
               application={workspaceApplicationForSidebar}
               statusMeta={statusMetaForCorrection}
@@ -3513,9 +2706,16 @@ export function NtaAntragDesktop({
               savedReviewComments={savedReviewCommentsForSidebar}
               onSavedCommentNavigate={navigateFromSavedComment}
             />
-          </aside>
-        ) : null}
-      </div>
+          </div>
+        ) : undefined
+      }
+    />
+
+      {draftExitError ? (
+        <p className="fixed right-6 top-16 z-50 max-w-sm text-right text-xs text-destructive">
+          {draftExitError}
+        </p>
+      ) : null}
 
       <Dialog
         open={deleteApplicationDialogOpen}
@@ -3552,6 +2752,6 @@ export function NtaAntragDesktop({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

@@ -17,6 +17,7 @@ import {
   PopoverAnchor,
   PopoverContent,
 } from "@/components/ui/popover"
+import { r1FlowSelectTriggerClassName } from "@/lib/design-tokens/r1-form"
 import { STUDIENGAENGE } from "@/lib/studiengaenge"
 import { cn } from "@/lib/utils"
 
@@ -27,12 +28,9 @@ type StudiengangComboboxProps = {
   placeholder?: string
 }
 
-/** Gleiche Trigger-Basis wie `SelectTrigger` + gleiche Overrides wie Semester-Feld in der Form */
 const comboboxTriggerClassName = cn(
-  "flex w-full min-w-0 cursor-text items-center justify-between gap-1.5 rounded-md border border-neutral-300 bg-background py-2 pr-2 pl-2.5 text-sm shadow-xs transition-[color,box-shadow] outline-none",
-  "focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50",
-  "dark:border-neutral-600 dark:bg-input/30 dark:focus-within:ring-ring/40",
-  "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  r1FlowSelectTriggerClassName,
+  "cursor-text [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
 )
 
 function filterStudiengaenge(query: string) {

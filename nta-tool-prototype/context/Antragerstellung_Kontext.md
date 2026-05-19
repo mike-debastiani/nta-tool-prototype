@@ -52,7 +52,15 @@ Hinweise:
 
 | Datei | Rolle |
 |-------|--------|
-| `components/nta-antrag-desktop.tsx` | R1 Flow Step 1–6: Validierung, Autosave, Realtime (per **`application.id`** gescoped), Sidebar, Delete |
+| `components/nta-antrag-desktop.tsx` | R1 Flow Step 1–6: Validierung, Fortschritts-/Freischaltlogik, Autosave, Realtime, Delete → Portal |
+| `components/domain/r1-application-flow-layout.tsx` | HF-Layout: `h-screen`, Top-Bar (Titel, Autosave-Hinweis, Schliessen), Sidebar, scrollbarer Form-Bereich |
+| `components/domain/r1-flow-icons.tsx` | Lucide-Icons + Fortschritts-Statuspunkt (Gradient complete/incomplete) |
+| `components/domain/r1-booking-scheduler.tsx` | Step 3 `step3_booking`: Kalender + Slots + Termindetails (Figma `5307:7575`) |
+| `components/domain/r1-booking-confirmation.tsx` | Step 3 `step3_booked`: Terminbestätigung, Karte, Footer (Figma `5307:7907` / `5307:8254`) |
+| `components/domain/r1-application-definition-section.tsx` | Step 4 + Step 5: **Antragsstellung** (HF-Feldabstände, `spacing="definition"`) |
+| `components/domain/custom-measure-lines-field.tsx` | Sonstige-Massnahmen-Zeilen (Step 4; wiederverwendet in Anpassungsansicht) |
+| `components/studiengang-combobox.tsx` | Studiengang Step 1 (HF-Select-Trigger aus `r1-form.ts`) |
+| `lib/design-tokens/r1-form.ts` | Feld-Gaps + Choice-Karten + Select-Trigger (SSOT für `R1FlowField*`) |
 | `app/portal/antragserstellung/page.tsx` | Steuert Initial-Load: `?new` ⇒ leer; `?applicationId` ⇒ `PortalApplicationAdjustment`; sonst nur **resumable** Anträge auto-laden |
 | `components/domain/portal-application-adjustment.tsx` | R1 Block-Detailansicht (Layout wie R2-Review). Edit nur bei kanonisch `needs_adjustment`; per-Block Autosave; Freigabe **„Anpassungen für Review freigeben“** → `POST /api/applications/r1-release-adjustments`; Realtime-Broadcast-Listener + Refetch |
 | `components/domain/student-dashboard.tsx` | R1 Dashboard (Liste; Klick → `?applicationId=<uuid>`); **Polling** der Anträge des eingeloggten Antragstellers für aktuelle `status`/Badges |
@@ -67,7 +75,7 @@ Hinweise:
 | `components/domain/login-card.tsx` | Student/Staff-Login inkl. `getSession()` nach Sign-In |
 | `components/domain/role-dashboard-layout.tsx` | Gemeinsames R1/Workspace-Dashboard (Sidebar; **Topbar** Suche/Inbox/Avatar für **R2–R6**) |
 | `components/domain/rich-text-editor.tsx` | TipTap-Wrapper (StarterKit + Underline/Link/TextAlign/Placeholder/Custom-Heading) mit shadcn-styled, reaktiver Toolbar (`useEditorState`) |
-| `components/domain/recommendation-released-accordion.tsx` | Geteilte Anzeige für `recommendation.releasedHtml` (Variant `card` für R2-Review, `plain` für R1-Antragsflow); Header inline mit Avatar + Freigegeben-Pill |
+| `components/domain/recommendation-released-accordion.tsx` | `releasedHtml`: `card` (R2-Review), `plain` (Legacy), **`r1`** (R1 Step 3/5, Figma `5247:5570`) — Meta «Freigegeben am … durch» + Avatar |
 | `components/ui/accordion.tsx` | shadcn-Wrapper um `radix-ui` Accordion (ohne Hover-Underline) |
 | `app/api/applications/review-forward/route.ts` | R2 Forward: `in_implementation` / `needs_correction` (RLS-konform); merged `data` muss **`r1AdjustmentResolutions`** nicht streichen (Trigger) |
 | `app/api/applications/r4-persist-decision/route.ts` | Optional: R4 merge `r4DecisionReview` (primär Browser-Client, siehe `r4-workspace-supabase-persist`) |
@@ -98,24 +106,41 @@ Hinweise:
 ### Step 2 — Fachärztliches Attest
 
 - Multi-Upload (Drag & Drop / Dateiauswahl); Löschen pro Datei; **mind. eine Datei** Pflicht.
+- **HF-Layout:** Root `scroll-mt-4 space-y-3`; Titel + ICF-Hinweis; **`R1FlowAttestCallout`** mit `mb-10` (Figma `5077:14809`); Upload-Bereich `space-y-2`; Hinweiszeile `text-hf-paragraph-small` + `mb-5`; Dateiliste `space-y-2`.
 
 ### Step 3 — Beratung & Empfehlung
 
-- Terminwahl (Kalender + Slot); nach Buchung Waiting-Screen.
-- **Empfehlung:** Realtime, sobald R2 freigibt (`data.recommendation.releasedHtml` + `ready: true`); **Kenntnisnahme-Checkbox** Pflicht.
-- Anzeige des freigegebenen Schreibens über den geteilten **`RecommendationReleasedAccordion`** (Variant `plain`) — gleicher visueller Block wie auf R2-Seite. Der frühere Datei-Tile (`recommendation.url`, Hilfsfunktion `fileNameFromUrl`) ist vollständig entfernt; existierende `url`-Werte bleiben im JSON erhalten, werden aber nicht mehr gerendert.
-- Solange `releasedHtml` noch leer ist, zeigt der Step nur einen kurzen Hinweis („Die Fachstelle hat noch kein Empfehlungsschreiben freigegeben.“) — kein Datei-Fallback mehr.
+UI-Substeps in `nta-antrag-desktop.tsx` (ein Sidebar-Step „Beratung und Empfehlung“):
 
-### Step 4 — Antrag stellen (Definition)
+| UI-Step | Komponente | Figma (HF) |
+|---------|------------|------------|
+| `step3_booking` | `R1FlowBookingScheduler` | `5307:7575` |
+| `step3_booked` | `R1FlowBookingConfirmation` | `5307:7907` (Karte/Footer `5307:8254`) |
+| `step3_recommendation` | `RecommendationReleasedAccordion` **`variant="r1"`** + optional Checkbox | `5247:5570` |
 
-- Blöcke gemäß Figma/Produkt; Pflicht: Freitext, Dauer, pro Auswahlblock mind. eine Option; „Sonstige“ mit Zusatztext wo vorgesehen.
+- **Buchung:** Kalender + Slots; ausgewählter Tag → Marker **weiss** auf schwarzem Kreis. Footer „Termin buchen“ in `R1FlowFormFooter`.
+- **Nach Buchung:** Terminbestätigung ohne inneren Rahmen um die Karte; **statische** Kartengrafik `public/images/r1-booking/map-example.png` + Link «In Maps öffnen»; Footer-Buttons gemäss Figma (kein `flex-1` auf Primary).
+- **Empfehlung freigegeben (R2):** nur wenn `data.recommendation.releasedHtml` gesetzt (`isRecommendationReleasedToR1`) — **nicht** durch Navigieren zu `step3_recommendation`.
+- **Kenntnisnahme:** Checkbox nur in `step3_recommendation` als `children` des Accordions; Pflicht für **Erst-Freischaltung** Step 4; Persistenz `data.r1RecommendationAcknowledged`; deaktiviert bis `releasedHtml`.
+- **Sticky Unlock:** Step 4/5 bleiben klickbar; abgewählte Kenntnisnahme → Step 3 in Sidebar **incomplete** (rot).
+- Legacy `recommendation.url` wird nicht gerendert.
+
+### Step 4 — Antrag stellen (Antragsstellung)
+
+- Implementierung: **`R1ApplicationDefinitionSection`** (geteilt mit Step 5).
+- `R1FlowSectionTitle spacingBelow="compact"` + `R1FlowFieldStack spacing="definition"` (**40px** zwischen den fünf Blöcken).
+- Pro Block: `R1FlowField described` (12px Beschreibung→Control), volle Breite Choice-Karten (`R1FlowFieldOptions` / `gap-2`).
+- Pflicht: Freitext, Dauer, Geltungsbereich, Lehrveranstaltungs- und Leistungsnachweis-Massnahmen (inkl. «Keine» / Sonstige-Zeilen).
 
 ### Step 5 — Übersicht
 
-- Gesamter Antrag als Review; Step-1 **locked**; Rest **editierbar**.
-- Live-Validierung: fehlende Pflichtinhalte **rot**; zugehöriger **Prozessschritt** in der Sidebar bei Fehler **rot**.
-- Empfehlungsschreiben-Block nutzt denselben `RecommendationReleasedAccordion` wie Step 3 (Variant `plain`); Fallback-Text identisch.
-- **Finales Senden** schreibt u. a. **`submittedAt`**, **`finalSubmitted`**, **`applicationDefinition`** in `applications.data` und führt fachlich in **„In Review“**. Das `recommendation`-Objekt wird per Spread erhalten (`...application.data.recommendation`) und `ready: true` gesetzt — vorhandene `draftHtml`/`releasedHtml`/`releasedBy`/Legacy-`url` bleiben unangetastet.
+- **Layout:** Alle Abschnitte als **direkte Kinder** von `R1FlowFormCard` (Fragment, **kein** `space-y-8`) → **40px** (`gap-10`) wie zwischen Step-1-Sektionen in Step 1.
+- **Step 1:** Persönliche Angaben, Studium, Antragsart — read-only (Lock-Icons); nach Beratungsbuchung identisch zur gesperrten Step-1-Ansicht (`scroll-mt-4` auf Persönliche Angaben).
+- **Step 2:** gleiche DOM-Struktur wie Step 2 (Attest inkl. Callout, Upload, Dateiliste); weiterhin editierbar.
+- **Step 3:** `RecommendationReleasedAccordion` **`variant="r1"`** **ohne** Kenntnisnahme-Checkbox.
+- **Step 4:** dieselbe `R1ApplicationDefinitionSection` wie Step 4; Overview-Validierung über `errors`-Prop (`overviewSituationInvalid`, …).
+- Live-Validierung: fehlende Pflichtinhalte **rot**; Sidebar **incomplete** (`step*InvalidInOverview`).
+- Nutzungsbedingungen-Block am Ende der Karte; **Finales Senden** → `submittedAt`, `finalSubmitted`, `applicationDefinition`; `recommendation` per Spread erhalten, `ready: true`.
 
 ### Step 6 — Erfolg
 
@@ -125,15 +150,83 @@ Hinweise:
 
 ---
 
-## 5. Prozessfortschritt (Sidebar) — Sollverhalten
+## 5. HF-Shell & Layout (R1-Antragsflow)
 
-- Steps nur klickbar, wenn **freigeschaltet**; Freischaltung **datenbasiert** (nicht nur `currentStep`).
-- Farben: **Grün** abgeschlossen; **Schwarz** aktiv oder nächster offener Step; **Grau** gesperrt; **Rot** ungültig in Übersicht.
-- **Trennlinie** nach „Beratung und Empfehlung“: vor Empfehlung sichtbar; nach freigegebener Empfehlung **dauerhaft ausgeblendet**.
+**Figma:** Screen `5180:7021`, Fortschritt `5180:7025`, States `5180:8333`, Form `5180:7082`, Top-Bar `5180:7106`, Kontakt `5213:1456`, Verwerfen `5180:7111`.  
+**Code:** `components/domain/r1-application-flow-layout.tsx` + `HfPageGrid`.
+
+| Bereich | Verhalten |
+|---------|-----------|
+| Seite | `h-screen overflow-hidden` — nur der **rechte Form-Bereich** scrollt (`R1FlowMainContent`) |
+| Top-Bar | Titel links; **Autosave-Hinweis** rechts (Save-Icon, `bewilligt-500`) wenn aktiv; optional **Schliessen** → Draft speichern + `/portal/home` |
+| Sidebar | Fortschrittskarte + Kontakt; unten **Antrag verwerfen** (`pb-6`) |
+| Hauptpanel | Weiss, `rounded-tl-xl`, bis rechter Viewport-Rand (`-mr-[var(--hf-grid-margin)]`) |
+| Formular | Karte `border-stone-250`, Footer **Weiter** innerhalb der Karte |
+| Korrektur-Modus | Optional dritte Spalte: Review-Sidebar; Formular `hf-col-span-6` |
+
+**Icons:** Lucide via `R1FlowIcon` / `r1-flow-icons.tsx` (Referenz-SVGs unter `public/icons/r1-flow/` optional; Runtime = Lucide).
+
+**Formular-Feldabstände:** `R1FlowField*`-Primitives + `lib/design-tokens/r1-form.ts` — Details `High_Fidelity_Design_Kontext.md` § 6.
+
+**Autosave:** LocalStorage-Debouncing in `nta-antrag-desktop.tsx`; Hinweis in Top-Bar (nicht über dem Formular). Ausgeblendet bei `step3_booked` und `step6_submitted`.
+
+**Antrag verwerfen:** Dialog bestätigen → Zeile in Supabase löschen (falls `application.id`), lokaler State + LocalStorage leeren → **`router.replace("/portal/home")`**.
 
 ---
 
-## 6. R1 Dashboard — Sollverhalten
+## 6. Prozessfortschritt (Sidebar) — Ist-Stand
+
+**Komponenten:** `R1FlowProgressCard`, `R1FlowProgressStep` in `r1-application-flow-layout.tsx`; Logik in `nta-antrag-desktop.tsx` (`resolveR1ProgressVisualState`, `canOpenR1ProgressStep`, `highestUnlockedStepIndex`).
+
+### Kopfzeile & Balken
+
+- Text: **`{n} von 5 Abgeschlossen`** — zählt abgeschlossene Schritte (nicht aktueller Step-Index).
+- Fortschrittsbalken: Breite = `completedStepCount / 5` (Gradient `bewilligt-100` → `bewilligt-300`).
+
+**Zähl-Regel (`r1CompletedStepCount`):** Step 1 vollständig, Step 2 ≥1 Attest, Step 3 = `releasedHtml` **und** Kenntnisnahme-Checkbox, Step 4 `isStepFourComplete`, Step 5 nach finalem Submit.
+
+### Visuelle Zustände pro Zeile (Figma `5180:8333`)
+
+| Zustand | Wann | Text/Icon | Hintergrund Zeile | Status rechts |
+|---------|------|-----------|-----------------|---------------|
+| **available** | Freigeschaltet, offen | `text-primary` | keiner; bei Hover/Auswahl `bg-stone-100` | leerer Kreis (primary) |
+| **complete** | Schritt erfüllt | `text-bewilligt-500` | wie oben bei Hover/Aktiv | Gradient-Punkt `bewilligt-100→300` |
+| **incomplete** | Offen, aber späterer Step schon freigeschaltet, oder Übersicht-Fehler | `text-abgelehnt-600` | wie oben | Gradient-Punkt `abgelehnt-100→400` (vertical) |
+| **locked-pre** | Vor Divider, noch nicht erreichbar (z. B. Step 2 ohne Step 1) | `text-stone-400` | — | Kreis `stone-400` |
+| **locked-post** | Step 4/5 vor R2-Freigabe (`!recommendationReleased`) | `text-stone-250` | — | Kreis `stone-250` |
+
+Step 5 nach R2-Freigabe aber vor Step-4-Abschluss: **locked-pre** (`stone-400`), nicht post.
+
+### Freischaltung (klickbar)
+
+**Erst-Freischaltung** (`canOpenR1ProgressStep`, ohne Sticky):
+
+| Step | Bedingung |
+|------|-----------|
+| 1 | immer |
+| 2 | Step 1 complete |
+| 3 | Step 1 + 2 complete |
+| 4 | Step 1 + 2 + `releasedHtml` + **Checkbox Kenntnisnahme** |
+| 5 | Step 1 + 2 + `releasedHtml` + Step 4 complete |
+
+**Sticky Unlock:** `highestUnlockedStepIndex` = max(bisher besuchter Index, `data.r1PortalFlowStep`, Navigation). Wenn `index >= stepIndex`, bleibt der Step **klickbar**, auch wenn Voraussetzungen später wieder fehlen (z. B. Attest gelöscht, aber User war schon auf Step 4).
+
+Ausnahme Step 4/5 ohne Kenntnisnahme: Erst-Freischaltung blockiert; nach Sticky bleibt Step 4 offen, Step 3 wird rot.
+
+**Navigation clamp:** `clampFlowStepToData` verhindert direktes Öffnen von Step 4/5 ohne `releasedHtml`. Step-3-Klick ohne Freigabe → `step3_booking` / `step3_booked`.
+
+### Trennlinie
+
+- `R1FlowProgressDivider` nach Step 3, solange `!recommendationReleased` (vor R2-Freigabe).
+
+### Übersicht (Step 5)
+
+- Auf Step 5: fehlende Steps 1/2/4 in Sidebar **incomplete** (`step*InvalidInOverview`).
+
+---
+
+
+## 7. R1 Dashboard — Sollverhalten
 
 - Liste aller eigenen Anträge.
 - **Neuen Antrag erstellen** → komplett leer über **`?new=1`** (auch `?new` ohne Wert genügt).
@@ -146,14 +239,17 @@ Hinweise:
 
 ---
 
-## 7. Datenmodell `applications.data` (relevant)
+## 8. Datenmodell `applications.data` (relevant)
 
 - `title`, `summary`
 - `personalData`
 - `attestFiles`
 - `consultation`: `status` **`booked` | `done`**, date, slot, location, advisor
+- `r1PortalFlowStep` — letzter persistierter UI-Step (Draft-Exit); fließt in `highestUnlockedStepIndex` ein.
+- `r1RecommendationAcknowledged` — Kenntnisnahme-Checkbox Step 3.
+- `r1DraftBookingUi` — Kalender/Slot-Entwurf vor finaler Buchung.
 - `recommendation`:
-  - `ready: boolean` — Step-Gating R1 (Step 3 erreichbar).
+  - `ready: boolean` — u. a. bei finalem Submit; **Freischaltung Step 4/5 nur über `releasedHtml`** (siehe `isRecommendationReleasedToR1`).
   - `draftHtml` / `draftText` — TipTap-Entwurf R2 (Beratungsphase, „Entwurf speichern“ im `RecommendationDraftEditor`).
   - `releasedHtml` / `releasedText` / `releasedAt` / `releasedBy` — finaler, freigegebener Inhalt nach „Empfehlungsschreiben freigeben“; treibt den `RecommendationReleasedAccordion` (R1 + R2).
   - `url` — Legacy-Datei-Pfad; bleibt aus Datenkompatibilität erhalten, wird **nicht mehr gerendert**.
@@ -167,7 +263,7 @@ Typen: **`lib/test-flow-types.ts`**.
 
 ---
 
-## 8. Statusmodell (kanonisch, R1/R2)
+## 9. Statusmodell (kanonisch, R1/R2)
 
 Verbindlich (Figma-State-Canvas + Produktregel):
 
@@ -200,7 +296,7 @@ State-Badges orientieren sich an **Figma-Farbkodierung** (kompakt, ohne Border) 
 
 ---
 
-## 9. R2 Workspace-Test — Leitplanken
+## 10. R2 Workspace-Test — Leitplanken
 
 - Detailansicht **read-only** (außer definierte Aktionen). Im `WorkspaceApplicationReview` über `viewMode` gesteuert:
   - `interactive` (in_review) — voller Review-Modus.
@@ -225,7 +321,7 @@ State-Badges orientieren sich an **Figma-Farbkodierung** (kompakt, ohne Border) 
 
 ---
 
-## 10. DB / RLS / Trigger — nicht verletzen
+## 11. DB / RLS / Trigger — nicht verletzen
 
 - Workspace-Policies: Zugriff für Rollen **R2, R3, R5, R6** (bestehende `applications_select_r2_worklist`). **R4** erhält dieselbe Lesesicht auf die Inbox über die additive Migration **`20260513190000_r4_workspace_select_policies.sql`** (`applications_select_r4_workspace` sowie `users_select_r4_workspace_applicants` für Embed). **R4-Schreiben:** Migration **`20260514120000_applications_update_r4_decision.sql`** — Policy **`applications_update_r4_decision`** (`USING` `in_implementation`, `WITH CHECK` `in_implementation` oder `approved`). **Wichtig:** beide Policy-Familien nutzen **`current_user_role()`** (wie die übrigen Workspace-Policies) — **kein** `EXISTS (SELECT … FROM public.users …)` innerhalb von RLS auf `users`/`applications`, sonst Endlos-Rekursion Postgres (**Symptom u. a.:** Login kann Profil nicht laden). Die **SELECT**-Policy `applications_select_r2_worklist` umfasst seit Migration **`extend_workspace_select_to_decision_states`** auch **`in_implementation`**, **`approved`** und **`rejected`** — sonst scheitert der `UPDATE` von `in_review → in_implementation` am implizit folgenden `RETURNING`-SELECT (Postgres-RLS-Mechanik). **`SUPABASE_SERVICE_ROLE_KEY` ist für den Forward-Pfad nicht erforderlich.**
 - **UPDATE**-Policy `applications_update_r2_worklist` deckt den Übergang aus `in_review` heraus (`USING`); `WITH CHECK` erlaubt die Ziel-Status `in_implementation` / `needs_correction`.
@@ -235,10 +331,10 @@ State-Badges orientieren sich an **Figma-Farbkodierung** (kompakt, ohne Border) 
 
 ---
 
-## 11. Arbeitsregeln bei Änderungen
+## 12. Arbeitsregeln bei Änderungen
 
 1. Keine Regression in bereits umgesetzten Screens ohne Produktentscheid.
-2. Status- und Freischaltlogik **datenbasiert** halten.
+2. Status- und Freischaltlogik **datenbasiert** halten — Step 4/5 nur über `releasedHtml` (`isRecommendationReleasedToR1`), nie über `currentStep === step3_recommendation`.
 3. R2-**Trigger-Grenzen** strikt einhalten (nur `consultation` / `recommendation`); R2-Review-Daten gehören unter `recommendation.workspaceReview`.
 4. **Realtime-Subscriptions** im R1-Flow immer auf die **aktive `application.id`** scopen, nicht auf `applicant_id` — sonst können Updates eines anderen Antrags den lokalen Step-State überschreiben.
 5. RLS-Anpassungen: bei **Status-Übergängen** prüfen, ob die Ziel-Zeile nach dem Update via SELECT-Policy weiterhin sichtbar ist (sonst `new row violates row-level security policy`).
@@ -248,11 +344,12 @@ State-Badges orientieren sich an **Figma-Farbkodierung** (kompakt, ohne Border) 
 
 ---
 
-## 12. Verwandte Dokumente
+## 13. Verwandte Dokumente
 
 | Datei | Nutzen |
 |-------|--------|
 | `General_Prototype_Kontext.md` | Tech, Rollen, Architektur, Scope |
 | `Antrag_Review_Kontext.md` | R2-Block-Review, Forward, R1-Freigabe-Loop, Persistenz, UI-Details |
 | `Antrag_Bewilligung_Kontext.md` | R4 Bewilligung, Workspace-RLS, APIs |
+| `High_Fidelity_Design_Kontext.md` | HF-Tokens, Grid, R1-Shell Figma-Referenzen |
 | `Prototyp_Funktionen.md` | Langfristige Funktionsvision |

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { HfGridCell, HfPageGrid } from "@/components/layout/hf-grid";
 import { useWorkspaceR2Toolbar } from "@/components/domain/workspace-r2-toolbar-context";
 import { ArrowLeft, Loader2, Save, Send } from "lucide-react";
 import { type Editor } from "@tiptap/react";
@@ -243,7 +244,8 @@ export function WorkspaceTestFlow({
 
   if (!selectedApplication) {
     return (
-      <div className="px-6 py-6">
+      <HfPageGrid className="py-6">
+        <HfGridCell span={12}>
       <Card>
         <CardHeader>
           <CardTitle>Eingegangene Antraege</CardTitle>
@@ -293,7 +295,8 @@ export function WorkspaceTestFlow({
           {message && <p className="pt-2 text-sm text-muted-foreground">{message}</p>}
         </CardContent>
       </Card>
-      </div>
+        </HfGridCell>
+      </HfPageGrid>
     );
   }
 

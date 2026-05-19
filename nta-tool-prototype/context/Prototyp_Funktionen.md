@@ -90,23 +90,23 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 ### F2 — Multi-Step Antrag-Erstellung (R1)
 
 **Zielbild:** linearer Step-Flow mit Stepper.  
-**Ist (`nta-antrag-desktop.tsx`):** **sechs** Schritte inkl. Übersicht und Erfolgsscreen (Persönliche Angaben → Attest → Beratung & Empfehlung → Antrag stellen → Übersicht → Erfolg); Details und Status-Gating → `Antragerstellung_Kontext.md`.
+**Ist:** **sechs** Schritte inkl. Übersicht und Erfolg — Logik in `nta-antrag-desktop.tsx`, **HF-Shell** in `r1-application-flow-layout.tsx` (Persönliche Angaben → Attest → Beratung & Empfehlung → Antrag stellen → Übersicht → Erfolg). Step 3 hat UI-Substeps (`step3_booking` / `step3_booked` / `step3_recommendation`). Step 4/5 teilen `R1ApplicationDefinitionSection`. HF-Feldabstände: `R1FlowField*` + `r1-form.ts`. Details → `Antragerstellung_Kontext.md` § 4–6, HF → `High_Fidelity_Design_Kontext.md` § 6.
 
 | Step (Zielbild-Kürzel) | Inhalt |
 |---|---|
 | 1 | Persönliche Angaben (vorausgefüllt aus Auth, editierbar), Antragsart, Studienangaben |
-| 2 | Fachärztliche Dokumente hochladen (mehrere PDFs möglich), Hilfestellung-Callout zu externen Resources oberhalb |
-| 3 | Beratungstermin buchen (Buchungs-Mock), Wartezustand, Empfehlung von R2 erhalten |
-| 4 | NTA-Definition: Massnahmen (Multiselect, ~10 Optionen), Gültigkeitsdauer, gesundheitliche Lage |
-| Overview | Gesamtformular kontrollieren, pro Section editierbar, final einreichen |
+| 2 | Fachärztliches Attest (ICF), `R1FlowAttestCallout`, Multi-Upload |
+| 3 | Buchung (`r1-booking-scheduler`), Terminbestätigung (`r1-booking-confirmation`), Empfehlung (`RecommendationReleasedAccordion` `variant="r1"`) |
+| 4 | Antragsstellung (`r1-application-definition-section`): Situation, Dauer, Geltungsbereich, Massnahmen |
+| Overview | Zusammengesetzte Ansicht aller Steps mit gleichen Abständen (`R1FlowFormCard` `gap-10`); Step 1 read-only; final einreichen |
 
-**Verhalten:**
-- Auto-Save nach jedem Feld-Änderung
-- Freie Navigation zwischen Steps (zurück und vor)
-- Wiedereinstieg auf letztem bearbeiteten Step nach Logout/Wiederkehr
-- Optionen: Entwurf speichern, Antrag verwerfen, Antrag während Erstellung jederzeit einsehen
-- Arztzeugnis bis zur finalen Einreichung änderbar
-- Step 4 erst freigeschaltet wenn R2-Empfehlung im Step 3 vorliegt
+**Verhalten (Ist-Stand Prototyp):**
+- Auto-Save (LocalStorage-Debouncing); Hinweis in **Top-Bar**, nicht im Formular
+- Navigation zwischen freigeschalteten Steps; **Sticky Unlock** (`highestUnlockedStepIndex` + `r1PortalFlowStep`) — einmal erreichte Steps bleiben klickbar
+- Wiedereinstieg: letzter Draft-Step in `data.r1PortalFlowStep`
+- **Antrag verwerfen** → Löschen (falls DB-Zeile) + Redirect `/portal/home`
+- Step 4/5: Freischaltung nur bei `recommendation.releasedHtml` (R2-Freigabe) **und** Kenntnisnahme-Checkbox für Erst-Zugang zu Step 4; `releasedHtml` darf **nicht** von `currentStep` abgeleitet werden
+- Fortschritts-Sidebar: HF-Zustände (primary / bewilligt / abgelehnt / stone locked) — siehe `Antragerstellung_Kontext.md` § 6
 
 ### F3 — Schema-driven Form-Rendering
 

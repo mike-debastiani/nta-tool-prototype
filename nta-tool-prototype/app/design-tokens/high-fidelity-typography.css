@@ -1,0 +1,215 @@
+/**
+ * High Fidelity typography — BA-Prototyp-High-Fi
+ * Source: Figma node 310:257309 (Typography)
+ * https://www.figma.com/design/pwLFwfIPnr9ZuYcot9pyyU/BA-Prototyp-High-Fi?node-id=310-257309
+ *
+ * Family: DM Sans (400 / 500 / 600). Monospaced token in Figma uses Geist Mono;
+ * Prototyp nutzt durchgängig DM Sans (Produktentscheid HF-Migration).
+ */
+
+:root {
+  /* Headings */
+  --hf-heading-1-size: 3rem;
+  --hf-heading-1-line-height: 3rem;
+  --hf-heading-2-size: 1.875rem;
+  --hf-heading-2-line-height: 1.875rem;
+  --hf-heading-3-size: 1.5rem;
+  --hf-heading-3-line-height: 1.8rem;
+  --hf-heading-4-size: 1.25rem;
+  --hf-heading-4-line-height: 1.5rem;
+
+  /* Paragraph large (18 / 27) */
+  --hf-paragraph-large-size: 1.125rem;
+  --hf-paragraph-large-line-height: 1.6875rem;
+
+  /* Paragraph regular (16 / 24) */
+  --hf-paragraph-regular-size: 1rem;
+  --hf-paragraph-regular-line-height: 1.5rem;
+
+  /* Paragraph small (14 / 20) */
+  --hf-paragraph-small-size: 0.875rem;
+  --hf-paragraph-small-line-height: 1.25rem;
+
+  /* Paragraph mini (12 / 16) */
+  --hf-paragraph-mini-size: 0.75rem;
+  --hf-paragraph-mini-line-height: 1rem;
+
+  /* Monospaced (16 / 24) — same metrics as paragraph regular */
+  --hf-monospaced-size: 1rem;
+  --hf-monospaced-line-height: 1.5rem;
+
+  /* Caption (14 / 21, tracking 1.5px) */
+  --hf-caption-size: 0.875rem;
+  --hf-caption-line-height: 1.3125rem;
+  --hf-caption-letter-spacing: 0.09375rem;
+}
+
+@theme inline {
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --text-heading-1: var(--hf-heading-1-size);
+  --text-heading-1--line-height: var(--hf-heading-1-line-height);
+  --text-heading-1--font-weight: 600;
+  --text-heading-1--letter-spacing: 0;
+
+  --text-heading-2: var(--hf-heading-2-size);
+  --text-heading-2--line-height: var(--hf-heading-2-line-height);
+  --text-heading-2--font-weight: 600;
+  --text-heading-2--letter-spacing: 0;
+
+  --text-heading-3: var(--hf-heading-3-size);
+  --text-heading-3--line-height: var(--hf-heading-3-line-height);
+  --text-heading-3--font-weight: 600;
+  --text-heading-3--letter-spacing: 0;
+
+  --text-heading-4: var(--hf-heading-4-size);
+  --text-heading-4--line-height: var(--hf-heading-4-line-height);
+  --text-heading-4--font-weight: 600;
+  --text-heading-4--letter-spacing: 0;
+
+  --text-paragraph-large: var(--hf-paragraph-large-size);
+  --text-paragraph-large--line-height: var(--hf-paragraph-large-line-height);
+
+  --text-paragraph-regular: var(--hf-paragraph-regular-size);
+  --text-paragraph-regular--line-height: var(--hf-paragraph-regular-line-height);
+
+  --text-paragraph-small: var(--hf-paragraph-small-size);
+  --text-paragraph-small--line-height: var(--hf-paragraph-small-line-height);
+
+  --text-paragraph-mini: var(--hf-paragraph-mini-size);
+  --text-paragraph-mini--line-height: var(--hf-paragraph-mini-line-height);
+
+  --text-monospaced: var(--hf-monospaced-size);
+  --text-monospaced--line-height: var(--hf-monospaced-line-height);
+  --text-monospaced--font-weight: 400;
+
+  --text-caption: var(--hf-caption-size);
+  --text-caption--line-height: var(--hf-caption-line-height);
+  --text-caption--letter-spacing: var(--hf-caption-letter-spacing);
+  --text-caption--font-weight: 400;
+}
+
+@layer utilities {
+  /* Headings (Figma: SemiBold = 600) */
+  .text-hf-h1 {
+    font-size: var(--hf-heading-1-size);
+    line-height: var(--hf-heading-1-line-height);
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  .text-hf-h2 {
+    font-size: var(--hf-heading-2-size);
+    line-height: var(--hf-heading-2-line-height);
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  .text-hf-h3 {
+    font-size: var(--hf-heading-3-size);
+    line-height: var(--hf-heading-3-line-height);
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  .text-hf-h4 {
+    font-size: var(--hf-heading-4-size);
+    line-height: var(--hf-heading-4-line-height);
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  /* Paragraph large */
+  .text-hf-paragraph-large {
+    font-size: var(--hf-paragraph-large-size);
+    line-height: var(--hf-paragraph-large-line-height);
+    font-weight: 400;
+  }
+
+  .text-hf-paragraph-large-medium {
+    font-size: var(--hf-paragraph-large-size);
+    line-height: var(--hf-paragraph-large-line-height);
+    font-weight: 500;
+  }
+
+  .text-hf-paragraph-large-bold {
+    font-size: var(--hf-paragraph-large-size);
+    line-height: var(--hf-paragraph-large-line-height);
+    font-weight: 600;
+  }
+
+  /* Paragraph regular */
+  .text-hf-paragraph-regular {
+    font-size: var(--hf-paragraph-regular-size);
+    line-height: var(--hf-paragraph-regular-line-height);
+    font-weight: 400;
+  }
+
+  .text-hf-paragraph-medium {
+    font-size: var(--hf-paragraph-regular-size);
+    line-height: var(--hf-paragraph-regular-line-height);
+    font-weight: 500;
+  }
+
+  .text-hf-paragraph-bold {
+    font-size: var(--hf-paragraph-regular-size);
+    line-height: var(--hf-paragraph-regular-line-height);
+    font-weight: 600;
+  }
+
+  /* Paragraph small */
+  .text-hf-paragraph-small {
+    font-size: var(--hf-paragraph-small-size);
+    line-height: var(--hf-paragraph-small-line-height);
+    font-weight: 400;
+  }
+
+  .text-hf-paragraph-small-medium {
+    font-size: var(--hf-paragraph-small-size);
+    line-height: var(--hf-paragraph-small-line-height);
+    font-weight: 500;
+  }
+
+  .text-hf-paragraph-small-bold {
+    font-size: var(--hf-paragraph-small-size);
+    line-height: var(--hf-paragraph-small-line-height);
+    font-weight: 600;
+  }
+
+  /* Paragraph mini */
+  .text-hf-paragraph-mini {
+    font-size: var(--hf-paragraph-mini-size);
+    line-height: var(--hf-paragraph-mini-line-height);
+    font-weight: 400;
+  }
+
+  .text-hf-paragraph-mini-medium {
+    font-size: var(--hf-paragraph-mini-size);
+    line-height: var(--hf-paragraph-mini-line-height);
+    font-weight: 500;
+  }
+
+  .text-hf-paragraph-mini-bold {
+    font-size: var(--hf-paragraph-mini-size);
+    line-height: var(--hf-paragraph-mini-line-height);
+    font-weight: 600;
+  }
+
+  /* Monospaced + caption */
+  .text-hf-monospaced {
+    font-size: var(--hf-monospaced-size);
+    line-height: var(--hf-monospaced-line-height);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .text-hf-caption {
+    font-size: var(--hf-caption-size);
+    line-height: var(--hf-caption-line-height);
+    font-weight: 400;
+    letter-spacing: var(--hf-caption-letter-spacing);
+    text-transform: uppercase;
+  }
+}

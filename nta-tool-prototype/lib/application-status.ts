@@ -1,3 +1,8 @@
+import {
+  hfRecommendationReleasedBadgeClass,
+  hfStatusBadgeClass,
+} from "@/lib/design-tokens/status-badge-colors";
+
 export type ApplicationStatus =
   | "draft"
   | "submitted"
@@ -57,19 +62,11 @@ const canonicalStatusLabelR4: Partial<Record<CanonicalApplicationState, string>>
   in_decision: "Entscheid ausstehend",
 };
 
-export const statusBadgeClass: Record<CanonicalApplicationState, string> = {
-  draft: "bg-zinc-100 text-zinc-500",
-  consultation_recommendation: "bg-sky-100 text-sky-500",
-  in_review: "bg-blue-100 text-blue-500",
-  needs_adjustment: "bg-orange-100 text-orange-400",
-  in_decision: "bg-purple-100 text-purple-600",
-  approved: "bg-green-100 text-green-700",
-  rejected: "bg-red-200 text-red-700",
-};
+export const statusBadgeClass: Record<CanonicalApplicationState, string> =
+  hfStatusBadgeClass;
 
-/** R2 badge after Empfehlung freigegeben — matches Figma Prototyp shadcn Kit node 3723:10336 (neutral-100 / neutral-500). */
 const R2_RECOMMENDATION_RELEASED_BADGE_CLASS =
-  "bg-neutral-100 text-neutral-500";
+  hfRecommendationReleasedBadgeClass;
 
 export function deriveCanonicalApplicationState(
   application: StatusDerivationInput,

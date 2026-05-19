@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "plugins": [{ "name": "next" }],
+    "baseUrl": "nta-tool-prototype",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "nta-tool-prototype/next-env.d.ts",
+    "nta-tool-prototype/**/*.ts",
+    "nta-tool-prototype/**/*.tsx",
+    "nta-tool-prototype/**/*.mts"
+  ],
+  "exclude": ["node_modules", "nta-tool-prototype/.next"]
+}

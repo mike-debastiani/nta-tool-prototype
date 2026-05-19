@@ -20,6 +20,7 @@ import { WorkspaceAccountMenu } from "@/components/domain/workspace-account-menu
 import { useWorkspaceR2Toolbar } from "@/components/domain/workspace-r2-toolbar-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { HfGridCell, HfPageGrid } from "@/components/layout/hf-grid";
 import { cn } from "@/lib/utils";
 
 type RoleDashboardLayoutProps = {
@@ -280,7 +281,7 @@ export function RoleDashboardLayout({
 
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {isWorkspaceShell ? (
-          <div className="sticky top-0 z-30 flex w-full shrink-0 items-center gap-4 border-b border-border bg-background px-6 py-3">
+          <div className="hf-px-page sticky top-0 z-30 flex w-full shrink-0 items-center gap-4 border-b border-border bg-background py-3">
             <div className="flex min-w-0 shrink-0 items-center">
               {workspaceToolbar?.leadingSlot}
             </div>
@@ -325,18 +326,24 @@ export function RoleDashboardLayout({
         {isWorkspaceShell || edgeToEdge ? (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-8">
-            {userLabel.trim() || actions ? (
-              <header className="mb-6 flex items-center justify-between gap-3">
-                {userLabel.trim() ? (
-                  <p className="text-sm text-muted-foreground">{userLabel}</p>
-                ) : (
-                  <span />
-                )}
-                {actions}
-              </header>
-            ) : null}
-            <div className="flex-1">{children}</div>
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto py-8">
+            <HfPageGrid className="flex min-h-0 flex-1 flex-col">
+              {userLabel.trim() || actions ? (
+                <HfGridCell span={12} className="mb-6">
+                  <header className="flex items-center justify-between gap-3">
+                    {userLabel.trim() ? (
+                      <p className="text-sm text-muted-foreground">{userLabel}</p>
+                    ) : (
+                      <span />
+                    )}
+                    {actions}
+                  </header>
+                </HfGridCell>
+              ) : null}
+              <HfGridCell span={12} className="flex min-h-0 flex-1 flex-col">
+                {children}
+              </HfGridCell>
+            </HfPageGrid>
           </div>
         )}
       </main>

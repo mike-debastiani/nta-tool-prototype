@@ -1,7 +1,7 @@
 # General Prototype Context — NTA Tool (HSLU Bachelor)
 
 > **Zweck:** Übergeordneter Kontext für neue Chats: Was der Prototyp ist, wie er technisch sitzt, welche Rollen und Bereiche es gibt, und welche Grenzen gelten.  
-> **Detail-Tiefe:** Antrag R1, R2-Beratung, Status, RLS → `Antragerstellung_Kontext.md`; **R2-Block-Review nach Einreichung**, Korrekturrunden, R1-Freigabe zurück in `in_review` → `Antrag_Review_Kontext.md`; **R4 Bewilligung / Entscheid** → `Antrag_Bewilligung_Kontext.md`. Zielbild vs. Ist: `Prototyp_Funktionen.md`.
+> **Detail-Tiefe:** Antrag R1, R2-Beratung, Status, RLS → `Antragerstellung_Kontext.md`; **R2-Block-Review nach Einreichung**, Korrekturrunden, R1-Freigabe zurück in `in_review` → `Antrag_Review_Kontext.md`; **R4 Bewilligung / Entscheid** → `Antrag_Bewilligung_Kontext.md`; **HF Design (Tokens, Grid, R1-Shell)** → `High_Fidelity_Design_Kontext.md`. Zielbild vs. Ist: `Prototyp_Funktionen.md`.
 
 ---
 
@@ -67,7 +67,7 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | ID | Thema |
 |----|--------|
 | F1 | Inszenierte Logins (Student/Staff) |
-| F2 | Multi-Step Antrag R1 (im Prototyp stark in `nta-antrag-desktop.tsx` verdichtet) |
+| F2 | Multi-Step Antrag R1 — HF-Shell in `r1-application-flow-layout.tsx`, Logik in `nta-antrag-desktop.tsx` (Details: `Antragerstellung_Kontext.md` § 4–6, HF: `High_Fidelity_Design_Kontext.md` § 7) |
 | F3 | Schema-driven Forms (Zielbild; Konfig unter `lib/config/` wo vorhanden) |
 | F4 | Beratung asynchron / Empfehlung R2 |
 | F5 | Workspace R2–R6 |
@@ -124,8 +124,20 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `components/domain/` | Fachliche UI (Dashboard, Workspace-Flow, Layouts, Badges, **Block-Review**, **Empfehlungs-Editor & -Accordion**, R1-Anpassungsansicht) |
 | `components/domain/rich-text-editor.tsx` | TipTap-Wrapper für das Empfehlungsschreiben |
 | `components/domain/recommendation-released-accordion.tsx` | Geteilte Anzeige des freigegebenen Empfehlungsschreibens (R1 + R2) |
+| `components/domain/r1-application-flow-layout.tsx` | HF-Shell R1-Antragsflow: Top-Bar, Sidebar, Fortschrittskarte, `R1FlowFormCard`, `R1FlowField*`, Attest-Callout |
+| `components/domain/r1-flow-icons.tsx` | Lucide-Icons für R1-Flow (Fortschritt, Kontakt, Autosave-Save) |
+| `components/domain/r1-booking-scheduler.tsx` | R1 Step 3 Terminbuchung (HF) |
+| `components/domain/r1-booking-confirmation.tsx` | R1 Step 3 Terminbestätigung (HF) |
+| `components/domain/r1-application-definition-section.tsx` | R1 Step 4/5 Antragsstellung (HF-Feldabstände) |
+| `components/domain/custom-measure-lines-field.tsx` | „Sonstige Massnahmen“-Zeilen (Step 4 + Portal-Anpassung) |
+| `components/studiengang-combobox.tsx` | Studiengang-Auswahl Step 1 (HF-Select-Styling) |
+| `app/design-tokens/high-fidelity-*.css` | HF Farben, Typo, Grid (CSS-SSOT) |
 | `components/domain/portal-application-adjustment.tsx` | R1 Block-Detailansicht (Status-abhängig Read-only / Edit) |
+| `components/layout/hf-grid.tsx` | `HfPageGrid`, `HfGridCell`, `HfGridFree` |
 | `components/ui/` | Generische UI-Bausteine (u. a. neuer `accordion.tsx`) |
+| `lib/design-tokens/r1-form.ts` | HF-Formular: Choice-Karten, eingebettetes Input, Select-Trigger |
+| `lib/design-tokens/typography.ts` | `hfTypography.*` für HF-Typo-Bundles |
+| `lib/design-tokens/grid.ts` | Grid-Konstanten + `hfGridCellClass()` |
 | `lib/application-status.ts` | Zentrale Status-Ableitung für Badges |
 | `lib/test-flow-types.ts` | Typisierung `ApplicationData` / Prototyp-JSON (inkl. `recommendation.draftHtml`/`releasedHtml`/`releasedBy`, `r1AdjustmentResolutions`, `workspaceReview`) |
 | `lib/r2-review-persist.ts` | Helfer für trigger-konforme R2-Saves |
@@ -156,3 +168,4 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `Antragerstellung_Kontext.md` | Antrag R1, R2-Beratung/Empfehlung/Forward, Status, Daten, RLS |
 | `Antrag_Review_Kontext.md` | R2-Block-Review nach Einreichung inkl. Persistenz und Forward in „In Entscheid“ |
 | `Antrag_Bewilligung_Kontext.md` | R4 Entscheidungsinstanz: Bewilligungs-UI, APIs, Workspace-RLS |
+| `High_Fidelity_Design_Kontext.md` | HF-Tokens, Grid, Typo, R1-Antragsflow-Shell (Figma) |

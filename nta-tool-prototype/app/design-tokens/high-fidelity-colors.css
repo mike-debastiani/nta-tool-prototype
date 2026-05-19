@@ -1,0 +1,224 @@
+/**
+ * High Fidelity color system — BA-Prototyp-High-Fi
+ * Source: Figma node 534:32434 (Colors / Raw Colors)
+ * https://www.figma.com/design/pwLFwfIPnr9ZuYcot9pyyU/BA-Prototyp-High-Fi?node-id=534-32434
+ *
+ * Hex values from Figma variable bindings (fill), not mislabeled swatch text.
+ */
+
+:root {
+  /* —— General (Obra shadcn / semantic) —— */
+  --hf-foreground: #1c1917;
+  --hf-foreground-alt: #404040;
+  --hf-muted-foreground: #78716c;
+  --hf-border: var(--hf-stone-250);
+  --hf-accent: #f5f5f5;
+  --hf-background: #ffffff;
+
+  /* —— Graustufen (Tailwind stone + HF-only 150 / 250) —— */
+  --hf-stone-50: #fafaf9;
+  --hf-stone-100: #f5f5f4;
+  --hf-stone-150: #eeeceb;
+  --hf-stone-200: #e7e5e4;
+  --hf-stone-250: #dedbd9;
+  --hf-stone-300: #d6d3d1;
+  --hf-stone-400: #a8a29e;
+  --hf-stone-500: #78716c;
+  --hf-stone-600: #57534e;
+  --hf-stone-700: #44403c;
+  --hf-stone-800: #292524;
+  --hf-stone-900: #1c1917;
+  --hf-stone-950: #0c0a09;
+
+  /* —— Entwurf —— */
+  --hf-entwurf-50: #f7f7f8;
+  --hf-entwurf-100: #efeef0;
+  --hf-entwurf-200: #dbd9de;
+  --hf-entwurf-300: #bab8c1;
+  --hf-entwurf-400: #94919f;
+  --hf-entwurf-500: #787483;
+  --hf-entwurf-600: #615e6b;
+  --hf-entwurf-700: #4f4c58;
+  --hf-entwurf-800: #44424a;
+  --hf-entwurf-900: #3d3b42;
+  --hf-entwurf-950: #28262b;
+
+  /* —— Beratung & Empfehlung —— */
+  --hf-beratung-50: #f1f7fe;
+  --hf-beratung-100: #e3ecfb;
+  --hf-beratung-200: #c0d9f7;
+  --hf-beratung-300: #88bbf1;
+  --hf-beratung-400: #4998e7;
+  --hf-beratung-500: #227bd5;
+  --hf-beratung-600: #1565c0;
+  --hf-beratung-700: #114c93;
+  --hf-beratung-800: #12427a;
+  --hf-beratung-900: #153965;
+  --hf-beratung-950: #0e2443;
+
+  /* —— In Review / Anpassung angefordert —— */
+  --hf-in-review-50: #eff6ff;
+  --hf-in-review-100: #dbeafe;
+  --hf-in-review-200: #bfdbfe;
+  --hf-in-review-300: #93c5fd;
+  --hf-in-review-400: #61a4f9;
+  --hf-in-review-500: #3c81f5;
+  --hf-in-review-600: #2662ea;
+  --hf-in-review-700: #1e4ed8;
+  --hf-in-review-800: #1f3fae;
+  --hf-in-review-900: #1f3a89;
+  --hf-in-review-950: #172554;
+
+  /* —— Review / Anpassung erforderlich —— */
+  --hf-adjustment-50: #fffbeb;
+  --hf-adjustment-100: #fef3cd;
+  --hf-adjustment-200: #fde38a;
+  --hf-adjustment-300: #fccf4d;
+  --hf-adjustment-400: #fbba24;
+  --hf-adjustment-500: #f4980c;
+  --hf-adjustment-600: #d97206;
+  --hf-adjustment-700: #b44f09;
+  --hf-adjustment-800: #b44f09;
+  --hf-adjustment-900: #78320f;
+  --hf-adjustment-950: #0c0a09;
+
+  /* —— In Entscheidung (Figma: 50–500 only; 600–950 reuse 500 in file) —— */
+  --hf-in-decision-50: #f8f3ff;
+  --hf-in-decision-100: #f1e9fe;
+  --hf-in-decision-200: #e6d6fe;
+  --hf-in-decision-300: #d1b5fd;
+  --hf-in-decision-400: #b68bfa;
+  --hf-in-decision-500: #985cf6;
+
+  /* —— Positiv / Bewilligt —— */
+  --hf-bewilligt-50: #f0fdf5;
+  --hf-bewilligt-100: #dcfce9;
+  --hf-bewilligt-200: #bbf7d3;
+  --hf-bewilligt-300: #86efb0;
+  --hf-bewilligt-400: #4ade85;
+  --hf-bewilligt-500: #22c563;
+  --hf-bewilligt-600: #16a34e;
+  --hf-bewilligt-700: #15803f;
+  --hf-bewilligt-800: #166535;
+  --hf-bewilligt-900: #14532d;
+  --hf-bewilligt-950: #052e15;
+
+  /* —— Destructiv / Abgelehnt —— */
+  --hf-abgelehnt-50: #fef2f2;
+  --hf-abgelehnt-100: #fee2e2;
+  --hf-abgelehnt-200: #fecaca;
+  --hf-abgelehnt-300: #fca5a5;
+  --hf-abgelehnt-400: #f87171;
+  --hf-abgelehnt-500: #ef4444;
+  --hf-abgelehnt-600: #dc2626;
+  --hf-abgelehnt-700: #b91c1c;
+  --hf-abgelehnt-800: #991b1b;
+  --hf-abgelehnt-900: #7f1d1d;
+  --hf-abgelehnt-950: #450a0a;
+}
+
+@theme inline {
+  /* General */
+  --color-hf-foreground: var(--hf-foreground);
+  --color-hf-foreground-alt: var(--hf-foreground-alt);
+  --color-foreground-alt: var(--hf-foreground-alt);
+  --color-hf-muted-foreground: var(--hf-muted-foreground);
+  --color-hf-border: var(--hf-border);
+  --color-hf-accent: var(--hf-accent);
+  --color-hf-background: var(--hf-background);
+
+  /* Graustufen — alias `stone` to HF values (override default if needed) */
+  --color-stone-50: var(--hf-stone-50);
+  --color-stone-100: var(--hf-stone-100);
+  --color-stone-150: var(--hf-stone-150);
+  --color-stone-200: var(--hf-stone-200);
+  --color-stone-250: var(--hf-stone-250);
+  --color-stone-300: var(--hf-stone-300);
+  --color-stone-400: var(--hf-stone-400);
+  --color-stone-500: var(--hf-stone-500);
+  --color-stone-600: var(--hf-stone-600);
+  --color-stone-700: var(--hf-stone-700);
+  --color-stone-800: var(--hf-stone-800);
+  --color-stone-900: var(--hf-stone-900);
+  --color-stone-950: var(--hf-stone-950);
+
+  /* Process palettes */
+  --color-entwurf-50: var(--hf-entwurf-50);
+  --color-entwurf-100: var(--hf-entwurf-100);
+  --color-entwurf-200: var(--hf-entwurf-200);
+  --color-entwurf-300: var(--hf-entwurf-300);
+  --color-entwurf-400: var(--hf-entwurf-400);
+  --color-entwurf-500: var(--hf-entwurf-500);
+  --color-entwurf-600: var(--hf-entwurf-600);
+  --color-entwurf-700: var(--hf-entwurf-700);
+  --color-entwurf-800: var(--hf-entwurf-800);
+  --color-entwurf-900: var(--hf-entwurf-900);
+  --color-entwurf-950: var(--hf-entwurf-950);
+
+  --color-beratung-50: var(--hf-beratung-50);
+  --color-beratung-100: var(--hf-beratung-100);
+  --color-beratung-200: var(--hf-beratung-200);
+  --color-beratung-300: var(--hf-beratung-300);
+  --color-beratung-400: var(--hf-beratung-400);
+  --color-beratung-500: var(--hf-beratung-500);
+  --color-beratung-600: var(--hf-beratung-600);
+  --color-beratung-700: var(--hf-beratung-700);
+  --color-beratung-800: var(--hf-beratung-800);
+  --color-beratung-900: var(--hf-beratung-900);
+  --color-beratung-950: var(--hf-beratung-950);
+
+  --color-in-review-50: var(--hf-in-review-50);
+  --color-in-review-100: var(--hf-in-review-100);
+  --color-in-review-200: var(--hf-in-review-200);
+  --color-in-review-300: var(--hf-in-review-300);
+  --color-in-review-400: var(--hf-in-review-400);
+  --color-in-review-500: var(--hf-in-review-500);
+  --color-in-review-600: var(--hf-in-review-600);
+  --color-in-review-700: var(--hf-in-review-700);
+  --color-in-review-800: var(--hf-in-review-800);
+  --color-in-review-900: var(--hf-in-review-900);
+  --color-in-review-950: var(--hf-in-review-950);
+
+  --color-adjustment-50: var(--hf-adjustment-50);
+  --color-adjustment-100: var(--hf-adjustment-100);
+  --color-adjustment-200: var(--hf-adjustment-200);
+  --color-adjustment-300: var(--hf-adjustment-300);
+  --color-adjustment-400: var(--hf-adjustment-400);
+  --color-adjustment-500: var(--hf-adjustment-500);
+  --color-adjustment-600: var(--hf-adjustment-600);
+  --color-adjustment-700: var(--hf-adjustment-700);
+  --color-adjustment-800: var(--hf-adjustment-800);
+  --color-adjustment-900: var(--hf-adjustment-900);
+  --color-adjustment-950: var(--hf-adjustment-950);
+
+  --color-in-decision-50: var(--hf-in-decision-50);
+  --color-in-decision-100: var(--hf-in-decision-100);
+  --color-in-decision-200: var(--hf-in-decision-200);
+  --color-in-decision-300: var(--hf-in-decision-300);
+  --color-in-decision-400: var(--hf-in-decision-400);
+  --color-in-decision-500: var(--hf-in-decision-500);
+
+  --color-bewilligt-50: var(--hf-bewilligt-50);
+  --color-bewilligt-100: var(--hf-bewilligt-100);
+  --color-bewilligt-200: var(--hf-bewilligt-200);
+  --color-bewilligt-300: var(--hf-bewilligt-300);
+  --color-bewilligt-400: var(--hf-bewilligt-400);
+  --color-bewilligt-500: var(--hf-bewilligt-500);
+  --color-bewilligt-600: var(--hf-bewilligt-600);
+  --color-bewilligt-700: var(--hf-bewilligt-700);
+  --color-bewilligt-800: var(--hf-bewilligt-800);
+  --color-bewilligt-900: var(--hf-bewilligt-900);
+  --color-bewilligt-950: var(--hf-bewilligt-950);
+
+  --color-abgelehnt-50: var(--hf-abgelehnt-50);
+  --color-abgelehnt-100: var(--hf-abgelehnt-100);
+  --color-abgelehnt-200: var(--hf-abgelehnt-200);
+  --color-abgelehnt-300: var(--hf-abgelehnt-300);
+  --color-abgelehnt-400: var(--hf-abgelehnt-400);
+  --color-abgelehnt-500: var(--hf-abgelehnt-500);
+  --color-abgelehnt-600: var(--hf-abgelehnt-600);
+  --color-abgelehnt-700: var(--hf-abgelehnt-700);
+  --color-abgelehnt-800: var(--hf-abgelehnt-800);
+  --color-abgelehnt-900: var(--hf-abgelehnt-900);
+  --color-abgelehnt-950: var(--hf-abgelehnt-950);
+}

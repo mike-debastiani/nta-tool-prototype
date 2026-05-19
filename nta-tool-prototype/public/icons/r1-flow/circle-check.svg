@@ -1,0 +1,14 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Icon / circle-check">
+<circle id="Ellipse 1" cx="8.15789" cy="8.15789" r="7.15789" fill="url(#paint0_linear_0_4)"/>
+<g id="Vector">
+<path d="M9.97581 6.17579C10.2101 5.94147 10.5899 5.94147 10.8243 6.17579C11.0586 6.41011 11.0586 6.78992 10.8243 7.02424L7.62421 10.2243C7.3899 10.4586 7.01008 10.4586 6.77576 10.2243L5.17574 8.62427C4.94142 8.38995 4.94142 8.01013 5.17574 7.77582C5.41006 7.5415 5.78987 7.5415 6.02419 7.77582L7.19999 8.95161L9.97581 6.17579Z" fill="var(--fill-0, white)"/>
+</g>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_4" x1="1" y1="8.15789" x2="15.3158" y2="8.15789" gradientUnits="userSpaceOnUse">
+<stop stop-color="#DCFCE9"/>
+<stop offset="1" stop-color="#86EFB0"/>
+</linearGradient>
+</defs>
+</svg>
