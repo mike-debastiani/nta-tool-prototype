@@ -8,6 +8,12 @@ export const HF_GRID = {
   breakpoint: "xl" as const,
 } as const;
 
+/** R1 Antragserstellung-Flow — schmalerer Seitenrand (`.hf-page-grid--r1-flow`). */
+export const HF_R1_FLOW_GRID = {
+  ...HF_GRID,
+  marginPx: 24,
+} as const;
+
 export type HfGridSpan = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export type HfGridStart = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 

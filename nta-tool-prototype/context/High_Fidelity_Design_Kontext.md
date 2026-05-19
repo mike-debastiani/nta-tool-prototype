@@ -11,7 +11,7 @@
 1. **Figma ist führend** — Hex-Werte und Layout aus den verlinkten Nodes; bei Widerspruch zwischen Swatch-Text und Variable/Fill gilt die **Variable-Bindung** (Fill).
 2. **Schrittweise pro Flow** — nicht alles auf einmal umstellen; nach jedem Screen Kurznotiz unter „Erfahrungen“.
 3. **Tokens vor Hardcoding** — Farben über `bg-entwurf-100`, `text-stone-900`, `var(--hf-border)` etc.; keine losen `#…` in Komponenten.
-4. **Mid-Fi-Kontext bleibt gültig** für Logik/RLS/Flows (`Antragerstellung_Kontext.md`, `Antrag_Review_Kontext.md`, …); dieses Dokument betrifft **visuelle** HF-Übersetzung.
+4. **Mid-Fi-Kontext bleibt gültig** für Logik/RLS/Flows (`Antragerstellung_Kontext.md`, `Antrag_Review_Kontext.md`, `Dashboard_Core_Layout_Kontext.md`, …); dieses Dokument betrifft **visuelle** HF-Übersetzung.
 
 ---
 
@@ -156,13 +156,33 @@ import { HfPageGrid, HfGridCell, HfGridFree } from "@/components/layout/hf-grid"
 
 **Ausnahmen (`HfGridFree`):** Review-/Korrektur-Ansichten mit fester rechter Sidebar (`edgeToEdge` im Layout) bleiben bewusst **ohne** Page-Grid — nutzen intern eigenes Layout; horizontale Abstände dort schrittweise auf `hf-px-page` / `--hf-grid-gutter` umstellen.
 
-**Bereits angebunden:** `RoleDashboardLayout` (R1-Inhalt), `portal/home` (8 Spalten zentriert), Workspace-Inbox-Liste, **R1-Antragsflow-Shell** (`r1-application-flow-layout.tsx`).
+**Bereits angebunden:** **Dashboard Core** (`workspace-dashboard-shell.tsx`, Figma Sidebar `5354:9951` / `5354:10586`), `portal/home` (8 Spalten zentriert in weissem Panel), Workspace-Inbox-Liste, **R1-Antragsflow-Shell** (`r1-application-flow-layout.tsx` — **separates** Layout, nicht die Dashboard-Shell). Details → **`Dashboard_Core_Layout_Kontext.md`**.
 
 Utility-Klassen: `hf-px-page` (Toolbar-Padding), `hf-gap-grid` (Gap = Gutter).
 
 ---
 
-## 6. R1 Antragsflow (HF umgesetzt)
+## 6. Dashboard Core (Portal + Workspace, HF umgesetzt)
+
+**Nicht** der R1-Step-Flow — gemeinsame Hülle für Antragsliste, Workspace-Inbox und R1-Adjustment.
+
+| Node | Inhalt |
+|------|--------|
+| `5354:9951` | Sidebar nav_max (240px) |
+| `5354:10586` | Sidebar nav_mini (68px) |
+| `5354:10007` | Workspace-Top-Bar (Suche, Inbox, Account) |
+
+**Code:** `components/domain/workspace-dashboard-shell.tsx`, Tokens `lib/design-tokens/workspace-dashboard.ts`, Brand `components/icons/avalis-logo.tsx` («avalis» = `hfTypography.h4`).
+
+**Portal-Besonderheiten:** 12px-Rand (`h-3`) auf `/portal/home`; Top-Bar wächst auf `/portal/antragserstellung` (Adjustment) von `h-3` → `h-14` mit Inhalts-Fade.
+
+**Inhalts-Panel:** nur `rounded-t-xl` oben; `edgeToEdge` für Review/Adjustment.
+
+Vollständige Mechanik (Collapse, `layoutMini`, Nav-Aktiv, Shell vs. Flow) → **`Dashboard_Core_Layout_Kontext.md`**.
+
+---
+
+## 7. R1 Antragsflow (HF umgesetzt)
 
 **Figma (Datei [BA-Prototyp-High-Fi](https://www.figma.com/design/pwLFwfIPnr9ZuYcot9pyyU)):**
 
@@ -180,6 +200,7 @@ Utility-Klassen: `hf-px-page` (Toolbar-Padding), `hf-gap-grid` (Gap = Gutter).
 
 - Seite: `h-screen overflow-hidden`; nur **`R1FlowMainContent`** scrollt vertikal.
 - Grid: Sidebar Spalten **1–3**, Hauptpanel **4–12** (bei Korrektur-Review optional Spalte 13+ für R2-Sidebar, Form **4–6**).
+- Seitenrand Flow: **24px** via `.hf-page-grid--r1-flow` (`HF_R1_FLOW_GRID`); Dashboard/Liste behalten **48px** Desktop-Margin.
 - Hauptpanel: weiss, `rounded-tl-xl`, bis rechter Viewport-Rand (`-mr-[var(--hf-grid-margin)]`).
 - **Autosave** in der Top-Bar (`headerAutosave`), Lucide **Save**, `text-bewilligt-500` — nicht mehr über dem Formular.
 
@@ -217,18 +238,19 @@ Utility-Klassen: `hf-px-page` (Toolbar-Padding), `hf-gap-grid` (Gap = Gutter).
 
 ---
 
-## 7. Noch offen (HF-Roadmap)
+## 8. Noch offen (HF-Roadmap)
 
 - [x] R1 Formular-Feldabstände (4 / 12 / 20 / 40px) — `r1-form.ts` + `R1FlowField*`
 - [ ] Spacing / Radius-Tokens global aus HF-Datei (ausserhalb R1-Formular)
 - [ ] Komponenten-States (Button, Input, Card) aus Obra HF-Kit
 - [x] R1 Antragsflow-Shell + Fortschrittskarte (Figma `5180:7021` ff.)
 - [x] R1 Steps 2–5 HF-Screens (Attest-Callout, Buchung, Terminbestätigung, Empfehlung `r1`, Antragsstellung, Übersicht)
-- [ ] Weitere Flow-Screens (Workspace, Portal-Detail, …) pro Schritt Figma-Node + Checkliste
+- [x] Dashboard Core Sidebar + Workspace-Top-Bar (Figma `5354:9951` / `5354:10586` / `5354:10007`)
+- [ ] Weitere HF-Details (Profil/Einstellungen-Views, feinere Top-Bar-States) pro Schritt Figma-Node + Checkliste
 
 ---
 
-## 8. Erfahrungen & Entscheidungen (laufend)
+## 9. Erfahrungen & Entscheidungen (laufend)
 
 | Datum | Thema | Notiz |
 |-------|--------|-------|
@@ -242,10 +264,12 @@ Utility-Klassen: `hf-px-page` (Toolbar-Padding), `hf-gap-grid` (Gap = Gutter).
 | 2026-05-19 | R1 Step 3 bestätigt | `r1-booking-confirmation.tsx` (`5307:7907`, Footer `5307:8254`); statische Karte `public/images/r1-booking/map-example.png` |
 | 2026-05-19 | Empfehlung R1 | `RecommendationReleasedAccordion` `variant="r1"` (`5247:5570`); `pt-4` Trigger→Content; Step 5 ohne Checkbox |
 | 2026-05-19 | Step 5 Übersicht | Abschnitte als `R1FlowFormCard`-Geschwister (`gap-10`); `R1ApplicationDefinitionSection` geteilt mit Step 4 |
+| 2026-05-19 | Dashboard Core | Sidebar `5354:9951`/`5354:10586`, Workspace-Top-Bar `5354:10007`; `workspace-dashboard-shell.tsx`; Top-Bar + Antragdetails-Panel (Ist: sofort; Morph-Spec → `Dashboard_Core_Layout_Kontext.md` § 4, § 6) |
+| 2026-05-19 | R1 Flow Grid-Margin | `.hf-page-grid--r1-flow`: Seitenrand **24px** (Desktop); Dashboard/Liste weiter **48px** |
 
 ---
 
-## 9. Verwandte Dateien
+## 10. Verwandte Dateien
 
 | Datei | Nutzen |
 |-------|--------|
@@ -261,4 +285,7 @@ Utility-Klassen: `hf-px-page` (Toolbar-Padding), `hf-gap-grid` (Gap = Gutter).
 | `components/domain/r1-booking-scheduler.tsx` | Step 3 Buchungs-UI |
 | `components/domain/r1-booking-confirmation.tsx` | Step 3 Terminbestätigung |
 | `lib/design-tokens/r1-form.ts` | R1-Formular-Klassen |
+| `Dashboard_Core_Layout_Kontext.md` | Portal-/Workspace-Dashboard-Shell (Sidebar, Top-Bar) |
 | `Antragerstellung_Kontext.md` | R1-Flow, Fortschritt, Daten-Gating |
+| `components/domain/workspace-dashboard-shell.tsx` | Dashboard Core Implementierung |
+| `lib/design-tokens/workspace-dashboard.ts` | Sidebar-/Top-Bar-Tokens |

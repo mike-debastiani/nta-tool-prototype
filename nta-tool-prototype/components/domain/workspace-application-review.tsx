@@ -33,6 +33,11 @@ import {
   ApplicationReviewDetailSidebar,
   type SavedReviewComment,
 } from "@/components/domain/application-review-detail-sidebar";
+import { useRegisterDashboardDetailPanel } from "@/components/domain/dashboard-detail-panel-context";
+import {
+  resolveApplicantDisplayName,
+  resolveApplicationAssignee,
+} from "@/lib/application-assignee";
 import {
   ASSESSMENT_MEASURE_OPTIONS,
   DurationChoiceCompare,
@@ -63,6 +68,10 @@ import {
   type WorkspaceApplication,
 } from "@/lib/test-flow-types";
 import { createClient } from "@/utils/supabase/client";
+import {
+  applicationContentScrollClass,
+  applicationContentScrollPaddingClass,
+} from "@/lib/design-tokens/application-scroll";
 import { cn } from "@/lib/utils";
 import {
   type ApplicationStatus,
@@ -499,8 +508,8 @@ export function WorkspaceApplicationReview({
       return;
     }
     setDraftPersistError(null);
-    onPersisted?.();
-  }, [supabase, onPersisted]);
+    /* Listen-Refresh über Supabase Realtime im Parent — kein onPersisted hier (vermeidet Doppel-GET + Re-Render-Loop). */
+  }, [supabase]);
 
   useEffect(() => {
     if (readOnly || application.status !== "in_review") return;
@@ -518,6 +527,9 @@ export function WorkspaceApplicationReview({
     application.id,
     persistReviewDraft,
   ]);
+
+  const onPersistedRef = useRef(onPersisted);
+  onPersistedRef.current = onPersisted;
 
   const openAdjustmentComposer = (blockId: ReviewWorkspaceBlockId, blockTitle: string) => {
     setAdjustmentRemarkSaveError(false);
@@ -667,12 +679,104 @@ export function WorkspaceApplicationReview({
       return;
     }
     await broadcastApplicationRowUpdated(supabase, application.id);
-    onPersisted?.();
+    onPersistedRef.current?.();
   };
 
+  const applicantDisplayName = useMemo(
+    () => resolveApplicantDisplayName(application),
+    [application],
+  );
+
+  const assignee = useMemo(
+    () =>
+      resolveApplicationAssignee({
+        canonicalState: statusMeta.canonicalState,
+        applicantDisplayName,
+        r2ReviewerDisplayName: reviewerDisplayName,
+        r4ReviewerDisplayName:
+          workspaceViewerRole === "R4" ? reviewerDisplayName : "Entscheidungsinstanz",
+      }),
+    [
+      statusMeta.canonicalState,
+      applicantDisplayName,
+      reviewerDisplayName,
+      workspaceViewerRole,
+    ],
+  );
+
+  const detailPanelSignature = useMemo(
+    () =>
+      [
+        application.id,
+        application.updated_at,
+        statusMeta.canonicalState,
+        statusMeta.label,
+        viewMode,
+        readOnly ? "1" : "0",
+        pendingComposer?.blockId ?? "",
+        pendingComposer?.draft ?? "",
+        adjustmentRemarkSaveError ? "1" : "0",
+        savedReviewComments.map((c) => `${c.id}:${c.createdAt}`).join(","),
+      ].join("\u001e"),
+    [
+      application.id,
+      application.updated_at,
+      statusMeta.canonicalState,
+      statusMeta.label,
+      viewMode,
+      readOnly,
+      pendingComposer?.blockId,
+      pendingComposer?.draft,
+      adjustmentRemarkSaveError,
+      savedReviewComments,
+    ],
+  );
+
+  useRegisterDashboardDetailPanel(
+    detailPanelSignature,
+    () => (
+      <ApplicationReviewDetailSidebar
+        application={application}
+        statusMeta={statusMeta}
+        assignee={assignee}
+        adjustmentComposer={
+          readOnly || !pendingComposer
+            ? null
+            : {
+                blockTitle: pendingComposer.blockTitle,
+                draft: pendingComposer.draft,
+                onDraftChange: (value) => {
+                  setPendingComposer((prev) =>
+                    prev ? { ...prev, draft: value } : null,
+                  );
+                  setAdjustmentRemarkSaveError((err) =>
+                    err && value.trim() ? false : err,
+                  );
+                },
+                onCancel: () => {
+                  setPendingComposer(null);
+                  setAdjustmentRemarkSaveError(false);
+                },
+                onSave: handleSaveAdjustmentFromSidebar,
+                saveError: adjustmentRemarkSaveError,
+              }
+        }
+        savedReviewComments={savedReviewComments}
+        onSavedCommentNavigate={navigateFromSavedComment}
+        showCommentsSection={viewMode !== "readonly_consultation"}
+      />
+    ),
+  );
+
   return (
-    <div className="flex min-h-0 flex-1 w-full min-w-0 flex-row overflow-hidden">
-      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto px-6 pb-8 pt-6">
+    <div className="flex min-h-0 flex-1 w-full min-w-0 flex-col overflow-hidden">
+      <div
+        className={cn(
+          "min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain",
+          applicationContentScrollClass,
+          applicationContentScrollPaddingClass,
+        )}
+      >
         <div className="mx-auto w-full max-w-4xl space-y-6">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-foreground">
@@ -983,7 +1087,6 @@ export function WorkspaceApplicationReview({
               data.recommendation?.releasedBy?.trim()
               || "NTA Fachstelle"
             }
-            variant="card"
           />
         ) : null}
 
@@ -1149,39 +1252,6 @@ export function WorkspaceApplicationReview({
         )}
         </div>
       </div>
-
-      <aside className="flex h-full min-h-0 w-[366px] shrink-0 flex-col overflow-hidden border-l border-border bg-[#fafafa]">
-        <ApplicationReviewDetailSidebar
-          application={application}
-          statusMeta={statusMeta}
-          assignedReviewerLabel={reviewerDisplayName}
-          adjustmentComposer={
-            readOnly || !pendingComposer
-              ? null
-              : {
-                  blockTitle: pendingComposer.blockTitle,
-                  draft: pendingComposer.draft,
-                  onDraftChange: (value) => {
-                    setPendingComposer((prev) =>
-                      prev ? { ...prev, draft: value } : null,
-                    );
-                    setAdjustmentRemarkSaveError((err) =>
-                      err && value.trim() ? false : err,
-                    );
-                  },
-                  onCancel: () => {
-                    setPendingComposer(null);
-                    setAdjustmentRemarkSaveError(false);
-                  },
-                  onSave: handleSaveAdjustmentFromSidebar,
-                  saveError: adjustmentRemarkSaveError,
-                }
-          }
-          savedReviewComments={savedReviewComments}
-          onSavedCommentNavigate={navigateFromSavedComment}
-          showCommentsSection={viewMode !== "readonly_consultation"}
-        />
-      </aside>
 
       <Dialog
         open={adjustmentResetDialogBlockId !== null}

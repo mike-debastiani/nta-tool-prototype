@@ -12,6 +12,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import {
+  ArrowLeft,
   Circle,
   CircleArrowRight,
   CircleCheck,
@@ -33,6 +34,7 @@ import {
   X,
 } from "lucide-react";
 
+import { usePortalDashboardToolbar } from "@/components/domain/portal-dashboard-toolbar-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import {
@@ -168,6 +170,8 @@ type NtaAntragDesktopProps = {
    * der DB und springt zum Dashboard (`/portal/home`).
    */
   enableDraftExitToDashboard?: boolean;
+  /** Portal: Flow in `PortalDashboardShell` (Top-Bar + Zurück extern). */
+  embedInDashboardShell?: boolean;
 };
 
 type StepOneField =
@@ -592,8 +596,10 @@ export function NtaAntragDesktop({
   onContinue,
   forceNew = false,
   enableDraftExitToDashboard = false,
+  embedInDashboardShell = false,
 }: NtaAntragDesktopProps) {
   const router = useRouter();
+  const portalToolbar = usePortalDashboardToolbar();
   const supabase = useMemo(() => createClient(), []);
   const [application, setApplication] = useState<ApplicationRow | null>(
     forceNew ? null : (initialApplication ?? null),
@@ -1463,13 +1469,56 @@ export function NtaAntragDesktop({
   const showFormAutosave =
     currentStep !== "step3_booked" && currentStep !== "step6_submitted";
 
+  useEffect(() => {
+    if (!embedInDashboardShell || !portalToolbar) return;
+
+    portalToolbar.setTrailingSlot(
+      showFormAutosave ? <R1FlowAutosaveIndicator /> : null,
+    );
+
+    if (enableDraftExitToDashboard) {
+      portalToolbar.setLeadingSlot(
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="-ml-2 gap-2 px-2 text-muted-foreground hover:text-foreground"
+          disabled={isPersistingDraftExit}
+          onClick={() => void handleDraftExitToDashboard()}
+        >
+          <ArrowLeft className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
+          {isPersistingDraftExit ? "Wird gespeichert …" : "Zurück"}
+        </Button>,
+      );
+    } else {
+      portalToolbar.setLeadingSlot(null);
+    }
+
+    return () => {
+      portalToolbar.setLeadingSlot(null);
+      portalToolbar.setTrailingSlot(null);
+    };
+  }, [
+    embedInDashboardShell,
+    portalToolbar,
+    showFormAutosave,
+    enableDraftExitToDashboard,
+    isPersistingDraftExit,
+    handleDraftExitToDashboard,
+  ]);
+
   return (
     <>
     <R1ApplicationFlowLayout
+      embedInDashboardShell={embedInDashboardShell}
       showCorrectionSidebar={showCorrectionSidebar}
-      headerAutosave={showFormAutosave ? <R1FlowAutosaveIndicator /> : undefined}
+      headerAutosave={
+        !embedInDashboardShell && showFormAutosave ? (
+          <R1FlowAutosaveIndicator />
+        ) : undefined
+      }
       headerClose={
-        enableDraftExitToDashboard
+        !embedInDashboardShell && enableDraftExitToDashboard
           ? {
               onClick: () => void handleDraftExitToDashboard(),
               disabled: isPersistingDraftExit,
@@ -2701,7 +2750,7 @@ export function NtaAntragDesktop({
             <ApplicationReviewDetailSidebar
               application={workspaceApplicationForSidebar}
               statusMeta={statusMetaForCorrection}
-              assignedReviewerLabel="Fachstelle NTA"
+              assignee={{ displayName: "NTA Fachstelle", initials: "NF" }}
               adjustmentComposer={null}
               savedReviewComments={savedReviewCommentsForSidebar}
               onSavedCommentNavigate={navigateFromSavedComment}

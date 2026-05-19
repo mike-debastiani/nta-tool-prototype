@@ -1,14 +1,14 @@
 # Kontext: Antrag Bewilligung (R4 Entscheidungsinstanz) — NTA Prototyp
 
 > **Zweck:** Referenz für den **R4-Bewilligungsflow** nach R2-Weiterreichung an die Entscheidungsinstanz (`in_implementation` / kanonisch **In Entscheid**). Layout und Block-Struktur entsprechen der **R2-Review-Ansicht**, Funktionen und Sidebar-Inhalt weichen ab.  
-> **Verwandt:** `Antrag_Review_Kontext.md` (R2 Block-Review, Forward), `Antragerstellung_Kontext.md` (RLS § 10, Login § 2), `General_Prototype_Kontext.md`.
+> **Verwandt:** `Antrag_Review_Kontext.md` (R2 Block-Review, Forward), `Dashboard_Core_Layout_Kontext.md` (Workspace-Shell), `Antragerstellung_Kontext.md` (RLS § 10, Login § 2), `General_Prototype_Kontext.md`.
 
 ---
 
 ## 1. Ausgangslage
 
 - R2 bestätigt alle Review-Blöcke und reicht mit **„Antrag weiterreichen“** an die Entscheidungsinstanz weiter → technischer Status **`in_implementation`**, kanonisch **`in_decision`** („In Entscheid“ für R1/R2).
-- **R4** nutzt dieselbe **Workspace-Shell** wie R2 (`RoleDashboardLayout`: Sidebar, **Topbar** mit Suche/Inbox/Avatar-Initialen aus `lib/user-initials.ts` für alle Rollen **R2–R6**, nicht nur R2). Unterschied ist **nur die Berechtigung je Status**:
+- **R4** nutzt dieselbe **Workspace-Dashboard-Shell** wie R2 (`WorkspaceDashboardShell` via `RoleDashboardLayout`: einklappbare Sidebar 240/68px, **Topbar** mit Suche/Inbox/Avatar-Initialen aus `lib/user-initials.ts` für alle Rollen **R2–R6**). Mechanik → **`Dashboard_Core_Layout_Kontext.md`**. Unterschied ist **nur die Berechtigung je Status**:
   - Ausserhalb **`in_implementation`** (technisch: Entscheid ausstehend): R4 sieht dieselbe **Block-Review-Ansicht** wie R2 im jeweiligen Nur-Lese-Modus (`WorkspaceApplicationReview`, `workspaceViewerRole="R4"`, `viewMode` je Kanon-Status; kein Empfehlungs-Editor für R4).
   - In **`in_implementation`**: zusätzliche **Bewilligungs-Ansicht** (`WorkspaceR4DecisionView`) mit Schaltern und Block-Bestätigung gemäss Figma (Standard / nach Anpassungen / bestätigter Block).
 - **Inbox-Liste:** dieselben Anträge wie R2 laden (`app/workspace/page.tsx` + `lib/workspace-applications-list.ts`; Client-Refresh in `workspace-test-flow.tsx` per **`GET /api/workspace/applications`**). Detailansicht auch für kanonisch **`approved`** / **`rejected`** im Modus `readonly_decision` (Lesesicht).
@@ -29,7 +29,7 @@ Login: **`/staff/login`** erlaubt weiterhin R2–R6 inkl. R4; Redirect nach erfo
 
 ## 3. UI — Layout
 
-- **Gleiche dreispaltige Logik** wie `WorkspaceApplicationReview`: scrollbare Blockspalte links, **fixe Sidebar** rechts (`366px`), `RoleDashboardLayout` / Toolbar **„Zurück zur Liste“** wie im Workspace-Flow.
+- **Gleiche dreispaltige Logik** wie `WorkspaceApplicationReview`: scrollbare Blockspalte links, **fixe Sidebar** rechts (`366px`), `WorkspaceDashboardShell` / `WorkspaceR2ToolbarProvider` — **„Zurück zur Liste“** im Workspace-Top-Bar-`leadingSlot`.
 - **Sidebar „Antragdetails“:** oben unverändert Metadaten (Status-Pill, Antragsteller, Daten, Zugewiesen, IDs).
 - **Unterhalb** (anstelle der Kommentar-Chronik im R4-Entscheid-Flow): **Kontakt-Cards**
   - **Antragstellende Person** (Name, E-Mail aus Antrag / verknüpftem User).
@@ -140,4 +140,4 @@ Ziel: kein „Kreuzschalten“ (ein Klick ändert scheinbar eine andere Zeile) u
 
 ---
 
-*Letzte Aktualisierung: R4 Client-Persistenz (`r4-workspace-supabase-persist`), UPDATE-RLS `applications_update_r4_decision`, reconcile-Logik `localR4BlockDiffersFromServerMerge` / funktionale Toggle-Updates, Workspace-Shell R2–R6, Inbox/API-Liste.*
+*Letzte Aktualisierung: R4 Client-Persistenz, UPDATE-RLS, reconcile-Logik; Workspace-Dashboard-Shell → `Dashboard_Core_Layout_Kontext.md`.*

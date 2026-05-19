@@ -2,6 +2,7 @@ import { StudentDashboard } from "@/components/domain/student-dashboard";
 import { RoleDashboardLayout } from "@/components/domain/role-dashboard-layout";
 import { requireUserProfile } from "@/lib/auth";
 import { type ApplicationRow } from "@/lib/test-flow-types";
+import { initialsFromProfile } from "@/lib/user-initials";
 import { createClient } from "@/utils/supabase/server";
 
 export default async function PortalHomePage() {
@@ -17,7 +18,11 @@ export default async function PortalHomePage() {
   return (
     <RoleDashboardLayout
       role="R1"
-      userLabel={`Eingeloggt als ${profile.display_name ?? profile.email}`}
+      userLabel=""
+      workspaceAccountInitials={initialsFromProfile(
+        profile.display_name,
+        profile.email,
+      )}
     >
       <div className="hf-grid w-full">
         <div className="hf-col-span-8 hf-col-start-3 hf-col-collapse-below-desktop min-w-0">

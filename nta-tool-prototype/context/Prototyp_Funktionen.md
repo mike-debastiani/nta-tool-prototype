@@ -59,7 +59,7 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 - R2-R6 → `/workspace`
 - Direktzugriff auf geschützte Routes ohne passende Rolle → Redirect zum jeweiligen Login
 
-**Drei Bereiche, eine Codebase, ein Backend.** Trennung erfolgt über Layout-Hüllen und Route Groups, nicht über separate Apps.
+**Drei Bereiche, eine Codebase, ein Backend.** Trennung erfolgt über Layout-Hüllen und Route Groups, nicht über separate Apps. **Dashboard-Shell** (Portal R1-Liste/Adjustment, Workspace R2–R6) vs. **R1-Antragsflow-Shell** (Steps 1–6) sind bewusst getrennt → **`Dashboard_Core_Layout_Kontext.md`**.
 
 ---
 
@@ -90,7 +90,7 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 ### F2 — Multi-Step Antrag-Erstellung (R1)
 
 **Zielbild:** linearer Step-Flow mit Stepper.  
-**Ist:** **sechs** Schritte inkl. Übersicht und Erfolg — Logik in `nta-antrag-desktop.tsx`, **HF-Shell** in `r1-application-flow-layout.tsx` (Persönliche Angaben → Attest → Beratung & Empfehlung → Antrag stellen → Übersicht → Erfolg). Step 3 hat UI-Substeps (`step3_booking` / `step3_booked` / `step3_recommendation`). Step 4/5 teilen `R1ApplicationDefinitionSection`. HF-Feldabstände: `R1FlowField*` + `r1-form.ts`. Details → `Antragerstellung_Kontext.md` § 4–6, HF → `High_Fidelity_Design_Kontext.md` § 6.
+**Ist:** **sechs** Schritte inkl. Übersicht und Erfolg — Logik in `nta-antrag-desktop.tsx`, **HF-Shell** in `r1-application-flow-layout.tsx` (Persönliche Angaben → Attest → Beratung & Empfehlung → Antrag stellen → Übersicht → Erfolg). Step 3 hat UI-Substeps (`step3_booking` / `step3_booked` / `step3_recommendation`). Step 4/5 teilen `R1ApplicationDefinitionSection`. HF-Feldabstände: `R1FlowField*` + `r1-form.ts`. Details → `Antragerstellung_Kontext.md` § 4–6, HF-Flow → `High_Fidelity_Design_Kontext.md` § 7; Dashboard-Shell → `Dashboard_Core_Layout_Kontext.md`.
 
 | Step (Zielbild-Kürzel) | Inhalt |
 |---|---|
@@ -129,7 +129,8 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 
 ### F5 — Workspace pro Verwaltungsrolle (R2-R6)
 
-- Eine `/workspace`-Hülle (`RoleDashboardLayout`), rollenspezifische Sichten innerhalb
+- Eine `/workspace`-Hülle (`WorkspaceDashboardShell` via `RoleDashboardLayout`): einklappbare Sidebar (240/68px), Top-Bar mit Suche/Inbox/Account, weisses Inhalts-Panel `rounded-t-xl` — **`Dashboard_Core_Layout_Kontext.md`**
+- Rollenspezifische Sichten innerhalb (`WorkspaceTestFlow`, R4-Entscheid-View, …)
 - R2 sieht Beratungs-/Review-Inbox, Empfehlungen, Block-Review, Weiterleitung an Entscheid
 - **R4 (Ist-Code):** Entscheidungs-Inbox wie R2 lesbar; in `in_implementation` Bewilligungs-UI (`WorkspaceR4DecisionView`); Zwischenstand **debounced** nach `data.r4DecisionReview`, Abschluss → `approved`; Client-Reconcile gegen Server-Snapshots siehe `Antrag_Bewilligung_Kontext.md` § 7 — Details → `Antrag_Bewilligung_Kontext.md`
 - R3/R5/R6: reduzierte oder geplante Sichten; RLS gruppiert R2/R3/R5/R6 in Worklist-Policies, R4 separat (siehe Kontext DB)

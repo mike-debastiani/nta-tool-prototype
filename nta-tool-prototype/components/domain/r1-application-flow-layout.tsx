@@ -21,6 +21,7 @@ import {
   r1FlowFieldStackClassName,
   r1FlowFieldStackDefinitionClassName,
 } from "@/lib/design-tokens/r1-form";
+import { applicationContentScrollClass } from "@/lib/design-tokens/application-scroll";
 import { hfTypography } from "@/lib/design-tokens/typography";
 import type { R1PortalFlowStep } from "@/lib/test-flow-types";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,8 @@ export type { R1ProgressStepVisualState };
 
 type R1ApplicationFlowLayoutProps = {
   showCorrectionSidebar?: boolean;
+  /** Eingebettet in Portal-Dashboard-Shell (kein eigener Viewport-Header). */
+  embedInDashboardShell?: boolean;
   headerClose?: {
     onClick: () => void;
     disabled?: boolean;
@@ -68,6 +71,7 @@ type R1ApplicationFlowLayoutProps = {
 
 export function R1ApplicationFlowLayout({
   showCorrectionSidebar = false,
+  embedInDashboardShell = false,
   headerClose,
   headerAutosave,
   sidebar,
@@ -75,13 +79,27 @@ export function R1ApplicationFlowLayout({
   main,
   correctionSidebar,
 }: R1ApplicationFlowLayoutProps) {
+  const showFlowTopBar = !embedInDashboardShell;
+
   return (
-    <div className="flex h-screen min-w-[var(--hf-grid-min-width)] flex-col overflow-hidden bg-stone-100">
+    <div
+      className={cn(
+        "flex min-w-[var(--hf-grid-min-width)] flex-col overflow-hidden",
+        embedInDashboardShell
+          ? "h-full min-h-0 bg-transparent"
+          : "h-screen bg-stone-100",
+      )}
+    >
       <HfPageGrid
-        className="flex h-full min-h-0 flex-col"
-        gridClassName="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)]"
+        className="hf-page-grid--r1-flow flex h-full min-h-0 flex-col"
+        gridClassName={cn(
+          "grid h-full min-h-0",
+          showFlowTopBar ? "grid-rows-[auto_minmax(0,1fr)]" : "grid-rows-[minmax(0,1fr)]",
+        )}
       >
-        <R1FlowTopBar close={headerClose} autosave={headerAutosave} />
+        {showFlowTopBar ? (
+          <R1FlowTopBar close={headerClose} autosave={headerAutosave} />
+        ) : null}
 
         <div className="hf-col-span-12 hf-grid min-h-0 flex-1">
           <aside className="hf-col-span-3 hf-col-collapse-below-desktop flex h-full min-h-0 flex-col justify-between gap-4 overflow-hidden">
@@ -110,7 +128,12 @@ export function R1ApplicationFlowLayout({
                   "hf-col-span-3 hf-col-start-10",
                 )}
               >
-                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                <div
+                  className={cn(
+                    "min-h-0 flex-1 overflow-y-auto overscroll-contain pr-2",
+                    applicationContentScrollClass,
+                  )}
+                >
                   {correctionSidebar}
                 </div>
               </aside>
@@ -402,7 +425,10 @@ type R1FlowMainContentProps = {
 export function R1FlowMainContent({ children }: R1FlowMainContentProps) {
   return (
     <div
-      className="flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain"
+      className={cn(
+        "flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain pr-2",
+        applicationContentScrollClass,
+      )}
       data-node-id="5180:7022"
     >
       <div className="grid grid-cols-9 gap-x-[var(--hf-grid-gutter)] pb-8 pt-6">

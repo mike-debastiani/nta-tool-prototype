@@ -1,7 +1,7 @@
 # Kontext: Antragserstellung (R1) & R2-Beratung — Prototyp NTA
 
 > **Zweck:** Operative Referenz für Chats zu **Anpassungen und Integrationen** rund um den **Antragsflow R1** bis zur finalen Einreichung, die **Status-/Badge-Logik**, den **Workspace-Test R2** (Beratung/Empfehlung) sowie **RLS/Trigger**.  
-> **Review-/Korrektur-Loop** nach Einreichung (R2 Block-Review, R1-Anpassungen, erneuter Review-Zyklus) → **`Antrag_Review_Kontext.md`**. **R4 Bewilligung** → **`Antrag_Bewilligung_Kontext.md`**. Gesamtprototyp → `General_Prototype_Kontext.md`. Zielbild-Funktionen → `Prototyp_Funktionen.md`.
+> **Review-/Korrektur-Loop** nach Einreichung (R2 Block-Review, R1-Anpassungen, erneuter Review-Zyklus) → **`Antrag_Review_Kontext.md`**. **R4 Bewilligung** → **`Antrag_Bewilligung_Kontext.md`**. **Dashboard-Shell** (Portal-Liste, Adjustment, Workspace) → **`Dashboard_Core_Layout_Kontext.md`**. Gesamtprototyp → `General_Prototype_Kontext.md`. Zielbild-Funktionen → `Prototyp_Funktionen.md`.
 
 ---
 
@@ -10,9 +10,10 @@
 - R1 **Antragserstellung** end-to-end bis zum **finalen Submit**; danach fachlich **„In Review“**.
 - R2 kann **Beratung + Empfehlung** und im Anschluss den **Block-Review** im **Workspace** bearbeiten und mit **„Antrag weiterreichen“** in **`in_implementation`** bzw. **`needs_correction`** überführen (Schreibzugriff nur auf definierte `data`-Teile).
 - **Empfehlungsschreiben** wird nicht mehr als Datei-Upload, sondern als **Rich-Text** (TipTap) direkt im Antrag verfasst. R2 nutzt dafür in der Phase „Beratung & Empfehlung“ den `RecommendationDraftEditor` (Entwurf speichern / freigeben); R1 sieht den freigegebenen Text identisch gestylt über den geteilten `RecommendationReleasedAccordion` in Step 3 und Step 5.
-- R1 **Dashboard:** Liste eigener Anträge; **Klick auf einen Antrag** öffnet stets die Block-Detailansicht `PortalApplicationAdjustment` (Layout wie R2-Review, Editieren nur im Status `needs_adjustment`). **Neuer Antrag** weiterhin über **`?new`** / **`?new=1`** mit leerem Stand.
+- R1 **Dashboard** (`/portal/home`): Liste eigener Anträge in der **Portal-Dashboard-Shell**; **Klick** → `/portal/antragserstellung?applicationId=<uuid>`. **Neuer Antrag** über **`?new`** / **`?new=1`** → Step-Flow **ohne** Dashboard-Shell.
+- **Zwei R1-Layouts (nicht mischen):** (1) **Dashboard-Shell** — Liste + Block-Detail `PortalApplicationAdjustment`; (2) **Antragsflow-Shell** — `NtaAntragDesktop` + `r1-application-flow-layout.tsx` für Entwurf, Beratung & Empfehlung, `?new`. Details → **`Dashboard_Core_Layout_Kontext.md`** § 1.
 - **Statusdarstellung** für Badges ist **zentral** in `lib/application-status.ts` (R1/R2 konsistent; Wording z. B. bei „Anpassung“ rollenabhängig).
-- R1- und R2-Dashboard nutzen ein gemeinsames **`RoleDashboardLayout`** (einklappbare Sidebar, rollenspezifische Nav-Items).
+- Portal- und Workspace-Dashboard teilen **`workspace-dashboard-shell.tsx`** über **`RoleDashboardLayout`** (einklappbare Sidebar 240/68px, rollenspezifische Nav).
 
 ---
 
@@ -33,7 +34,8 @@ Hinweise:
 
 - `app/portal/antragserstellung/page.tsx` interpretiert **jeden** Wert von `?new` als „leerer Neustart“ (`params.new !== undefined`).
 - Ohne `?new` und ohne `?applicationId` wird der **letzte** Antrag des Users **nur dann** automatisch geladen, wenn sein kanonischer Status **`draft`**, **`consultation_recommendation`** oder **`needs_adjustment`** ist. Bereits eingereichte Anträge (`in_review` / `in_decision` / `approved` / `rejected`) führen zu einem **leeren** Formular, damit R1 problemlos einen zweiten Antrag starten kann.
-- **Mit `?applicationId=<uuid>`** rendert die Page nicht mehr den Step-Flow, sondern die Block-Detailansicht `PortalApplicationAdjustment` — Layout analog zur R2-Review. Bearbeitung ist nur aktiv, wenn `deriveCanonicalApplicationState === "needs_adjustment"` (im Portal z. B. `canEditBlocks`); sonst Lese-Modus mit „Zurück zum Dashboard“ und **Antrag zurückziehen**. Nach Aktionen von R2/R1 kann sich der Status per **Broadcast** (`application-realtime-sync`) bzw. **Router-Refresh** aktualisieren; das **Student-Dashboard** pollt zusätzlich die eigene Antragsliste (sichtbare Status-Badges).
+- **Mit `?applicationId=<uuid>`:** Kanonischer Status **`draft`** oder **`consultation_recommendation`** → weiterhin **Step-Flow** (`NtaAntragDesktop`, **keine** Dashboard-Shell). Alle **anderen** Status → **`PortalApplicationAdjustment`** in der **Portal-Dashboard-Shell** (Top-Bar mit **Zurück** → `/portal/home`; Nav **«Meine Anträge»** bleibt aktiv). Bearbeitung nur bei `needs_adjustment` (`allowAdjustments`); sonst read-only. Realtime/Polling wie oben.
+- **Ohne `applicationId`**, Auto-Resume: lädt den letzten Antrag nur bei `draft`, `consultation_recommendation` oder `needs_adjustment` — dann **Step-Flow** (auch `needs_adjustment` ohne explizite `applicationId` landet im Flow, nicht in der Adjustment-Ansicht).
 - `/portal` kann noch auf die Antragserstellung zeigen — mit `app/` abgleichen.
 
 ### R2
@@ -73,7 +75,10 @@ Hinweise:
 | `lib/workspace-applications-list.ts` | Gemeinsame Select-Logik (optional Service-Role für R4 wenn gesetzt) |
 | `lib/user-initials.ts` | Initialen für Workspace-Avatar |
 | `components/domain/login-card.tsx` | Student/Staff-Login inkl. `getSession()` nach Sign-In |
-| `components/domain/role-dashboard-layout.tsx` | Gemeinsames R1/Workspace-Dashboard (Sidebar; **Topbar** Suche/Inbox/Avatar für **R2–R6**) |
+| `components/domain/workspace-dashboard-shell.tsx` | Dashboard Core: Sidebar, Brand, Portal/Workspace-Nav, Top-Bars |
+| `components/domain/role-dashboard-layout.tsx` | Einstieg: Portal- vs. Workspace-Shell; Portal `showTopBar` auf `/portal/antragserstellung` |
+| `components/domain/portal-dashboard-toolbar-context.tsx` | Portal-Top-Bar-Slots |
+| `lib/design-tokens/workspace-dashboard.ts` | Sidebar-/Top-Bar-Tokens (240/68px, Rim `h-3`, Top-Bar `h-14`) |
 | `components/domain/rich-text-editor.tsx` | TipTap-Wrapper (StarterKit + Underline/Link/TextAlign/Placeholder/Custom-Heading) mit shadcn-styled, reaktiver Toolbar (`useEditorState`) |
 | `components/domain/recommendation-released-accordion.tsx` | `releasedHtml`: `card` (R2-Review), `plain` (Legacy), **`r1`** (R1 Step 3/5, Figma `5247:5570`) — Meta «Freigegeben am … durch» + Avatar |
 | `components/ui/accordion.tsx` | shadcn-Wrapper um `radix-ui` Accordion (ohne Hover-Underline) |
@@ -157,7 +162,7 @@ UI-Substeps in `nta-antrag-desktop.tsx` (ein Sidebar-Step „Beratung und Empfeh
 
 | Bereich | Verhalten |
 |---------|-----------|
-| Seite | `h-screen overflow-hidden` — nur der **rechte Form-Bereich** scrollt (`R1FlowMainContent`) |
+| Seite | `h-screen overflow-hidden` — nur der **rechte Form-Bereich** scrollt (`R1FlowMainContent`); Seitenrand **24px** (`.hf-page-grid--r1-flow`, nicht 48px Dashboard-Grid) |
 | Top-Bar | Titel links; **Autosave-Hinweis** rechts (Save-Icon, `bewilligt-500`) wenn aktiv; optional **Schliessen** → Draft speichern + `/portal/home` |
 | Sidebar | Fortschrittskarte + Kontakt; unten **Antrag verwerfen** (`pb-6`) |
 | Hauptpanel | Weiss, `rounded-tl-xl`, bis rechter Viewport-Rand (`-mr-[var(--hf-grid-margin)]`) |
@@ -166,7 +171,7 @@ UI-Substeps in `nta-antrag-desktop.tsx` (ein Sidebar-Step „Beratung und Empfeh
 
 **Icons:** Lucide via `R1FlowIcon` / `r1-flow-icons.tsx` (Referenz-SVGs unter `public/icons/r1-flow/` optional; Runtime = Lucide).
 
-**Formular-Feldabstände:** `R1FlowField*`-Primitives + `lib/design-tokens/r1-form.ts` — Details `High_Fidelity_Design_Kontext.md` § 6.
+**Formular-Feldabstände:** `R1FlowField*`-Primitives + `lib/design-tokens/r1-form.ts` — Details `High_Fidelity_Design_Kontext.md` § 7.
 
 **Autosave:** LocalStorage-Debouncing in `nta-antrag-desktop.tsx`; Hinweis in Top-Bar (nicht über dem Formular). Ausgeblendet bei `step3_booked` und `step6_submitted`.
 
@@ -228,14 +233,14 @@ Ausnahme Step 4/5 ohne Kenntnisnahme: Erst-Freischaltung blockiert; nach Sticky 
 
 ## 7. R1 Dashboard — Sollverhalten
 
-- Liste aller eigenen Anträge.
-- **Neuen Antrag erstellen** → komplett leer über **`?new=1`** (auch `?new` ohne Wert genügt).
-- **Klick auf einen Eintrag** → `?applicationId=<uuid>` rendert immer die Block-Detailansicht `PortalApplicationAdjustment` (kein Inline-Detail im Dashboard mehr).
-  - Im Status **`needs_adjustment`**: pro Block „Anpassung vornehmen“ (Edit-Mode) + „Anpassung speichern“; per-Block Autosave; bestätigte Blöcke grün, ausstehende amber mit Original-Bemerkung der Fachstelle; Sidebar-Kommentare springen per Klick zum passenden Block (`reviewWorkspaceAnchorId`); abgeschlossene Anpassungen landen in `data.r1AdjustmentResolutions` (`R1AdjustmentResolution.resolvedAt`).
-  - In allen anderen Status: reine Lese-Ansicht (gleiches Layout, keine Edit-Buttons).
-  - **Persistenter „Zurück zum Dashboard“**-Button oben links (`absolute`) und **Löschen-Aktion** sind in jedem Status verfügbar.
-- Direktaufruf von `/portal/antragserstellung` ohne Parameter: lädt nur **resumable** Anträge automatisch; bei bereits eingereichten Anträgen erscheint ein leeres Formular (kein Re-Display des Erfolgs-Screens).
-- Sidebar wie im Layout: **collapsible** (expanded / icon-only).
+- **Shell:** `/portal/home` und Adjustment-Ansicht nutzen **`PortalDashboardShell`** (Sidebar, 12px-Rand oben auf der Liste, Top-Bar + Antragdetails beim geöffneten Antrag **ohne** Öffnungs-Animation) — **`Dashboard_Core_Layout_Kontext.md`**.
+- Liste aller eigenen Anträge (`StudentDashboard` in `HfPageGrid`).
+- **Neuen Antrag erstellen** → **`?new=1`** → **Antragsflow** ohne Dashboard-Shell.
+- **Klick auf einen Eintrag** → `?applicationId=<uuid>`:
+  - **`draft` / `consultation_recommendation`:** Step-Flow (`NtaAntragDesktop`).
+  - **Sonst:** `PortalApplicationAdjustment` in der Dashboard-Shell; **Zurück** in der Portal-Top-Bar (nicht mehr als `absolute`-Button im Content).
+  - **`needs_adjustment`:** Block-Edit, Autosave, `r1AdjustmentResolutions`; andere Status read-only; **Löschen** / **Antrag zurückziehen** in der Adjustment-UI.
+- Direktaufruf `/portal/antragserstellung` ohne Parameter: Auto-Resume nur für resumable Status (s. § 2); eingereichte Anträge ohne Resume → leeres Formular im Flow.
 
 ---
 
@@ -351,5 +356,6 @@ State-Badges orientieren sich an **Figma-Farbkodierung** (kompakt, ohne Border) 
 | `General_Prototype_Kontext.md` | Tech, Rollen, Architektur, Scope |
 | `Antrag_Review_Kontext.md` | R2-Block-Review, Forward, R1-Freigabe-Loop, Persistenz, UI-Details |
 | `Antrag_Bewilligung_Kontext.md` | R4 Bewilligung, Workspace-RLS, APIs |
-| `High_Fidelity_Design_Kontext.md` | HF-Tokens, Grid, R1-Shell Figma-Referenzen |
+| `Dashboard_Core_Layout_Kontext.md` | Portal-/Workspace-Dashboard-Shell vs. R1-Flow |
+| `High_Fidelity_Design_Kontext.md` | HF-Tokens, Grid, R1-Flow-Shell Figma-Referenzen |
 | `Prototyp_Funktionen.md` | Langfristige Funktionsvision |

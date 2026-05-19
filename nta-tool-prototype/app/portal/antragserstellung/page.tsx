@@ -1,12 +1,15 @@
-import { NtaAntragDesktop } from "@/components/nta-antrag-desktop";
+import { type ReactNode } from "react";
+
 import { PortalApplicationAdjustment } from "@/components/domain/portal-application-adjustment";
 import { RoleDashboardLayout } from "@/components/domain/role-dashboard-layout";
+import { NtaAntragDesktop } from "@/components/nta-antrag-desktop";
 import { requireUserProfile } from "@/lib/auth";
 import { deriveCanonicalApplicationState } from "@/lib/application-status";
 import {
   type ApplicationRow,
   type WorkspaceApplication,
 } from "@/lib/test-flow-types";
+import { initialsFromProfile } from "@/lib/user-initials";
 import { createClient } from "@/utils/supabase/server";
 
 type PortalAntragserstellungPageProps = {
@@ -17,10 +20,6 @@ export default async function PortalAntragserstellungPage({
   searchParams,
 }: PortalAntragserstellungPageProps) {
   const params = (await searchParams) ?? {};
-  // Accept any presence of `?new` (e.g. `?new`, `?new=1`, `?new=true`) as a
-  // request to start a fresh application. Previously only the exact value `"1"`
-  // worked, which silently fell back to loading the most recent application —
-  // confusing if that one was already in review.
   const forceNew = params.new !== undefined;
   const applicationId =
     typeof params.applicationId === "string" && params.applicationId.length > 0
@@ -28,6 +27,10 @@ export default async function PortalAntragserstellungPage({
       : undefined;
   const profile = await requireUserProfile(["R1"], "/student/login");
   const supabase = await createClient();
+  const workspaceAccountInitials = initialsFromProfile(
+    profile.display_name,
+    profile.email,
+  );
 
   let initial: ApplicationRow | undefined;
 
@@ -50,11 +53,6 @@ export default async function PortalAntragserstellungPage({
       .limit(1)
       .maybeSingle<ApplicationRow>();
     if (data) {
-      // Only auto-resume an application that still requires R1 action. If the
-      // latest one is already locked for R1 (`in_review`/`in_decision`/
-      // `approved`/`rejected`), fall back to a fresh form so R1 can start a
-      // second application without seeing the previous one's success screen
-      // or read-only step 1.
       const canonical = deriveCanonicalApplicationState(data);
       const isResumable =
         canonical === "draft"
@@ -70,14 +68,22 @@ export default async function PortalAntragserstellungPage({
 
   const initialCanonical =
     initial !== undefined ? deriveCanonicalApplicationState(initial) : null;
-  /** Show draft-exit „Schliessen“ on fresh form too (first visit with zero applications). */
   const enableDraftExitToDashboard =
     initialCanonical === "draft"
     || initialCanonical === "consultation_recommendation"
     || startFresh;
 
-  // Explizite Auswahl aus `/portal/home`: Block-Detail nur nach Einreichung /
-  // Review; Entwurf und Beratungsphase weiter im Step-Flow (`NtaAntragDesktop`).
+  const wrapInPortalShell = (content: ReactNode) => (
+    <RoleDashboardLayout
+      role="R1"
+      userLabel=""
+      workspaceAccountInitials={workspaceAccountInitials}
+      edgeToEdge
+    >
+      {content}
+    </RoleDashboardLayout>
+  );
+
   if (!startFresh && initial && applicationId) {
     const canonical = deriveCanonicalApplicationState(initial);
     if (canonical === "draft" || canonical === "consultation_recommendation") {
@@ -103,15 +109,13 @@ export default async function PortalAntragserstellungPage({
     };
     const applicantDisplayName =
       profile.display_name?.trim() || profile.email || "Antragsteller";
-    return (
-      <RoleDashboardLayout role="R1" userLabel="" edgeToEdge>
-        <PortalApplicationAdjustment
-          key={`${workspaceApplication.id}-${workspaceApplication.status}`}
-          application={workspaceApplication}
-          applicantDisplayName={applicantDisplayName}
-          allowAdjustments={canonical === "needs_adjustment"}
-        />
-      </RoleDashboardLayout>
+    return wrapInPortalShell(
+      <PortalApplicationAdjustment
+        key={`${workspaceApplication.id}-${workspaceApplication.status}`}
+        application={workspaceApplication}
+        applicantDisplayName={applicantDisplayName}
+        allowAdjustments={canonical === "needs_adjustment"}
+      />,
     );
   }
 

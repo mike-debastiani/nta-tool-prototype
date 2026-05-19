@@ -42,7 +42,8 @@ function formatReleasedAt(iso?: string) {
   });
 }
 
-function R1ReleasedMeta({
+/** Freigabe-Meta (HF 5247:5570) — R1, R2, R4 einheitlich. */
+function ReleasedMeta({
   releasedAtLabel,
   authorDisplayName,
   initials,
@@ -76,7 +77,7 @@ function R1ReleasedMeta({
 /**
  * Gemeinsame Darstellung eines freigegebenen Empfehlungsschreibens als Accordion.
  *
- * - `variant="card"`: Review-Blocks mit Card-Hülle.
+ * - `variant="card"`: Review-Blocks mit Card-Hülle (R2/R4); Meta wie R1.
  * - `variant="plain"`: eingebettet ohne HF-Header (Legacy).
  * - `variant="r1"`: R1 Step 3 / HF 5247:5570 — Titel, Freigabe-Meta, Content + `children`.
  */
@@ -112,7 +113,7 @@ export function RecommendationReleasedAccordion({
               <h2 className="shrink-0 whitespace-nowrap text-hf-paragraph-large-medium text-stone-900">
                 Empfehlungsschreiben
               </h2>
-              <R1ReleasedMeta
+              <ReleasedMeta
                 releasedAtLabel={releasedAtLabel}
                 authorDisplayName={authorDisplayName}
                 initials={initials}
@@ -141,6 +142,7 @@ export function RecommendationReleasedAccordion({
       <AccordionItem value="recommendation" className="border-b-0">
         <AccordionTrigger
           className={cn(
+            "group hover:no-underline [&>svg:last-child]:hidden",
             "py-5",
             variant === "card" ? "px-6" : "px-0",
           )}
@@ -149,24 +151,11 @@ export function RecommendationReleasedAccordion({
             <h2 className="text-lg font-medium text-foreground">
               Empfehlungsschreiben der Fachstelle
             </h2>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">
-                  Erstellt durch:
-                </span>
-                <span
-                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground"
-                  title={authorDisplayName}
-                  aria-label={`Erstellt durch ${authorDisplayName}`}
-                >
-                  {initials}
-                </span>
-              </div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-100 px-2.5 py-1 text-xs font-medium text-teal-700">
-                Freigegeben am:
-                {releasedAtLabel ? `   ${releasedAtLabel}` : ""}
-              </span>
-            </div>
+            <ReleasedMeta
+              releasedAtLabel={releasedAtLabel}
+              authorDisplayName={authorDisplayName}
+              initials={initials}
+            />
           </div>
         </AccordionTrigger>
         <AccordionContent

@@ -4,6 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { CheckCheck, Info, Loader2, Pencil, RotateCcw } from "lucide-react";
 import { ApplicationReviewDetailSidebar } from "@/components/domain/application-review-detail-sidebar";
+import { useRegisterDashboardDetailPanel } from "@/components/domain/dashboard-detail-panel-context";
+import {
+  resolveApplicantDisplayName,
+  resolveApplicationAssignee,
+} from "@/lib/application-assignee";
 import {
   ReviewBlockCard,
   ReviewField,
@@ -39,6 +44,10 @@ import {
   type WorkspaceApplication,
 } from "@/lib/test-flow-types";
 import { createClient } from "@/utils/supabase/client";
+import {
+  applicationContentScrollClass,
+  applicationContentScrollPaddingClass,
+} from "@/lib/design-tokens/application-scroll";
 import { cn } from "@/lib/utils";
 import { getApplicationStatusMeta } from "@/lib/application-status";
 import { Button } from "@/components/ui/button";
@@ -693,9 +702,65 @@ export function WorkspaceR4DecisionView({
     );
   }
 
+  const applicantDisplayName = useMemo(
+    () => resolveApplicantDisplayName(application),
+    [application],
+  );
+
+  const assignee = useMemo(
+    () =>
+      resolveApplicationAssignee({
+        canonicalState: statusMeta.canonicalState,
+        applicantDisplayName,
+        r2ReviewerDisplayName:
+          application.data.consultation?.advisor?.trim()
+          || application.data.recommendation?.releasedBy?.trim()
+          || "NTA Fachstelle",
+        r4ReviewerDisplayName: reviewerDisplayName,
+      }),
+    [statusMeta.canonicalState, applicantDisplayName, application.data, reviewerDisplayName],
+  );
+
+  const detailPanelSignature = useMemo(
+    () =>
+      [
+        application.id,
+        application.updated_at,
+        statusMeta.canonicalState,
+        statusMeta.label,
+      ].join("\u001e"),
+    [
+      application.id,
+      application.updated_at,
+      statusMeta.canonicalState,
+      statusMeta.label,
+    ],
+  );
+
+  useRegisterDashboardDetailPanel(
+    detailPanelSignature,
+    () => (
+      <ApplicationReviewDetailSidebar
+        application={application}
+        statusMeta={statusMeta}
+        assignee={assignee}
+        adjustmentComposer={null}
+        savedReviewComments={[]}
+        showCommentsSection
+        secondarySection="r4_contacts"
+      />
+    ),
+  );
+
   return (
-    <div className="flex min-h-0 flex-1 w-full min-w-0 flex-row overflow-hidden">
-      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto px-6 pb-8 pt-6">
+    <div className="flex min-h-0 flex-1 w-full min-w-0 flex-col overflow-hidden">
+      <div
+        className={cn(
+          "min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain",
+          applicationContentScrollClass,
+          applicationContentScrollPaddingClass,
+        )}
+      >
         <div className="mx-auto w-full max-w-4xl space-y-6">
           <div>
             <h1 className="text-xl font-semibold tracking-tight text-foreground">
@@ -761,7 +826,6 @@ export function WorkspaceR4DecisionView({
               html={data.recommendation?.releasedHtml ?? ""}
               releasedAt={data.recommendation?.releasedAt}
               authorDisplayName={data.recommendation?.releasedBy?.trim() || "NTA Fachstelle"}
-              variant="card"
             />
           ) : null}
 
@@ -822,17 +886,6 @@ export function WorkspaceR4DecisionView({
         </div>
       </div>
 
-      <aside className="flex h-full min-h-0 w-[366px] shrink-0 flex-col overflow-hidden border-l border-border bg-[#fafafa]">
-        <ApplicationReviewDetailSidebar
-          application={application}
-          statusMeta={statusMeta}
-          assignedReviewerLabel={reviewerDisplayName}
-          adjustmentComposer={null}
-          savedReviewComments={[]}
-          showCommentsSection
-          secondarySection="r4_contacts"
-        />
-      </aside>
     </div>
   );
 }

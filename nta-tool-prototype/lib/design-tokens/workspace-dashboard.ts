@@ -1,0 +1,76 @@
+/** Workspace dashboard shell (Figma 5354:9951 nav_max, 5354:10586 nav_mini). */
+
+/** Navigations-Sidebar: horizontaler Innenabstand (Portal + Workspace). */
+export const DASHBOARD_SIDEBAR_PADDING_CLASS = "pl-4 py-3";
+
+/** Zeile mit weissem Hauptpanel + Antragdetails-Spalte. */
+export const DASHBOARD_SHELL_CONTENT_ROW_PADDING_CLASS = "px-4";
+
+/** Weisses Inhalts-Panel (`rounded-t-xl`) — Listen / Dashboard ohne Antrag. */
+export const DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS = "px-4";
+
+/** Weisses Inhalts-Panel, wenn Antrag geöffnet (Detail-Sidebar aktiv). */
+export const DASHBOARD_SHELL_MAIN_PANEL_PADDING_OPEN_CLASS = "pl-4 pr-2";
+
+/** Antragdetails-Spalte: nur linker Innenabstand (rechts/oben/unten 0). */
+export const DASHBOARD_DETAIL_PANEL_PADDING_CLASS = "pl-4";
+
+/** Top-Leiste Portal / Workspace (gleiche Höhe). */
+export const DASHBOARD_TOP_BAR_PADDING_CLASS = "pl-10 pr-4 py-3";
+export const DASHBOARD_TOP_BAR_HEIGHT_CLASS = "min-h-14";
+
+export const WORKSPACE_NAV_WIDTH_EXPANDED_PX = 240;
+export const WORKSPACE_NAV_WIDTH_COLLAPSED_PX = 68;
+
+/** Dauer der Sidebar-Breiten-Transition — Layout-Mini erst danach umschalten. */
+export const WORKSPACE_SIDEBAR_TRANSITION_MS = 300;
+
+export const workspaceSidebarLabelTransitionClass =
+  "transition-opacity duration-300 ease-out";
+
+/** Nav-Zeilen: `max-width` folgt der schrumpfenden Sidebar (`w-full` + `max-w-10`). */
+export const workspaceSidebarNavItemWidthTransitionClass =
+  "transition-[max-width] duration-300 ease-out";
+
+/** Portal: 12px-Rand oben (Dashboard) ↔ volle Top-Bar (Antrag geöffnet). */
+export const PORTAL_DASHBOARD_RIM_HEIGHT_CLASS = "h-3";
+export const PORTAL_TOP_BAR_HEIGHT_CLASS = "h-14";
+
+/** Rechtes Panel — volle Breite (Figma 5435:11416). Ist-Zustand: sofort `w-0` ↔ diese Breite. */
+export const DASHBOARD_DETAIL_PANEL_WIDTH_CLASS = "w-[330px]";
+
+/** Später: 12px-Rim vor vollem Panel (Morph w-3 → w-[330px]). */
+export const DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS = "w-3";
+
+/** Später: Breiten-Morph des Detail-Panels (300ms). */
+export const workspaceDetailPanelWidthTransitionClass =
+  "transition-[width] duration-300 ease-out";
+
+/** Später: Opacity-Fade des Panel-Inhalts (200ms). */
+export const workspaceDetailPanelContentTransitionClass =
+  "transition-opacity duration-200 ease-out";
+
+/** Später: Höhen-Morph Portal Top-Bar h-3 → h-14 (gleiche Dauer wie Sidebar). */
+export const workspacePortalTopBarHeightTransitionClass =
+  "transition-[height] duration-300 ease-out";
+
+export const workspaceNavWidthClass = (collapsed: boolean) =>
+  collapsed ? "w-[68px]" : "w-[240px]";
+
+/** Figma iconBadge: 32×32, stone-200, 16px-Icon. */
+export const workspaceSidebarToggleBaseClass =
+  "z-30 flex size-8 shrink-0 items-center justify-center rounded-full bg-stone-200 p-2 text-foreground-alt";
+
+/** Nur Aufklappen-Button & Einklappen im aufgeklappten Zustand — nie bei `collapsed`. */
+export const workspaceSidebarToggleHoverClass =
+  "opacity-0 invisible transition-[opacity,visibility] duration-200 group-hover/sidebar:visible group-hover/sidebar:opacity-100 group-hover/brand:visible group-hover/brand:opacity-100 focus-visible:visible focus-visible:opacity-100";
+
+/** Brand-Zeile: identische Höhe aufgeklappt / eingeklappt (Figma py-1 + 40px Logo). */
+export const WORKSPACE_BRAND_ROW_CLASS = "relative flex w-full shrink-0 items-center";
+
+/** Logo + Nav-Icons: 40×40 (size-10), gleiche horizontale Achse in nav_max & nav_mini. */
+export const WORKSPACE_SIDEBAR_ICON_SLOT_PX = 40;
+
+/** Logo + Nav: 40×40-Box, 16×16-Icon zentriert — kein zusätzlicher linker Offset. */
+export const workspaceSidebarIconSlotClass =
+  "flex size-10 shrink-0 items-center justify-center";

@@ -1,34 +1,19 @@
 "use client";
 
-import {
-  Calendar,
-  Check,
-  Copy,
-  Hash,
-  MessageSquare,
-  MoreHorizontal,
-  User,
-  UserCircle,
-  X,
-} from "lucide-react";
+import { MessageSquare, MoreHorizontal, X } from "lucide-react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { ApplicationDetailsCard } from "@/components/domain/application-details-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import type { ApplicationAssignee } from "@/lib/application-assignee";
+import { type ApplicationStatusMeta } from "@/lib/application-status";
 import { cn } from "@/lib/utils";
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
-import { formatReviewSubmittedAt } from "@/lib/application-review-labels";
-import { type ApplicationStatusMeta } from "@/lib/application-status";
 import {
   REVIEW_WORKSPACE_BLOCK_IDS,
   type ReviewWorkspaceBlockId,
 } from "@/lib/review-workspace-blocks";
-
-type DetailRow = {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: React.ReactNode;
-};
 
 export type SavedReviewComment = {
   id: string;
@@ -60,8 +45,7 @@ export type ReviewAdjustmentComposerProps = {
 type ApplicationReviewDetailSidebarProps = {
   application: WorkspaceApplication;
   statusMeta: ApplicationStatusMeta;
-  /** Shown for „Zugewiesen an“ — typically the logged-in R2 reviewer in the prototype. */
-  assignedReviewerLabel: string;
+  assignee: ApplicationAssignee;
   /** Aktiver Entwurf zur Anpassung (Sidebar nach „Anpassung anfordern“). */
   adjustmentComposer: ReviewAdjustmentComposerProps | null;
   /** Gespeicherte Block-Kommentare (Chronik unter dem Entwurf). */
@@ -98,7 +82,7 @@ function formatCommentTimestamp(ts: number): string {
 export function ApplicationReviewDetailSidebar({
   application,
   statusMeta,
-  assignedReviewerLabel,
+  assignee,
   adjustmentComposer,
   savedReviewComments,
   onSavedCommentNavigate,
@@ -106,57 +90,6 @@ export function ApplicationReviewDetailSidebar({
   showCommentsSection = true,
   secondarySection = "comments",
 }: ApplicationReviewDetailSidebarProps) {
-  const submitted = formatReviewSubmittedAt(application.data);
-  const updated = new Date(application.updated_at).toLocaleDateString("de-CH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-
-  const primaryRows = useMemo<DetailRow[]>(
-    () => [
-      {
-        icon: User,
-        label: "Antragsteller",
-        value: <ApplicantNameWithId application={application} />,
-      },
-      {
-        icon: Calendar,
-        label: "Eingereicht am",
-        value: (
-          <span className="text-foreground">{submitted ?? "—"}</span>
-        ),
-      },
-      {
-        icon: UserCircle,
-        label: "Zuletzt aktualisiert",
-        value: <span className="text-foreground">{updated}</span>,
-      },
-      {
-        icon: User,
-        label: "Zugewiesen an",
-        value: (
-          <span className="inline-flex items-center gap-2 text-foreground">
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-[10px] leading-none font-semibold text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100">
-              {initialsFromName(assignedReviewerLabel)}
-            </span>
-            <span className="truncate">{assignedReviewerLabel}</span>
-          </span>
-        ),
-      },
-      {
-        icon: Hash,
-        label: "Antrags-ID",
-        value: (
-          <code className="rounded bg-muted px-1.5 py-0.5 text-xs text-foreground">
-            {application.id}
-          </code>
-        ),
-      },
-    ],
-    [application, assignedReviewerLabel, submitted, updated],
-  );
-
   const orderedSavedReviewComments = useMemo(() => {
     const orderIndex = new Map<ReviewWorkspaceBlockId, number>(
       REVIEW_WORKSPACE_BLOCK_IDS.map((id, idx) => [id, idx]),
@@ -180,7 +113,7 @@ export function ApplicationReviewDetailSidebar({
   if (adjustmentComposer) {
     return (
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#fafafa]">
-        <header className="flex shrink-0 items-center gap-2 border-b border-border px-6 py-5">
+        <header className="flex shrink-0 items-center gap-2 border-b border-border py-5">
           <button
             type="button"
             onClick={() => adjustmentComposer.onCancel()}
@@ -191,9 +124,9 @@ export function ApplicationReviewDetailSidebar({
           </button>
           <h2 className="text-lg font-medium leading-[27px] text-foreground">Kommentare</h2>
         </header>
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6 pt-6">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden pb-6 pt-6">
           <ReviewAdjustmentDraftCard
-            reviewerName={assignedReviewerLabel}
+            reviewerName={assignee.displayName}
             composer={adjustmentComposer}
             layout="fullColumn"
           />
@@ -203,43 +136,17 @@ export function ApplicationReviewDetailSidebar({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#fafafa]">
-      <div
-        className={cn(
-          "shrink-0 space-y-4 px-5 py-5",
-          showCommentsSection && "border-b border-border",
-        )}
-      >
-        <h2 className="text-sm font-semibold text-foreground">Antragdetails</h2>
-        <div className="space-y-0">
-          {/* Status row — Notion-style pill */}
-          <div className="flex min-h-9 items-start gap-2 py-1.5">
-            <span className="flex size-5 shrink-0 items-center justify-center text-muted-foreground">
-              <span className="size-2 rounded-full bg-current opacity-60" aria-hidden />
-            </span>
-            <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
-              <span className="shrink-0 pt-0.5 text-xs text-muted-foreground">
-                Status
-              </span>
-              <span
-                className={cn(
-                  "inline-flex max-w-full items-center rounded-md px-2 py-0.5 text-xs font-semibold",
-                  statusMeta.className,
-                )}
-              >
-                {statusMeta.label}
-              </span>
-            </div>
-          </div>
-          {primaryRows.map((row) => (
-            <DetailPropertyRow key={row.label} {...row} />
-          ))}
-        </div>
-      </div>
+    <div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden">
+      <ApplicationDetailsCard
+        application={application}
+        statusMeta={statusMeta}
+        assignee={assignee}
+        className="shrink-0"
+      />
 
       {showCommentsSection && secondarySection === "comments" ? (
         <section
-          className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6 pt-6"
+          className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-background pb-4 pt-4"
           aria-labelledby="review-comments-heading"
         >
           <div className="mb-5 flex shrink-0 items-center gap-2">
@@ -474,24 +381,6 @@ function SavedReviewCommentCard({
   );
 }
 
-function DetailPropertyRow({
-  icon: Icon,
-  label,
-  value,
-}: DetailRow) {
-  return (
-    <div className="flex min-h-9 items-start gap-2 py-1.5">
-      <span className="flex size-5 shrink-0 items-center justify-center text-muted-foreground">
-        <Icon className="size-4" aria-hidden />
-      </span>
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-        <span className="shrink-0 pt-0.5 text-xs text-muted-foreground">{label}</span>
-        <div className="min-w-0 flex-1 text-right text-sm sm:text-right">{value}</div>
-      </div>
-    </div>
-  );
-}
-
 function initialsFromName(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
@@ -523,7 +412,7 @@ function R4ContactsSection({ application }: { application: WorkspaceApplication 
 
   return (
     <section
-      className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 pb-6 pt-6"
+      className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-xl bg-background pb-4 pt-4"
       aria-labelledby="r4-contacts-heading"
     >
       <h3 id="r4-contacts-heading" className="mb-4 text-lg font-medium leading-[27px] text-foreground">
@@ -556,45 +445,3 @@ function R4ContactsSection({ application }: { application: WorkspaceApplication 
   );
 }
 
-function ApplicantNameWithId({ application }: { application: WorkspaceApplication }) {
-  const id = application.applicant_id;
-  const name = resolveApplicantDisplayName(application);
-  const [copied, setCopied] = useState(false);
-
-  async function copyId() {
-    try {
-      await navigator.clipboard.writeText(id);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* ignore */
-    }
-  }
-
-  return (
-    <span className="inline-flex max-w-full min-w-0 items-center justify-end gap-1">
-      <span
-        className="min-w-0 truncate text-right font-medium text-foreground"
-        title={id}
-      >
-        {name}
-      </span>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          void copyId();
-        }}
-        className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        title={`Antragsteller-ID (Hover auf den Namen)\n${id}\n\nKlick: ID kopieren`}
-        aria-label="Antragsteller-ID kopieren"
-      >
-        {copied ? (
-          <Check className="size-3.5 text-teal-600" aria-hidden />
-        ) : (
-          <Copy className="size-3.5" aria-hidden />
-        )}
-      </button>
-    </span>
-  );
-}

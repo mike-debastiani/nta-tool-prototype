@@ -78,6 +78,11 @@ export function WorkspaceTestFlow({
     }
   }, []);
 
+  /** Stabile Referenz — verhindert Autosave-Loop in WorkspaceApplicationReview (onPersisted in useCallback-Deps). */
+  const handleApplicationPersisted = useCallback(() => {
+    void refreshApplications();
+  }, [refreshApplications]);
+
   useEffect(() => {
     const channel = supabase
       .channel(`workspace-app-${userId}`)
@@ -317,7 +322,7 @@ export function WorkspaceTestFlow({
           key={`${selectedApplication.id}-${selectedApplication.status}`}
           application={selectedApplication}
           reviewerDisplayName={reviewerDisplayName}
-          onPersisted={() => void refreshApplications()}
+          onPersisted={handleApplicationPersisted}
         />
       );
     }
@@ -363,7 +368,7 @@ export function WorkspaceTestFlow({
         reviewerDisplayName={reviewerDisplayName}
         viewMode={r4ViewMode}
         workspaceViewerRole={workspaceRole === "R4" ? "R4" : "R2"}
-        onPersisted={() => void refreshApplications()}
+        onPersisted={handleApplicationPersisted}
         bottomAction={recommendationBottomAction}
       />
     );

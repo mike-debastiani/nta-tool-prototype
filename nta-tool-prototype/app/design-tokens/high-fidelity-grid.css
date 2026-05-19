@@ -43,6 +43,11 @@
   padding-inline: var(--hf-grid-margin);
 }
 
+/* R1 Antragserstellung-Flow: 24px Seitenrand (Dashboard/Liste unverändert) */
+.hf-page-grid--r1-flow {
+  --hf-grid-margin: 1.5rem;
+}
+
 /* 12-column fluid grid */
 .hf-grid {
   display: grid;

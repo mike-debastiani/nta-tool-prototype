@@ -1,7 +1,7 @@
 # General Prototype Context — NTA Tool (HSLU Bachelor)
 
 > **Zweck:** Übergeordneter Kontext für neue Chats: Was der Prototyp ist, wie er technisch sitzt, welche Rollen und Bereiche es gibt, und welche Grenzen gelten.  
-> **Detail-Tiefe:** Antrag R1, R2-Beratung, Status, RLS → `Antragerstellung_Kontext.md`; **R2-Block-Review nach Einreichung**, Korrekturrunden, R1-Freigabe zurück in `in_review` → `Antrag_Review_Kontext.md`; **R4 Bewilligung / Entscheid** → `Antrag_Bewilligung_Kontext.md`; **HF Design (Tokens, Grid, R1-Shell)** → `High_Fidelity_Design_Kontext.md`. Zielbild vs. Ist: `Prototyp_Funktionen.md`.
+> **Detail-Tiefe:** Antrag R1, R2-Beratung, Status, RLS → `Antragerstellung_Kontext.md`; **Dashboard-Shell Portal + Workspace** (Sidebar, Top-Bar) → `Dashboard_Core_Layout_Kontext.md`; **R2-Block-Review nach Einreichung**, Korrekturrunden, R1-Freigabe zurück in `in_review` → `Antrag_Review_Kontext.md`; **R4 Bewilligung / Entscheid** → `Antrag_Bewilligung_Kontext.md`; **HF Design (Tokens, Grid, R1-Flow-Shell)** → `High_Fidelity_Design_Kontext.md`. Zielbild vs. Ist: `Prototyp_Funktionen.md`.
 
 ---
 
@@ -42,7 +42,7 @@ Funktionaler Web-Prototyp zur **Simulation** des Nachteilsausgleich-Prozesses (N
 
 **Routing nach Login (Zielbild):** R1 → Portal; Verwaltungsrollen → Workspace. Ungeschützter Zugriff → Redirect zum passenden Login.
 
-Eine Codebase, ein Supabase-Backend; Trennung über Routen und Layouts (`RoleDashboardLayout` u. a.), nicht über separate Apps.
+Eine Codebase, ein Supabase-Backend; Trennung über Routen und Layouts (`RoleDashboardLayout` → `PortalDashboardShell` / `WorkspaceDashboardShell` in `workspace-dashboard-shell.tsx`; R1-Antragsflow **ohne** diese Shell → `r1-application-flow-layout.tsx`), nicht über separate Apps. Mechanik → **`Dashboard_Core_Layout_Kontext.md`**.
 
 ---
 
@@ -70,7 +70,7 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | F2 | Multi-Step Antrag R1 — HF-Shell in `r1-application-flow-layout.tsx`, Logik in `nta-antrag-desktop.tsx` (Details: `Antragerstellung_Kontext.md` § 4–6, HF: `High_Fidelity_Design_Kontext.md` § 7) |
 | F3 | Schema-driven Forms (Zielbild; Konfig unter `lib/config/` wo vorhanden) |
 | F4 | Beratung asynchron / Empfehlung R2 |
-| F5 | Workspace R2–R6 |
+| F5 | Workspace R2–R6 — gemeinsame Dashboard-Shell (`Dashboard_Core_Layout_Kontext.md`) |
 | F6 | Annotations / Korrektur-Loop (Vision); **Ist:** Block-Level-Review im Workspace + R1 `PortalApplicationAdjustment` + `r1-release-adjustments` (siehe `Antrag_Review_Kontext.md`) |
 | F7 | Realtime zwischen Clients (**Ist:** u. a. Broadcast `application-realtime-sync` + Refetch/Polling wo nötig) |
 | F8 | Aktivitäts-Log (`application_events` o. ä.) |
@@ -121,7 +121,13 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `lib/r1-adjustment-release.ts` | Regeln und Builder für Post-Submit nach R1-Freigabe |
 | `lib/workspace-review-hydration-key.ts` | Fingerprint für wiederholtes `in_review` (R2-UI) |
 | `lib/application-realtime-sync.ts` | Broadcast-Helfer nach mutierenden Schritten |
-| `components/domain/` | Fachliche UI (Dashboard, Workspace-Flow, Layouts, Badges, **Block-Review**, **Empfehlungs-Editor & -Accordion**, R1-Anpassungsansicht) |
+| `components/domain/workspace-dashboard-shell.tsx` | **Dashboard Core:** `DashboardShell`, Portal/Workspace-Varianten, Sidebar-Collapse, Top-Bar + Antragdetails-Panel (sofort sichtbar; Morph optional → `Dashboard_Core_Layout_Kontext.md`) |
+| `components/domain/role-dashboard-layout.tsx` | Router: R1 → Portal-Shell; R2–R6 → Workspace-Shell; `showTopBar` auf `/portal/antragserstellung` |
+| `components/domain/portal-dashboard-toolbar-context.tsx` | Portal-Top-Bar-Slots (Zurück, Trailing) |
+| `components/domain/workspace-r2-toolbar-context.tsx` | Workspace-Top-Bar `leadingSlot` (z. B. Zurück zur Liste) |
+| `lib/design-tokens/workspace-dashboard.ts` | Sidebar-Breiten, Transitions, Icon-Slots, Portal-Rim/Top-Bar |
+| `components/icons/avalis-logo.tsx` | Brand-Logo in Dashboard-Sidebar |
+| `components/domain/` | Fachliche UI (Dashboard, Workspace-Flow, Badges, **Block-Review**, **Empfehlungs-Editor & -Accordion**, R1-Anpassungsansicht) |
 | `components/domain/rich-text-editor.tsx` | TipTap-Wrapper für das Empfehlungsschreiben |
 | `components/domain/recommendation-released-accordion.tsx` | Geteilte Anzeige des freigegebenen Empfehlungsschreibens (R1 + R2) |
 | `components/domain/r1-application-flow-layout.tsx` | HF-Shell R1-Antragsflow: Top-Bar, Sidebar, Fortschrittskarte, `R1FlowFormCard`, `R1FlowField*`, Attest-Callout |
@@ -168,4 +174,5 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `Antragerstellung_Kontext.md` | Antrag R1, R2-Beratung/Empfehlung/Forward, Status, Daten, RLS |
 | `Antrag_Review_Kontext.md` | R2-Block-Review nach Einreichung inkl. Persistenz und Forward in „In Entscheid“ |
 | `Antrag_Bewilligung_Kontext.md` | R4 Entscheidungsinstanz: Bewilligungs-UI, APIs, Workspace-RLS |
+| `Dashboard_Core_Layout_Kontext.md` | Portal- & Workspace-Dashboard-Shell (Sidebar, Top-Bar, Shell vs. R1-Flow) |
 | `High_Fidelity_Design_Kontext.md` | HF-Tokens, Grid, Typo, R1-Antragsflow-Shell (Figma) |

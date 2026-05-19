@@ -2,7 +2,7 @@
 
 > **Zweck:** Zentrale Referenz für Chats zur **Review-Ansicht nach finalem R1-Submit**, **UI**, **Client-State**, **Sidebar-Kommentare**, **Code-Ankern** sowie dem **Empfehlungsschreiben-Drafting / -Release** (Rich-Text) zwischen R2 und R1.  
 > **Backend:** R2-Review-Persistenz, Forward-Aktion (`in_implementation` / `needs_correction`), R1-Freigabe zurück in den Review-Loop (`in_review`), Empfehlungs-Inhalte unter `data.recommendation.*` — RLS-/Trigger-konform; **R4**-Lesepolicies ergänzend zu R2 (`Antrag_Bewilligung_Kontext.md`). Siehe [Daten & Backend](#4-daten--backend).  
-> **Verwandt:** `Antragerstellung_Kontext.md` · `General_Prototype_Kontext.md` · `Antrag_Bewilligung_Kontext.md` (R4) · `Prototyp_Funktionen.md` (F6/F7 vs. Ist-Block-Review)
+> **Verwandt:** `Antragerstellung_Kontext.md` · `Dashboard_Core_Layout_Kontext.md` (Shell, Top-Bar, Zurück) · `General_Prototype_Kontext.md` · `Antrag_Bewilligung_Kontext.md` (R4) · `Prototyp_Funktionen.md` (F6/F7 vs. Ist-Block-Review)
 
 ---
 
@@ -32,7 +32,7 @@
 - Nach **Anpassungsanforderung:** R1 **„Anpassung erforderlich“**, R2-Label **„Anpassung ausstehend“** (`needs_adjustment`; Labels `getStatusLabelForAudience`).
 - **Umgesetzt:** Klick auf einen Antrag im R1-Dashboard öffnet **immer** die Block-Detailansicht **`PortalApplicationAdjustment`** (`components/domain/portal-application-adjustment.tsx`) unter `/portal/antragserstellung?applicationId=<uuid>` — identisches Layout wie die R2-Review (Block-Liste links, Antrag-Sidebar rechts). Bearbeitung ist **nur** aktiv, wenn `deriveCanonicalApplicationState === "needs_adjustment"` (im Code u. a. `canEditBlocks`); in allen anderen Status ist die Ansicht read-only. Per Sidebar-Kommentar / „Anpassung vornehmen“ springt R1 zur passenden Stelle (`reviewWorkspaceAnchorId`); bestätigte Blöcke grün, angeforderte Anpassungen amber mit R2-Bemerkung.
 - **Autosave:** Pro betroffenem Block schreibt R1 debounced in `data.applicationDefinition` / `data.personalData` / `data.attestFiles`; abgeschlossene Anpassungen sind in `data.r1AdjustmentResolutions` (Typ `R1AdjustmentResolution` mit `resolvedAt`) markiert, damit die UI „Anpassung erfolgt“ anzeigt, ohne die Original-Bemerkung von R2 zu verlieren.
-- **Persistenter Zurück-Button** oben links („Zurück zum Dashboard“) und **Löschen-Aktion** sind in jedem Status verfügbar.
+- **Zurück zum Dashboard** über die **Portal-Dashboard-Top-Bar** (`usePortalDashboardToolbar` / Default-Link → `/portal/home`); **Löschen-Aktion** in der Adjustment-UI. Kein schwebender `absolute`-Zurück-Button mehr im Content.
 - **Umgesetzt:** Wenn alle von R2 angeforderten Anpassungs-Blöcke mindestens einmal gespeichert sind (`r1AllRequestedAdjustmentsSaved` in `lib/r1-adjustment-release.ts`), kann R1 **„Anpassungen für Review freigeben“** auslösen → API oben → `in_review`. UI: schwarzer Button, rechts in einer Zeile mit **„Antrag zurückziehen“** (keine umgebenden Erklärungstexte mehr in diesem Bereich).
 
 ### Loop & Entscheid
@@ -96,7 +96,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 - **Container:** `RecommendationDraftEditor` in `components/domain/workspace-test-flow.tsx`. Wird **nur** gerendert, solange `selectedCanonicalState === "consultation_recommendation"` **und** `data.recommendation.releasedHtml` leer ist.
   - „Entwurf speichern“ (links) → `saveRecommendationDraft` schreibt `data.recommendation.draftHtml` / `draftText` (RLS-erlaubter Pfad). Statustext sitzt rechts neben dem Button.
   - „Empfehlungsschreiben freigeben“ (rechts) → `releaseRecommendation` schreibt `releasedHtml` / `releasedText` / `releasedAt` / `releasedBy` (Anzeige-Name aus `reviewerDisplayName`) und setzt `ready: true`.
-- **Sichtbar nach Release:** Der Editor verschwindet (kein `bottomAction` mehr). Statt dessen taucht der freigegebene Inhalt als regulärer Block (`RecommendationReleasedAccordion`, Variant `card`) in der Blockliste auf — derselbe Block wird auf R1-Seite (Variant `plain`) in `step3_recommendation` / `step5_overview` eingebettet (Details: `Antragerstellung_Kontext.md` § 4).
+- **Sichtbar nach Release:** Der Editor verschwindet (kein `bottomAction` mehr). Statt dessen taucht der freigegebene Inhalt als regulärer Block (`RecommendationReleasedAccordion`, HF wie R1) in der Blockliste auf — identische Darstellung in R1 (`step3_recommendation` / `step5_overview`), R2-Review und R4 (Details: `Antragerstellung_Kontext.md` § 4).
 - **Accordion-Layout:** Trigger-Zeile zeigt links den Titel „Empfehlungsschreiben der Fachstelle“, rechts inline **„Erstellt durch:“ + Avatar (Initialen aus `releasedBy`)** und die **„Freigegeben · DD.MM.YYYY“-Pill** (Datum-only, ohne Icon). Content ist `dangerouslySetInnerHTML` aus `releasedHtml`, defaultmäßig aufgeklappt. Eigenes Layout — keine Bottom-Author-Sektion / kein Inner-Divider mehr.
 
 ### Hauptkomponenten (Code-Anker)
@@ -117,16 +117,18 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 | Toolbar | `components/domain/workspace-r2-toolbar-context.tsx` | Topbar-Slot („Zurück zur Liste“) |
 | Workspace-Flow | `components/domain/workspace-test-flow.tsx` | Liste, View-Mode-Ableitung, `RecommendationDraftEditor` (Bottom-Slot in `consultation_recommendation`) |
 | Rich-Text-Editor | `components/domain/rich-text-editor.tsx` | TipTap-Wrapper mit shadcn-styled Toolbar, `useEditorState`, Custom-Heading-Extension |
-| Released-Accordion | `components/domain/recommendation-released-accordion.tsx` | Geteilter Read-Only-Block (Variant `card` für R2, `plain` für R1) für `releasedHtml`/`releasedAt`/`releasedBy` |
+| Released-Accordion | `components/domain/recommendation-released-accordion.tsx` | Geteilter Read-Only-Block (HF 5247:5570, R1/R2/R4/Portal) für `releasedHtml`/`releasedAt`/`releasedBy` |
 | Accordion-Primitive | `components/ui/accordion.tsx` | shadcn-Wrapper um `radix-ui` Accordion (ohne Hover-Underline) |
 | R1-Anpassungsansicht | `components/domain/portal-application-adjustment.tsx` | Block-Detail R1 unter `/portal/antragserstellung?applicationId=…`; identisches Layout, Edit nur bei `needs_adjustment` (`allowAdjustments`) |
-| Layout | `components/domain/role-dashboard-layout.tsx` | Gemeinsames R1/R2–R6 Shell; **Workspace-Topbar** (Suche, Inbox, Avatar) für alle **R2–R6**; Nav unterscheidet R1 vs. Workspace |
+| Dashboard-Shell | `components/domain/workspace-dashboard-shell.tsx` | Sidebar 240/68px, Portal Top-Bar + rechtes Antragdetails-Panel (sofort); Workspace-Top-Bar; Figma `5354:9951` / `5354:10586` → `Dashboard_Core_Layout_Kontext.md` |
+| Layout-Router | `components/domain/role-dashboard-layout.tsx` | R1 → `PortalDashboardShell`; R2–R6 → `WorkspaceDashboardShell` |
+| Portal-Toolbar | `components/domain/portal-dashboard-toolbar-context.tsx` | Zurück-Slot in Portal-Top-Bar |
 
 ### Review-Blöcke (Reihenfolge)
 
 1. **Antragsteller** — Persönliche Angaben ohne Antragsart.
 2. **Fachärztliches Attest** — Dateizeilen (Placeholder wenn keine URL).
-3. **Empfehlungsschreiben der Fachstelle** — **`RecommendationReleasedAccordion`** (Variant `card`), wird ab dem Moment gerendert, in dem `data.recommendation.releasedHtml` existiert — **unabhängig vom View-Mode**, also in `interactive`, `readonly_consultation`, `readonly_adjustment_pending`, `readonly_decision`. Der frühere Legacy-Block über `recommendation.url` (Datei-Kachel mit `ReviewFileRow` + `fileNameFromUrl`) ist vollständig entfernt; vor dem Release wird in dieser Position nichts angezeigt.
+3. **Empfehlungsschreiben** — **`RecommendationReleasedAccordion`** (HF 5247:5570, einheitlich mit R1), wird ab dem Moment gerendert, in dem `data.recommendation.releasedHtml` existiert — **unabhängig vom View-Mode**, also in `interactive`, `readonly_consultation`, `readonly_adjustment_pending`, `readonly_decision`. Der frühere Legacy-Block über `recommendation.url` (Datei-Kachel mit `ReviewFileRow` + `fileNameFromUrl`) ist vollständig entfernt; vor dem Release wird in dieser Position nichts angezeigt.
 4. **Antragsdefinition** — `situationDescription`.
 5. **Gültigkeitsdauer** — Vergleich der beiden Optionen.
 6. **Geltungsbereich** — `APPLICATION_SCOPE_OPTIONS`.
@@ -193,7 +195,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 | Rechte Spalte | volle Höhe; bei **Kommentarentwurf** nimmt die Kommentar-Ansicht die **komplette** Sidebar ein |
 | Kommentarchronik (ohne Entwurf) | scrollbarer Bereich unter „Kommentare“ |
 
-Details Sidebar-Einklapp-Logik / Z-Index: `role-dashboard-layout.tsx` und frühere Review-Notizen im Chat — bei Layout-Bugs dort nachziehen.
+**Äussere Dashboard-Shell** (Sidebar, Top-Bar, weisses Panel): `workspace-dashboard-shell.tsx` — **`Dashboard_Core_Layout_Kontext.md`**. Review-Innenlayout (3 Spalten, Scroll) bleibt in `WorkspaceApplicationReview` / `PortalApplicationAdjustment`.
 
 ### Block-Card-Styling (`ReviewBlockCard`)
 

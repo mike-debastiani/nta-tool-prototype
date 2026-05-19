@@ -18,9 +18,14 @@ const MENU_ITEM =
 
 type WorkspaceAccountMenuProps = {
   initials?: string;
+  /** HF Workspace-Topbar: 40px Avatar (Figma 5354:10014). */
+  size?: "default" | "workspace";
 };
 
-export function WorkspaceAccountMenu({ initials = "NF" }: WorkspaceAccountMenuProps) {
+export function WorkspaceAccountMenu({
+  initials = "NF",
+  size = "default",
+}: WorkspaceAccountMenuProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -38,7 +43,12 @@ export function WorkspaceAccountMenu({ initials = "NF" }: WorkspaceAccountMenuPr
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-xs font-semibold text-neutral-800 outline-none transition-colors hover:bg-neutral-300/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-600/80"
+          className={cn(
+            "flex shrink-0 items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            size === "workspace"
+              ? "size-10 bg-stone-150 text-hf-paragraph-small-medium text-foreground hover:bg-stone-200/80"
+              : "size-9 bg-neutral-200 text-xs font-semibold text-neutral-800 hover:bg-neutral-300/80 dark:bg-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-600/80",
+          )}
           aria-label="Benutzerkonto-Menü"
         >
           {initials}

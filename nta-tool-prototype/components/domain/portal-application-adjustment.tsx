@@ -40,6 +40,8 @@ import {
   ApplicationReviewDetailSidebar,
   type SavedReviewComment,
 } from "@/components/domain/application-review-detail-sidebar";
+import { useRegisterDashboardDetailPanel } from "@/components/domain/dashboard-detail-panel-context";
+import { resolveApplicationAssignee } from "@/lib/application-assignee";
 import {
   APPLICATION_SCOPE_OPTIONS,
   ASSESSMENT_MEASURE_OPTIONS,
@@ -75,6 +77,10 @@ import {
   type WorkspaceApplication,
 } from "@/lib/test-flow-types";
 import { createClient } from "@/utils/supabase/client";
+import {
+  applicationContentScrollClass,
+  applicationContentScrollPaddingClass,
+} from "@/lib/design-tokens/application-scroll";
 import { cn } from "@/lib/utils";
 import { getApplicationStatusMeta } from "@/lib/application-status";
 import {
@@ -767,24 +773,65 @@ export function PortalApplicationAdjustment({
       editing?.blockId === id && autosave.kind === "error" ? autosave.message : null,
   });
 
-  return (
-    <div className="flex min-h-0 flex-1 w-full min-w-0 flex-row overflow-hidden">
-      <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
-        <div className="absolute left-6 top-4 z-30 rounded-full border border-border/70 bg-background/90 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/75">
-          <Button
-            asChild
-            variant="ghost"
-            size="sm"
-            className="h-9 gap-1.5 rounded-full px-3 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <Link href="/portal/home">
-              <ArrowLeft className="size-4" aria-hidden />
-              Zurück
-            </Link>
-          </Button>
-        </div>
+  const assignee = useMemo(
+    () =>
+      resolveApplicationAssignee({
+        canonicalState: statusMeta.canonicalState,
+        applicantDisplayName,
+        r2ReviewerDisplayName:
+          snapshot.data.consultation?.advisor?.trim()
+          || snapshot.data.recommendation?.releasedBy?.trim()
+          || "NTA Fachstelle",
+        r4ReviewerDisplayName: "Entscheidungsinstanz",
+      }),
+    [statusMeta.canonicalState, applicantDisplayName, snapshot.data],
+  );
 
-        <div className="h-full overflow-y-auto px-6 pb-8 pt-20">
+  const detailPanelSignature = useMemo(
+    () =>
+      [
+        snapshot.id,
+        snapshot.updated_at,
+        statusMeta.canonicalState,
+        statusMeta.label,
+        canEditBlocks ? "1" : "0",
+        savedComments.map((c) => `${c.id}:${c.createdAt}`).join(","),
+      ].join("\u001e"),
+    [
+      snapshot.id,
+      snapshot.updated_at,
+      statusMeta.canonicalState,
+      statusMeta.label,
+      canEditBlocks,
+      savedComments,
+    ],
+  );
+
+  useRegisterDashboardDetailPanel(
+    detailPanelSignature,
+    () => (
+      <ApplicationReviewDetailSidebar
+        application={snapshot}
+        statusMeta={statusMeta}
+        assignee={assignee}
+        adjustmentComposer={null}
+        savedReviewComments={savedComments}
+        onSavedCommentNavigate={navigateFromComment}
+        showCommentsSection={canEditBlocks}
+      />
+    ),
+  );
+
+  return (
+    <div className="flex min-h-0 flex-1 w-full min-w-0 flex-col overflow-hidden">
+      <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
+        <div
+          className={cn(
+            "h-full overflow-y-auto overscroll-contain",
+            applicationContentScrollClass,
+            applicationContentScrollPaddingClass,
+          )}
+        >
           <div className="mx-auto w-full max-w-4xl space-y-6">
             <div>
               <div className="min-w-0">
@@ -907,7 +954,6 @@ export function PortalApplicationAdjustment({
               Wird nur gerendert, wenn die Fachstelle ein Schreiben freigegeben hat. */}
           {data.recommendation?.releasedHtml?.trim() ? (
             <RecommendationReleasedAccordion
-              variant="card"
               html={data.recommendation.releasedHtml}
               releasedAt={data.recommendation.releasedAt}
               authorDisplayName={
@@ -1146,17 +1192,6 @@ export function PortalApplicationAdjustment({
         </div>
       </div>
 
-      <aside className="flex h-full min-h-0 w-[366px] shrink-0 flex-col overflow-hidden border-l border-border bg-[#fafafa]">
-        <ApplicationReviewDetailSidebar
-          application={snapshot}
-          statusMeta={statusMeta}
-          assignedReviewerLabel={applicantDisplayName}
-          adjustmentComposer={null}
-          savedReviewComments={savedComments}
-          onSavedCommentNavigate={navigateFromComment}
-          showCommentsSection={canEditBlocks}
-        />
-      </aside>
     </div>
   );
 }
