@@ -41,6 +41,7 @@ import {
   type SavedReviewComment,
 } from "@/components/domain/application-review-detail-sidebar";
 import { useRegisterDashboardDetailPanel } from "@/components/domain/dashboard-detail-panel-context";
+import { useDashboardScrollRoot } from "@/components/domain/dashboard-main-panel-scroll-context";
 import { resolveApplicationAssignee } from "@/lib/application-assignee";
 import {
   APPLICATION_SCOPE_OPTIONS,
@@ -807,6 +808,8 @@ export function PortalApplicationAdjustment({
     ],
   );
 
+  const scrollRootRef = useDashboardScrollRoot<HTMLDivElement>();
+
   useRegisterDashboardDetailPanel(
     detailPanelSignature,
     () => (
@@ -826,6 +829,7 @@ export function PortalApplicationAdjustment({
     <div className="flex min-h-0 flex-1 w-full min-w-0 flex-col overflow-hidden">
       <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
         <div
+          ref={scrollRootRef}
           className={cn(
             "h-full overflow-y-auto overscroll-contain",
             applicationContentScrollClass,
@@ -1543,7 +1547,7 @@ function PersonalEditForm({
           <label
             key={opt.value}
             className={cn(
-              "flex w-full items-start gap-3 rounded-xl border border-border bg-card px-3 py-3",
+              "flex w-full items-start gap-3 rounded-lg border border-border bg-card px-3 py-3",
               value.antragsart === opt.value ? "opacity-100" : "opacity-70",
             )}
           >

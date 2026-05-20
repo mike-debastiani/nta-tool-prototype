@@ -182,7 +182,7 @@ export function RecommendationReleasedAccordion({
     <section
       id={anchorId}
       className={cn(
-        "scroll-mt-6 overflow-hidden rounded-xl border border-border bg-card shadow-xs",
+        "scroll-mt-6 overflow-hidden rounded-lg border border-border bg-card",
         className,
       )}
     >

@@ -199,6 +199,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 
 ### Block-Card-Styling (`ReviewBlockCard`)
 
+- **Surface:** `applicationBlockSurfaceClass` aus `lib/design-tokens/application-block.ts` — `rounded-lg border border-border bg-card`, **kein** Shadow (gleiches Muster in Portal-Adjustment, R4, R1-`R1FlowFormCard`, Empfehlungs-Accordion).
 - **Keine Header-Trennlinie mehr** zwischen Block-Titel und Inhalt (`border-b border-border` entfernt). Titel und Inhalt liegen in einem gemeinsamen Container `px-6 pt-5 pb-5` mit `space-y-4` — der Abstand Heading ↔ Content ist damit ~16 px statt vorher ~40 px.
 - Footer-Tonalitäten (`default` / `confirmed` teal / `adjustment` amber) unverändert; `RecommendationReleasedAccordion` und `RecommendationDraftEditor` orientieren sich am gleichen Header-Padding (kein eigenständiger Border-Divider mehr).
 

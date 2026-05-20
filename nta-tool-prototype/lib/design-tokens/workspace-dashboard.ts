@@ -1,22 +1,52 @@
 /** Workspace dashboard shell (Figma 5354:9951 nav_max, 5354:10586 nav_mini). */
 
-/** Navigations-Sidebar: horizontaler Innenabstand (Portal + Workspace). */
-export const DASHBOARD_SIDEBAR_PADDING_CLASS = "pl-4 py-3";
+/** Navigations-Sidebar: links 18px, oben/unten 12px (`py-3`). */
+export const DASHBOARD_SIDEBAR_PADDING_CLASS = "py-3 pl-[18px]";
 
-/** Zeile mit weissem Hauptpanel + Antragdetails-Spalte. */
-export const DASHBOARD_SHELL_CONTENT_ROW_PADDING_CLASS = "px-4";
+/** Nav-Item aktiv (Figma `5509:11682` — `general/primary`). */
+export const DASHBOARD_NAV_ITEM_ACTIVE_CLASS =
+  "rounded-[7px] bg-primary text-primary-foreground";
 
-/** Weisses Inhalts-Panel (`rounded-t-xl`) — Listen / Dashboard ohne Antrag. */
-export const DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS = "px-4";
+/** Nav-Item inaktiv — unveränderte Layout-Klassen (`NAV_ITEM_BASE` in Shell). */
+export const DASHBOARD_NAV_ITEM_IDLE_CLASS =
+  "rounded-md text-foreground-alt hover:bg-stone-150/80";
+
+/** Nav-Label aktiv — ohne `text-foreground-alt` aus `hfTypography`, damit Primary-Foreground greift. */
+export const DASHBOARD_NAV_ITEM_ACTIVE_LABEL_CLASS =
+  "text-hf-paragraph-small-medium text-primary-foreground";
+
+/** Zeile mit weissem Hauptpanel + Antragdetails-Spalte (24px zum Viewport-Rand). */
+export const DASHBOARD_SHELL_CONTENT_ROW_PADDING_CLASS = "px-6";
+
+/** Weisses Inhalts-Panel — 24px innen links/rechts, 40px oben (Dashboard-Inhalt). */
+export const DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS = "px-6 pt-10";
+
+/** Inhalt passt ohne Scroll: unterer Rand der Content-Zeile (= 24px) + `rounded-xl`. */
+export const DASHBOARD_SHELL_CONTENT_ROW_PADDING_BOTTOM_INSET_CLASS = "pb-6";
+export const DASHBOARD_SHELL_MAIN_PANEL_ROUNDED_INSET_CLASS = "rounded-xl";
+
+/** Inhalt scrollt: Panel bis unten, nur oben abgerundet. */
+export const DASHBOARD_SHELL_CONTENT_ROW_PADDING_BOTTOM_SCROLL_CLASS = "pb-0";
+export const DASHBOARD_SHELL_MAIN_PANEL_ROUNDED_SCROLL_CLASS = "rounded-t-xl";
+
+/**
+ * Weisses Panel: ab diesem Verhältnis `scrollHeight / clientHeight` → „tight“ Layout
+ * (kein `pb-4`, nur `rounded-t-xl`). Höher als striktes Overflow, damit knapp-passender
+ * Inhalt nicht mit dem Padding-Umschalten flackert.
+ */
+export const DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_ENTER_RATIO = 0.9;
+
+/** Unter dieser Ratio wieder Inset-Layout — niedriger als ENTER wegen Hysterese (Padding ändert clientHeight). */
+export const DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_EXIT_RATIO = 0.82;
 
 /** Weisses Inhalts-Panel, wenn Antrag geöffnet (Detail-Sidebar aktiv). */
-export const DASHBOARD_SHELL_MAIN_PANEL_PADDING_OPEN_CLASS = "pl-4 pr-2";
+export const DASHBOARD_SHELL_MAIN_PANEL_PADDING_OPEN_CLASS = "pt-10 pl-6 pr-2";
 
 /** Antragdetails-Spalte: nur linker Innenabstand (rechts/oben/unten 0). */
-export const DASHBOARD_DETAIL_PANEL_PADDING_CLASS = "pl-4";
+export const DASHBOARD_DETAIL_PANEL_PADDING_CLASS = "pl-6";
 
-/** Top-Leiste Portal / Workspace (gleiche Höhe). */
-export const DASHBOARD_TOP_BAR_PADDING_CLASS = "pl-10 pr-4 py-3";
+/** Top-Leiste Portal / Workspace: 24px seitlich, 12px oben/unten. */
+export const DASHBOARD_TOP_BAR_PADDING_CLASS = "px-6 py-3";
 export const DASHBOARD_TOP_BAR_HEIGHT_CLASS = "min-h-14";
 
 export const WORKSPACE_NAV_WIDTH_EXPANDED_PX = 240;
@@ -33,7 +63,7 @@ export const workspaceSidebarNavItemWidthTransitionClass =
   "transition-[max-width] duration-300 ease-out";
 
 /** Portal: 12px-Rand oben (Dashboard) ↔ volle Top-Bar (Antrag geöffnet). */
-export const PORTAL_DASHBOARD_RIM_HEIGHT_CLASS = "h-3";
+export const PORTAL_DASHBOARD_RIM_HEIGHT_CLASS = "h-4";
 export const PORTAL_TOP_BAR_HEIGHT_CLASS = "h-14";
 
 /** Rechtes Panel — volle Breite (Figma 5435:11416). Ist-Zustand: sofort `w-0` ↔ diese Breite. */

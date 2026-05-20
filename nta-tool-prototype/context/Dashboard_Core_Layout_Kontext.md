@@ -16,18 +16,21 @@ RoleDashboardLayout          ← Einstieg pro Seite (Rolle + Route)
           └── WorkspaceDashboardShell → DashboardShell (variant="workspace")
 
 DashboardShell (intern)
+├── DashboardMainPanelScrollProvider
 ├── WorkspaceSidebar       Brand, Nav, Collapse-Logik
 ├── PortalTopBar | WorkspaceTopBar
-└── weisser Inhalts-Container (rounded-t-xl oben, px-3)
+└── DashboardMainPanel     weisses Panel (Inset `rounded-xl` oder Tight `rounded-t-xl`)
 ```
 
 | Datei | Rolle |
 |-------|--------|
 | `components/domain/role-dashboard-layout.tsx` | Wählt Shell nach Rolle; Portal: `showTopBar` wenn Route `/portal/antragserstellung` |
-| `components/domain/workspace-dashboard-shell.tsx` | `DashboardShell`, `PortalDashboardShell`, `WorkspaceDashboardShell`, Sidebar, Brand, Nav-Items |
+| `components/domain/workspace-dashboard-shell.tsx` | `DashboardShell`, `PortalDashboardShell`, `WorkspaceDashboardShell`, Sidebar, Brand, Nav-Items, `DashboardMainPanel` (Inset/Tight-Layout) |
+| `components/domain/dashboard-main-panel-scroll-context.tsx` | Optional: Page registriert eigenes Scroll-Element (`edgeToEdge`-Review), Shell misst `scrollHeight` dort |
 | `components/domain/portal-dashboard-toolbar-context.tsx` | Slots für Portal-Top-Bar (Zurück, optional Trailing z. B. Autosave) |
 | `components/domain/workspace-r2-toolbar-context.tsx` | Slot für Workspace-Top-Bar links (z. B. «Zurück zur Liste») |
-| `lib/design-tokens/workspace-dashboard.ts` | Breiten, Padding-Klassen (`DASHBOARD_*_PADDING_CLASS`), Transition-Dauer, Icon-Slots |
+| `components/domain/workspace-home-dashboard.tsx` | Workspace-Home-Mock (Figma `5509:11682`) — nur Inhalt im weissen Panel |
+| `lib/design-tokens/workspace-dashboard.ts` | Breiten, Padding, Nav-Aktiv-Farben, Inset/Tight-Layout-Ratios, Transition-Dauer, Icon-Slots |
 
 **Wichtig — zwei getrennte R1-Layouts:**
 
@@ -47,8 +50,8 @@ Die Flow-Shell und die Dashboard-Shell **nicht mischen** (kein doppelte Sidebar,
 ┌──────────────┬─────────────────────────────────────────────┐
 │  Sidebar     │  [Portal: 12px-Rand oder Top-Bar]            │
 │  stone-100   │  [Workspace: Top-Bar immer sichtbar]         │
-│  pl-4        ├─────────────────────────────────────────────┤
-│              │  px-4 (Hauptpanel); Detail-Spalte nur pl-4   │
+│  pl-[18px]   ├─────────────────────────────────────────────┤
+│  py-3        │  px-6 (Hauptpanel); Detail-Spalte pl-6      │
 │  Logo+avalis │  ┌─────────────────────────────────────────┐ │
 │  Navigation  │  │  Inhalt (bg-background, rounded-t-xl)   │ │
 │  …           │  │  children der jeweiligen Page             │ │
@@ -57,8 +60,8 @@ Die Flow-Shell und die Dashboard-Shell **nicht mischen** (kein doppelte Sidebar,
 ```
 
 - **Seiten-Hintergrund:** `bg-stone-100`, `h-screen`, `overflow-hidden`.
-- **Inhalts-Panel:** nur **`rounded-t-xl`** (unten kein Radius), `bg-background`, füllt restliche Höhe.
-- **Horizontaler Abstand:** Content-Zeile `px-4`; weisses Hauptpanel `px-4`; Nav-Sidebar `pl-4` (`py-3`); Top-Leiste `px-4`; Antragdetails-Spalte nur `pl-4`.
+- **Inhalts-Panel:** `bg-background`; innen **`px-6 pt-10`** (24px seitlich, 40px oben); **Inset-Layout** (unten `pb-6`, `rounded-xl`) solange `scrollHeight / clientHeight` unter **90 %**; **Tight-Layout** (`pb-0`, nur `rounded-t-xl`) ab **90 %** (Hysterese-Ausstieg **82 %**). Konstanten: `DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_*` in `workspace-dashboard.ts`.
+- **Horizontaler Abstand:** Content-Zeile **`px-6`** (24px zum Viewport); weisses Hauptpanel **`px-6 pt-10`**; Nav-Sidebar **`pl-[18px] py-3`**; Top-Leiste **`px-6 py-3`**; Antragdetails-Spalte **`pl-6`**.
 
 ---
 
@@ -111,8 +114,9 @@ Beim **Aufklappen:** `layoutMini` sofort `false`, dann `collapsed` → `false` (
 
 - Zeile: `h-8`, Icon in **40×40-Slot**, Lucide **16×16** zentriert im Slot.
 - Label: `opacity`-Transition 300ms; bei `layoutMini` aus dem Flow genommen.
-- Aktiv: `bg-background rounded-[7px] text-foreground-alt`.
-- Badge (nur Workspace «Meine Aufgaben»): bei `collapsed`/`layoutMini` per `opacity-0` ausgeblendet, bleibt im DOM.
+- **Aktiv (Portal + Workspace):** `DASHBOARD_NAV_ITEM_ACTIVE_CLASS` — `bg-primary`, `rounded-[7px]`, Icons erben `text-primary-foreground`; Label **`DASHBOARD_NAV_ITEM_ACTIVE_LABEL_CLASS`** (`text-hf-paragraph-small-medium text-primary-foreground`) — **nicht** `hfTypography.paragraphSmallMedium` (enthält `text-foreground-alt` und würde den Kontrast killen). Figma: `5509:11682`.
+- **Inaktiv:** `DASHBOARD_NAV_ITEM_IDLE_CLASS` — `text-foreground-alt`, Hover `stone-150/80`.
+- Badge (nur Workspace «Meine Aufgaben»): bei `collapsed`/`layoutMini` per `opacity-0` ausgeblendet, bleibt im DOM (auch im aktiven Zustand weiter `bg-stone-150`).
 
 ### Navigation — Inhalte
 
@@ -177,7 +181,19 @@ Default-Zurück: `portalDefaultBackButton` in `workspace-dashboard-shell.tsx`.
 
 ---
 
-## 5. Workspace — Top-Leiste
+## 5. Workspace — Home (Mock) & Top-Leiste
+
+### Home-Dashboard (HF-Mock)
+
+| Aspekt | Ist |
+|--------|-----|
+| **Figma** | `5509:11682` (Workspace Home) |
+| **Route** | `/workspace` **ohne** `?view=` |
+| **Rollen** | **R2, R3, R4** → `WorkspaceHomeDashboard`; **R5/R6** → weiterhin Inbox-Liste (`WorkspaceTestFlow`) |
+| **Datei** | `workspace-home-dashboard.tsx` — KPI-Karten (`431px` / `319px` / flex), Beratungsliste, «Anträge»-Tabelle (Mock-Daten) |
+| **Shell** | Normales Inset-Panel (`px-6 pt-10`); kein `edgeToEdge` |
+
+### Top-Leiste
 
 - **Immer** sichtbar (kein Rim-Morph).
 - Inhalt: optional **`leadingSlot`** aus `WorkspaceR2ToolbarProvider` (z. B. «Zurück zur Liste» in `workspace-test-flow.tsx` bei geöffnetem Antrag), **Suche** (Mock), **Benachrichtigungen**, **Account** mit Initialen (`lib/user-initials.ts`, `workspaceAccountInitials` von Server-Pages).
@@ -220,7 +236,18 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 | `app/portal/antragserstellung/page.tsx` | **keine** Shell bei Flow | — | `NtaAntragDesktop` |
 | `app/workspace/page.tsx` | Workspace | ja | `WorkspaceTestFlow` |
 
-`edgeToEdge`: kein zusätzliches `p-6` im Shell-Inneren — volle Fläche für Review/Listen.
+`edgeToEdge`: kein zusätzliches `p-6` im Shell-Inneren — volle Fläche für Review/Listen; Page registriert Scroll-Root über `DashboardMainPanelScrollProvider` (s. unten).
+
+### Weisses Hauptpanel — Inset vs. Tight (Scroll)
+
+`DashboardMainPanel` in `workspace-dashboard-shell.tsx` misst `scrollHeight / clientHeight` am Scroll-Container (Default: inneres `overflow-y-auto` im Panel; bei `edgeToEdge` das registrierte Element aus `dashboard-main-panel-scroll-context.tsx`).
+
+| Modus | Bedingung | Content-Zeile unten | Panel-Radius |
+|-------|-----------|---------------------|--------------|
+| **Inset** | Ratio ≤ 0,9 (Einstieg) bzw. &lt; 0,82 (Ausstieg, Hysterese) | `pb-6` | `rounded-xl` |
+| **Tight** | Ratio &gt; 0,9 (Einstieg) | `pb-0` | `rounded-t-xl` |
+
+**Hysterese:** Wechsel Inset ↔ Tight ändert `clientHeight` — ohne zweite Schwelle (`EXIT` 0,82 &lt; `ENTER` 0,9) flackert das Layout. `ResizeObserver` + `window.resize` triggern Neumessung.
 
 ---
 
@@ -237,13 +264,23 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 | `DASHBOARD_DETAIL_PANEL_WIDTH_CLASS` | `w-[330px]` — Antragdetails-Spalte |
 | `workspaceDetailPanelWidthTransitionClass` | *(später)* Panel-Breite 300ms |
 | `workspaceDetailPanelContentTransitionClass` | *(später)* Panel-Inhalt Opacity 200ms |
-| `DASHBOARD_SIDEBAR_PADDING_CLASS` | `pl-4 py-3` |
-| `DASHBOARD_SHELL_CONTENT_ROW_PADDING_CLASS` | `px-4` |
-| `DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS` | `px-4` |
-| `DASHBOARD_DETAIL_PANEL_PADDING_CLASS` | `pl-4` (+ `gap-4` zwischen Karten in Shell) |
-| `DASHBOARD_TOP_BAR_PADDING_CLASS` | `px-4 py-4` |
-| `DASHBOARD_TOP_BAR_HEIGHT_CLASS` | `h-14 min-h-14` (Portal + Workspace) |
-| `PORTAL_DASHBOARD_RIM_HEIGHT_CLASS` | `h-3` — Listen-Rand oben |
+| `DASHBOARD_SIDEBAR_PADDING_CLASS` | `pl-[18px] py-3` |
+| `DASHBOARD_SHELL_CONTENT_ROW_PADDING_CLASS` | `px-6` |
+| `DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS` | `px-6 pt-10` |
+| `DASHBOARD_SHELL_MAIN_PANEL_PADDING_OPEN_CLASS` | `pt-10 pl-6 pr-2` — Antrag geöffnet |
+| `DASHBOARD_SHELL_CONTENT_ROW_PADDING_BOTTOM_INSET_CLASS` | `pb-6` — Inset-Modus |
+| `DASHBOARD_SHELL_CONTENT_ROW_PADDING_BOTTOM_SCROLL_CLASS` | `pb-0` — Tight-Modus |
+| `DASHBOARD_SHELL_MAIN_PANEL_ROUNDED_INSET_CLASS` | `rounded-xl` |
+| `DASHBOARD_SHELL_MAIN_PANEL_ROUNDED_SCROLL_CLASS` | `rounded-t-xl` |
+| `DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_ENTER_RATIO` | `0.9` — Einstieg Tight |
+| `DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_EXIT_RATIO` | `0.82` — Rückkehr Inset (Hysterese) |
+| `DASHBOARD_NAV_ITEM_ACTIVE_CLASS` | `rounded-[7px] bg-primary text-primary-foreground` |
+| `DASHBOARD_NAV_ITEM_IDLE_CLASS` | inaktiv + Hover |
+| `DASHBOARD_NAV_ITEM_ACTIVE_LABEL_CLASS` | Label aktiv ohne `text-foreground-alt` |
+| `DASHBOARD_DETAIL_PANEL_PADDING_CLASS` | `pl-6` (+ `gap-4` zwischen Karten in Shell) |
+| `DASHBOARD_TOP_BAR_PADDING_CLASS` | `px-6 py-3` |
+| `DASHBOARD_TOP_BAR_HEIGHT_CLASS` | `min-h-14` (Portal + Workspace) |
+| `PORTAL_DASHBOARD_RIM_HEIGHT_CLASS` | `h-4` — Listen-Rand oben (`portal/home`) |
 | `PORTAL_TOP_BAR_HEIGHT_CLASS` | `h-14` — Top-Bar (Referenz / späterer Morph) |
 | `workspaceSidebarIconSlotClass` | 40×40 Flex-Slot für Logo/Nav-Icon |
 | `workspaceSidebarToggleBaseClass` / `HoverClass` | 32×32 Badge; Hover nur wenn erlaubt |
@@ -258,7 +295,8 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 4. **Top-Bar / Detail-Panel:** Standard ist **sofortiges** Einblenden; Morph-Animationen nur bewusst reaktivieren (§ 4 «Geplant», § 6 «Geplant»).
 5. **Detail-Panel:** Registrierung über `useRegisterDashboardDetailPanel` mit stabiler **Signatur** — kein JSX direkt in Context-State.
 6. **Icon-Ausrichtung:** Kein `justify-center` auf Nav-Zeilen beim Einklappen — Slot-System beibehalten.
-7. **Inhalts-Panel:** Unten nie `rounded-b-*` — nur `rounded-t-xl`.
+7. **Inhalts-Panel:** Im **Tight**-Modus nur `rounded-t-xl`; im **Inset**-Modus `rounded-xl` (unten `pb-6` in der Content-Zeile). Nicht manuell zwischen `pb-4`/`pb-0` toggeln — `DashboardMainPanel` + Hysterese-Tokens nutzen.
+8. **Nav aktiv:** Label immer `DASHBOARD_NAV_ITEM_ACTIVE_LABEL_CLASS` — kein `hfTypography.*` mit festem `text-foreground-alt` auf dem aktiven Eintrag.
 
 ---
 
@@ -274,4 +312,4 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 
 ---
 
-*Letzte Aktualisierung: Dashboard Core Layout — Top-Bar und Antragdetails-Panel ohne Öffnungs-Animation (Ist); Morph-Spezifikation für später in § 4 und § 6 dokumentiert.*
+*Letzte Aktualisierung: Nav-Aktiv Primary (`5509:11682`), Inset/Tight-Hauptpanel mit Hysterese, Workspace-Home-Mock (`5509:11682`), Spacing-Tokens `px-6` / `pl-[18px]`; Morph Top-Bar/Detail-Panel weiterhin «geplant».*

@@ -207,7 +207,7 @@ export function ReviewBlockCard({
           : "flex flex-wrap items-center justify-between gap-3 border-t border-amber-400 bg-amber-400 px-3 py-3";
 
   const sectionClassName = cn(
-    "scroll-mt-6 overflow-hidden rounded-xl bg-card shadow-xs",
+    "scroll-mt-6 overflow-hidden rounded-lg bg-card",
     borderTone === "default" && "border border-border",
     borderTone === "confirmed" &&
       "border-[1.5px] border-teal-600 dark:border-teal-500",
@@ -386,12 +386,12 @@ export function ReviewFileRow({
   );
 
   const shellClass = cn(
-    "flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-4 py-3 text-sm shadow-xs",
+    "flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-4 py-3 text-sm",
   );
   const shellClassOpenable = cn(shellClass, "group");
   const interactiveOpenableClass = cn(
     shellClassOpenable,
-    "cursor-pointer transition-all hover:border-muted-foreground/30 hover:bg-muted/55 hover:shadow-sm",
+    "cursor-pointer transition-all hover:border-muted-foreground/30 hover:bg-muted/55",
     "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
   );
 
@@ -496,9 +496,9 @@ export function DurationChoiceCompare({
           <div
             key={opt.id}
             className={cn(
-              "flex gap-3 rounded-[10px] border px-3 py-3 transition-colors",
+              "flex gap-3 rounded-lg border px-3 py-3 transition-colors",
               isSelected
-                ? "border-border border-solid bg-card shadow-xs"
+                ? "border-border border-solid bg-card"
                 : "border-border border-dashed bg-muted/50 opacity-70",
             )}
           >
@@ -545,9 +545,9 @@ export function ScopeChecklist({ selected }: { selected: string[] }) {
           <li key={option}>
             <div
               className={cn(
-                "flex items-start gap-3 rounded-[10px] border px-3 py-3",
+                "flex items-start gap-3 rounded-lg border px-3 py-3",
                 isOn
-                  ? "border-border border-solid bg-card shadow-xs"
+                  ? "border-border border-solid bg-card"
                   : "border-border border-dashed bg-muted/50 opacity-70",
               )}
             >
@@ -618,7 +618,7 @@ export function MeasureChecklist({
           <li key="__keine__">
             <div
               className={cn(
-                "flex items-start gap-3 rounded-[10px] border bg-card px-3 py-3 shadow-xs",
+                "flex items-start gap-3 rounded-lg border bg-card px-3 py-3",
                 "border-foreground",
               )}
             >
@@ -647,7 +647,7 @@ export function MeasureChecklist({
             <li key={option.key}>
               <div
                 className={cn(
-                  "flex items-start gap-3 rounded-[10px] border bg-card px-3 py-3 shadow-xs",
+                  "flex items-start gap-3 rounded-lg border bg-card px-3 py-3",
                   isOn ? "border-foreground" : "border-border",
                 )}
               >
@@ -691,7 +691,7 @@ export function MeasureChecklist({
         <div
           key={`other-${idx}`}
           className={cn(
-            "flex items-start gap-3 rounded-[10px] border bg-card px-3 py-3 shadow-xs",
+            "flex items-start gap-3 rounded-lg border bg-card px-3 py-3",
             line ? "border-foreground" : "border-border",
           )}
         >

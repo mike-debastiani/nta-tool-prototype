@@ -214,7 +214,7 @@ function ReviewAdjustmentDraftCard({
   return (
     <article
       className={cn(
-        "flex flex-col gap-4 rounded-lg border-[1.5px] border-amber-400 bg-muted/80 p-4 shadow-xs",
+        "flex flex-col gap-4 rounded-lg border-[1.5px] border-amber-400 bg-muted/80 p-4",
         // In `fullColumn` mode the card should not stretch to fill the column
         // height. We want "height on hug" based on the textarea content,
         // while keeping the textarea's min-height intact.
@@ -261,7 +261,7 @@ function ReviewAdjustmentDraftCard({
           rows={1}
           aria-invalid={composer.saveError}
           className={cn(
-            "field-sizing-fixed resize-y overflow-y-auto rounded-lg border-border bg-background text-sm shadow-xs",
+            "field-sizing-fixed resize-y overflow-y-auto rounded-lg border border-border bg-background text-sm",
             "min-h-[120px] max-h-[min(48dvh,480px)] w-full",
             composer.saveError && "border-destructive",
           )}
@@ -419,7 +419,7 @@ function R4ContactsSection({ application }: { application: WorkspaceApplication 
         Kontakte
       </h3>
       <div className="space-y-4">
-        <Card className="shadow-xs">
+        <Card className="rounded-lg border border-border shadow-none ring-0">
           <CardHeader className="space-y-1 pb-2">
             <CardTitle className="text-sm font-semibold text-foreground">Antragstellende Person</CardTitle>
           </CardHeader>
@@ -428,7 +428,7 @@ function R4ContactsSection({ application }: { application: WorkspaceApplication 
             <p className="text-muted-foreground">{applicantEmail}</p>
           </CardContent>
         </Card>
-        <Card className="shadow-xs">
+        <Card className="rounded-lg border border-border shadow-none ring-0">
           <CardHeader className="space-y-1 pb-2">
             <CardTitle className="text-sm font-semibold text-foreground">Kontaktperson Fachstelle</CardTitle>
           </CardHeader>

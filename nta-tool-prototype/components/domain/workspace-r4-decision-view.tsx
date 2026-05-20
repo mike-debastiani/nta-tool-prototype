@@ -5,6 +5,7 @@ import { flushSync } from "react-dom";
 import { CheckCheck, Info, Loader2, Pencil, RotateCcw } from "lucide-react";
 import { ApplicationReviewDetailSidebar } from "@/components/domain/application-review-detail-sidebar";
 import { useRegisterDashboardDetailPanel } from "@/components/domain/dashboard-detail-panel-context";
+import { useDashboardScrollRoot } from "@/components/domain/dashboard-main-panel-scroll-context";
 import {
   resolveApplicantDisplayName,
   resolveApplicationAssignee,
@@ -585,7 +586,7 @@ export function WorkspaceR4DecisionView({
         key={id}
         id={anchorId}
         className={cn(
-          "scroll-mt-6 overflow-hidden rounded-xl bg-card shadow-xs",
+          "scroll-mt-6 overflow-hidden rounded-lg bg-card",
           confirmedClosed
             ? "border-[1.5px] border-[#009689]"
             : "border border-border",
@@ -737,6 +738,8 @@ export function WorkspaceR4DecisionView({
     ],
   );
 
+  const scrollRootRef = useDashboardScrollRoot<HTMLDivElement>();
+
   useRegisterDashboardDetailPanel(
     detailPanelSignature,
     () => (
@@ -755,6 +758,7 @@ export function WorkspaceR4DecisionView({
   return (
     <div className="flex min-h-0 flex-1 w-full min-w-0 flex-col overflow-hidden">
       <div
+        ref={scrollRootRef}
         className={cn(
           "min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain",
           applicationContentScrollClass,

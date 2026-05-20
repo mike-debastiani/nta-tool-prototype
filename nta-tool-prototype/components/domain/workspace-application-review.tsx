@@ -34,6 +34,7 @@ import {
   type SavedReviewComment,
 } from "@/components/domain/application-review-detail-sidebar";
 import { useRegisterDashboardDetailPanel } from "@/components/domain/dashboard-detail-panel-context";
+import { useDashboardScrollRoot } from "@/components/domain/dashboard-main-panel-scroll-context";
 import {
   resolveApplicantDisplayName,
   resolveApplicationAssignee,
@@ -732,6 +733,8 @@ export function WorkspaceApplicationReview({
     ],
   );
 
+  const scrollRootRef = useDashboardScrollRoot<HTMLDivElement>();
+
   useRegisterDashboardDetailPanel(
     detailPanelSignature,
     () => (
@@ -771,6 +774,7 @@ export function WorkspaceApplicationReview({
   return (
     <div className="flex min-h-0 flex-1 w-full min-w-0 flex-col overflow-hidden">
       <div
+        ref={scrollRootRef}
         className={cn(
           "min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain",
           applicationContentScrollClass,

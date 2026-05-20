@@ -117,6 +117,9 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `lib/user-initials.ts` | Initialen für Workspace-Avatar aus `display_name` / E-Mail |
 | `components/domain/login-card.tsx` | Student/Staff-Login: Supabase Auth + Profil `users.role`, Redirect |
 | `app/workspace/page.tsx` | `requireUserProfile` R2–R6, `fetchWorkspaceApplicationsList`, `initialsFromProfile`, `WorkspaceTestFlow` |
+| `components/domain/workspace-test-flow.tsx` | Workspace-Inbox, Review, R4-Entscheid; auf `/workspace` ohne `?view=` → R2–R4: `WorkspaceHomeDashboard`, R5/R6: Inbox-Liste |
+| `components/domain/workspace-home-dashboard.tsx` | Workspace-Home-Mock (Figma `5509:11682`): KPIs, Beratungen, Anträge-Tabelle — nur Inhalt im weissen Panel |
+| `components/domain/dashboard-main-panel-scroll-context.tsx` | Scroll-Root-Registrierung für `edgeToEdge`-Pages → Inset/Tight-Messung in der Shell |
 | `app/api/applications/r1-release-adjustments/route.ts` | R1: zurück nach `in_review` inkl. `workspaceReview`-Merge |
 | `lib/r1-adjustment-release.ts` | Regeln und Builder für Post-Submit nach R1-Freigabe |
 | `lib/workspace-review-hydration-key.ts` | Fingerprint für wiederholtes `in_review` (R2-UI) |
@@ -125,7 +128,8 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `components/domain/role-dashboard-layout.tsx` | Router: R1 → Portal-Shell; R2–R6 → Workspace-Shell; `showTopBar` auf `/portal/antragserstellung` |
 | `components/domain/portal-dashboard-toolbar-context.tsx` | Portal-Top-Bar-Slots (Zurück, Trailing) |
 | `components/domain/workspace-r2-toolbar-context.tsx` | Workspace-Top-Bar `leadingSlot` (z. B. Zurück zur Liste) |
-| `lib/design-tokens/workspace-dashboard.ts` | Sidebar-Breiten, Transitions, Icon-Slots, Portal-Rim/Top-Bar |
+| `lib/design-tokens/workspace-dashboard.ts` | Sidebar-Breiten, Padding, Nav-Aktiv (`DASHBOARD_NAV_ITEM_*`), Inset/Tight-Ratios, Portal-Rim/Top-Bar |
+| `lib/design-tokens/application-block.ts` | `applicationBlockSurfaceClass` — Antragsblöcke: `rounded-lg border-border`, kein Shadow |
 | `components/icons/avalis-logo.tsx` | Brand-Logo in Dashboard-Sidebar |
 | `components/domain/` | Fachliche UI (Dashboard, Workspace-Flow, Badges, **Block-Review**, **Empfehlungs-Editor & -Accordion**, R1-Anpassungsansicht) |
 | `components/domain/rich-text-editor.tsx` | TipTap-Wrapper für das Empfehlungsschreiben |

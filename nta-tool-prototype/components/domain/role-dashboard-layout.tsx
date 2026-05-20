@@ -67,7 +67,7 @@ export function RoleDashboardLayout({
         {edgeToEdge ? (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-6">{children}</div>
+          <div className="flex min-h-0 flex-1 flex-col p-6">{children}</div>
         )}
       </PortalDashboardShell>
     </PortalDashboardToolbarProvider>

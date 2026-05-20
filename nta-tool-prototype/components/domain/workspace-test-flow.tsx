@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { HfGridCell, HfPageGrid } from "@/components/layout/hf-grid";
 import { useWorkspaceR2Toolbar } from "@/components/domain/workspace-r2-toolbar-context";
 import { ArrowLeft, Loader2, Save, Send } from "lucide-react";
@@ -19,6 +20,7 @@ import {
   WorkspaceApplicationReview,
   type WorkspaceReviewViewMode,
 } from "@/components/domain/workspace-application-review";
+import { WorkspaceHomeDashboard } from "@/components/domain/workspace-home-dashboard";
 import { WorkspaceR4DecisionView } from "@/components/domain/workspace-r4-decision-view";
 import { RichTextEditor } from "@/components/domain/rich-text-editor";
 import { type UserRole } from "@/lib/auth";
@@ -41,6 +43,8 @@ export function WorkspaceTestFlow({
   initialApplications,
   workspaceRole,
 }: WorkspaceTestFlowProps) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const setLeadingToolbarSlot = useWorkspaceR2Toolbar()?.setLeadingSlot;
 
   const supabase = useMemo(() => createClient(), []);
@@ -248,6 +252,15 @@ export function WorkspaceTestFlow({
           : "interactive";
 
   if (!selectedApplication) {
+    const isWorkspaceHome = pathname === "/workspace" && !searchParams.get("view");
+    const showHomeDashboardMock =
+      isWorkspaceHome
+      && (workspaceRole === "R2" || workspaceRole === "R3" || workspaceRole === "R4");
+
+    if (showHomeDashboardMock) {
+      return <WorkspaceHomeDashboard reviewerDisplayName={reviewerDisplayName} />;
+    }
+
     return (
       <HfPageGrid className="py-6">
         <HfGridCell span={12}>
@@ -417,7 +430,7 @@ function RecommendationDraftEditor({
   const canRelease = hasRecommendationBody && !busy && Boolean(editor);
 
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+    <section className="overflow-hidden rounded-lg border border-border bg-card">
       <div className="space-y-1 px-6 pt-5 pb-4">
         <h2 className="text-lg font-medium text-foreground">
           Empfehlungsschreiben erstellen

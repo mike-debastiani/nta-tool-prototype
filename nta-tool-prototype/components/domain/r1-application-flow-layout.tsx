@@ -21,6 +21,7 @@ import {
   r1FlowFieldStackClassName,
   r1FlowFieldStackDefinitionClassName,
 } from "@/lib/design-tokens/r1-form";
+import { applicationBlockSurfaceBackgroundClass } from "@/lib/design-tokens/application-block";
 import { applicationContentScrollClass } from "@/lib/design-tokens/application-scroll";
 import { hfTypography } from "@/lib/design-tokens/typography";
 import type { R1PortalFlowStep } from "@/lib/test-flow-types";
@@ -461,7 +462,7 @@ type R1FlowFormCardProps = {
 export function R1FlowFormCard({ children }: R1FlowFormCardProps) {
   return (
     <div
-      className="rounded-xl border border-stone-250 bg-background p-6"
+      className={cn(applicationBlockSurfaceBackgroundClass, "p-6")}
       data-node-id="5180:7082"
     >
       <div className="flex flex-col gap-10">{children}</div>

@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ArrowLeft,
   ArrowLeftFromLine,
@@ -22,6 +30,10 @@ import {
   DashboardDetailPanelProvider,
   useDashboardDetailPanel,
 } from "@/components/domain/dashboard-detail-panel-context";
+import {
+  DashboardMainPanelScrollProvider,
+  useDashboardMainPanelScrollElement,
+} from "@/components/domain/dashboard-main-panel-scroll-context";
 import { AvalisLogo } from "@/components/icons/avalis-logo";
 import { usePortalDashboardToolbar } from "@/components/domain/portal-dashboard-toolbar-context";
 import { WorkspaceAccountMenu } from "@/components/domain/workspace-account-menu";
@@ -31,9 +43,18 @@ import { hfTypography } from "@/lib/design-tokens/typography";
 import {
   DASHBOARD_DETAIL_PANEL_PADDING_CLASS,
   DASHBOARD_DETAIL_PANEL_WIDTH_CLASS,
+  DASHBOARD_NAV_ITEM_ACTIVE_CLASS,
+  DASHBOARD_NAV_ITEM_ACTIVE_LABEL_CLASS,
+  DASHBOARD_NAV_ITEM_IDLE_CLASS,
+  DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_ENTER_RATIO,
+  DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_EXIT_RATIO,
+  DASHBOARD_SHELL_CONTENT_ROW_PADDING_BOTTOM_INSET_CLASS,
+  DASHBOARD_SHELL_CONTENT_ROW_PADDING_BOTTOM_SCROLL_CLASS,
   DASHBOARD_SHELL_CONTENT_ROW_PADDING_CLASS,
   DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS,
   DASHBOARD_SHELL_MAIN_PANEL_PADDING_OPEN_CLASS,
+  DASHBOARD_SHELL_MAIN_PANEL_ROUNDED_INSET_CLASS,
+  DASHBOARD_SHELL_MAIN_PANEL_ROUNDED_SCROLL_CLASS,
   DASHBOARD_SIDEBAR_PADDING_CLASS,
   DASHBOARD_TOP_BAR_HEIGHT_CLASS,
   DASHBOARD_TOP_BAR_PADDING_CLASS,
@@ -215,9 +236,7 @@ function WorkspaceNavItem({
         workspaceSidebarNavItemWidthTransitionClass,
         "w-full justify-start",
         collapsed ? "max-w-10 gap-0 pr-0" : "max-w-full gap-2 pr-3",
-        active
-          ? "bg-background rounded-[7px] text-foreground-alt"
-          : "rounded-md text-foreground-alt hover:bg-stone-150/80",
+        active ? DASHBOARD_NAV_ITEM_ACTIVE_CLASS : DASHBOARD_NAV_ITEM_IDLE_CLASS,
       )}
       aria-label={collapsed ? item.label : undefined}
       title={collapsed ? item.label : undefined}
@@ -229,7 +248,9 @@ function WorkspaceNavItem({
         className={cn(
           "min-w-0 flex-1 truncate whitespace-nowrap",
           workspaceSidebarLabelTransitionClass,
-          active ? hfTypography.paragraphSmallMedium : hfTypography.paragraphSmall,
+          active
+            ? DASHBOARD_NAV_ITEM_ACTIVE_LABEL_CLASS
+            : hfTypography.paragraphSmall,
           collapsed ? "pointer-events-none opacity-0" : "opacity-100",
         )}
         aria-hidden={collapsed}
@@ -463,6 +484,136 @@ function useSidebarCollapseState(defaultSidebarCollapsed: boolean) {
   return { collapsed, layoutMini, setCollapsed };
 }
 
+function useDashboardMainPanelScrollable() {
+  const registeredScrollElement = useDashboardMainPanelScrollElement();
+  const defaultScrollRef = useRef<HTMLDivElement>(null);
+  const [isScrollable, setIsScrollable] = useState(false);
+  /** Hysterese: `pb-4` ↔ `pb-0` ändert `clientHeight` — ohne zweite Schwelle flackert das Layout. */
+  const tightLayoutRef = useRef(false);
+
+  const measure = useCallback(() => {
+    const el = registeredScrollElement ?? defaultScrollRef.current;
+    if (!el) return;
+    const h = el.clientHeight;
+    if (h <= 0) return;
+    const ratio = el.scrollHeight / h;
+
+    const nextTight = tightLayoutRef.current
+      ? ratio > DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_EXIT_RATIO
+      : ratio > DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_ENTER_RATIO;
+
+    if (nextTight !== tightLayoutRef.current) {
+      tightLayoutRef.current = nextTight;
+      setIsScrollable(nextTight);
+    }
+  }, [registeredScrollElement]);
+
+  useLayoutEffect(() => {
+    tightLayoutRef.current = false;
+    measure();
+  }, [measure, registeredScrollElement]);
+
+  useEffect(() => {
+    const el = registeredScrollElement ?? defaultScrollRef.current;
+    if (!el) return;
+
+    const resizeObserver = new ResizeObserver(measure);
+    resizeObserver.observe(el);
+    window.addEventListener("resize", measure);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [measure, registeredScrollElement]);
+
+  return {
+    defaultScrollRef,
+    isScrollable,
+    usesExternalScroll: registeredScrollElement != null,
+  };
+}
+
+type DashboardMainPanelProps = {
+  children: ReactNode;
+  showDetailPanel: boolean;
+  contentRowClassName?: string;
+  panelDataNodeId?: string;
+};
+
+/**
+ * Weisses Hauptpanel: bei kurzem Inhalt unten `pb-4` + `rounded-xl`;
+ * bei hoher Füllhöhe (scrollHeight/clientHeight > 90 %, Hysterese-Ausstieg 82 %) nur oben abgerundet, bis zum Viewport-Rand.
+ */
+function DashboardMainPanel({
+  children,
+  showDetailPanel,
+  contentRowClassName,
+  panelDataNodeId,
+}: DashboardMainPanelProps) {
+  const { defaultScrollRef, isScrollable, usesExternalScroll } =
+    useDashboardMainPanelScrollable();
+  const { registration: detailPanelRegistration } = useDashboardDetailPanel();
+
+  return (
+    <div
+      className={cn(
+        "flex min-h-0 flex-1 flex-row",
+        DASHBOARD_SHELL_CONTENT_ROW_PADDING_CLASS,
+        isScrollable
+          ? DASHBOARD_SHELL_CONTENT_ROW_PADDING_BOTTOM_SCROLL_CLASS
+          : DASHBOARD_SHELL_CONTENT_ROW_PADDING_BOTTOM_INSET_CLASS,
+        contentRowClassName,
+      )}
+      data-node-id="5435:11022"
+    >
+      <div
+        data-node-id={panelDataNodeId}
+        className={cn(
+          "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background",
+          showDetailPanel
+            ? DASHBOARD_SHELL_MAIN_PANEL_PADDING_OPEN_CLASS
+            : DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS,
+          isScrollable
+            ? DASHBOARD_SHELL_MAIN_PANEL_ROUNDED_SCROLL_CLASS
+            : DASHBOARD_SHELL_MAIN_PANEL_ROUNDED_INSET_CLASS,
+        )}
+      >
+        {usesExternalScroll ? (
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            {children}
+          </div>
+        ) : (
+          <div
+            ref={defaultScrollRef}
+            className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain"
+          >
+            {children}
+          </div>
+        )}
+      </div>
+      <div
+        className={cn(
+          "shrink-0 overflow-hidden",
+          showDetailPanel ? DASHBOARD_DETAIL_PANEL_WIDTH_CLASS : "w-0",
+        )}
+        aria-hidden={!showDetailPanel}
+      >
+        {showDetailPanel ? (
+          <div
+            className={cn(
+              "flex h-full min-h-0 flex-col gap-4 overflow-y-auto bg-stone-100",
+              DASHBOARD_DETAIL_PANEL_PADDING_CLASS,
+            )}
+          >
+            {detailPanelRegistration?.render()}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 function DashboardShellBody({
   children,
   workspaceAccountInitials = "NF",
@@ -511,44 +662,15 @@ function DashboardShellBody({
             leadingSlot={topBarLeadingSlot}
           />
         )}
-        <div
-          className={cn(
-            "flex min-h-0 flex-1 flex-row pb-0",
-            DASHBOARD_SHELL_CONTENT_ROW_PADDING_CLASS,
-            variant === "portal" ? "pt-0" : showTopBar ? "pt-0" : "pt-3",
-          )}
-          data-node-id="5435:11022"
+        <DashboardMainPanel
+          showDetailPanel={showDetailPanel}
+          panelDataNodeId={variant === "workspace" ? "5354:9953" : undefined}
+          contentRowClassName={
+            variant === "portal" ? "pt-0" : showTopBar ? "pt-0" : "pt-3"
+          }
         >
-          <div
-            className={cn(
-              "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-t-xl bg-background",
-              showDetailPanel
-                ? DASHBOARD_SHELL_MAIN_PANEL_PADDING_OPEN_CLASS
-                : DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS,
-            )}
-            data-node-id={variant === "workspace" ? "5354:9953" : undefined}
-          >
-            {children}
-          </div>
-          <div
-            className={cn(
-              "shrink-0 overflow-hidden",
-              showDetailPanel ? DASHBOARD_DETAIL_PANEL_WIDTH_CLASS : "w-0",
-            )}
-            aria-hidden={!showDetailPanel}
-          >
-            {showDetailPanel ? (
-              <div
-                className={cn(
-                  "flex h-full min-h-0 flex-col gap-4 overflow-y-auto bg-stone-100",
-                  DASHBOARD_DETAIL_PANEL_PADDING_CLASS,
-                )}
-              >
-                {detailPanelRegistration?.render()}
-              </div>
-            ) : null}
-          </div>
-        </div>
+          {children}
+        </DashboardMainPanel>
       </div>
     </div>
   );
@@ -557,7 +679,9 @@ function DashboardShellBody({
 function DashboardShell(props: DashboardShellProps) {
   return (
     <DashboardDetailPanelProvider>
-      <DashboardShellBody {...props} />
+      <DashboardMainPanelScrollProvider>
+        <DashboardShellBody {...props} />
+      </DashboardMainPanelScrollProvider>
     </DashboardDetailPanelProvider>
   );
 }

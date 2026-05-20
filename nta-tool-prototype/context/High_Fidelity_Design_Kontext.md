@@ -171,12 +171,15 @@ Utility-Klassen: `hf-px-page` (Toolbar-Padding), `hf-gap-grid` (Gap = Gutter).
 | `5354:9951` | Sidebar nav_max (240px) |
 | `5354:10586` | Sidebar nav_mini (68px) |
 | `5354:10007` | Workspace-Top-Bar (Suche, Inbox, Account) |
+| `5509:11682` | Workspace Home + Nav-Aktiv (Primary-Hintergrund, `primary-foreground`-Label) |
 
-**Code:** `components/domain/workspace-dashboard-shell.tsx`, Tokens `lib/design-tokens/workspace-dashboard.ts`, Brand `components/icons/avalis-logo.tsx` («avalis» = `hfTypography.h4`).
+**Code:** `components/domain/workspace-dashboard-shell.tsx`, `workspace-home-dashboard.tsx`, Tokens `lib/design-tokens/workspace-dashboard.ts`, Antragsblöcke `lib/design-tokens/application-block.ts`, Brand `components/icons/avalis-logo.tsx` («avalis» = `hfTypography.h4`).
 
-**Portal-Besonderheiten:** 12px-Rand (`h-3`) auf `/portal/home`; Top-Bar wächst auf `/portal/antragserstellung` (Adjustment) von `h-3` → `h-14` mit Inhalts-Fade.
+**Nav aktiv:** `bg-primary` / `text-primary-foreground`, `rounded-[7px]` — Tokens `DASHBOARD_NAV_ITEM_ACTIVE_*` (Label ohne `hfTypography`-`foreground-alt`).
 
-**Inhalts-Panel:** nur `rounded-t-xl` oben; `edgeToEdge` für Review/Adjustment.
+**Portal-Besonderheiten:** 16px-Rand (`h-4` / `PORTAL_DASHBOARD_RIM_HEIGHT_CLASS`) auf `/portal/home`; Top-Bar auf `/portal/antragserstellung` (Adjustment), Ist ohne Höhen-Morph.
+
+**Inhalts-Panel:** **Inset** (`rounded-xl`, `pb-6`) oder **Tight** (`rounded-t-xl`, `pb-0`) je nach Füllhöhe (Hysterese 90 % / 82 %); `edgeToEdge` für Review/Adjustment mit optionalem externem Scroll-Root.
 
 Vollständige Mechanik (Collapse, `layoutMini`, Nav-Aktiv, Shell vs. Flow) → **`Dashboard_Core_Layout_Kontext.md`**.
 
@@ -266,6 +269,7 @@ Vollständige Mechanik (Collapse, `layoutMini`, Nav-Aktiv, Shell vs. Flow) → *
 | 2026-05-19 | Step 5 Übersicht | Abschnitte als `R1FlowFormCard`-Geschwister (`gap-10`); `R1ApplicationDefinitionSection` geteilt mit Step 4 |
 | 2026-05-19 | Dashboard Core | Sidebar `5354:9951`/`5354:10586`, Workspace-Top-Bar `5354:10007`; `workspace-dashboard-shell.tsx`; Top-Bar + Antragdetails-Panel (Ist: sofort; Morph-Spec → `Dashboard_Core_Layout_Kontext.md` § 4, § 6) |
 | 2026-05-19 | R1 Flow Grid-Margin | `.hf-page-grid--r1-flow`: Seitenrand **24px** (Desktop); Dashboard/Liste weiter **48px** |
+| 2026-05-20 | Dashboard HF Polish | Nav-Aktiv Primary + Workspace Home `5509:11682`; Inset/Tight-Panel + Hysterese; `application-block.ts` für Antragskarten |
 
 ---
 

@@ -8,6 +8,7 @@ import {
   Users,
 } from "lucide-react";
 
+import { applicationBlockSurfaceBackgroundClass } from "@/lib/design-tokens/application-block";
 import { hfTypography } from "@/lib/design-tokens/typography";
 import { formatReviewSubmittedAt } from "@/lib/application-review-labels";
 import type { ApplicationAssignee } from "@/lib/application-assignee";
@@ -74,7 +75,8 @@ export function ApplicationDetailsCard({
   return (
     <div
       className={cn(
-        "flex flex-col gap-4 rounded-xl bg-background px-3 py-4",
+        "flex flex-col gap-4 px-3 py-4",
+        applicationBlockSurfaceBackgroundClass,
         className,
       )}
       data-node-id="5435:11416"
