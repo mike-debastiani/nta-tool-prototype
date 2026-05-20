@@ -118,7 +118,8 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `components/domain/login-card.tsx` | Student/Staff-Login: Supabase Auth + Profil `users.role`, Redirect |
 | `app/workspace/page.tsx` | `requireUserProfile` R2–R6, `fetchWorkspaceApplicationsList`, `initialsFromProfile`, `WorkspaceTestFlow` |
 | `components/domain/workspace-test-flow.tsx` | Workspace-Inbox, Review, R4-Entscheid; auf `/workspace` ohne `?view=` → R2–R4: `WorkspaceHomeDashboard`, R5/R6: Inbox-Liste |
-| `components/domain/workspace-home-dashboard.tsx` | Workspace-Home-Mock (Figma `5509:11682`): KPIs, Beratungen, Anträge-Tabelle — nur Inhalt im weissen Panel |
+| `components/domain/workspace-home-dashboard.tsx` | Workspace-Home (Figma `5509:11682`): KPIs/Beratungen Mock; Anträge-Tabelle live (`applications`), Offen/Alle + Suche, Zeilen öffnen Review |
+| `components/domain/application-review-blocks.tsx` | Review-Blöcke + `shortApplicationRef` / `workspaceApplicationListNumber` (Listen-Spalte Antragsnummer) |
 | `components/domain/dashboard-main-panel-scroll-context.tsx` | Scroll-Root-Registrierung für `edgeToEdge`-Pages → Inset/Tight-Messung in der Shell |
 | `app/api/applications/r1-release-adjustments/route.ts` | R1: zurück nach `in_review` inkl. `workspaceReview`-Merge |
 | `lib/r1-adjustment-release.ts` | Regeln und Builder für Post-Submit nach R1-Freigabe |

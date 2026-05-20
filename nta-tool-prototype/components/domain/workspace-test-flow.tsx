@@ -258,7 +258,14 @@ export function WorkspaceTestFlow({
       && (workspaceRole === "R2" || workspaceRole === "R3" || workspaceRole === "R4");
 
     if (showHomeDashboardMock) {
-      return <WorkspaceHomeDashboard reviewerDisplayName={reviewerDisplayName} />;
+      return (
+        <WorkspaceHomeDashboard
+          reviewerDisplayName={reviewerDisplayName}
+          applications={applications}
+          workspaceRole={workspaceRole}
+          onSelectApplication={setSelectedApplicationId}
+        />
+      );
     }
 
     return (

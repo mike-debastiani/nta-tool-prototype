@@ -163,6 +163,15 @@ export function shortApplicationRef(id: string) {
   return id.replace(/-/g, "").slice(0, 8).toUpperCase();
 }
 
+/** Anzeige in Workspace-Listen (Figma «Antragsnummer», z. B. `NTA-2026-A1B2`). */
+export function workspaceApplicationListNumber(application: {
+  id: string;
+  created_at: string;
+}) {
+  const year = new Date(application.created_at).getFullYear();
+  return `NTA-${year}-${shortApplicationRef(application.id).slice(-4)}`;
+}
+
 /**
  * Visueller Tonus eines Review-Block-Footers / -Rahmens.
  * - `default`: neutraler Card-Look (für noch ausstehende Aktionen).

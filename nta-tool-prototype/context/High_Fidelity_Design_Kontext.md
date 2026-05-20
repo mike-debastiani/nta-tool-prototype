@@ -270,6 +270,7 @@ Vollständige Mechanik (Collapse, `layoutMini`, Nav-Aktiv, Shell vs. Flow) → *
 | 2026-05-19 | Dashboard Core | Sidebar `5354:9951`/`5354:10586`, Workspace-Top-Bar `5354:10007`; `workspace-dashboard-shell.tsx`; Top-Bar + Antragdetails-Panel (Ist: sofort; Morph-Spec → `Dashboard_Core_Layout_Kontext.md` § 4, § 6) |
 | 2026-05-19 | R1 Flow Grid-Margin | `.hf-page-grid--r1-flow`: Seitenrand **24px** (Desktop); Dashboard/Liste weiter **48px** |
 | 2026-05-20 | Dashboard HF Polish | Nav-Aktiv Primary + Workspace Home `5509:11682`; Inset/Tight-Panel + Hysterese; `application-block.ts` für Antragskarten |
+| 2026-05-20 | Workspace Home table | Anträge-Tabelle: Live-`applications`, Zeilenklick, ein Divider pro Zeile; `workspaceApplicationListNumber` |
 
 ---
 

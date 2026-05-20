@@ -130,7 +130,7 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 ### F5 — Workspace pro Verwaltungsrolle (R2-R6)
 
 - Eine `/workspace`-Hülle (`WorkspaceDashboardShell` via `RoleDashboardLayout`): einklappbare Sidebar (240/68px), Nav-Aktiv Primary (`5509:11682`), Top-Bar mit Suche/Inbox/Account, weisses Inhalts-Panel Inset/Tight je nach Scroll-Füllung — **`Dashboard_Core_Layout_Kontext.md`**
-- **Home (Mock):** R2–R4 auf `/workspace` ohne `?view=` → `WorkspaceHomeDashboard` (Figma `5509:11682`); R5/R6 weiter Inbox-Liste
+- **Home:** R2–R4 auf `/workspace` ohne `?view=` → `WorkspaceHomeDashboard` (Figma `5509:11682`): Anträge-Tabelle mit echter Worklist (klickbar → Review); KPI/Beratungen noch Mock; R5/R6 weiter Inbox-Liste
 - Rollenspezifische Sichten innerhalb (`WorkspaceTestFlow`, R4-Entscheid-View, …)
 - R2 sieht Beratungs-/Review-Inbox, Empfehlungen, Block-Review, Weiterleitung an Entscheid
 - **R4 (Ist-Code):** Entscheidungs-Inbox wie R2 lesbar; in `in_implementation` Bewilligungs-UI (`WorkspaceR4DecisionView`); Zwischenstand **debounced** nach `data.r4DecisionReview`, Abschluss → `approved`; Client-Reconcile gegen Server-Snapshots siehe `Antrag_Bewilligung_Kontext.md` § 7 — Details → `Antrag_Bewilligung_Kontext.md`

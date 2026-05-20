@@ -29,7 +29,7 @@ DashboardShell (intern)
 | `components/domain/dashboard-main-panel-scroll-context.tsx` | Optional: Page registriert eigenes Scroll-Element (`edgeToEdge`-Review), Shell misst `scrollHeight` dort |
 | `components/domain/portal-dashboard-toolbar-context.tsx` | Slots für Portal-Top-Bar (Zurück, optional Trailing z. B. Autosave) |
 | `components/domain/workspace-r2-toolbar-context.tsx` | Slot für Workspace-Top-Bar links (z. B. «Zurück zur Liste») |
-| `components/domain/workspace-home-dashboard.tsx` | Workspace-Home-Mock (Figma `5509:11682`) — nur Inhalt im weissen Panel |
+| `components/domain/workspace-home-dashboard.tsx` | Workspace-Home (Figma `5509:11682`); Anträge-Tabelle live, KPI/Beratungen noch Mock |
 | `lib/design-tokens/workspace-dashboard.ts` | Breiten, Padding, Nav-Aktiv-Farben, Inset/Tight-Layout-Ratios, Transition-Dauer, Icon-Slots |
 
 **Wichtig — zwei getrennte R1-Layouts:**
@@ -181,16 +181,21 @@ Default-Zurück: `portalDefaultBackButton` in `workspace-dashboard-shell.tsx`.
 
 ---
 
-## 5. Workspace — Home (Mock) & Top-Leiste
+## 5. Workspace — Home & Top-Leiste
 
-### Home-Dashboard (HF-Mock)
+### Home-Dashboard
 
 | Aspekt | Ist |
 |--------|-----|
 | **Figma** | `5509:11682` (Workspace Home) |
 | **Route** | `/workspace` **ohne** `?view=` |
 | **Rollen** | **R2, R3, R4** → `WorkspaceHomeDashboard`; **R5/R6** → weiterhin Inbox-Liste (`WorkspaceTestFlow`) |
-| **Datei** | `workspace-home-dashboard.tsx` — KPI-Karten (`431px` / `319px` / flex), Beratungsliste, «Anträge»-Tabelle (Mock-Daten) |
+| **Props** | `applications`, `workspaceRole`, `reviewerDisplayName`, `onSelectApplication` — aus `workspace-test-flow.tsx` |
+| **KPI / Beratungen** | noch **Mock**-Zahlen und Terminzeilen |
+| **Anträge-Tabelle** | echte `WorkspaceApplication[]` (Server-Liste + Realtime-Refresh wie Inbox) |
+| **Tabellen-Spalten** | Name (`resolveApplicantDisplayName`), Studiengang, Antragsnummer (`workspaceApplicationListNumber` in `application-review-blocks.tsx`), Datum (`submittedAt` oder `updated_at`), Status (`getApplicationStatusMeta`), Zugewiesen an (`resolveApplicationAssignee`) |
+| **Interaktion** | Zeile klickbar → `setSelectedApplicationId` → gleiche Review-/R4-Ansicht wie Inbox; Filter **Offen** (ohne bewilligt/abgelehnt) / **Alle**; lokale Suche |
+| **Tabelle UI** | ein `border-b` pro Zeile (nicht pro Zelle); letzte Zeile ohne Divider |
 | **Shell** | Normales Inset-Panel (`px-6 pt-10`); kein `edgeToEdge` |
 
 ### Top-Leiste
@@ -312,4 +317,4 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 
 ---
 
-*Letzte Aktualisierung: Nav-Aktiv Primary (`5509:11682`), Inset/Tight-Hauptpanel mit Hysterese, Workspace-Home-Mock (`5509:11682`), Spacing-Tokens `px-6` / `pl-[18px]`; Morph Top-Bar/Detail-Panel weiterhin «geplant».*
+*Letzte Aktualisierung: Workspace-Home-Anträge-Tabelle mit Live-Daten und Zeilen-Navigation; KPI/Beratungen weiter Mock; Nav Primary + Inset/Tight unverändert.*

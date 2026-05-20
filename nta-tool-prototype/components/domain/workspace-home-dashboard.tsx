@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   ArrowUpRight,
   ChevronsUpDown,
@@ -10,19 +10,32 @@ import {
   Search,
 } from "lucide-react";
 
+import { workspaceApplicationListNumber } from "@/components/domain/application-review-blocks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { hfStatusBadgeClass } from "@/lib/design-tokens/status-badge-colors";
+import {
+  deriveCanonicalApplicationState,
+  getApplicationStatusMeta,
+  type StatusAudience,
+} from "@/lib/application-status";
+import {
+  resolveApplicantDisplayName,
+  resolveApplicationAssignee,
+} from "@/lib/application-assignee";
+import { formatReviewSubmittedAt } from "@/lib/application-review-labels";
 import { hfTypography } from "@/lib/design-tokens/typography";
+import { type UserRole } from "@/lib/auth";
+import { type WorkspaceApplication } from "@/lib/test-flow-types";
 import { cn } from "@/lib/utils";
-
-/** Figma `5509:11682` — Workspace Home (Mock). */
-const FIGMA_AVATAR_URL =
-  "https://www.figma.com/api/mcp/asset/27ceb896-95bd-42de-93c3-02494ca68931";
 
 type WorkspaceHomeDashboardProps = {
   reviewerDisplayName: string;
+  applications: WorkspaceApplication[];
+  workspaceRole: UserRole;
+  onSelectApplication: (applicationId: string) => void;
 };
+
+type ApplicationsFilter = "open" | "all";
 
 function greetingName(displayName: string): string {
   const trimmed = displayName.trim();
@@ -47,64 +60,38 @@ function formatHomeDate(d: Date): string {
   });
 }
 
+function statusAudienceForRole(role: UserRole): StatusAudience {
+  return role === "R4" ? "R4" : "R2";
+}
+
+function formatApplicationTableDate(application: WorkspaceApplication): string {
+  const submitted = formatReviewSubmittedAt(application.data);
+  if (submitted) return submitted;
+  return new Date(application.updated_at).toLocaleDateString("de-CH", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function applicantInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
+}
+
+function isOpenApplication(application: WorkspaceApplication): boolean {
+  const state = deriveCanonicalApplicationState(application);
+  return state !== "approved" && state !== "rejected";
+}
+
 const mockAppointments = [
   { date: "Dienstag, 11. Juli", time: "08:15", name: "Jaquline Beispielien", room: "Zimmer 404" },
   { date: "Dienstag, 11. Juli", time: "08:15", name: "Jaquline Beispielien", room: "Zimmer 404" },
   { date: "Dienstag, 11. Juli", time: "08:15", name: "Jaquline Beispielien", room: "Zimmer 404" },
   { date: "Dienstag, 11. Juli", time: "08:15", name: "Jaquline Beispielien", room: "Zimmer 404" },
 ] as const;
-
-type TableRow = {
-  name: string;
-  studiengang: string;
-  ref: string;
-  date: string;
-  status: string;
-  statusClass: string;
-  assignee: string;
-};
-
-const mockTableRows: TableRow[] = [
-  {
-    name: "Suzanne Beispielien",
-    studiengang: "Religionslehre (MA)",
-    ref: "NTA-2024-0042",
-    date: "02.07.2026",
-    status: "Anpassung angefordert",
-    statusClass: "bg-in-review-50 text-in-review-800",
-    assignee: "Susanne Beispiel",
-  },
-  {
-    name: "Suzanne Beispielien",
-    studiengang: "Religionslehre (MA)",
-    ref: "NTA-2024-0042",
-    date: "02.07.2026",
-    status: "Beratung & Empfehlung",
-    statusClass: hfStatusBadgeClass.consultation_recommendation,
-    assignee: "Susanne Beispiel",
-  },
-  {
-    name: "Suzanne Beispielien",
-    studiengang: "Religionslehre (MA)",
-    ref: "NTA-2024-0042",
-    date: "02.07.2026",
-    status: "In Entscheid",
-    statusClass: "bg-in-decision-50 text-in-decision-500",
-    assignee: "Susanne Beispiel",
-  },
-  {
-    name: "Suzanne Beispielien",
-    studiengang: "Religionslehre (MA)",
-    ref: "NTA-2024-0042",
-    date: "02.07.2026",
-    status: "Review erforderlich",
-    statusClass: hfStatusBadgeClass.needs_adjustment.replace(
-      "text-adjustment-500",
-      "text-adjustment-600",
-    ),
-    assignee: "Susanne Beispiel",
-  },
-];
 
 function SummaryCardShell({
   children,
@@ -150,10 +137,71 @@ function StatusBadge({ label, className }: { label: string; className: string })
   );
 }
 
-export function WorkspaceHomeDashboard({ reviewerDisplayName }: WorkspaceHomeDashboardProps) {
+export function WorkspaceHomeDashboard({
+  reviewerDisplayName,
+  applications,
+  workspaceRole,
+  onSelectApplication,
+}: WorkspaceHomeDashboardProps) {
   const name = greetingName(reviewerDisplayName);
   const phrase = greetingPhrase();
   const todayLabel = formatHomeDate(new Date());
+  const statusAudience = statusAudienceForRole(workspaceRole);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [applicationsFilter, setApplicationsFilter] = useState<ApplicationsFilter>("open");
+
+  const tableRows = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+
+    return applications
+      .filter((application) => {
+        if (applicationsFilter === "open" && !isOpenApplication(application)) {
+          return false;
+        }
+        if (!q) return true;
+
+        const applicantName = resolveApplicantDisplayName(application).toLowerCase();
+        const studiengang = (application.data.personalData?.studiengang ?? "").toLowerCase();
+        const ref = workspaceApplicationListNumber(application).toLowerCase();
+
+        return (
+          applicantName.includes(q)
+          || studiengang.includes(q)
+          || ref.includes(q)
+        );
+      })
+      .map((application) => {
+        const statusMeta = getApplicationStatusMeta(application, statusAudience);
+        const canonicalState = statusMeta.canonicalState;
+        const applicantName = resolveApplicantDisplayName(application);
+        const assignee = resolveApplicationAssignee({
+          canonicalState,
+          applicantDisplayName: applicantName,
+          r2ReviewerDisplayName:
+            application.data.recommendation?.releasedBy?.trim() || reviewerDisplayName,
+          r4ReviewerDisplayName: reviewerDisplayName,
+        });
+
+        return {
+          application,
+          applicantName,
+          applicantInitials: applicantInitials(applicantName),
+          studiengang: application.data.personalData?.studiengang?.trim() || "—",
+          ref: workspaceApplicationListNumber(application),
+          date: formatApplicationTableDate(application),
+          statusLabel: statusMeta.label,
+          statusClass: statusMeta.className,
+          assignee: assignee.displayName,
+        };
+      });
+  }, [
+    applications,
+    applicationsFilter,
+    reviewerDisplayName,
+    searchQuery,
+    statusAudience,
+  ]);
 
   return (
     <div className="flex min-h-0 w-full min-w-0 flex-col gap-6 pb-6">
@@ -281,29 +329,42 @@ export function WorkspaceHomeDashboard({ reviewerDisplayName }: WorkspaceHomeDas
                 aria-hidden
               />
               <Input
-                readOnly
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Liste durchsuchen…"
                 className="h-9 rounded-full border-border bg-background pl-10"
-                aria-label="Liste durchsuchen (Mock)"
+                aria-label="Liste durchsuchen"
               />
             </div>
             <div className="flex items-center rounded-full border border-border p-[3px]">
               <button
                 type="button"
+                onClick={() => setApplicationsFilter("open")}
                 className={cn(
-                  "rounded-full border border-border px-3 py-1.5",
-                  hfTypography.paragraphSmallBold,
-                  "text-foreground",
+                  "rounded-full px-3 py-1.5",
+                  applicationsFilter === "open"
+                    ? cn(
+                        "border border-border bg-background",
+                        hfTypography.paragraphSmallBold,
+                        "text-foreground",
+                      )
+                    : cn(hfTypography.paragraphSmall, "text-muted-foreground"),
                 )}
               >
                 Offen
               </button>
               <button
                 type="button"
+                onClick={() => setApplicationsFilter("all")}
                 className={cn(
                   "rounded-[10px] px-3 py-1.5",
-                  hfTypography.paragraphSmall,
-                  "text-muted-foreground",
+                  applicationsFilter === "all"
+                    ? cn(
+                        "border border-border bg-background",
+                        hfTypography.paragraphSmallBold,
+                        "text-foreground",
+                      )
+                    : cn(hfTypography.paragraphSmall, "text-muted-foreground"),
                 )}
               >
                 Alle
@@ -330,8 +391,8 @@ export function WorkspaceHomeDashboard({ reviewerDisplayName }: WorkspaceHomeDas
         <div className="w-full overflow-x-auto">
           <table className="w-full min-w-[1068px] border-collapse text-left">
             <thead>
-              <tr>
-                <th className="relative px-2 py-2 text-left after:absolute after:inset-x-2 after:bottom-0 after:h-px after:bg-border">
+              <tr className="border-b border-border">
+                <th className="px-2 py-2 text-left">
                   <span className="inline-flex items-center gap-2">
                     <span className={cn(hfTypography.paragraphSmallMedium, "text-foreground")}>
                       Name
@@ -339,7 +400,7 @@ export function WorkspaceHomeDashboard({ reviewerDisplayName }: WorkspaceHomeDas
                     <ChevronsUpDown className="size-4 text-muted-foreground" aria-hidden />
                   </span>
                 </th>
-                <th className="relative px-2 py-2 text-left after:absolute after:inset-x-2 after:bottom-0 after:h-px after:bg-border">
+                <th className="px-2 py-2 text-left">
                   <span className="inline-flex items-center gap-2">
                     <span className={cn(hfTypography.paragraphSmallMedium, "text-foreground")}>
                       Studiengang
@@ -347,7 +408,7 @@ export function WorkspaceHomeDashboard({ reviewerDisplayName }: WorkspaceHomeDas
                     <ChevronsUpDown className="size-4 text-muted-foreground" aria-hidden />
                   </span>
                 </th>
-                <th className="relative px-2 py-2 text-left after:absolute after:inset-x-2 after:bottom-0 after:h-px after:bg-border">
+                <th className="px-2 py-2 text-left">
                   <span className="inline-flex items-center gap-2">
                     <span className={cn(hfTypography.paragraphSmallMedium, "text-foreground")}>
                       Antragsnummer
@@ -355,7 +416,7 @@ export function WorkspaceHomeDashboard({ reviewerDisplayName }: WorkspaceHomeDas
                     <ChevronsUpDown className="size-4 text-muted-foreground" aria-hidden />
                   </span>
                 </th>
-                <th className="relative px-2 py-2 text-left after:absolute after:inset-x-2 after:bottom-0 after:h-px after:bg-border">
+                <th className="px-2 py-2 text-left">
                   <span className="inline-flex items-center gap-2">
                     <span className={cn(hfTypography.paragraphSmallMedium, "text-foreground")}>
                       Datum
@@ -363,7 +424,7 @@ export function WorkspaceHomeDashboard({ reviewerDisplayName }: WorkspaceHomeDas
                     <ChevronsUpDown className="size-4 text-muted-foreground" aria-hidden />
                   </span>
                 </th>
-                <th className="relative px-2 py-2 text-left after:absolute after:inset-x-2 after:bottom-0 after:h-px after:bg-border">
+                <th className="px-2 py-2 text-left">
                   <span className="inline-flex items-center gap-2">
                     <span className={cn(hfTypography.paragraphSmallMedium, "text-foreground")}>
                       Status
@@ -371,7 +432,7 @@ export function WorkspaceHomeDashboard({ reviewerDisplayName }: WorkspaceHomeDas
                     <ChevronsUpDown className="size-4 text-muted-foreground" aria-hidden />
                   </span>
                 </th>
-                <th className="relative px-2 py-2 text-left after:absolute after:inset-x-2 after:bottom-0 after:h-px after:bg-border">
+                <th className="px-2 py-2 text-left">
                   <span className="inline-flex items-center gap-2">
                     <span className={cn(hfTypography.paragraphSmallMedium, "text-foreground")}>
                       Zugewiesen an
@@ -379,61 +440,92 @@ export function WorkspaceHomeDashboard({ reviewerDisplayName }: WorkspaceHomeDas
                     <ChevronsUpDown className="size-4 text-muted-foreground" aria-hidden />
                   </span>
                 </th>
-                <th className="relative w-10 px-2 py-2 after:absolute after:inset-x-2 after:bottom-0 after:h-px after:bg-border" />
+                <th className="w-10 px-2 py-2" />
               </tr>
             </thead>
             <tbody>
-              {mockTableRows.map((row) => (
-                <tr key={`${row.ref}-${row.status}`}>
-                  <td className="relative h-14 px-2 after:absolute after:inset-x-2 after:bottom-0 after:h-px after:bg-stone-300">
-                    <div className="flex items-center gap-2">
-                      <span className="relative size-8 shrink-0 overflow-hidden rounded-full bg-stone-150">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={FIGMA_AVATAR_URL}
-                          alt=""
-                          className="size-full object-cover"
-                        />
-                      </span>
-                      <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
-                        {row.name}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="relative h-14 px-2 after:absolute after:inset-x-2 after:bottom-0 after:h-px after:bg-stone-300">
-                    <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
-                      {row.studiengang}
-                    </span>
-                  </td>
-                  <td className="relative h-14 px-2 after:absolute after:inset-x-2 after:bottom-0 after:h-px after:bg-stone-300">
-                    <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
-                      {row.ref}
-                    </span>
-                  </td>
-                  <td className="relative h-14 px-2 after:absolute after:inset-x-2 after:bottom-0 after:h-px after:bg-stone-300">
-                    <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
-                      {row.date}
-                    </span>
-                  </td>
-                  <td className="relative h-14 px-2 after:absolute after:inset-x-2 after:bottom-0 after:h-px after:bg-stone-300">
-                    <StatusBadge label={row.status} className={row.statusClass} />
-                  </td>
-                  <td className="relative h-14 px-2 after:absolute after:inset-x-2 after:bottom-0 after:h-px after:bg-stone-300">
-                    <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
-                      {row.assignee}
-                    </span>
-                  </td>
-                  <td className="relative h-14 px-2 after:absolute after:inset-x-2 after:bottom-0 after:h-px after:bg-stone-300">
-                    <button
-                      type="button"
-                      className="inline-flex size-6 items-center justify-center text-foreground-alt"
-                      aria-label="Zeilenmenü"
-                    >
-                      <MoreVertical className="size-4" strokeWidth={1.75} />
-                    </button>
+              {tableRows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="px-2 py-8 text-center text-hf-paragraph-small text-muted-foreground"
+                  >
+                    {applications.length === 0
+                      ? "Keine eingegangenen Anträge sichtbar."
+                      : "Keine Anträge für die aktuelle Filterung."}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                tableRows.map((row, index) => {
+                  const isLast = index === tableRows.length - 1;
+                  return (
+                    <tr
+                      key={row.application.id}
+                      className={cn(
+                        "cursor-pointer transition-colors hover:bg-background/80",
+                        !isLast && "border-b border-stone-300",
+                      )}
+                      onClick={() => onSelectApplication(row.application.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          onSelectApplication(row.application.id);
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Antrag ${row.applicantName} öffnen`}
+                    >
+                      <td className="h-14 px-2">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-stone-150 text-[10px] font-semibold text-foreground"
+                            aria-hidden
+                          >
+                            {row.applicantInitials}
+                          </span>
+                          <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
+                            {row.applicantName}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="h-14 px-2">
+                        <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
+                          {row.studiengang}
+                        </span>
+                      </td>
+                      <td className="h-14 px-2">
+                        <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
+                          {row.ref}
+                        </span>
+                      </td>
+                      <td className="h-14 px-2">
+                        <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
+                          {row.date}
+                        </span>
+                      </td>
+                      <td className="h-14 px-2">
+                        <StatusBadge label={row.statusLabel} className={row.statusClass} />
+                      </td>
+                      <td className="h-14 px-2">
+                        <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
+                          {row.assignee}
+                        </span>
+                      </td>
+                      <td className="h-14 px-2">
+                        <button
+                          type="button"
+                          className="inline-flex size-6 items-center justify-center text-foreground-alt"
+                          aria-label={`Menü für ${row.applicantName}`}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <MoreVertical className="size-4" strokeWidth={1.75} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
