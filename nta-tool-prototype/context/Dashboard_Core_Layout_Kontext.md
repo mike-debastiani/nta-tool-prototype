@@ -29,8 +29,15 @@ DashboardShell (intern)
 | `components/domain/dashboard-main-panel-scroll-context.tsx` | Optional: Page registriert eigenes Scroll-Element (`edgeToEdge`-Review), Shell misst `scrollHeight` dort |
 | `components/domain/portal-dashboard-toolbar-context.tsx` | Slots für Portal-Top-Bar (Zurück, optional Trailing z. B. Autosave) |
 | `components/domain/workspace-r2-toolbar-context.tsx` | Slot für Workspace-Top-Bar links (z. B. «Zurück zur Liste») |
-| `components/domain/workspace-home-dashboard.tsx` | Workspace-Home (Figma `5509:11682`); Anträge-Tabelle live, KPI/Beratungen noch Mock |
-| `lib/design-tokens/workspace-dashboard.ts` | Breiten, Padding, Nav-Aktiv-Farben, Inset/Tight-Layout-Ratios, Transition-Dauer, Icon-Slots |
+| `components/domain/workspace-home-dashboard.tsx` | Workspace-Home (Figma `5509:11682`); KPI-Zeile live (`OpenApplicationsSummaryCard`, `AssignedTasksSummaryCard`); Beratungen dieser Woche noch Mock |
+| `components/domain/open-applications-summary-card.tsx` | KPI «Offene Antragsverfahren» (Chart-Ansichten, Live-Stats) |
+| `components/domain/assigned-tasks-summary-card.tsx` | KPI «Zugewiesene Aufgaben» (Live-Zuweisung, rollenabhängig) |
+| `components/domain/student-dashboard.tsx` | R1 Home «Meine Anträge» (Figma `5792:22019` / `5826:3088`); Cards/Table-Toggle, Live-Polling |
+| `components/domain/r1-application-card.tsx` | R1-Antragkarte nach Status (Figma `5856:21926`); ganze Karte klickbar |
+| `components/domain/r1-applications-table.tsx` | R1-Anträge-Tabelle; klickbare Zeilen |
+| `lib/design-tokens/workspace-dashboard.ts` | Breiten, Padding, Nav-Aktiv-Farben, Inset/Tight-Layout-Ratios, `WORKSPACE_HOME_KPI_*` |
+| `lib/design-tokens/application-content-panel.ts` | Weisses Panel: Shadow, Card-Surface (`APPLICATION_CONTENT_PANEL_*`) |
+| `lib/design-tokens/application-scroll.ts` | Scroll-Viewport vs. Inhalts-Inset (`whitePanelScroll*`, `dashboardMainPanelScrollAreaClass`) |
 
 **Wichtig — zwei getrennte R1-Layouts:**
 
@@ -60,7 +67,7 @@ Die Flow-Shell und die Dashboard-Shell **nicht mischen** (kein doppelte Sidebar,
 ```
 
 - **Seiten-Hintergrund:** `bg-stone-100`, `h-screen`, `overflow-hidden`.
-- **Inhalts-Panel:** `bg-background`; innen **`px-6 pt-10`** (24px seitlich, 40px oben); **Inset-Layout** (unten `pb-6`, `rounded-xl`) solange `scrollHeight / clientHeight` unter **90 %**; **Tight-Layout** (`pb-0`, nur `rounded-t-xl`) ab **90 %** (Hysterese-Ausstieg **82 %**). Konstanten: `DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_*` in `workspace-dashboard.ts`.
+- **Inhalts-Panel:** `bg-background` + Shadow `APPLICATION_CONTENT_PANEL_SHADOW_CLASS` (`lib/design-tokens/application-content-panel.ts`); innen **`px-6 pt-10`** (24px seitlich, 40px oben); **Inset-Layout** (unten `pb-6`, `rounded-xl`) solange `scrollHeight / clientHeight` unter **90 %**; **Tight-Layout** (`pb-0`, nur `rounded-t-xl`) ab **90 %** (Hysterese-Ausstieg **82 %**). Konstanten: `DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_*` in `workspace-dashboard.ts`.
 - **Horizontaler Abstand:** Content-Zeile **`px-6`** (24px zum Viewport); weisses Hauptpanel **`px-6 pt-10`**; Nav-Sidebar **`pl-[18px] py-3`**; Top-Leiste **`px-6 py-3`**; Antragdetails-Spalte **`pl-6`**.
 
 ---
@@ -191,7 +198,10 @@ Default-Zurück: `portalDefaultBackButton` in `workspace-dashboard-shell.tsx`.
 | **Route** | `/workspace` **ohne** `?view=` |
 | **Rollen** | **R2, R3, R4** → `WorkspaceHomeDashboard`; **R5/R6** → weiterhin Inbox-Liste (`WorkspaceTestFlow`) |
 | **Props** | `applications`, `workspaceRole`, `reviewerDisplayName`, `onSelectApplication` — aus `workspace-test-flow.tsx` |
-| **KPI / Beratungen** | noch **Mock**-Zahlen und Terminzeilen |
+| **KPI «Offene Antragsverfahren»** | Live (`computeOpenApplicationsStats`); Chart-Ansichten (Vertikal/Kreis/Horizontal/Kombiniert) |
+| **KPI «Zugewiesene Aufgaben»** | Live (`computeAssignedTasksStats` + `resolveApplicationAssignee`); R2: Beratungen/Reviews; R3/R4: Entscheidungen; «+N seit Login» Mock |
+| **KPI-Zeile Layout** | 3 gleich breite Spalten (`WORKSPACE_HOME_KPI_CARD_CLASS`, `gap-6`) |
+| **Beratungen dieser Woche** | noch **Mock**-Terminzeilen |
 | **Anträge-Tabelle** | echte `WorkspaceApplication[]` (Server-Liste + Realtime-Refresh wie Inbox) |
 | **Tabellen-Spalten** | Name (`resolveApplicantDisplayName`), Studiengang, Antragsnummer (`workspaceApplicationListNumber` in `application-review-blocks.tsx`), Datum (`submittedAt` oder `updated_at`), Status (`getApplicationStatusMeta`), Zugewiesen an (`resolveApplicationAssignee`) |
 | **Interaktion** | Zeile klickbar → `setSelectedApplicationId` → gleiche Review-/R4-Ansicht wie Inbox; Filter **Offen** (ohne bewilligt/abgelehnt) / **Alle**; lokale Suche |
@@ -206,6 +216,22 @@ Default-Zurück: `portalDefaultBackButton` in `workspace-dashboard-shell.tsx`.
 
 ---
 
+## 5b. Portal — Home «Meine Anträge» (R1)
+
+| Aspekt | Ist |
+|--------|-----|
+| **Figma** | Cards `5792:22019`, Table `5826:3088`, Card-States `5856:21926` |
+| **Route** | `/portal/home` |
+| **Komponente** | `StudentDashboard` — volle Panelbreite (`p-6` Shell, kein `HfPageGrid`) |
+| **Daten** | Supabase-Liste eigener Anträge (Server + Client-Polling 2s) |
+| **Ansichten** | Toggle **Cards** / **Table** (`localStorage`: `r1-applications-view`) |
+| **Cards** | CSS-Grid: 2 Spalten, ab **1600px** 3 Spalten; Status-spezifische Shell + Progress (`In Review → In Entscheid → Verfügung`); Utility-Spalte am Ende (`R1DashboardUtilityColumn`: Neuer Antrag + Informationen) |
+| **Table** | Spalten Antragsnummer, Einreichedatum, Gültigkeitsdauer, Gültig bis, Status; Header + Zeilen mit je einem `border-b` (letzte Zeile ohne); ganze Zeile klickbar |
+| **Status-Pills auf Karten** | `R1_CARD_STATUS_BADGE_CLASS` (HF-pro Status, z. B. Beratung `beratung-100/500`) — kann von globalen Badges abweichen |
+| **Interaktion** | Klick Karte/Zeile → `/portal/antragserstellung?applicationId=<uuid>`; «Neuer Antrag» → `?new=1` |
+
+---
+
 ## 6. Rechtes Antragdetails-Panel
 
 Gemeinsam für **Portal (Adjustment)** und **Workspace (Review, R4, …)** — nicht für den R1-Step-Flow ohne Dashboard-Shell.
@@ -215,7 +241,7 @@ Gemeinsam für **Portal (Adjustment)** und **Workspace (Review, R4, …)** — n
 - Registrierung: `useRegisterDashboardDetailPanel(signature, render, enabled)` (`dashboard-detail-panel-context.tsx`).
 - Shell rendert rechts neben dem weissen Inhalts-Panel eine Spalte auf **`bg-stone-100`** (Rahmen zum Viewport).
 - **Geschlossen:** `w-0`, kein Inhalt.
-- **Geöffnet:** **`w-[330px]`** (`DASHBOARD_DETAIL_PANEL_WIDTH_CLASS`) — Karte **Antragdetails** (Figma `5435:11416`, `application-details-card.tsx`) + Kommentare/Kontakte je nach Page.
+- **Geöffnet:** **`w-[330px]`** (`DASHBOARD_DETAIL_PANEL_WIDTH_CLASS`) — Karte **Antragdetails** (Figma `5652:18411`, `application-details-card.tsx`, `hf-content-panel-card` + Shadow) + Kommentare/Kontakte je nach Page.
 
 ### Verhalten (Ist)
 
@@ -236,7 +262,7 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 
 | Page | Shell | `edgeToEdge` | Inhalt |
 |------|-------|--------------|--------|
-| `app/portal/home/page.tsx` | Portal | nein (`p-6` + Scroll) | `StudentDashboard` in `HfPageGrid` |
+| `app/portal/home/page.tsx` | Portal | nein (`p-6` + Scroll) | `StudentDashboard` (volle Breite) |
 | `app/portal/antragserstellung/page.tsx` | nur bei **Adjustment** | ja | `PortalApplicationAdjustment` |
 | `app/portal/antragserstellung/page.tsx` | **keine** Shell bei Flow | — | `NtaAntragDesktop` |
 | `app/workspace/page.tsx` | Workspace | ja | `WorkspaceTestFlow` |
@@ -271,8 +297,8 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 | `workspaceDetailPanelContentTransitionClass` | *(später)* Panel-Inhalt Opacity 200ms |
 | `DASHBOARD_SIDEBAR_PADDING_CLASS` | `pl-[18px] py-3` |
 | `DASHBOARD_SHELL_CONTENT_ROW_PADDING_CLASS` | `px-6` |
-| `DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS` | `px-6 pt-10` |
-| `DASHBOARD_SHELL_MAIN_PANEL_PADDING_OPEN_CLASS` | `pt-10 pl-6 pr-2` — Antrag geöffnet |
+| `DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS` | `pt-10` — horizontal 24px am Scroll (`pl-6 pr-4` + `mr-2`) |
+| `DASHBOARD_SHELL_MAIN_PANEL_PADDING_OPEN_CLASS` | `pt-10` — Antrag geöffnet, Inset am Page-Scroll |
 | `DASHBOARD_SHELL_CONTENT_ROW_PADDING_BOTTOM_INSET_CLASS` | `pb-6` — Inset-Modus |
 | `DASHBOARD_SHELL_CONTENT_ROW_PADDING_BOTTOM_SCROLL_CLASS` | `pb-0` — Tight-Modus |
 | `DASHBOARD_SHELL_MAIN_PANEL_ROUNDED_INSET_CLASS` | `rounded-xl` |
@@ -317,4 +343,4 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 
 ---
 
-*Letzte Aktualisierung: Workspace-Home-Anträge-Tabelle mit Live-Daten und Zeilen-Navigation; KPI/Beratungen weiter Mock; Nav Primary + Inset/Tight unverändert.*
+*Letzte Aktualisierung: R1 Home (Cards/Table, Live-Daten); Workspace-Home-KPIs «Offene Antragsverfahren» und «Zugewiesene Aufgaben» live; Scroll/Inset-Tokens für weisses Panel; Beratungen dieser Woche weiter Mock.*

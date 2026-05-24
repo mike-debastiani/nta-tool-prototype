@@ -7,7 +7,8 @@ import type { CanonicalApplicationState } from "@/lib/application-status";
 export const hfStatusBadgeClass: Record<CanonicalApplicationState, string> = {
   draft: "bg-entwurf-100 text-entwurf-500",
   consultation_recommendation: "bg-beratung-100 text-beratung-500",
-  in_review: "bg-in-review-100 text-in-review-500",
+  /** In Review — visuell wie «Anpassung erforderlich» (HF Anpassung-Palette). */
+  in_review: "bg-adjustment-100 text-adjustment-500",
   needs_adjustment: "bg-adjustment-100 text-adjustment-500",
   in_decision: "bg-in-decision-100 text-in-decision-500",
   approved: "bg-bewilligt-100 text-bewilligt-700",

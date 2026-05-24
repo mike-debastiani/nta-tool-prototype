@@ -24,14 +24,11 @@ export default async function PortalHomePage() {
         profile.email,
       )}
     >
-      <div className="hf-grid w-full">
-        <div className="hf-col-span-8 hf-col-start-3 hf-col-collapse-below-desktop min-w-0">
-          <StudentDashboard
-            applications={(data as ApplicationRow[]) ?? []}
-            applicantId={profile.id}
-          />
-        </div>
-      </div>
+      <StudentDashboard
+        applications={(data as ApplicationRow[]) ?? []}
+        applicantId={profile.id}
+        studentDisplayName={profile.display_name ?? profile.email}
+      />
     </RoleDashboardLayout>
   );
 }

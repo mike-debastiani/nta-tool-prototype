@@ -22,7 +22,14 @@ import {
   r1FlowFieldStackDefinitionClassName,
 } from "@/lib/design-tokens/r1-form";
 import { applicationBlockSurfaceBackgroundClass } from "@/lib/design-tokens/application-block";
-import { applicationContentScrollClass } from "@/lib/design-tokens/application-scroll";
+import {
+  APPLICATION_CONTENT_PANEL_CARD_CLASS,
+  APPLICATION_CONTENT_PANEL_SURFACE_CLASS,
+} from "@/lib/design-tokens/application-content-panel";
+import {
+  whitePanelScrollContentInsetXClass,
+  whitePanelScrollViewportClass,
+} from "@/lib/design-tokens/application-scroll";
 import { hfTypography } from "@/lib/design-tokens/typography";
 import type { R1PortalFlowStep } from "@/lib/test-flow-types";
 import { cn } from "@/lib/utils";
@@ -116,7 +123,8 @@ export function R1ApplicationFlowLayout({
             <>
               <div
                 className={cn(
-                  "hf-col-collapse-below-desktop hf-grid-free flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-background",
+                  "hf-col-collapse-below-desktop hf-grid-free flex h-full min-h-0 min-w-0 flex-col overflow-hidden",
+                  APPLICATION_CONTENT_PANEL_SURFACE_CLASS,
                   "rounded-tl-xl",
                   "hf-col-span-6 hf-col-start-4",
                 )}
@@ -125,14 +133,16 @@ export function R1ApplicationFlowLayout({
               </div>
               <aside
                 className={cn(
-                  "hf-col-collapse-below-desktop hf-grid-free hidden h-full min-h-0 flex-col overflow-hidden border-l border-stone-250 bg-background lg:flex",
+                  "hf-col-collapse-below-desktop hf-grid-free hidden h-full min-h-0 flex-col overflow-hidden border-l border-stone-250 lg:flex",
+                  APPLICATION_CONTENT_PANEL_SURFACE_CLASS,
+                  "rounded-tr-xl",
                   "hf-col-span-3 hf-col-start-10",
                 )}
               >
                 <div
                   className={cn(
-                    "min-h-0 flex-1 overflow-y-auto overscroll-contain pr-2",
-                    applicationContentScrollClass,
+                    whitePanelScrollViewportClass,
+                    whitePanelScrollContentInsetXClass,
                   )}
                 >
                   {correctionSidebar}
@@ -142,9 +152,9 @@ export function R1ApplicationFlowLayout({
           ) : (
             <div
               className={cn(
-                "hf-col-collapse-below-desktop hf-grid-free flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-background",
-                "rounded-tl-xl",
-                "-mr-[var(--hf-grid-margin)]",
+                "hf-col-collapse-below-desktop hf-grid-free flex h-full min-h-0 min-w-0 flex-col overflow-hidden",
+                APPLICATION_CONTENT_PANEL_SURFACE_CLASS,
+                "rounded-t-xl",
                 "hf-col-span-9 hf-col-start-4",
               )}
             >
@@ -209,7 +219,10 @@ export function R1FlowProgressCard({
 
   return (
     <div
-      className="flex shrink-0 flex-col gap-4 rounded-xl bg-background p-4"
+      className={cn(
+        APPLICATION_CONTENT_PANEL_CARD_CLASS,
+        "flex shrink-0 flex-col gap-4 p-4",
+      )}
       data-node-id="5180:7025"
     >
       <div className="flex shrink-0 flex-col gap-4" data-node-id="5180:7026">
@@ -330,7 +343,10 @@ export function R1FlowProgressDivider() {
 export function R1FlowContactCard() {
   return (
     <div
-      className="flex shrink-0 flex-col gap-4 rounded-xl bg-background p-4"
+      className={cn(
+        APPLICATION_CONTENT_PANEL_CARD_CLASS,
+        "flex shrink-0 flex-col gap-4 p-4",
+      )}
       data-node-id="5213:1456"
     >
       <div className="flex flex-col gap-0.5" data-node-id="5213:1457">
@@ -427,8 +443,8 @@ export function R1FlowMainContent({ children }: R1FlowMainContentProps) {
   return (
     <div
       className={cn(
-        "flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain pr-2",
-        applicationContentScrollClass,
+        whitePanelScrollViewportClass,
+        whitePanelScrollContentInsetXClass,
       )}
       data-node-id="5180:7022"
     >

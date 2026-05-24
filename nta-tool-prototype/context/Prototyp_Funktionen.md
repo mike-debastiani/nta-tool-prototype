@@ -87,6 +87,14 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 - Nach Login: Rolle aus `users`-Tabelle lesen, entsprechend redirecten (`R1` → Portal, sonst → Workspace)
 - Kein echtes OAuth, keine 1:1-Klone der Microsoft/EDU-ID-Branding (markenrechtlich heikel)
 
+### F1b — R1 Dashboard «Meine Anträge» (`/portal/home`)
+
+- **HF-Home** in der Portal-Dashboard-Shell (Figma `5792:22019` / `5826:3088`): Begrüssung, Cards/Table-Toggle, Live-Daten (Polling)
+- **Cards:** statuskodierte Antragkarten mit 3-Schritt-Progress; Grid 2 Spalten, ab 1600px 3 Spalten; Utility-Spalte «Neuer Antrag» + «Informationen» am Ende
+- **Table:** sortierte Liste mit klickbaren Zeilen; nur Header- und Zeilen-Unterränder
+- **Navigation:** Klick Karte/Zeile → `/portal/antragserstellung?applicationId=<uuid>`; Neuer Antrag → `?new=1` (Step-Flow ohne Dashboard-Shell)
+- Details → `Antragerstellung_Kontext.md` § 7, `Dashboard_Core_Layout_Kontext.md` § 5b
+
 ### F2 — Multi-Step Antrag-Erstellung (R1)
 
 **Zielbild:** linearer Step-Flow mit Stepper.  
@@ -130,7 +138,7 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 ### F5 — Workspace pro Verwaltungsrolle (R2-R6)
 
 - Eine `/workspace`-Hülle (`WorkspaceDashboardShell` via `RoleDashboardLayout`): einklappbare Sidebar (240/68px), Nav-Aktiv Primary (`5509:11682`), Top-Bar mit Suche/Inbox/Account, weisses Inhalts-Panel Inset/Tight je nach Scroll-Füllung — **`Dashboard_Core_Layout_Kontext.md`**
-- **Home:** R2–R4 auf `/workspace` ohne `?view=` → `WorkspaceHomeDashboard` (Figma `5509:11682`): Anträge-Tabelle mit echter Worklist (klickbar → Review); KPI/Beratungen noch Mock; R5/R6 weiter Inbox-Liste
+- **Home:** R2–R4 auf `/workspace` ohne `?view=` → `WorkspaceHomeDashboard` (Figma `5509:11682`): KPI «Offene Antragsverfahren» und «Zugewiesene Aufgaben» mit Live-Daten; Beratungen dieser Woche noch Mock; Anträge-Tabelle mit echter Worklist (klickbar → Review); R5/R6 weiter Inbox-Liste
 - Rollenspezifische Sichten innerhalb (`WorkspaceTestFlow`, R4-Entscheid-View, …)
 - R2 sieht Beratungs-/Review-Inbox, Empfehlungen, Block-Review, Weiterleitung an Entscheid
 - **R4 (Ist-Code):** Entscheidungs-Inbox wie R2 lesbar; in `in_implementation` Bewilligungs-UI (`WorkspaceR4DecisionView`); Zwischenstand **debounced** nach `data.r4DecisionReview`, Abschluss → `approved`; Client-Reconcile gegen Server-Snapshots siehe `Antrag_Bewilligung_Kontext.md` § 7 — Details → `Antrag_Bewilligung_Kontext.md`

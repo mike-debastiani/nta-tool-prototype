@@ -10,7 +10,7 @@
 - R1 **Antragserstellung** end-to-end bis zum **finalen Submit**; danach fachlich **„In Review“**.
 - R2 kann **Beratung + Empfehlung** und im Anschluss den **Block-Review** im **Workspace** bearbeiten und mit **„Antrag weiterreichen“** in **`in_implementation`** bzw. **`needs_correction`** überführen (Schreibzugriff nur auf definierte `data`-Teile).
 - **Empfehlungsschreiben** wird nicht mehr als Datei-Upload, sondern als **Rich-Text** (TipTap) direkt im Antrag verfasst. R2 nutzt dafür in der Phase „Beratung & Empfehlung“ den `RecommendationDraftEditor` (Entwurf speichern / freigeben); R1 sieht den freigegebenen Text identisch gestylt über den geteilten `RecommendationReleasedAccordion` in Step 3 und Step 5.
-- R1 **Dashboard** (`/portal/home`): Liste eigener Anträge in der **Portal-Dashboard-Shell**; **Klick** → `/portal/antragserstellung?applicationId=<uuid>`. **Neuer Antrag** über **`?new`** / **`?new=1`** → Step-Flow **ohne** Dashboard-Shell.
+- R1 **Dashboard** (`/portal/home`): **HF-Home** in der **Portal-Dashboard-Shell** — Begrüssung, Cards/Table-Toggle, statuskodierte Antragkarten mit Progress-Stepper oder Tabellenansicht, Utility-Spalte «Neuer Antrag» + «Informationen»; **Live-Daten** (Polling). **Klick** Karte/Zeile → `/portal/antragserstellung?applicationId=<uuid>`. **Neuer Antrag** über **`?new`** / **`?new=1`** → Step-Flow **ohne** Dashboard-Shell.
 - **Zwei R1-Layouts (nicht mischen):** (1) **Dashboard-Shell** — Liste + Block-Detail `PortalApplicationAdjustment`; (2) **Antragsflow-Shell** — `NtaAntragDesktop` + `r1-application-flow-layout.tsx` für Entwurf, Beratung & Empfehlung, `?new`. Details → **`Dashboard_Core_Layout_Kontext.md`** § 1.
 - **Statusdarstellung** für Badges ist **zentral** in `lib/application-status.ts` (R1/R2 konsistent; Wording z. B. bei „Anpassung“ rollenabhängig).
 - Portal- und Workspace-Dashboard teilen **`workspace-dashboard-shell.tsx`** über **`RoleDashboardLayout`** (einklappbare Sidebar 240/68px, rollenspezifische Nav).
@@ -165,7 +165,7 @@ UI-Substeps in `nta-antrag-desktop.tsx` (ein Sidebar-Step „Beratung und Empfeh
 | Seite | `h-screen overflow-hidden` — nur der **rechte Form-Bereich** scrollt (`R1FlowMainContent`); Seitenrand **24px** (`.hf-page-grid--r1-flow`, nicht 48px Dashboard-Grid) |
 | Top-Bar | Titel links; **Autosave-Hinweis** rechts (Save-Icon, `bewilligt-500`) wenn aktiv; optional **Schliessen** → Draft speichern + `/portal/home` |
 | Sidebar | Fortschrittskarte + Kontakt; unten **Antrag verwerfen** (`pb-6`) |
-| Hauptpanel | Weiss, `rounded-tl-xl`, bis rechter Viewport-Rand (`-mr-[var(--hf-grid-margin)]`) |
+| Hauptpanel | Weiss, `rounded-t-xl`, Shadow `APPLICATION_CONTENT_PANEL_SHADOW_CLASS`, rechter Rand **24px** wie Dashboard (`px-6` / Grid-Margin, kein `-mr` mehr) |
 | Formular | Karte `border-stone-250`, Footer **Weiter** innerhalb der Karte |
 | Korrektur-Modus | Optional dritte Spalte: Review-Sidebar; Formular `hf-col-span-6` |
 
@@ -233,8 +233,14 @@ Ausnahme Step 4/5 ohne Kenntnisnahme: Erst-Freischaltung blockiert; nach Sticky 
 
 ## 7. R1 Dashboard — Sollverhalten
 
-- **Shell:** `/portal/home` und Adjustment-Ansicht nutzen **`PortalDashboardShell`** (Sidebar, 12px-Rand oben auf der Liste, Top-Bar + Antragdetails beim geöffneten Antrag **ohne** Öffnungs-Animation) — **`Dashboard_Core_Layout_Kontext.md`**.
-- Liste aller eigenen Anträge (`StudentDashboard` in `HfPageGrid`).
+- **Shell:** `/portal/home` und Adjustment-Ansicht nutzen **`PortalDashboardShell`** (Sidebar, 12px-Rand oben, Top-Bar + Antragdetails beim geöffneten Antrag **ohne** Öffnungs-Animation) — **`Dashboard_Core_Layout_Kontext.md`** § 5b.
+- **Home-UI (`StudentDashboard`):** Figma `5792:22019` (Cards), `5826:3088` (Table), Karten-States `5856:21926`.
+  - **Header:** Begrüssung mit `studentDisplayName`, aktuelles Datum.
+  - **Ansichten:** Toggle **Cards** / **Table** (Persistenz `localStorage` `r1-applications-view`).
+  - **Cards:** Grid 2 Spalten, ab Viewport **1600px** 3 Spalten; jede Karte statuskodiert (`r1-application-card-visual.ts`), 3-Schritt-Progress (`In Review → In Entscheid → Verfügung`), Status-Pill via `R1_CARD_STATUS_BADGE_CLASS`; **ganze Karte** ist Link.
+  - **Table:** Spalten Antragsnummer, Einreichedatum, Gültigkeitsdauer, Gültig bis, Status; nur Header-Unterrand + Zeilen-Unterränder (letzte Zeile ohne); **ganze Zeile** klickbar.
+  - **Utility-Spalte** (`R1DashboardUtilityColumn`, Figma `5792:22057`): «Neuer Antrag erstellen» + «Informationen» (Links `size="sm"`) am Ende des Grids.
+  - **Daten:** Server-Liste + Client-Polling (2s); Meta via `r1-application-list-meta.ts`.
 - **Neuen Antrag erstellen** → **`?new=1`** → **Antragsflow** ohne Dashboard-Shell.
 - **Klick auf einen Eintrag** → `?applicationId=<uuid>`:
   - **`draft` / `consultation_recommendation`:** Step-Flow (`NtaAntragDesktop`).

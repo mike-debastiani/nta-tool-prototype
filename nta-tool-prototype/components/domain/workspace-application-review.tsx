@@ -70,8 +70,7 @@ import {
 } from "@/lib/test-flow-types";
 import { createClient } from "@/utils/supabase/client";
 import {
-  applicationContentScrollClass,
-  applicationContentScrollPaddingClass,
+  applicationReviewScrollAreaClass,
 } from "@/lib/design-tokens/application-scroll";
 import { cn } from "@/lib/utils";
 import {
@@ -775,11 +774,7 @@ export function WorkspaceApplicationReview({
     <div className="flex min-h-0 flex-1 w-full min-w-0 flex-col overflow-hidden">
       <div
         ref={scrollRootRef}
-        className={cn(
-          "min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain",
-          applicationContentScrollClass,
-          applicationContentScrollPaddingClass,
-        )}
+        className={applicationReviewScrollAreaClass}
       >
         <div className="mx-auto w-full max-w-4xl space-y-6">
         <div>

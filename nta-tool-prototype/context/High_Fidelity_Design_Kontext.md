@@ -156,7 +156,7 @@ import { HfPageGrid, HfGridCell, HfGridFree } from "@/components/layout/hf-grid"
 
 **Ausnahmen (`HfGridFree`):** Review-/Korrektur-Ansichten mit fester rechter Sidebar (`edgeToEdge` im Layout) bleiben bewusst **ohne** Page-Grid — nutzen intern eigenes Layout; horizontale Abstände dort schrittweise auf `hf-px-page` / `--hf-grid-gutter` umstellen.
 
-**Bereits angebunden:** **Dashboard Core** (`workspace-dashboard-shell.tsx`, Figma Sidebar `5354:9951` / `5354:10586`), `portal/home` (8 Spalten zentriert in weissem Panel), Workspace-Inbox-Liste, **R1-Antragsflow-Shell** (`r1-application-flow-layout.tsx` — **separates** Layout, nicht die Dashboard-Shell). Details → **`Dashboard_Core_Layout_Kontext.md`**.
+**Bereits angebunden:** **Dashboard Core** (`workspace-dashboard-shell.tsx`, Figma Sidebar `5354:9951` / `5354:10586`), **`portal/home`** (R1 HF Home: Cards `5792:22019`, Table `5826:3088`, Card-States `5856:21926`), Workspace-Home `5509:11682` (KPI `5483:11126`), Workspace-Inbox-Liste, **R1-Antragsflow-Shell** (`r1-application-flow-layout.tsx` — **separates** Layout, nicht die Dashboard-Shell). Details → **`Dashboard_Core_Layout_Kontext.md`**.
 
 Utility-Klassen: `hf-px-page` (Toolbar-Padding), `hf-gap-grid` (Gap = Gutter).
 
@@ -172,8 +172,15 @@ Utility-Klassen: `hf-px-page` (Toolbar-Padding), `hf-gap-grid` (Gap = Gutter).
 | `5354:10586` | Sidebar nav_mini (68px) |
 | `5354:10007` | Workspace-Top-Bar (Suche, Inbox, Account) |
 | `5509:11682` | Workspace Home + Nav-Aktiv (Primary-Hintergrund, `primary-foreground`-Label) |
+| `5483:11126` | Workspace KPI «Offene Antragsverfahren» |
+| `5792:22019` | R1 Home — Cards-Ansicht «Meine Anträge» |
+| `5826:3088` | R1 Home — Table-Ansicht |
+| `5856:21926` | R1 Antragkarte — Status-Varianten |
+| `5792:22057` | R1 Utility-Spalte (Neuer Antrag + Informationen) |
 
-**Code:** `components/domain/workspace-dashboard-shell.tsx`, `workspace-home-dashboard.tsx`, Tokens `lib/design-tokens/workspace-dashboard.ts`, Antragsblöcke `lib/design-tokens/application-block.ts`, Brand `components/icons/avalis-logo.tsx` («avalis» = `hfTypography.h4`).
+**Code:** `components/domain/workspace-dashboard-shell.tsx`, `workspace-home-dashboard.tsx`, `student-dashboard.tsx`, Tokens `lib/design-tokens/workspace-dashboard.ts`, Antragsblöcke `lib/design-tokens/application-block.ts`, Brand `components/icons/avalis-logo.tsx` («avalis» = `hfTypography.h4`).
+
+**Status-Badge (global):** `in_review` → `adjustment`-Palette (`status-badge-colors.ts`); R1-Karten können abweichende Pills nutzen (`R1_CARD_STATUS_BADGE_CLASS`).
 
 **Nav aktiv:** `bg-primary` / `text-primary-foreground`, `rounded-[7px]` — Tokens `DASHBOARD_NAV_ITEM_ACTIVE_*` (Label ohne `hfTypography`-`foreground-alt`).
 
@@ -204,7 +211,7 @@ Vollständige Mechanik (Collapse, `layoutMini`, Nav-Aktiv, Shell vs. Flow) → *
 - Seite: `h-screen overflow-hidden`; nur **`R1FlowMainContent`** scrollt vertikal.
 - Grid: Sidebar Spalten **1–3**, Hauptpanel **4–12** (bei Korrektur-Review optional Spalte 13+ für R2-Sidebar, Form **4–6**).
 - Seitenrand Flow: **24px** via `.hf-page-grid--r1-flow` (`HF_R1_FLOW_GRID`); Dashboard/Liste behalten **48px** Desktop-Margin.
-- Hauptpanel: weiss, `rounded-tl-xl`, bis rechter Viewport-Rand (`-mr-[var(--hf-grid-margin)]`).
+- Hauptpanel: weiss, `rounded-t-xl`, Shadow `application-content-panel.ts`, rechter Rand 24px (wie Dashboard).
 - **Autosave** in der Top-Bar (`headerAutosave`), Lucide **Save**, `text-bewilligt-500` — nicht mehr über dem Formular.
 
 **Icons:** Lucide über `components/domain/r1-flow-icons.tsx` (`R1FlowIcon`, `R1FlowProgressTrailingIcon`). Keine Raster-Assets unter `public/icons/r1-flow/` mehr.

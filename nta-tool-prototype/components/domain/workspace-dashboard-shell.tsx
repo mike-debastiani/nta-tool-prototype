@@ -39,8 +39,13 @@ import { usePortalDashboardToolbar } from "@/components/domain/portal-dashboard-
 import { WorkspaceAccountMenu } from "@/components/domain/workspace-account-menu";
 import { useWorkspaceR2Toolbar } from "@/components/domain/workspace-r2-toolbar-context";
 import { Button } from "@/components/ui/button";
+import {
+  dashboardMainPanelScrollAreaClass,
+  detailPanelScrollAreaClass,
+} from "@/lib/design-tokens/application-scroll";
 import { hfTypography } from "@/lib/design-tokens/typography";
 import {
+  APPLICATION_CONTENT_PANEL_SHADOW_CLASS,
   DASHBOARD_DETAIL_PANEL_PADDING_CLASS,
   DASHBOARD_DETAIL_PANEL_WIDTH_CLASS,
   DASHBOARD_NAV_ITEM_ACTIVE_CLASS,
@@ -571,6 +576,7 @@ function DashboardMainPanel({
         data-node-id={panelDataNodeId}
         className={cn(
           "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background",
+          APPLICATION_CONTENT_PANEL_SHADOW_CLASS,
           showDetailPanel
             ? DASHBOARD_SHELL_MAIN_PANEL_PADDING_OPEN_CLASS
             : DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS,
@@ -586,7 +592,7 @@ function DashboardMainPanel({
         ) : (
           <div
             ref={defaultScrollRef}
-            className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain"
+            className={dashboardMainPanelScrollAreaClass}
           >
             {children}
           </div>
@@ -602,7 +608,8 @@ function DashboardMainPanel({
         {showDetailPanel ? (
           <div
             className={cn(
-              "flex h-full min-h-0 flex-col gap-4 overflow-y-auto bg-stone-100",
+              "h-full min-h-0 bg-stone-100",
+              detailPanelScrollAreaClass,
               DASHBOARD_DETAIL_PANEL_PADDING_CLASS,
             )}
           >

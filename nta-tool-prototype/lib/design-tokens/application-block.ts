@@ -5,6 +5,6 @@
 export const applicationBlockSurfaceClass =
   "rounded-lg border border-border bg-card";
 
-/** Wie `applicationBlockSurfaceClass`, aber `bg-background` (z. B. Detail-Panel). */
+/** Wie `applicationBlockSurfaceClass`, aber `bg-background` (Formularblöcke im weissen Panel). */
 export const applicationBlockSurfaceBackgroundClass =
   "rounded-lg border border-border bg-background";

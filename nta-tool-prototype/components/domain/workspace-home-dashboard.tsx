@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import {
   ArrowUpRight,
   ChevronsUpDown,
@@ -10,6 +10,8 @@ import {
   Search,
 } from "lucide-react";
 
+import { AssignedTasksSummaryCard } from "@/components/domain/assigned-tasks-summary-card";
+import { OpenApplicationsSummaryCard } from "@/components/domain/open-applications-summary-card";
 import { workspaceApplicationListNumber } from "@/components/domain/application-review-blocks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,8 +26,14 @@ import {
 } from "@/lib/application-assignee";
 import { formatReviewSubmittedAt } from "@/lib/application-review-labels";
 import { hfTypography } from "@/lib/design-tokens/typography";
+import {
+  WORKSPACE_HOME_KPI_CARD_CLASS,
+  WORKSPACE_HOME_KPI_ROW_GAP_CLASS,
+} from "@/lib/design-tokens/workspace-dashboard";
 import { type UserRole } from "@/lib/auth";
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
+import { computeAssignedTasksStats } from "@/lib/workspace-assigned-tasks-stats";
+import { computeOpenApplicationsStats } from "@/lib/workspace-open-applications-stats";
 import { cn } from "@/lib/utils";
 
 type WorkspaceHomeDashboardProps = {
@@ -93,25 +101,6 @@ const mockAppointments = [
   { date: "Dienstag, 11. Juli", time: "08:15", name: "Jaquline Beispielien", room: "Zimmer 404" },
 ] as const;
 
-function SummaryCardShell({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex min-h-[220px] shrink-0 flex-col gap-4 rounded-xl bg-stone-50 p-6",
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
-}
-
 function PrimaryIconLinkButton() {
   return (
     <button
@@ -150,6 +139,20 @@ export function WorkspaceHomeDashboard({
 
   const [searchQuery, setSearchQuery] = useState("");
   const [applicationsFilter, setApplicationsFilter] = useState<ApplicationsFilter>("open");
+
+  const openApplicationsStats = useMemo(
+    () => computeOpenApplicationsStats(applications),
+    [applications],
+  );
+
+  const assignedTasksStats = useMemo(
+    () =>
+      computeAssignedTasksStats(applications, {
+        reviewerDisplayName,
+        workspaceRole,
+      }),
+    [applications, reviewerDisplayName, workspaceRole],
+  );
 
   const tableRows = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -214,79 +217,30 @@ export function WorkspaceHomeDashboard({
         </p>
       </header>
 
-      <div className="flex gap-6">
-        <SummaryCardShell className="w-[431px] max-w-[431px]">
-          <div className="flex items-start justify-between gap-2">
-            <p className={cn(hfTypography.paragraphLargeMedium, "text-foreground")}>
-              Offene Antragsverfahren
-            </p>
-            <PrimaryIconLinkButton />
-          </div>
-          <div className="flex min-h-0 flex-1 items-end justify-between gap-4">
-            <p className="text-[128px] font-semibold leading-none tracking-tight text-foreground">
-              73
-            </p>
-            <div className="flex h-[171px] items-end gap-4" aria-hidden>
-              <div className="flex h-[85%] w-11 flex-col justify-end rounded-xl bg-beratung-100 px-2 pb-2 pt-3">
-                <span className={cn(hfTypography.paragraphLargeMedium, "text-beratung-500")}>
-                  23
-                </span>
-              </div>
-              <div className="flex h-full w-12 flex-col justify-end rounded-xl bg-adjustment-200 px-2 pb-2 pt-3">
-                <span className={cn(hfTypography.paragraphLargeMedium, "text-adjustment-600")}>
-                  34
-                </span>
-              </div>
-              <div className="flex h-[45%] w-11 flex-col justify-end rounded-xl bg-in-decision-200 pl-3 pr-2 pb-2 pt-3">
-                <span className={cn(hfTypography.paragraphLargeMedium, "text-in-decision-500")}>
-                  16
-                </span>
-              </div>
-            </div>
-          </div>
-        </SummaryCardShell>
+      <div className={cn("flex items-stretch", WORKSPACE_HOME_KPI_ROW_GAP_CLASS)}>
+        <OpenApplicationsSummaryCard
+          stats={openApplicationsStats}
+          className={WORKSPACE_HOME_KPI_CARD_CLASS}
+        />
 
-        <SummaryCardShell className="w-[319px] max-w-[319px]">
-          <div className="flex items-start justify-between gap-2">
-            <p className={cn(hfTypography.paragraphLargeMedium, "text-foreground")}>
-              Zugewiesene Aufgaben
-            </p>
-            <PrimaryIconLinkButton />
-          </div>
-          <div className="flex min-h-0 flex-1 flex-col gap-4">
-            <div className="flex flex-1 flex-col justify-between gap-3 rounded-xl bg-beratung-100 p-4">
-              <p className={cn(hfTypography.paragraphMedium, "text-beratung-500")}>
-                Beratungen
-              </p>
-              <div className="flex items-baseline gap-0.5">
-                <span className="text-[64px] font-semibold leading-none text-in-review-500">
-                  6
-                </span>
-                <span className={cn(hfTypography.paragraphSmall, "text-beratung-500")}>
-                  +5
-                </span>
-              </div>
-            </div>
-            <div className="flex flex-1 flex-col justify-between gap-3 rounded-xl bg-adjustment-100 p-4">
-              <p className={cn(hfTypography.paragraphMedium, "text-adjustment-600")}>
-                Reviews
-              </p>
-              <div className="flex items-baseline gap-0.5 text-adjustment-600">
-                <span className="text-[64px] font-semibold leading-none">23</span>
-                <span className={cn(hfTypography.paragraphSmall)}>+16</span>
-              </div>
-            </div>
-          </div>
-        </SummaryCardShell>
+        <AssignedTasksSummaryCard
+          buckets={assignedTasksStats.buckets}
+          className={WORKSPACE_HOME_KPI_CARD_CLASS}
+        />
 
-        <div className="flex min-h-[220px] min-w-0 flex-1 flex-col gap-4 rounded-xl bg-beratung-100 p-6">
+        <div
+          className={cn(
+            WORKSPACE_HOME_KPI_CARD_CLASS,
+            "flex flex-col gap-4 rounded-xl bg-beratung-100 p-6",
+          )}
+        >
           <div className="flex items-start justify-between gap-2">
             <p className={cn(hfTypography.paragraphLargeMedium, "text-foreground")}>
               Beratungen dieser Woche
             </p>
             <PrimaryIconLinkButton />
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {mockAppointments.map((row, index) => (
               <div
                 key={`${row.date}-${index}`}

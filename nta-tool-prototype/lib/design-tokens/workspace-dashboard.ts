@@ -1,5 +1,7 @@
 /** Workspace dashboard shell (Figma 5354:9951 nav_max, 5354:10586 nav_mini). */
 
+export { APPLICATION_CONTENT_PANEL_SHADOW_CLASS } from "@/lib/design-tokens/application-content-panel";
+
 /** Navigations-Sidebar: links 18px, oben/unten 12px (`py-3`). */
 export const DASHBOARD_SIDEBAR_PADDING_CLASS = "py-3 pl-[18px]";
 
@@ -18,8 +20,8 @@ export const DASHBOARD_NAV_ITEM_ACTIVE_LABEL_CLASS =
 /** Zeile mit weissem Hauptpanel + Antragdetails-Spalte (24px zum Viewport-Rand). */
 export const DASHBOARD_SHELL_CONTENT_ROW_PADDING_CLASS = "px-6";
 
-/** Weisses Inhalts-Panel — 24px innen links/rechts, 40px oben (Dashboard-Inhalt). */
-export const DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS = "px-6 pt-10";
+/** Weisses Inhalts-Panel — nur oben; horizontaler Inset liegt am Scroll-Viewport (`pl-6 pr-4` + `mr-2`). */
+export const DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS = "pt-10";
 
 /** Inhalt passt ohne Scroll: unterer Rand der Content-Zeile (= 24px) + `rounded-xl`. */
 export const DASHBOARD_SHELL_CONTENT_ROW_PADDING_BOTTOM_INSET_CLASS = "pb-6";
@@ -39,11 +41,11 @@ export const DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_ENTER_RATIO = 0.9;
 /** Unter dieser Ratio wieder Inset-Layout — niedriger als ENTER wegen Hysterese (Padding ändert clientHeight). */
 export const DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_EXIT_RATIO = 0.82;
 
-/** Weisses Inhalts-Panel, wenn Antrag geöffnet (Detail-Sidebar aktiv). */
-export const DASHBOARD_SHELL_MAIN_PANEL_PADDING_OPEN_CLASS = "pt-10 pl-6 pr-2";
+/** Weisses Inhalts-Panel, wenn Antrag geöffnet (horizontaler Inset am Page-Scroll). */
+export const DASHBOARD_SHELL_MAIN_PANEL_PADDING_OPEN_CLASS = "pt-10";
 
-/** Antragdetails-Spalte: nur linker Innenabstand (rechts/oben/unten 0). */
-export const DASHBOARD_DETAIL_PANEL_PADDING_CLASS = "pl-6";
+/** Antragdetails-Spalte: horizontaler Inset am Scroll-Viewport (`pl-6 pr-4` + `mr-2`). */
+export const DASHBOARD_DETAIL_PANEL_PADDING_CLASS = "";
 
 /** Top-Leiste Portal / Workspace: 24px seitlich, 12px oben/unten. */
 export const DASHBOARD_TOP_BAR_PADDING_CLASS = "px-6 py-3";
@@ -104,3 +106,13 @@ export const WORKSPACE_SIDEBAR_ICON_SLOT_PX = 40;
 /** Logo + Nav: 40×40-Box, 16×16-Icon zentriert — kein zusätzlicher linker Offset. */
 export const workspaceSidebarIconSlotClass =
   "flex size-10 shrink-0 items-center justify-center";
+
+/** Workspace-Home, erste Zeile: Abstand zwischen den drei KPI-Karten (24px). */
+export const WORKSPACE_HOME_KPI_ROW_GAP_CLASS = "gap-6";
+
+/**
+ * Workspace-Home, erste Zeile: gleiche Breite für alle drei KPI-Karten.
+ * `flex-1 basis-0` teilt die verfügbare Zeilenbreite minus `WORKSPACE_HOME_KPI_ROW_GAP_CLASS` zu gleichen Teilen.
+ */
+export const WORKSPACE_HOME_KPI_CARD_CLASS =
+  "min-h-[220px] min-w-0 flex-1 basis-0 self-stretch";

@@ -8,6 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import type { ApplicationAssignee } from "@/lib/application-assignee";
 import { type ApplicationStatusMeta } from "@/lib/application-status";
+import {
+  detailPanelContentInsetXClass,
+  whitePanelScrollViewportClass,
+} from "@/lib/design-tokens/application-scroll";
 import { cn } from "@/lib/utils";
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
 import {
@@ -136,17 +140,22 @@ export function ApplicationReviewDetailSidebar({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden">
+    <div
+      className={cn(
+        "flex h-full min-h-0 w-full min-w-0 flex-col gap-4 overflow-hidden",
+        detailPanelContentInsetXClass,
+      )}
+    >
       <ApplicationDetailsCard
         application={application}
         statusMeta={statusMeta}
         assignee={assignee}
-        className="shrink-0"
+        className="w-full shrink-0"
       />
 
       {showCommentsSection && secondarySection === "comments" ? (
         <section
-          className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-background pb-4 pt-4"
+          className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-background px-6 pb-4 pt-4"
           aria-labelledby="review-comments-heading"
         >
           <div className="mb-5 flex shrink-0 items-center gap-2">
@@ -154,7 +163,12 @@ export function ApplicationReviewDetailSidebar({
               Kommentare
             </h3>
           </div>
-          <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
+          <div
+            className={cn(
+              whitePanelScrollViewportClass,
+              "flex min-h-0 flex-1 flex-col gap-5",
+            )}
+          >
             {orderedSavedReviewComments.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 {emptyCommentsLabel}
@@ -412,7 +426,7 @@ function R4ContactsSection({ application }: { application: WorkspaceApplication 
 
   return (
     <section
-      className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-xl bg-background pb-4 pt-4"
+      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-background px-6 pb-4 pt-4"
       aria-labelledby="r4-contacts-heading"
     >
       <h3 id="r4-contacts-heading" className="mb-4 text-lg font-medium leading-[27px] text-foreground">

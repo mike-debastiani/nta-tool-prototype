@@ -79,8 +79,7 @@ import {
 } from "@/lib/test-flow-types";
 import { createClient } from "@/utils/supabase/client";
 import {
-  applicationContentScrollClass,
-  applicationContentScrollPaddingClass,
+  applicationReviewScrollAreaClass,
 } from "@/lib/design-tokens/application-scroll";
 import { cn } from "@/lib/utils";
 import { getApplicationStatusMeta } from "@/lib/application-status";
@@ -830,11 +829,7 @@ export function PortalApplicationAdjustment({
       <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
         <div
           ref={scrollRootRef}
-          className={cn(
-            "h-full overflow-y-auto overscroll-contain",
-            applicationContentScrollClass,
-            applicationContentScrollPaddingClass,
-          )}
+          className={cn("h-full", applicationReviewScrollAreaClass)}
         >
           <div className="mx-auto w-full max-w-4xl space-y-6">
             <div>
