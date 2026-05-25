@@ -64,9 +64,8 @@ Zentral in `lib/design-tokens/status-badge-colors.ts`, konsumiert von `lib/appli
 | Status | Klassen (Beispiel) |
 |--------|-------------------|
 | Entwurf | `bg-entwurf-100 text-entwurf-500` |
-| Beratung & Empfehlung | `bg-beratung-100 text-beratung-500` |
-| In Review (R1) | `bg-in-review-50 text-in-review-800` |
-| In Review (R2 «Review erforderlich») | `bg-adjustment-100 text-adjustment-600` |
+| Beratung & Empfehlung | `bg-consultation-surface` / `text-consultation-accent` (`#E0F2FE` / `#0EA5E9`) |
+| In Review / Review erforderlich (R1, R2, R4) | `bg-beratung-100 text-beratung-500` |
 | Anpassung | `bg-adjustment-100 text-adjustment-500` |
 | In Entscheid | `bg-in-decision-100 text-in-decision-500` |
 | Bewilligt | `bg-bewilligt-100 text-bewilligt-700` |
@@ -173,15 +172,20 @@ Utility-Klassen: `hf-px-page` (Toolbar-Padding), `hf-gap-grid` (Gap = Gutter).
 | `5354:10586` | Sidebar nav_mini (68px) |
 | `5354:10007` | Workspace-Top-Bar (Suche, Inbox, Account) |
 | `5509:11682` | Workspace Home + Nav-Aktiv (Primary-Hintergrund, `primary-foreground`-Label) |
-| `5483:11126` | Workspace KPI «Offene Antragsverfahren» |
+| `5483:11126` | Workspace KPI «Offene Antragsverfahren» (R2/R3) |
+| `5948:27359` | Workspace Home R4 — «Alle Anträge» + «Zugewiesene Aufgaben» |
+| `5948:27466` / `5948:27470` | Anträge-Panel Toolbar (Suche, Offen/Alle, Filter, Download) |
+| `5955:21930` | Anträge-Tabelle maximiert (Minimize) |
 | `5792:22019` | R1 Home — Cards-Ansicht «Meine Anträge» |
 | `5826:3088` | R1 Home — Table-Ansicht |
 | `5856:21926` | R1 Antragkarte — Status-Varianten |
 | `5792:22057` | R1 Utility-Spalte (Neuer Antrag + Informationen) |
 
-**Code:** `components/domain/workspace-dashboard-shell.tsx`, `workspace-home-dashboard.tsx`, `student-dashboard.tsx`, Tokens `lib/design-tokens/workspace-dashboard.ts`, Antragsblöcke `lib/design-tokens/application-block.ts`, Brand `components/icons/avalis-logo.tsx` («avalis» = `hfTypography.h4`).
+**Code:** `workspace-dashboard-shell.tsx`, `workspace-home-dashboard.tsx`, `workspace-my-tasks-view.tsx`, `workspace-applications-table.tsx`, `student-dashboard.tsx`, Tokens `workspace-dashboard.ts` (inkl. `WORKSPACE_HOME_TABLE_*`), `application-block.ts`, Brand `avalis-logo.tsx`.
 
-**Status-Badge:** audience-spezifisch in `status-badge-colors.ts` (`getHfStatusBadgeClass`); R1 `in_review` = In-Review-50/800; R2 = adjustment-100/600. R1-Karten können eigene Pills nutzen (`R1_CARD_STATUS_BADGE_CLASS`).
+**Anträge-Toolbar (Figma `5948:27470`):** Suche/Filter/Download — `bg-transparent`, Rand `border-border`; Toggle aktiv `bg-primary` / `text-primary-foreground` / `rounded-full`; inaktiv `text-muted-foreground` / `rounded-[10px]`. Kein weisser Fill auf Panel-`stone-50`.
+
+**Status-Badge:** `status-badge-colors.ts` — Beratung & Empfehlung vs. In Review/Review erforderlich (alle Rollen gleich); Callouts via `hfStatusCalloutClasses`. KPI «Offene Antragsverfahren»: Balkenfarben unverändert (`beratung-100` für In-Review-Segment); Total nur In Review + Anpassung + In Entscheid.
 
 **Nav aktiv:** `bg-primary` / `text-primary-foreground`, `rounded-[7px]` — Tokens `DASHBOARD_NAV_ITEM_ACTIVE_*` (Label ohne `hfTypography`-`foreground-alt`).
 

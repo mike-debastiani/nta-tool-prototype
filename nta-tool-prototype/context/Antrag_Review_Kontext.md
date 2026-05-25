@@ -44,7 +44,7 @@
 ## 3. Status & Badges
 
 - **Zentral:** `lib/application-status.ts` — `deriveCanonicalApplicationState`, `getApplicationStatusMeta`, Export **`ApplicationStatusMeta`**; Badge-Klassen über **`getHfStatusBadgeClass(state, audience)`** aus `lib/design-tokens/status-badge-colors.ts` (**`StatusAudience`:** `R1` \| `R2` \| `R4`).
-- **R1 «In Review»:** `bg-in-review-50 text-in-review-800`; **R2/R4 «Review erforderlich»:** `bg-adjustment-100 text-adjustment-600` (HF Erforderlich).
+- **In Review / Review erforderlich (R1, R2, R4):** `bg-beratung-100 text-beratung-500`. **Beratung & Empfehlung:** `bg-consultation-surface text-consultation-accent` (`#E0F2FE` / `#0EA5E9`).
 - **Header-Callouts** in Review/Portal: `components/domain/application-status-callout.tsx` — Container-Farben aus dem Status-Badge (`hfStatusCalloutClasses`); optional **`muted`** für R4-Lesesicht.
 - UI-Badges (Sidebar, Listen): `components/domain/application-status-badge.tsx`; R1-Karten können abweichende Pills nutzen (`R1_CARD_STATUS_BADGE_CLASS`).
 - **Keine** zweite Statuslogik in Screens duplizieren.

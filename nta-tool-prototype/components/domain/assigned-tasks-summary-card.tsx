@@ -15,14 +15,23 @@ const LABEL_FONT_MIN_PX = 12;
 type AssignedTasksSummaryCardProps = {
   buckets: AssignedTaskBucket[];
   className?: string;
+  onHeaderIconClick?: () => void;
+  headerIconAriaLabel?: string;
 };
 
-function PrimaryIconLinkButton() {
+function PrimaryIconLinkButton({
+  onClick,
+  ariaLabel = "Details öffnen",
+}: {
+  onClick?: () => void;
+  ariaLabel?: string;
+}) {
   return (
     <button
       type="button"
+      onClick={onClick}
       className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90"
-      aria-label="Details öffnen"
+      aria-label={ariaLabel}
     >
       <ArrowUpRight className="size-4" strokeWidth={1.75} aria-hidden />
     </button>
@@ -92,7 +101,12 @@ function AssignedTaskMetricItem({ bucket }: { bucket: AssignedTaskBucket }) {
 }
 
 /** Figma `5483:11126` — «Zugewiesene Aufgaben» mit Echtdaten. */
-export function AssignedTasksSummaryCard({ buckets, className }: AssignedTasksSummaryCardProps) {
+export function AssignedTasksSummaryCard({
+  buckets,
+  className,
+  onHeaderIconClick,
+  headerIconAriaLabel,
+}: AssignedTasksSummaryCardProps) {
   return (
     <div
       className={cn(
@@ -105,7 +119,10 @@ export function AssignedTasksSummaryCard({ buckets, className }: AssignedTasksSu
         <p className={cn(hfTypography.paragraphLargeMedium, "text-foreground")}>
           Zugewiesene Aufgaben
         </p>
-        <PrimaryIconLinkButton />
+        <PrimaryIconLinkButton
+          onClick={onHeaderIconClick}
+          ariaLabel={headerIconAriaLabel}
+        />
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4">

@@ -21,6 +21,7 @@ import {
   type WorkspaceReviewViewMode,
 } from "@/components/domain/workspace-application-review";
 import { WorkspaceHomeDashboard } from "@/components/domain/workspace-home-dashboard";
+import { WorkspaceMyTasksView } from "@/components/domain/workspace-my-tasks-view";
 import { WorkspaceR4DecisionView } from "@/components/domain/workspace-r4-decision-view";
 import { RichTextEditor } from "@/components/domain/rich-text-editor";
 import { type UserRole } from "@/lib/auth";
@@ -63,6 +64,14 @@ export function WorkspaceTestFlow({
       current === SUPPRESS_EDITOR_NOTICE ? null : current,
     );
   }, []);
+
+  const dashboardView = searchParams.get("view");
+
+  useEffect(() => {
+    if (dashboardView === "aufgaben") {
+      setSelectedApplicationId(null);
+    }
+  }, [dashboardView]);
 
   const refreshApplications = useCallback(async () => {
     const seq = ++refreshApplicationsSeq.current;
@@ -252,12 +261,26 @@ export function WorkspaceTestFlow({
           : "interactive";
 
   if (!selectedApplication) {
-    const isWorkspaceHome = pathname === "/workspace" && !searchParams.get("view");
-    const showHomeDashboardMock =
+    const isWorkspaceHome = pathname === "/workspace" && !dashboardView;
+    const showHomeDashboard =
       isWorkspaceHome
       && (workspaceRole === "R2" || workspaceRole === "R3" || workspaceRole === "R4");
+    const showMyTasksView =
+      dashboardView === "aufgaben"
+      && (workspaceRole === "R2" || workspaceRole === "R3" || workspaceRole === "R4");
 
-    if (showHomeDashboardMock) {
+    if (showMyTasksView) {
+      return (
+        <WorkspaceMyTasksView
+          reviewerDisplayName={reviewerDisplayName}
+          applications={applications}
+          workspaceRole={workspaceRole}
+          onSelectApplication={setSelectedApplicationId}
+        />
+      );
+    }
+
+    if (showHomeDashboard) {
       return (
         <WorkspaceHomeDashboard
           reviewerDisplayName={reviewerDisplayName}

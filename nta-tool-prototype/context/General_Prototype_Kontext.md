@@ -117,17 +117,21 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `lib/user-initials.ts` | Initialen für Workspace-Avatar aus `display_name` / E-Mail |
 | `components/domain/login-card.tsx` | Student/Staff-Login: Supabase Auth + Profil `users.role`, Redirect |
 | `app/workspace/page.tsx` | `requireUserProfile` R2–R6, `fetchWorkspaceApplicationsList`, `initialsFromProfile`, `WorkspaceTestFlow` |
-| `components/domain/workspace-test-flow.tsx` | Workspace-Inbox, Review, R4-Entscheid; auf `/workspace` ohne `?view=` → R2–R4: `WorkspaceHomeDashboard`, R5/R6: Inbox-Liste |
-| `components/domain/workspace-home-dashboard.tsx` | Workspace-Home (Figma `5509:11682`): KPI «Offene Antragsverfahren» + «Zugewiesene Aufgaben» live; Beratungen Mock; Anträge-Tabelle live, Offen/Alle + Suche, Zeilen öffnen Review |
-| `components/domain/open-applications-summary-card.tsx` | KPI «Offene Antragsverfahren» mit Chart-Ansichten und Live-Stats |
-| `components/domain/assigned-tasks-summary-card.tsx` | KPI «Zugewiesene Aufgaben» (rollenabhängige Buckets, Live-Zuweisung) |
+| `components/domain/workspace-test-flow.tsx` | Routing: Home / `?view=aufgaben` / Review; R2–R4 Home + Meine Aufgaben; R5/R6 Inbox |
+| `components/domain/workspace-home-dashboard.tsx` | Workspace-Home: KPI-Zeile, Anträge-Toolbar, Maximize, KPI-Icon-Navigation |
+| `components/domain/workspace-my-tasks-view.tsx` | `/workspace?view=aufgaben` — gefilterte Aufgaben-Tabelle |
+| `components/domain/workspace-applications-table.tsx` | Geteilte Anträge-Tabelle (Home + Meine Aufgaben) |
+| `components/domain/open-applications-summary-card.tsx` | KPI Charts; optional `onHeaderIconClick`, `allowedViews` (R4 nur Vertikal/Horizontal) |
+| `components/domain/assigned-tasks-summary-card.tsx` | KPI «Zugewiesene Aufgaben»; optional `onHeaderIconClick` → Meine Aufgaben |
 | `components/domain/student-dashboard.tsx` | R1 Home «Meine Anträge»: Cards/Table-Toggle, Live-Polling, Utility-Spalte |
 | `components/domain/r1-application-card.tsx` | Statuskodierte R1-Antragkarte mit Progress-Stepper (klickbare Karte) |
 | `components/domain/r1-applications-table.tsx` | R1-Tabellenansicht mit klickbaren Zeilen |
 | `lib/r1-application-card-visual.ts` | Karten-Shell, Progress-States, `R1_CARD_STATUS_BADGE_CLASS` |
 | `lib/r1-application-list-meta.ts` | Titel, Datums- und Gültigkeits-Spalten für Cards/Table |
-| `lib/workspace-open-applications-stats.ts` | Aggregation Open-Applications-KPI |
-| `lib/workspace-assigned-tasks-stats.ts` | Aggregation für Zugewiesene-Aufgaben-KPI |
+| `lib/workspace-open-applications-stats.ts` | KPI «Offene Antragsverfahren» (R2/R3): `in_review`, `needs_adjustment`, `in_decision` |
+| `lib/workspace-all-applications-stats.ts` | KPI «Alle Anträge» (R4): `in_decision`, `approved`, `rejected` |
+| `lib/workspace-assigned-tasks-stats.ts` | KPI + Meine Aufgaben: `isApplicationInMyTasksForRole`, `filterMyTasksApplications` |
+| `lib/workspace-application-table-rows.ts` | Tabellenzeilen für `WorkspaceApplicationsTable` |
 | `components/domain/application-review-blocks.tsx` | Review-Blöcke + `shortApplicationRef` / `workspaceApplicationListNumber` (Listen-Spalte Antragsnummer) |
 | `components/domain/dashboard-main-panel-scroll-context.tsx` | Scroll-Root-Registrierung für `edgeToEdge`-Pages → Inset/Tight-Messung in der Shell |
 | `app/api/applications/r1-release-adjustments/route.ts` | R1: zurück nach `in_review` inkl. `workspaceReview`-Merge |

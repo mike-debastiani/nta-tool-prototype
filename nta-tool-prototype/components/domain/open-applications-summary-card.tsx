@@ -10,13 +10,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { AllApplicationsBucketId } from "@/lib/workspace-all-applications-stats";
+import { hfTypography } from "@/lib/design-tokens/typography";
 import {
-  type OpenApplicationsBucket,
   type OpenApplicationsBucketId,
   type OpenApplicationsStats,
 } from "@/lib/workspace-open-applications-stats";
-import { hfTypography } from "@/lib/design-tokens/typography";
 import { cn } from "@/lib/utils";
+
+export type ApplicationsChartBucketId = OpenApplicationsBucketId | AllApplicationsBucketId;
+
+export type ApplicationsChartStats = {
+  total: number;
+  buckets: { id: ApplicationsChartBucketId; value: number }[];
+};
 
 export type OpenApplicationsChartView = "vertical" | "pie" | "horizontal" | "combined";
 
@@ -28,10 +35,10 @@ const VIEW_OPTIONS: { value: OpenApplicationsChartView; label: string }[] = [
 ];
 
 const BUCKET_STYLES: Record<
-  OpenApplicationsBucketId,
+  ApplicationsChartBucketId,
   { barClass: string; textClass: string; pieStrokeClass: string }
 > = {
-  beratung: {
+  in_review: {
     barClass: "bg-beratung-100",
     textClass: "text-beratung-500",
     pieStrokeClass: "stroke-beratung-100",
@@ -45,6 +52,16 @@ const BUCKET_STYLES: Record<
     barClass: "bg-in-decision-200",
     textClass: "text-in-decision-500",
     pieStrokeClass: "stroke-in-decision-200",
+  },
+  approved: {
+    barClass: "bg-bewilligt-100",
+    textClass: "text-bewilligt-700",
+    pieStrokeClass: "stroke-bewilligt-100",
+  },
+  rejected: {
+    barClass: "bg-abgelehnt-200",
+    textClass: "text-abgelehnt-700",
+    pieStrokeClass: "stroke-abgelehnt-200",
   },
 };
 
@@ -65,36 +82,50 @@ const COMBINED_BORDER_RADIUS_PX = 12;
  * z-index: unterstes Segment vorn, oberstes hinten.
  */
 const COMBINED_STACK_BOTTOM_TO_TOP: {
-  id: OpenApplicationsBucketId;
+  id: ApplicationsChartBucketId;
   zIndex: number;
 }[] = [
   { id: "in_decision", zIndex: 30 },
   { id: "adjustment", zIndex: 20 },
-  { id: "beratung", zIndex: 10 },
+  { id: "in_review", zIndex: 10 },
 ];
 
 type OpenApplicationsSummaryCardProps = {
-  stats: OpenApplicationsStats;
+  stats: ApplicationsChartStats | OpenApplicationsStats;
   className?: string;
+  /** Figma R4 `5948:27359`: «Alle Anträge». */
+  title?: string;
+  totalAriaLabel?: string;
+  /** Einschränkung der Diagrammansichten (z. B. R4 nur Vertikal/Horizontal). */
+  allowedViews?: OpenApplicationsChartView[];
+  onHeaderIconClick?: () => void;
+  headerIconAriaLabel?: string;
 };
 
 type CombinedSegmentLayout = {
-  bucket: OpenApplicationsBucket;
+  bucket: ApplicationsChartStats["buckets"][number];
   bottomPx: number;
   heightPx: number;
   zIndex: number;
 };
 
-function bucketStyle(id: OpenApplicationsBucketId) {
+function bucketStyle(id: ApplicationsChartBucketId) {
   return BUCKET_STYLES[id];
 }
 
-function PrimaryIconLinkButton() {
+function PrimaryIconLinkButton({
+  onClick,
+  ariaLabel = "Details öffnen",
+}: {
+  onClick?: () => void;
+  ariaLabel?: string;
+}) {
   return (
     <button
       type="button"
+      onClick={onClick}
       className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90"
-      aria-label="Details öffnen"
+      aria-label={ariaLabel}
     >
       <ArrowUpRight className="size-4" strokeWidth={1.75} aria-hidden />
     </button>
@@ -107,7 +138,7 @@ function ChartValueLabel({
   className,
 }: {
   value: number;
-  bucketId: OpenApplicationsBucketId;
+  bucketId: ApplicationsChartBucketId;
   className?: string;
 }) {
   const styles = bucketStyle(bucketId);
@@ -125,7 +156,13 @@ function ChartValueLabel({
   );
 }
 
-function VerticalBarValue({ value, bucketId }: { value: number; bucketId: OpenApplicationsBucketId }) {
+function VerticalBarValue({
+  value,
+  bucketId,
+}: {
+  value: number;
+  bucketId: ApplicationsChartBucketId;
+}) {
   return (
     <div
       className="flex w-full justify-center"
@@ -136,7 +173,13 @@ function VerticalBarValue({ value, bucketId }: { value: number; bucketId: OpenAp
   );
 }
 
-function HorizontalBarValue({ value, bucketId }: { value: number; bucketId: OpenApplicationsBucketId }) {
+function HorizontalBarValue({
+  value,
+  bucketId,
+}: {
+  value: number;
+  bucketId: ApplicationsChartBucketId;
+}) {
   return (
     <div
       className="flex h-full items-center"
@@ -152,7 +195,7 @@ function CombinedSegmentLabel({
   bucketId,
 }: {
   value: number;
-  bucketId: OpenApplicationsBucketId;
+  bucketId: ApplicationsChartBucketId;
 }) {
   return (
     <div
@@ -186,7 +229,7 @@ function useChartAreaHeight<T extends HTMLElement>() {
 }
 
 function computeCombinedSegmentLayout(
-  buckets: OpenApplicationsBucket[],
+  buckets: ApplicationsChartStats["buckets"],
   chartHeightPx: number,
 ): CombinedSegmentLayout[] {
   const total = buckets.reduce((sum, bucket) => sum + bucket.value, 0);
@@ -239,7 +282,11 @@ function computeCombinedSegmentLayout(
   return positioned;
 }
 
-function VerticalBarsChart({ buckets }: { buckets: OpenApplicationsBucket[] }) {
+function VerticalBarsChart({
+  buckets,
+}: {
+  buckets: ApplicationsChartStats["buckets"];
+}) {
   const max = Math.max(...buckets.map((bucket) => bucket.value), 1);
 
   return (
@@ -271,7 +318,11 @@ function VerticalBarsChart({ buckets }: { buckets: OpenApplicationsBucket[] }) {
   );
 }
 
-function HorizontalBarsChart({ buckets }: { buckets: OpenApplicationsBucket[] }) {
+function HorizontalBarsChart({
+  buckets,
+}: {
+  buckets: ApplicationsChartStats["buckets"];
+}) {
   const max = Math.max(...buckets.map((bucket) => bucket.value), 1);
 
   return (
@@ -300,7 +351,11 @@ function HorizontalBarsChart({ buckets }: { buckets: OpenApplicationsBucket[] })
   );
 }
 
-function CombinedBarsChart({ buckets }: { buckets: OpenApplicationsBucket[] }) {
+function CombinedBarsChart({
+  buckets,
+}: {
+  buckets: ApplicationsChartStats["buckets"];
+}) {
   const { ref, height: chartHeightPx } = useChartAreaHeight<HTMLDivElement>();
 
   const segments = useMemo(
@@ -335,7 +390,7 @@ function CombinedBarsChart({ buckets }: { buckets: OpenApplicationsBucket[] }) {
   );
 }
 
-function PieDonutChart({ buckets }: { buckets: OpenApplicationsBucket[] }) {
+function PieDonutChart({ buckets }: { buckets: ApplicationsChartStats["buckets"] }) {
   const total = buckets.reduce((sum, bucket) => sum + bucket.value, 0);
   const { ref, height: areaHeight } = useChartAreaHeight<HTMLDivElement>();
   const size = Math.min(Math.max(areaHeight, 120), 200);
@@ -410,9 +465,11 @@ function PieDonutChart({ buckets }: { buckets: OpenApplicationsBucket[] }) {
 function ViewSelect({
   value,
   onValueChange,
+  options,
 }: {
   value: OpenApplicationsChartView;
   onValueChange: (value: OpenApplicationsChartView) => void;
+  options: { value: OpenApplicationsChartView; label: string }[];
 }) {
   return (
     <Select value={value} onValueChange={(v) => onValueChange(v as OpenApplicationsChartView)}>
@@ -428,7 +485,7 @@ function ViewSelect({
         <SelectValue />
       </SelectTrigger>
       <SelectContent align="start">
-        {VIEW_OPTIONS.map((option) => (
+        {options.map((option) => (
           <SelectItem key={option.value} value={option.value}>
             {option.label}
           </SelectItem>
@@ -438,10 +495,31 @@ function ViewSelect({
   );
 }
 
-/** Figma `5862:24056` ff. — «Offene Antragsverfahren» mit Ansicht-Dropdown. */
-export function OpenApplicationsSummaryCard({ stats, className }: OpenApplicationsSummaryCardProps) {
-  const [view, setView] = useState<OpenApplicationsChartView>("vertical");
+/** Figma `5862:24056` ff. — «Offene Antragsverfahren» / R4 «Alle Anträge» mit Ansicht-Dropdown. */
+export function OpenApplicationsSummaryCard({
+  stats,
+  className,
+  title = "Offene Antragsverfahren",
+  totalAriaLabel,
+  allowedViews,
+  onHeaderIconClick,
+  headerIconAriaLabel,
+}: OpenApplicationsSummaryCardProps) {
+  const viewOptions = useMemo(
+    () =>
+      allowedViews
+        ? VIEW_OPTIONS.filter((option) => allowedViews.includes(option.value))
+        : VIEW_OPTIONS,
+    [allowedViews],
+  );
+  const defaultView = viewOptions[0]?.value ?? "vertical";
+  const [view, setView] = useState<OpenApplicationsChartView>(defaultView);
   const displayBuckets = stats.buckets;
+  const resolvedView = viewOptions.some((option) => option.value === view)
+    ? view
+    : defaultView;
+  const totalLabel =
+    totalAriaLabel ?? `${stats.total} ${title.toLowerCase()}`;
 
   return (
     <div
@@ -454,9 +532,12 @@ export function OpenApplicationsSummaryCard({ stats, className }: OpenApplicatio
     >
       <div className="flex shrink-0 items-center justify-between gap-2">
         <p className={cn(hfTypography.paragraphLargeMedium, "text-foreground")}>
-          Offene Antragsverfahren
+          {title}
         </p>
-        <PrimaryIconLinkButton />
+        <PrimaryIconLinkButton
+          onClick={onHeaderIconClick}
+          ariaLabel={headerIconAriaLabel}
+        />
       </div>
 
       <div
@@ -464,20 +545,26 @@ export function OpenApplicationsSummaryCard({ stats, className }: OpenApplicatio
         style={{ gap: TOTAL_TO_CHART_GAP_PX }}
       >
         <div className="flex h-full min-w-0 shrink-0 flex-col justify-between self-stretch">
-          <ViewSelect value={view} onValueChange={setView} />
+          <ViewSelect
+            value={resolvedView}
+            onValueChange={setView}
+            options={viewOptions}
+          />
           <p
             className="text-[128px] font-semibold leading-none tracking-tight text-foreground"
-            aria-label={`${stats.total} offene Antragsverfahren`}
+            aria-label={totalLabel}
           >
             {stats.total}
           </p>
         </div>
 
         <div className="flex h-full min-h-0 min-w-0 flex-1 items-stretch">
-          {view === "vertical" ? <VerticalBarsChart buckets={displayBuckets} /> : null}
-          {view === "horizontal" ? <HorizontalBarsChart buckets={displayBuckets} /> : null}
-          {view === "combined" ? <CombinedBarsChart buckets={displayBuckets} /> : null}
-          {view === "pie" ? <PieDonutChart buckets={displayBuckets} /> : null}
+          {resolvedView === "vertical" ? <VerticalBarsChart buckets={displayBuckets} /> : null}
+          {resolvedView === "horizontal" ? (
+            <HorizontalBarsChart buckets={displayBuckets} />
+          ) : null}
+          {resolvedView === "combined" ? <CombinedBarsChart buckets={displayBuckets} /> : null}
+          {resolvedView === "pie" ? <PieDonutChart buckets={displayBuckets} /> : null}
         </div>
       </div>
     </div>

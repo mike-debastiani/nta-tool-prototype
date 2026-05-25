@@ -1,10 +1,14 @@
 import type { CanonicalApplicationState } from "@/lib/application-status";
+import {
+  hfConsultationStatusBadgeClass,
+  hfInReviewStatusBadgeClass,
+} from "@/lib/design-tokens/status-badge-colors";
 
-/** Status-Pills auf R1-Antragkarten (Figma `5856:21926`, abweichend von globalen Pills wo nötig). */
+/** Status-Pills auf R1-Antragkarten — gleiche Kodierung wie Workspace (`getApplicationStatusMeta`). */
 export const R1_CARD_STATUS_BADGE_CLASS: Record<CanonicalApplicationState, string> = {
   draft: "bg-entwurf-100 text-entwurf-800",
-  consultation_recommendation: "bg-beratung-100 text-beratung-500",
-  in_review: "bg-in-review-50 text-in-review-800",
+  consultation_recommendation: hfConsultationStatusBadgeClass,
+  in_review: hfInReviewStatusBadgeClass,
   needs_adjustment: "bg-adjustment-100 text-adjustment-600",
   in_decision: "bg-in-decision-50 text-in-decision-800",
   approved: "bg-bewilligt-50 text-bewilligt-800",

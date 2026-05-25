@@ -3,6 +3,12 @@ import {
   type CanonicalApplicationState,
 } from "@/lib/application-status";
 import {
+  hfConsultationStatusForegroundClass,
+  hfConsultationStatusSurfaceClass,
+  hfInReviewStatusForegroundClass,
+  hfInReviewStatusSurfaceClass,
+} from "@/lib/design-tokens/status-badge-colors";
+import {
   resolveApplicantDisplayName,
   resolveApplicationAssignee,
 } from "@/lib/application-assignee";
@@ -36,17 +42,17 @@ const BUCKET_META: Record<
 > = {
   beratungen: {
     label: "Beratungen",
-    surfaceClass: "bg-beratung-100",
-    labelClass: "text-beratung-500",
-    metricClass: "text-beratung-500",
-    deltaClass: "text-beratung-500",
+    surfaceClass: hfConsultationStatusSurfaceClass,
+    labelClass: hfConsultationStatusForegroundClass,
+    metricClass: hfConsultationStatusForegroundClass,
+    deltaClass: hfConsultationStatusForegroundClass,
   },
   reviews: {
     label: "Reviews",
-    surfaceClass: "bg-adjustment-100",
-    labelClass: "text-adjustment-600",
-    metricClass: "text-adjustment-600",
-    deltaClass: "text-adjustment-600",
+    surfaceClass: hfInReviewStatusSurfaceClass,
+    labelClass: hfInReviewStatusForegroundClass,
+    metricClass: hfInReviewStatusForegroundClass,
+    deltaClass: hfInReviewStatusForegroundClass,
   },
   entscheidungen: {
     label: "Entscheidungen",
@@ -68,7 +74,8 @@ function resolveR2ReviewerDisplayName(
   return application.data.recommendation?.releasedBy?.trim() || fallbackReviewerDisplayName;
 }
 
-function isAssignedToReviewer(
+/** Antrag ist der angemeldeten Person als Bearbeitung zugewiesen (Figma «Zugewiesen an»). */
+export function isApplicationAssignedToReviewer(
   application: WorkspaceApplication,
   reviewerDisplayName: string,
 ): boolean {
@@ -91,6 +98,14 @@ function isAssignedToReviewer(
   return namesMatch(assignee.displayName, reviewerDisplayName);
 }
 
+/** R2: freigegebenes Empfehlungsschreiben → Badge «Empfehlung verfasst», keine offene Beratungsaufgabe. */
+function isR2RecommendationReleased(application: WorkspaceApplication): boolean {
+  if (deriveCanonicalApplicationState(application) !== "consultation_recommendation") {
+    return false;
+  }
+  return Boolean(application.data?.recommendation?.releasedHtml?.trim());
+}
+
 function taskBucketForState(
   state: CanonicalApplicationState,
   workspaceRole: UserRole,
@@ -106,6 +121,42 @@ function taskBucketForState(
   }
 
   return null;
+}
+
+/**
+ * Meine Aufgaben / KPI «Zugewiesene Aufgaben»:
+ * - R2: `consultation_recommendation` (ohne «Empfehlung verfasst»), `in_review`
+ * - R3/R4: `in_decision`
+ * plus Zuweisung an `reviewerDisplayName`.
+ */
+export function isApplicationInMyTasksForRole(
+  application: WorkspaceApplication,
+  options: {
+    reviewerDisplayName: string;
+    workspaceRole: UserRole;
+  },
+): boolean {
+  const { reviewerDisplayName, workspaceRole } = options;
+  if (!isApplicationAssignedToReviewer(application, reviewerDisplayName)) {
+    return false;
+  }
+  if (workspaceRole === "R2" && isR2RecommendationReleased(application)) {
+    return false;
+  }
+  const state = deriveCanonicalApplicationState(application);
+  return taskBucketForState(state, workspaceRole) !== null;
+}
+
+export function filterMyTasksApplications(
+  applications: WorkspaceApplication[],
+  options: {
+    reviewerDisplayName: string;
+    workspaceRole: UserRole;
+  },
+): WorkspaceApplication[] {
+  return applications.filter((application) =>
+    isApplicationInMyTasksForRole(application, options),
+  );
 }
 
 function bucketOrderForRole(workspaceRole: UserRole): AssignedTaskBucketId[] {
@@ -148,7 +199,14 @@ export function computeAssignedTasksStats(
   );
 
   for (const application of applications) {
-    if (!isAssignedToReviewer(application, reviewerDisplayName)) continue;
+    if (
+      !isApplicationInMyTasksForRole(application, {
+        reviewerDisplayName,
+        workspaceRole,
+      })
+    ) {
+      continue;
+    }
 
     const state = deriveCanonicalApplicationState(application);
     const bucketId = taskBucketForState(state, workspaceRole);

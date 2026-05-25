@@ -190,23 +190,90 @@ Default-Zurück: `portalDefaultBackButton` in `workspace-dashboard-shell.tsx`.
 
 ## 5. Workspace — Home & Top-Leiste
 
-### Home-Dashboard
+### Home-Dashboard & Workspace-Views
 
 | Aspekt | Ist |
 |--------|-----|
-| **Figma** | `5509:11682` (Workspace Home) |
-| **Route** | `/workspace` **ohne** `?view=` |
-| **Rollen** | **R2, R3, R4** → `WorkspaceHomeDashboard`; **R5/R6** → weiterhin Inbox-Liste (`WorkspaceTestFlow`) |
-| **Props** | `applications`, `workspaceRole`, `reviewerDisplayName`, `onSelectApplication` — aus `workspace-test-flow.tsx` |
-| **KPI «Offene Antragsverfahren»** | Live (`computeOpenApplicationsStats`); Chart-Ansichten (Vertikal/Kreis/Horizontal/Kombiniert) |
-| **KPI «Zugewiesene Aufgaben»** | Live (`computeAssignedTasksStats` + `resolveApplicationAssignee`); R2: Beratungen/Reviews; R3/R4: Entscheidungen; «+N seit Login» Mock |
-| **KPI-Zeile Layout** | 3 gleich breite Spalten (`WORKSPACE_HOME_KPI_CARD_CLASS`, `gap-6`) |
-| **Beratungen dieser Woche** | noch **Mock**-Terminzeilen |
-| **Anträge-Tabelle** | echte `WorkspaceApplication[]` (Server-Liste + Realtime-Refresh wie Inbox) |
-| **Tabellen-Spalten** | Name (`resolveApplicantDisplayName`), Studiengang, Antragsnummer (`workspaceApplicationListNumber` in `application-review-blocks.tsx`), Datum (`submittedAt` oder `updated_at`), Status (`getApplicationStatusMeta`), Zugewiesen an (`resolveApplicationAssignee`) |
-| **Interaktion** | Zeile klickbar → `setSelectedApplicationId` → gleiche Review-/R4-Ansicht wie Inbox; Filter **Offen** (ohne bewilligt/abgelehnt) / **Alle**; lokale Suche |
-| **Tabelle UI** | ein `border-b` pro Zeile (nicht pro Zelle); letzte Zeile ohne Divider |
-| **Shell** | Default-Scroll mit `pt-12` am Viewport; kein `edgeToEdge` |
+| **Figma Home R2/R3** | `5509:11682` — KPI-Zeile + Anträge-Panel |
+| **Figma Home R4** | `5948:27359` — «Alle Anträge» 7/10 + «Zugewiesene Aufgaben» 3/10 (keine dritte KPI-Karte) |
+| **Figma Anträge-Toolbar** | `5948:27466` / `5948:27470` — Suche, Toggle, Filter, Download |
+| **Figma Tabelle maximiert** | `5955:21930` — KPI ausgeblendet, Minimize oben rechts im Panel |
+| **Routing** | `workspace-test-flow.tsx` entscheidet anhand `searchParams.get("view")` und `selectedApplicationId` |
+
+| Route / Zustand | Komponente | Rollen |
+|-----------------|------------|--------|
+| `/workspace` ohne `?view=` | `WorkspaceHomeDashboard` | R2, R3, R4 |
+| `/workspace?view=aufgaben` | `WorkspaceMyTasksView` | R2, R3, R4 |
+| `/workspace?view=terminplaner` | *(noch keine eigene Page — Fallback Inbox-Liste)* | Nav-Ziel aus KPI «Beratungen» |
+| kein Antrag selektiert, sonstige `?view=` | Inbox-Card-Liste | R5/R6 bzw. Platzhalter |
+| `selectedApplicationId` gesetzt | Review / R4-Entscheid (unverändert) | je Status/Rolle |
+
+Beim Wechsel zu `?view=aufgaben` setzt `WorkspaceTestFlow` `selectedApplicationId` auf `null` (kein Detail hinter der Listen-URL).
+
+### Abhängigkeiten (Daten & UI)
+
+```
+WorkspaceTestFlow(applications, workspaceRole, reviewerDisplayName)
+│
+├─ WorkspaceHomeDashboard
+│   ├─ computeOpenApplicationsStats ──► OpenApplicationsSummaryCard (R2/R3, Titel «Offene Antragsverfahren»)
+│   ├─ computeAllApplicationsStats ─────► OpenApplicationsSummaryCard (R4, Titel «Alle Anträge», nur Charts Vertikal/Horizontal)
+│   ├─ computeAssignedTasksStats ───────► AssignedTasksSummaryCard
+│   ├─ buildWorkspaceApplicationTableRows + lokale Filter (Offen/Alle, Suche) ──► WorkspaceApplicationsTable
+│   └─ lib/application-assignee.ts (Zugewiesen an), lib/application-status.ts (Status-Labels)
+│
+└─ WorkspaceMyTasksView
+    ├─ filterMyTasksApplications ◄── isApplicationInMyTasksForRole (gleiche Regeln wie KPI-Zähler)
+    └─ WorkspaceApplicationsTable (shared)
+```
+
+**Gemeinsame Tabellen-Pipeline:** `lib/workspace-application-table-rows.ts` → `components/domain/workspace-applications-table.tsx`. Home filtert die Eingabeliste vorher; Meine Aufgaben nutzt `filterMyTasksApplications` aus `lib/workspace-assigned-tasks-stats.ts`.
+
+### KPI-Zeile
+
+| Rolle | Layout erste Zeile | KPI-Karten |
+|-------|-------------------|------------|
+| **R2, R3** | 3× `WORKSPACE_HOME_KPI_CARD_CLASS` (`flex-1`, `gap-6`) | Offene Antragsverfahren · Zugewiesene Aufgaben · Beratungen diese Woche (Mock) |
+| **R4** | `WORKSPACE_HOME_R4_OPEN_CARD_CLASS` (7/10) + `WORKSPACE_HOME_R4_TASKS_CARD_CLASS` (3/10) | Alle Anträge · Zugewiesene Aufgaben |
+
+**KPI «Offene Antragsverfahren» (R2/R3)** — `lib/workspace-open-applications-stats.ts`: Total und Balken nur **`in_review`**, **`needs_adjustment`**, **`in_decision`** (kein `consultation_recommendation` im Total).
+
+**KPI «Alle Anträge» (R4)** — `lib/workspace-all-applications-stats.ts`: Total und Balken nur **`in_decision`**, **`approved`**, **`rejected`** (Reihenfolge Figma).
+
+**KPI «Zugewiesene Aufgaben»** — `computeAssignedTasksStats` / `isApplicationInMyTasksForRole`:
+
+| Rolle | Status in KPI & Meine Aufgaben | Ausgeschlossen |
+|-------|--------------------------------|----------------|
+| **R2** | `consultation_recommendation` (ohne freigegebene Empfehlung), `in_review` | «Empfehlung verfasst» (`recommendation.releasedHtml`), alle anderen States |
+| **R3, R4** | `in_decision` | alle anderen States |
+
+Zuweisung: `resolveApplicationAssignee` + Name-Match mit `reviewerDisplayName` (`isApplicationAssignedToReviewer`). Details → `lib/application-assignee.ts`.
+
+**KPI Icon-Buttons (Header):**
+
+| Karte | Aktion |
+|-------|--------|
+| Offene Antragsverfahren / Alle Anträge | `maximizeApplicationsTable`: Filter **Offen**, Tabelle **maximiert** (KPI-Zeile ausgeblendet, Transition 300ms) |
+| Zugewiesene Aufgaben | `router.push("/workspace?view=aufgaben")` |
+| Beratungen diese Woche (nur R2/R3) | `router.push("/workspace?view=terminplaner")` |
+
+### Meine Aufgaben (`?view=aufgaben`)
+
+| Aspekt | Ist |
+|--------|-----|
+| **Komponente** | `workspace-my-tasks-view.tsx` — nur `stone-50`-Panel + `WorkspaceApplicationsTable` (keine Toolbar) |
+| **Filter** | `filterMyTasksApplications` — identisch zu KPI-Buckets + Zuweisung (s. Tabelle oben) |
+| **Interaktion** | Zeilenklick → `setSelectedApplicationId` → Review wie von Home |
+
+### Anträge-Panel (Home)
+
+| Aspekt | Ist |
+|--------|-----|
+| **Toolbar** | Tokens `WORKSPACE_HOME_TABLE_*` in `workspace-dashboard.ts` (Figma `5948:27470`): Suche/Filter/Download **transparent**, Toggle aktiv **`bg-primary`** / inaktiv `rounded-[10px]` muted |
+| **Filter Offen/Alle** | `isOpenApplication` = nicht `approved` / `rejected`; Suche über Name, Studiengang, Antragsnummer |
+| **Maximize** | Nur R2/R4: Button im Panel-Header; KPI-Zeile `grid-rows-[0fr]` + Opacity; Panel `flex-1`; Minimize stellt KPI wieder her |
+| **Tabellen-Spalten** | Name, Studiengang, Antragsnummer (`workspaceApplicationListNumber`), Datum, Status (`getApplicationStatusMeta`, Audience R2 oder R4), Zugewiesen an |
+| **Shell** | Default-Scroll `dashboardMainPanelScrollAreaClass` mit `pt-12`; kein `edgeToEdge` |
 
 ### Top-Leiste
 
@@ -307,6 +374,12 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 | `DASHBOARD_SHELL_MAIN_PANEL_ROUNDED_SCROLL_CLASS` | `rounded-t-xl` |
 | `DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_ENTER_RATIO` | `0.9` — Einstieg Tight |
 | `DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_EXIT_RATIO` | `0.82` — Rückkehr Inset (Hysterese) |
+| `WORKSPACE_HOME_KPI_CARD_CLASS` | R2/R3: drei gleich breite KPI-Karten |
+| `WORKSPACE_HOME_R4_OPEN_CARD_CLASS` / `WORKSPACE_HOME_R4_TASKS_CARD_CLASS` | R4: 7/10 + 3/10 |
+| `WORKSPACE_HOME_TABLE_PANEL_TOGGLE_BUTTON_CLASS` | Maximize/Minimize im Anträge-Panel |
+| `WORKSPACE_HOME_TABLE_SEARCH_*` | Suche 320px, pill, transparent |
+| `WORKSPACE_HOME_TABLE_FILTER_*` | Toggle Offen/Alle (Segment + Tab active/inactive) |
+| `WORKSPACE_HOME_TABLE_OUTLINE_BUTTON_CLASS` | Filter + Liste herunterladen (outline, transparent) |
 | `DASHBOARD_NAV_ITEM_ACTIVE_CLASS` | `rounded-[7px] bg-primary text-primary-foreground` |
 | `DASHBOARD_NAV_ITEM_IDLE_CLASS` | inaktiv + Hover |
 | `DASHBOARD_NAV_ITEM_ACTIVE_LABEL_CLASS` | Label aktiv ohne `text-foreground-alt` |
@@ -345,4 +418,4 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 
 ---
 
-*Letzte Aktualisierung: R1 Home (Cards/Table, Live-Daten); Workspace-Home-KPIs «Offene Antragsverfahren» und «Zugewiesene Aufgaben» live; Scroll/Inset-Tokens für weisses Panel; Beratungen dieser Woche weiter Mock.*
+*Letzte Aktualisierung: Workspace-Home R4-Layout (7/10); Meine Aufgaben-View mit rollenspezifischem Task-Filter; Anträge-Toolbar/Maximize (Figma `5948:27466` ff.); gemeinsame `WorkspaceApplicationsTable`; KPI-Icon-Navigation zu Aufgaben/Terminplaner/Maximize.*

@@ -56,6 +56,10 @@
   --hf-beratung-900: #153965;
   --hf-beratung-950: #0e2443;
 
+  /** Beratung & Empfehlung — Badge / KPI «Beratungen» / Wochen-Card (Workspace). */
+  --hf-consultation-surface: #e0f2fe;
+  --hf-consultation-accent: #0ea5e9;
+
   /* —— In Review / Anpassung angefordert —— */
   --hf-in-review-50: #eff6ff;
   --hf-in-review-100: #dbeafe;
@@ -166,6 +170,9 @@
   --color-beratung-800: var(--hf-beratung-800);
   --color-beratung-900: var(--hf-beratung-900);
   --color-beratung-950: var(--hf-beratung-950);
+
+  --color-consultation-surface: var(--hf-consultation-surface);
+  --color-consultation-accent: var(--hf-consultation-accent);
 
   --color-in-review-50: var(--hf-in-review-50);
   --color-in-review-100: var(--hf-in-review-100);

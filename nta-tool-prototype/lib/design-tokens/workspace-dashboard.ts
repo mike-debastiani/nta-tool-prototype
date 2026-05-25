@@ -116,3 +116,54 @@ export const WORKSPACE_HOME_KPI_ROW_GAP_CLASS = "gap-6";
  */
 export const WORKSPACE_HOME_KPI_CARD_CLASS =
   "min-h-[220px] min-w-0 flex-1 basis-0 self-stretch";
+
+/**
+ * R4 Home (Figma `5948:27359`): «Alle Anträge» 7/10, «Zugewiesene Aufgaben» 3/10
+ * der Zeilenbreite minus `WORKSPACE_HOME_KPI_ROW_GAP_CLASS`.
+ */
+export const WORKSPACE_HOME_R4_OPEN_CARD_CLASS =
+  "min-h-[220px] min-w-0 flex-[7] basis-0 self-stretch";
+
+export const WORKSPACE_HOME_R4_TASKS_CARD_CLASS =
+  "min-h-[220px] min-w-0 flex-[3] basis-0 self-stretch";
+
+/** Figma `5948:27469` / `5955:21930` — Maximize/Minimize oben rechts im Anträge-Panel. */
+export const WORKSPACE_HOME_TABLE_PANEL_TOGGLE_BUTTON_CLASS =
+  "flex size-9 shrink-0 items-center justify-center rounded-full bg-primary p-2 text-primary-foreground transition-opacity hover:opacity-90";
+
+/** Figma `5948:27470` — Toolbar-Zeile im Anträge-Panel. */
+export const WORKSPACE_HOME_TABLE_TOOLBAR_ROW_CLASS =
+  "flex w-full shrink-0 flex-wrap items-center justify-between gap-4";
+
+export const WORKSPACE_HOME_TABLE_TOOLBAR_LEFT_CLASS =
+  "flex min-w-0 flex-1 flex-wrap items-center gap-4";
+
+/** Suche `5957:22502` — 320×36px, pill, border. */
+export const WORKSPACE_HOME_TABLE_SEARCH_WRAPPER_CLASS =
+  "relative w-full max-w-[320px] min-w-[200px] shrink-0";
+
+export const WORKSPACE_HOME_TABLE_SEARCH_INPUT_CLASS = [
+  "h-9 min-h-9 w-full rounded-full border-border bg-transparent py-[7.5px] pl-10 pr-3",
+  "text-hf-paragraph-small text-foreground shadow-none",
+  "placeholder:text-muted-foreground",
+  "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+].join(" ");
+
+/** Toggle `5948:27474` — Segment-Container. */
+export const WORKSPACE_HOME_TABLE_FILTER_TOGGLE_CLASS =
+  "flex shrink-0 items-center rounded-full border border-border p-[3px]";
+
+/** Aktiver Tab — `bg-primary`, `primary-foreground` (Figma `5948:27475`). */
+export const WORKSPACE_HOME_TABLE_FILTER_TAB_ACTIVE_CLASS =
+  "min-h-[29px] rounded-full border border-border bg-primary px-2 py-1 text-primary-foreground";
+
+/** Inaktiver Tab — `rounded-[10px]`, muted (Figma `5948:27478`). */
+export const WORKSPACE_HOME_TABLE_FILTER_TAB_INACTIVE_CLASS =
+  "min-h-[29px] rounded-[10px] px-2 py-1 text-muted-foreground";
+
+/** Filter + Liste herunterladen `5948:27481` / `5948:27482`. */
+export const WORKSPACE_HOME_TABLE_OUTLINE_BUTTON_CLASS =
+  "inline-flex h-9 min-h-9 shrink-0 items-center justify-center gap-2 rounded-full border border-border bg-transparent px-4 py-2 shadow-none transition-opacity hover:opacity-80";
+
+export const WORKSPACE_HOME_TABLE_DOWNLOAD_BUTTON_CLASS =
+  WORKSPACE_HOME_TABLE_OUTLINE_BUTTON_CLASS;
