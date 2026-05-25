@@ -40,7 +40,11 @@ import { ApplicationReviewPageHeader } from "@/components/domain/application-rev
 import { ApplicationStatusCallout } from "@/components/domain/application-status-callout";
 import { useRegisterDashboardDetailPanel } from "@/components/domain/dashboard-detail-panel-context";
 import { useDashboardScrollRoot } from "@/components/domain/dashboard-main-panel-scroll-context";
-import { resolveApplicationAssignee } from "@/lib/application-assignee";
+import {
+  resolveApplicationAssignee,
+  WORKSPACE_PROTOTYPE_R2_REVIEWER_NAME,
+  WORKSPACE_PROTOTYPE_R4_REVIEWER_NAME,
+} from "@/lib/application-assignee";
 import {
   APPLICATION_SCOPE_OPTIONS,
   ASSESSMENT_MEASURE_OPTIONS,
@@ -839,9 +843,8 @@ export function PortalApplicationAdjustment({
         applicantDisplayName,
         r2ReviewerDisplayName:
           snapshot.data.consultation?.advisor?.trim()
-          || snapshot.data.recommendation?.releasedBy?.trim()
-          || "NTA Fachstelle",
-        r4ReviewerDisplayName: "Entscheidungsinstanz",
+          || WORKSPACE_PROTOTYPE_R2_REVIEWER_NAME,
+        r4ReviewerDisplayName: WORKSPACE_PROTOTYPE_R4_REVIEWER_NAME,
       }),
     [statusMeta.canonicalState, applicantDisplayName, snapshot.data],
   );

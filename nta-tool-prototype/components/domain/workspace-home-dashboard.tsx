@@ -2,23 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
-import {
-  ArrowUpRight,
-  Download,
-  Filter,
-  Maximize2,
-  Minimize2,
-  Search,
-} from "lucide-react";
+import { ArrowUpRight, Maximize2, Minimize2 } from "lucide-react";
 
 import { AssignedTasksSummaryCard } from "@/components/domain/assigned-tasks-summary-card";
 import { OpenApplicationsSummaryCard } from "@/components/domain/open-applications-summary-card";
-import { workspaceApplicationListNumber } from "@/components/domain/application-review-blocks";
+import { useWorkspaceApplicationsTableState } from "@/components/domain/use-workspace-applications-table-state";
 import { WorkspaceApplicationsTable } from "@/components/domain/workspace-applications-table";
-import { Input } from "@/components/ui/input";
-import { resolveApplicantDisplayName } from "@/lib/application-assignee";
-import { deriveCanonicalApplicationState } from "@/lib/application-status";
-import { buildWorkspaceApplicationTableRows } from "@/lib/workspace-application-table-rows";
+import { WorkspaceApplicationsTableToolbar } from "@/components/domain/workspace-applications-table-toolbar";
 import { hfConsultationStatusSurfaceClass } from "@/lib/design-tokens/status-badge-colors";
 import { hfTypography } from "@/lib/design-tokens/typography";
 import {
@@ -26,16 +16,7 @@ import {
   WORKSPACE_HOME_KPI_ROW_GAP_CLASS,
   WORKSPACE_HOME_R4_OPEN_CARD_CLASS,
   WORKSPACE_HOME_R4_TASKS_CARD_CLASS,
-  WORKSPACE_HOME_TABLE_DOWNLOAD_BUTTON_CLASS,
-  WORKSPACE_HOME_TABLE_FILTER_TAB_ACTIVE_CLASS,
-  WORKSPACE_HOME_TABLE_FILTER_TAB_INACTIVE_CLASS,
-  WORKSPACE_HOME_TABLE_FILTER_TOGGLE_CLASS,
-  WORKSPACE_HOME_TABLE_OUTLINE_BUTTON_CLASS,
   WORKSPACE_HOME_TABLE_PANEL_TOGGLE_BUTTON_CLASS,
-  WORKSPACE_HOME_TABLE_SEARCH_INPUT_CLASS,
-  WORKSPACE_HOME_TABLE_SEARCH_WRAPPER_CLASS,
-  WORKSPACE_HOME_TABLE_TOOLBAR_LEFT_CLASS,
-  WORKSPACE_HOME_TABLE_TOOLBAR_ROW_CLASS,
 } from "@/lib/design-tokens/workspace-dashboard";
 import { computeAllApplicationsStats } from "@/lib/workspace-all-applications-stats";
 import { type UserRole } from "@/lib/auth";
@@ -50,8 +31,6 @@ type WorkspaceHomeDashboardProps = {
   workspaceRole: UserRole;
   onSelectApplication: (applicationId: string) => void;
 };
-
-type ApplicationsFilter = "open" | "all";
 
 function greetingName(displayName: string): string {
   const trimmed = displayName.trim();
@@ -74,11 +53,6 @@ function formatHomeDate(d: Date): string {
     month: "long",
     year: "numeric",
   });
-}
-
-function isOpenApplication(application: WorkspaceApplication): boolean {
-  const state = deriveCanonicalApplicationState(application);
-  return state !== "approved" && state !== "rejected";
 }
 
 const mockAppointments = [
@@ -140,19 +114,23 @@ export function WorkspaceHomeDashboard({
   const name = greetingName(reviewerDisplayName);
   const phrase = greetingPhrase();
   const todayLabel = formatHomeDate(new Date());
-  const [searchQuery, setSearchQuery] = useState("");
-  const [applicationsFilter, setApplicationsFilter] = useState<ApplicationsFilter>("open");
   const [isTableMaximized, setIsTableMaximized] = useState(false);
   const router = useRouter();
+
+  const tableState = useWorkspaceApplicationsTableState({
+    applications,
+    reviewerDisplayName,
+    workspaceRole,
+  });
 
   const isR4Home = workspaceRole === "R4";
   const supportsTableExpand = workspaceRole === "R2" || workspaceRole === "R4";
 
   const maximizeApplicationsTable = useCallback(() => {
     if (!supportsTableExpand) return;
-    setApplicationsFilter("open");
+    tableState.setOpenAllFilter("open");
     setIsTableMaximized(true);
-  }, [supportsTableExpand]);
+  }, [supportsTableExpand, tableState]);
 
   const openMyTasks = useCallback(() => {
     router.push("/workspace?view=aufgaben");
@@ -179,36 +157,6 @@ export function WorkspaceHomeDashboard({
         workspaceRole,
       }),
     [applications, reviewerDisplayName, workspaceRole],
-  );
-
-  const filteredApplications = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-
-    return applications.filter((application) => {
-      if (applicationsFilter === "open" && !isOpenApplication(application)) {
-        return false;
-      }
-      if (!q) return true;
-
-      const applicantName = resolveApplicantDisplayName(application).toLowerCase();
-      const studiengang = (application.data.personalData?.studiengang ?? "").toLowerCase();
-      const ref = workspaceApplicationListNumber(application).toLowerCase();
-
-      return (
-        applicantName.includes(q)
-        || studiengang.includes(q)
-        || ref.includes(q)
-      );
-    });
-  }, [applications, applicationsFilter, reviewerDisplayName, searchQuery, workspaceRole]);
-
-  const tableRows = useMemo(
-    () =>
-      buildWorkspaceApplicationTableRows(filteredApplications, {
-        reviewerDisplayName,
-        workspaceRole,
-      }),
-    [filteredApplications, reviewerDisplayName, workspaceRole],
   );
 
   const kpiRow = (
@@ -358,77 +306,20 @@ export function WorkspaceHomeDashboard({
           ) : null}
         </div>
 
-        <div className={WORKSPACE_HOME_TABLE_TOOLBAR_ROW_CLASS} data-node-id="5948:27470">
-          <div className={WORKSPACE_HOME_TABLE_TOOLBAR_LEFT_CLASS} data-node-id="5948:27472">
-            <div className={WORKSPACE_HOME_TABLE_SEARCH_WRAPPER_CLASS} data-node-id="5957:22502">
-              <Search
-                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-                strokeWidth={1.75}
-                aria-hidden
-              />
-              <Input
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Liste durchsuchen…"
-                className={WORKSPACE_HOME_TABLE_SEARCH_INPUT_CLASS}
-                aria-label="Liste durchsuchen"
-              />
-            </div>
-            <div
-              className={WORKSPACE_HOME_TABLE_FILTER_TOGGLE_CLASS}
-              data-node-id="5948:27474"
-              role="group"
-              aria-label="Anträge filtern"
-            >
-              <button
-                type="button"
-                onClick={() => setApplicationsFilter("open")}
-                className={cn(
-                  "text-hf-paragraph-small-bold",
-                  applicationsFilter === "open"
-                    ? WORKSPACE_HOME_TABLE_FILTER_TAB_ACTIVE_CLASS
-                    : WORKSPACE_HOME_TABLE_FILTER_TAB_INACTIVE_CLASS,
-                )}
-              >
-                Offen
-              </button>
-              <button
-                type="button"
-                onClick={() => setApplicationsFilter("all")}
-                className={cn(
-                  "text-hf-paragraph-small-bold",
-                  applicationsFilter === "all"
-                    ? WORKSPACE_HOME_TABLE_FILTER_TAB_ACTIVE_CLASS
-                    : WORKSPACE_HOME_TABLE_FILTER_TAB_INACTIVE_CLASS,
-                )}
-              >
-                Alle
-              </button>
-            </div>
-            <button
-              type="button"
-              className={cn(
-                WORKSPACE_HOME_TABLE_OUTLINE_BUTTON_CLASS,
-                "text-hf-paragraph-small-medium text-foreground",
-              )}
-              data-node-id="5948:27481"
-            >
-              <Filter className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
-              Filter
-            </button>
-          </div>
-          <button
-            type="button"
-            className={cn(
-              WORKSPACE_HOME_TABLE_DOWNLOAD_BUTTON_CLASS,
-              "text-hf-paragraph-small-medium text-foreground",
-            )}
-            data-node-id="5948:27482"
-          >
-            <Download className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
-            Liste herunterladen
-          </button>
-        </div>
+        <WorkspaceApplicationsTableToolbar
+          searchQuery={tableState.searchQuery}
+          onSearchQueryChange={tableState.setSearchQuery}
+          showOpenAllToggle
+          openAllFilter={tableState.openAllFilter}
+          onOpenAllFilterChange={tableState.setOpenAllFilter}
+          columnFilters={tableState.columnFilters}
+          filterOptions={tableState.filterOptions}
+          reviewerDisplayName={reviewerDisplayName}
+          onColumnFiltersChange={tableState.setColumnFilters}
+          onResetColumnFilters={tableState.resetColumnFilters}
+          filteredCount={tableState.filteredCount}
+          totalCount={tableState.totalCount}
+        />
 
         <div
           className={cn(
@@ -439,8 +330,11 @@ export function WorkspaceHomeDashboard({
           )}
         >
           <WorkspaceApplicationsTable
-            rows={tableRows}
+            rows={tableState.displayedRows}
             onSelectApplication={onSelectApplication}
+            sort={tableState.sort}
+            onSortChange={tableState.setSort}
+            totalRowCount={tableState.baseRows.length}
             emptyMessage={
               applications.length === 0
                 ? "Keine eingegangenen Anträge sichtbar."

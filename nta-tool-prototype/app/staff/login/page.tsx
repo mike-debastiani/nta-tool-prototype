@@ -1,9 +1,14 @@
 import { LoginCard } from "@/components/domain/login-card";
+import { PrototypeEntryShell } from "@/components/domain/prototype-entry-shell";
 
 export default function StaffLoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center p-6">
-      <LoginCard title="Staff Login (R2-R6 inkl. R4)" allowedRoles={["R2", "R3", "R4", "R5", "R6"]} />
-    </main>
+    <PrototypeEntryShell narrow backHref="/" backLabel="Zurück zur Übersicht">
+      <LoginCard
+        title="Workspace Anmeldung"
+        description="Melden Sie sich mit Ihrem Hochschul-Testkonto an, um Anträge zu bearbeiten und den NTA-Prozess in der Verwaltung abzubilden."
+        allowedRoles={["R2", "R3", "R4", "R5", "R6"]}
+      />
+    </PrototypeEntryShell>
   );
 }

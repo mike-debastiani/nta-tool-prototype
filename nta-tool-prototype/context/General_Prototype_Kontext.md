@@ -101,7 +101,9 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
   - **SELECT-Policy** `applications_select_r2_worklist` deckt seit Migration `extend_workspace_select_to_decision_states` zusätzlich `in_implementation`, `approved`, `rejected` ab — Voraussetzung dafür, dass R2 nach „Antrag weiterreichen“ den nun in „In Entscheid“ befindlichen Antrag noch sieht und der `UPDATE` nicht am `RETURNING`-SELECT scheitert.
   - **R4 Workspace-Lesen:** additive Policies `applications_select_r4_workspace` und `users_select_r4_workspace_applicants` (Migration `supabase/migrations/20260513190000_r4_workspace_select_policies.sql`). **R4 Workspace-Schreiben:** Policy **`applications_update_r4_decision`** (Migration `20260514120000_applications_update_r4_decision.sql`) — `USING` nur `in_implementation`, `WITH CHECK` `in_implementation` oder `approved`. **Pflicht:** Bedingung über **`current_user_role()`** (`SECURITY DEFINER`, bereits im Schema) — **niemals** `EXISTS (SELECT … FROM public.users …)` innerhalb von RLS auf `users`/`applications`, sonst Postgres **„infinite recursion detected in policy for relation users“**.
   - **Login:** `components/domain/login-card.tsx` lädt nach `signInWithPassword` zuerst **`getSession()`**, damit der folgende `users`-Select mit JWT/RLS als `authenticated` läuft.
-  - **Status-Übergänge** über reguläre Session-Clients: ein dedizierter `SUPABASE_SERVICE_ROLE_KEY` ist im Forward-Pfad nicht nötig (`utils/supabase/service-role.ts` bleibt optional, u. a. für `fetchWorkspaceApplicationsList` wenn R4-Policies in einer Umgebung noch fehlen).
+  - **Status-Übergänge** über reguläre Session-Clients: ein dedizierter `SUPABASE_SERVICE_ROLE_KEY` ist im Forward-Pfad nicht nötig (`utils/supabase/service-role.ts` bleibt optional).
+  - **R4 Workspace-Liste:** `fetchWorkspaceApplicationsList` nutzt **nur** den Session-Client; Fakultäts-Filter über RLS (`r4_application_in_department_scope`), zusätzlich Client-Whitelist nicht-`draft`-Status für die Home-Inbox.
+  - **UZH Studiengänge:** `departments` / `study_programs` (Migrationen `20260520120000_*`, `20260521120000_uzh_study_programs_v2`); App-SSOT `lib/uzh-studiengaenge-data.ts`.
 - Details zu Feldern im Antrags-JSON: `Antragerstellung_Kontext.md` und `lib/test-flow-types.ts`; Review-/Empfehlungs-Pfade → `Antrag_Review_Kontext.md` / Migrationen.
 
 ---
@@ -113,14 +115,23 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `app/` | Routen (Portal, Workspace, Logins, API) |
 | `app/api/applications/review-forward/route.ts` | RLS-konformer R2-Forward auf `in_implementation` / `needs_correction` |
 | `app/api/workspace/applications/route.ts` | `GET` — Session + Rolle R2–R6, gleiche Liste wie Server-Page (`fetchWorkspaceApplicationsList`) |
-| `lib/workspace-applications-list.ts` | Server: Antragsliste Workspace; optional Service-Role nur für R4 wenn Key gesetzt |
+| `lib/workspace-applications-list.ts` | Server: Antragsliste Workspace (Session + RLS; R4 Status-Whitelist) |
+| `lib/r4-department-access.ts` | R4-Scope-Lookup (Hilfe/Debug; Liste nicht davon abhängig) |
+| `lib/uzh-studiengaenge-data.ts` | UZH-Fakultäten & Studiengänge (Seed-Quelle für DB + Combobox) |
+| `lib/uzh-studiengaenge.ts` | Lookup Studiengang → Fakultät, Kürzel, Studienstufe |
+| `lib/application-assignee.ts` | «Zugewiesen an», Avatare, Prototyp-R2/R4-Namen je Viewer |
+| `lib/workspace-applications-table-controls.ts` | Workspace-Tabelle: Facetten, Pills, Sort, Filter |
+| `components/domain/use-workspace-applications-table-state.ts` | Hook: Offen/Alle, Suche, Filter, Sort → Tabellenzeilen |
+| `components/domain/workspace-applications-table-toolbar.tsx` | Toolbar Home + Meine Aufgaben |
+| `components/domain/workspace-applications-table-filter-popover.tsx` | Facetten-Filter-Popover |
+| `components/domain/workspace-applications-table-filter-pills.tsx` | Aktive Filter-Chips |
 | `lib/user-initials.ts` | Initialen für Workspace-Avatar aus `display_name` / E-Mail |
 | `components/domain/login-card.tsx` | Student/Staff-Login: Supabase Auth + Profil `users.role`, Redirect |
 | `app/workspace/page.tsx` | `requireUserProfile` R2–R6, `fetchWorkspaceApplicationsList`, `initialsFromProfile`, `WorkspaceTestFlow` |
 | `components/domain/workspace-test-flow.tsx` | Routing: Home / `?view=aufgaben` / Review; R2–R4 Home + Meine Aufgaben; R5/R6 Inbox |
 | `components/domain/workspace-home-dashboard.tsx` | Workspace-Home: KPI-Zeile, Anträge-Toolbar, Maximize, KPI-Icon-Navigation |
 | `components/domain/workspace-my-tasks-view.tsx` | `/workspace?view=aufgaben` — gefilterte Aufgaben-Tabelle |
-| `components/domain/workspace-applications-table.tsx` | Geteilte Anträge-Tabelle (Home + Meine Aufgaben) |
+| `components/domain/workspace-applications-table.tsx` | Sortierbare Anträge-Tabelle (Fakultät, Assignee-Avatar) |
 | `components/domain/open-applications-summary-card.tsx` | KPI Charts; optional `onHeaderIconClick`, `allowedViews` (R4 nur Vertikal/Horizontal) |
 | `components/domain/assigned-tasks-summary-card.tsx` | KPI «Zugewiesene Aufgaben»; optional `onHeaderIconClick` → Meine Aufgaben |
 | `components/domain/student-dashboard.tsx` | R1 Home «Meine Anträge»: Cards/Table-Toggle, Live-Polling, Utility-Spalte |
@@ -163,7 +174,9 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `components/domain/r1-booking-confirmation.tsx` | R1 Step 3 Terminbestätigung (HF) |
 | `components/domain/r1-application-definition-section.tsx` | R1 Step 4/5 Antragsstellung (HF-Feldabstände) |
 | `components/domain/custom-measure-lines-field.tsx` | „Sonstige Massnahmen“-Zeilen (Step 4 + Portal-Anpassung) |
-| `components/studiengang-combobox.tsx` | Studiengang-Auswahl Step 1 (HF-Select-Styling) |
+| `components/studiengang-combobox.tsx` | Studiengang-Auswahl Step 1 (UZH-Gruppen aus `uzh-studiengaenge`) |
+| `components/domain/prototype-entry-shell.tsx` | Landing `/` — HF-Einstieg Portal vs. Staff |
+| `context/Antrag_Formular_Referenz.md` | Menschliche Referenz: R1-Felder & realistische Mock-Inhalte |
 | `app/design-tokens/high-fidelity-*.css` | HF Farben, Typo, Grid (CSS-SSOT) |
 | `components/domain/portal-application-adjustment.tsx` | R1 Block-Detailansicht (Status-abhängig Read-only / Edit) |
 | `components/layout/hf-grid.tsx` | `HfPageGrid`, `HfGridCell`, `HfGridFree` |

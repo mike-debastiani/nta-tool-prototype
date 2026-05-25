@@ -34,7 +34,7 @@ import { useRegisterDashboardDetailPanel } from "@/components/domain/dashboard-d
 import { useDashboardScrollRoot } from "@/components/domain/dashboard-main-panel-scroll-context";
 import {
   resolveApplicantDisplayName,
-  resolveApplicationAssignee,
+  resolveApplicationAssigneeForWorkspace,
 } from "@/lib/application-assignee";
 import {
   ASSESSMENT_MEASURE_OPTIONS,
@@ -728,19 +728,11 @@ export function WorkspaceApplicationReview({
 
   const assignee = useMemo(
     () =>
-      resolveApplicationAssignee({
-        canonicalState: statusMeta.canonicalState,
-        applicantDisplayName,
-        r2ReviewerDisplayName: reviewerDisplayName,
-        r4ReviewerDisplayName:
-          workspaceViewerRole === "R4" ? reviewerDisplayName : "Entscheidungsinstanz",
+      resolveApplicationAssigneeForWorkspace(application, {
+        workspaceRole: workspaceViewerRole,
+        reviewerDisplayName,
       }),
-    [
-      statusMeta.canonicalState,
-      applicantDisplayName,
-      reviewerDisplayName,
-      workspaceViewerRole,
-    ],
+    [application, reviewerDisplayName, workspaceViewerRole],
   );
 
   const detailPanelSignature = useMemo(

@@ -167,3 +167,15 @@ export const WORKSPACE_HOME_TABLE_OUTLINE_BUTTON_CLASS =
 
 export const WORKSPACE_HOME_TABLE_DOWNLOAD_BUTTON_CLASS =
   WORKSPACE_HOME_TABLE_OUTLINE_BUTTON_CLASS;
+
+/** Aktive Tabellenfilter als Pills unter der Toolbar. */
+export const WORKSPACE_HOME_TABLE_FILTER_PILLS_ROW_CLASS =
+  "flex w-full min-w-0 flex-wrap items-center gap-2";
+
+export const WORKSPACE_HOME_TABLE_FILTER_PILL_CLASS = [
+  "inline-flex h-8 max-w-full items-center gap-1 rounded-full border border-border bg-stone-100/90 py-1 pl-3 pr-1",
+  "text-hf-paragraph-mini-medium text-foreground",
+].join(" ");
+
+export const WORKSPACE_HOME_TABLE_FILTER_PILL_REMOVE_CLASS =
+  "flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-stone-200/90 hover:text-foreground";

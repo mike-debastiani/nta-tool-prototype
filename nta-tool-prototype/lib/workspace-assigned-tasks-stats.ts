@@ -9,8 +9,8 @@ import {
   hfInReviewStatusSurfaceClass,
 } from "@/lib/design-tokens/status-badge-colors";
 import {
-  resolveApplicantDisplayName,
-  resolveApplicationAssignee,
+  namesMatchAssignee,
+  resolveApplicationAssigneeForWorkspace,
 } from "@/lib/application-assignee";
 import type { UserRole } from "@/lib/auth";
 import type { WorkspaceApplication } from "@/lib/test-flow-types";
@@ -21,8 +21,8 @@ export type AssignedTaskBucket = {
   id: AssignedTaskBucketId;
   label: string;
   count: number;
-  /** Mock: neue Aufgaben seit letztem Login (Prototyp). */
-  sinceLastLogin: number;
+  /** Neu heute in diesem Bucket (KPI: nur «+N», ohne separates «heute»-Label). */
+  addedToday: number;
   surfaceClass: string;
   labelClass: string;
   metricClass: string;
@@ -38,7 +38,7 @@ const BUCKET_ORDER_DECISION: AssignedTaskBucketId[] = ["entscheidungen"];
 
 const BUCKET_META: Record<
   AssignedTaskBucketId,
-  Omit<AssignedTaskBucket, "id" | "count" | "sinceLastLogin">
+  Omit<AssignedTaskBucket, "id" | "count" | "addedToday">
 > = {
   beratungen: {
     label: "Beratungen",
@@ -63,39 +63,32 @@ const BUCKET_META: Record<
   },
 };
 
-function namesMatch(a: string, b: string): boolean {
-  return a.trim().toLowerCase() === b.trim().toLowerCase();
-}
-
-function resolveR2ReviewerDisplayName(
-  application: WorkspaceApplication,
-  fallbackReviewerDisplayName: string,
-): string {
-  return application.data.recommendation?.releasedBy?.trim() || fallbackReviewerDisplayName;
-}
-
 /** Antrag ist der angemeldeten Person als Bearbeitung zugewiesen (Figma «Zugewiesen an»). */
 export function isApplicationAssignedToReviewer(
   application: WorkspaceApplication,
-  reviewerDisplayName: string,
+  options: {
+    reviewerDisplayName: string;
+    workspaceRole: UserRole;
+  },
 ): boolean {
+  const { reviewerDisplayName, workspaceRole } = options;
   const canonicalState = deriveCanonicalApplicationState(application);
+
   if (
     canonicalState === "approved"
     || canonicalState === "rejected"
+    || canonicalState === "needs_adjustment"
     || canonicalState === "draft"
   ) {
     return false;
   }
 
-  const assignee = resolveApplicationAssignee({
-    canonicalState,
-    applicantDisplayName: resolveApplicantDisplayName(application),
-    r2ReviewerDisplayName: resolveR2ReviewerDisplayName(application, reviewerDisplayName),
-    r4ReviewerDisplayName: reviewerDisplayName,
+  const assignee = resolveApplicationAssigneeForWorkspace(application, {
+    reviewerDisplayName,
+    workspaceRole,
   });
 
-  return namesMatch(assignee.displayName, reviewerDisplayName);
+  return namesMatchAssignee(assignee.displayName, reviewerDisplayName);
 }
 
 /** R2: freigegebenes Empfehlungsschreiben → Badge «Empfehlung verfasst», keine offene Beratungsaufgabe. */
@@ -137,7 +130,12 @@ export function isApplicationInMyTasksForRole(
   },
 ): boolean {
   const { reviewerDisplayName, workspaceRole } = options;
-  if (!isApplicationAssignedToReviewer(application, reviewerDisplayName)) {
+  if (
+    !isApplicationAssignedToReviewer(application, {
+      reviewerDisplayName,
+      workspaceRole,
+    })
+  ) {
     return false;
   }
   if (workspaceRole === "R2" && isR2RecommendationReleased(application)) {
@@ -166,24 +164,31 @@ function bucketOrderForRole(workspaceRole: UserRole): AssignedTaskBucketId[] {
   return BUCKET_ORDER_R2;
 }
 
-/** Deterministischer Mock für «+N seit letztem Login». */
-function mockSinceLastLoginDelta(
+function referenceDateForAssignedTask(application: WorkspaceApplication): Date {
+  const submitted = application.data?.submittedAt;
+  if (submitted) {
+    const parsed = new Date(submitted);
+    if (!Number.isNaN(parsed.getTime())) return parsed;
+  }
+  return new Date(application.updated_at);
+}
+
+function isDateTodayDeCh(date: Date): boolean {
+  const todayKey = new Date().toLocaleDateString("de-CH");
+  return date.toLocaleDateString("de-CH") === todayKey;
+}
+
+/** Anträge im Bucket, die heute (Kalendertag de-CH) eingegangen sind. */
+function countAssignedTasksAddedToday(
   applicationsInBucket: WorkspaceApplication[],
 ): number {
-  const count = applicationsInBucket.length;
-  if (count === 0) return 0;
-
-  const hash = applicationsInBucket.reduce(
-    (acc, application) => acc + application.id.split("").reduce((h, c) => h + c.charCodeAt(0), 0),
-    0,
-  );
-  const delta = 1 + (hash % Math.max(1, Math.min(count, 5)));
-  return Math.min(count, delta);
+  return applicationsInBucket.filter((application) =>
+    isDateTodayDeCh(referenceDateForAssignedTask(application)),
+  ).length;
 }
 
 /**
  * Zugewiesene Aufgaben für die angemeldete Person (Figma `5483:11126`).
- * Filter: `resolveApplicationAssignee` entspricht `reviewerDisplayName`.
  */
 export function computeAssignedTasksStats(
   applications: WorkspaceApplication[],
@@ -222,7 +227,7 @@ export function computeAssignedTasksStats(
       id,
       ...meta,
       count: apps.length,
-      sinceLastLogin: mockSinceLastLoginDelta(apps),
+      addedToday: countAssignedTasksAddedToday(apps),
     };
   });
 

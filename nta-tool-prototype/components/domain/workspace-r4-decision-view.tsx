@@ -10,7 +10,7 @@ import { useRegisterDashboardDetailPanel } from "@/components/domain/dashboard-d
 import { useDashboardScrollRoot } from "@/components/domain/dashboard-main-panel-scroll-context";
 import {
   resolveApplicantDisplayName,
-  resolveApplicationAssignee,
+  resolveApplicationAssigneeForWorkspace,
 } from "@/lib/application-assignee";
 import {
   ReviewFileRow,
@@ -427,16 +427,11 @@ export function WorkspaceR4DecisionView({
 
   const assignee = useMemo(
     () =>
-      resolveApplicationAssignee({
-        canonicalState: statusMeta.canonicalState,
-        applicantDisplayName,
-        r2ReviewerDisplayName:
-          application.data.consultation?.advisor?.trim()
-          || application.data.recommendation?.releasedBy?.trim()
-          || "NTA Fachstelle",
-        r4ReviewerDisplayName: reviewerDisplayName,
+      resolveApplicationAssigneeForWorkspace(application, {
+        workspaceRole: "R4",
+        reviewerDisplayName,
       }),
-    [statusMeta.canonicalState, applicantDisplayName, application.data, reviewerDisplayName],
+    [application, reviewerDisplayName],
   );
 
   const detailPanelSignature = useMemo(

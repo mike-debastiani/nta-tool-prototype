@@ -248,7 +248,7 @@ export function R1FlowProgressCard({
             data-node-id="5180:7030"
           >
             <div
-              className="absolute top-0 left-0 h-2 rounded-l-md bg-gradient-to-r from-bewilligt-100 to-bewilligt-300"
+              className="absolute top-0 left-0 h-2 rounded-l-md bg-bewilligt-300"
               style={{ width: `${progressPercent}%` }}
             />
           </div>

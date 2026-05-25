@@ -1,44 +1,80 @@
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Building2, GraduationCap } from "lucide-react";
+
+import { PrototypeEntryShell } from "@/components/domain/prototype-entry-shell";
 import { Button } from "@/components/ui/button";
+import { APPLICATION_CONTENT_PANEL_CARD_CLASS } from "@/lib/design-tokens/application-content-panel";
+import { hfTypography } from "@/lib/design-tokens/typography";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col justify-center gap-6 px-6 py-12">
-      <h1 className="text-3xl font-semibold tracking-tight">NTA Testflow</h1>
-      <p className="max-w-2xl text-sm text-muted-foreground">
-        Dieser reduzierte Prototyp simuliert die Kommunikation zwischen R1
-        (Studierende:r) und R2 (Fachstelle) mit echter Supabase-Anbindung und
-        Realtime-Statusupdates.
-      </p>
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Studierenden-Bereich (R1)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Antrag erstellen, einreichen und den Status live verfolgen.
+    <PrototypeEntryShell>
+      <header className="mb-10 max-w-2xl">
+        <p className={cn(hfTypography.paragraphMiniMedium, "mb-2 text-stone-500")}>
+          HSLU · Bachelorprojekt
+        </p>
+        <h1 className={cn(hfTypography.h2, "text-stone-900")}>
+          NTA-Prototyp
+        </h1>
+        <p className={cn(hfTypography.paragraphRegular, "mt-4 text-stone-600")}>
+          Funktionaler Web-Prototyp zur Simulation des Nachteilsausgleichs (NTA)
+          an Hochschulen. Er dient Forschung und Usability-Tests — kein
+          produktives System. Wählen Sie den Bereich, in den Sie sich anmelden
+          möchten.
+        </p>
+      </header>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <section
+          className={cn(
+            APPLICATION_CONTENT_PANEL_CARD_CLASS,
+            "flex flex-col gap-5 p-6",
+          )}
+        >
+          <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <GraduationCap className="size-5" strokeWidth={1.75} aria-hidden />
+          </div>
+          <div className="flex flex-1 flex-col gap-2">
+            <h2 className={cn(hfTypography.h4, "text-stone-900")}>Portal</h2>
+            <p className={cn(hfTypography.paragraphSmall, "text-stone-600")}>
+              Perspektive Studierende: Antrag erstellen, Beratung und
+              Empfehlung durchlaufen, Status verfolgen und Anpassungen
+              vornehmen.
             </p>
-            <Button asChild>
-              <Link href="/student/login">Zu Student Login</Link>
-            </Button>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Workspace-Bereich (R2)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Eingereichte Antraege einsehen und den Status bearbeiten.
+          </div>
+          <Button asChild className="w-full sm:w-auto">
+            <Link href="/student/login">Zum Portal anmelden</Link>
+          </Button>
+        </section>
+
+        <section
+          className={cn(
+            APPLICATION_CONTENT_PANEL_CARD_CLASS,
+            "flex flex-col gap-5 p-6",
+          )}
+        >
+          <div className="flex size-11 items-center justify-center rounded-xl bg-stone-200/80 text-stone-700">
+            <Building2 className="size-5" strokeWidth={1.75} aria-hidden />
+          </div>
+          <div className="flex flex-1 flex-col gap-2">
+            <h2 className={cn(hfTypography.h4, "text-stone-900")}>Workspace</h2>
+            <p className={cn(hfTypography.paragraphSmall, "text-stone-600")}>
+              Perspektive Hochschule: eingereichte Anträge bearbeiten, Beratung
+              und Empfehlung verfassen, Review und Entscheidung im Prozess
+              abbilden.
             </p>
-            <Button asChild variant="outline">
-              <Link href="/staff/login">Zu Staff Login</Link>
-            </Button>
-          </CardContent>
-        </Card>
+          </div>
+          <Button asChild variant="outline" className="w-full sm:w-auto">
+            <Link href="/staff/login">Zum Workspace anmelden</Link>
+          </Button>
+        </section>
       </div>
-    </main>
+
+      <p className={cn(hfTypography.paragraphMini, "mt-10 max-w-2xl text-stone-500")}>
+        Testkonten und Demo-Funktionen finden Sie nach der Anmeldung in den
+        jeweiligen Bereichen. Die Anmeldung erfolgt per E-Mail und Passwort.
+      </p>
+    </PrototypeEntryShell>
   );
 }

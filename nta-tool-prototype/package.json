@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:r4-faculty": "node scripts/seed-r4-faculty-users.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",

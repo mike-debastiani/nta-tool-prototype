@@ -181,7 +181,7 @@ Utility-Klassen: `hf-px-page` (Toolbar-Padding), `hf-gap-grid` (Gap = Gutter).
 | `5856:21926` | R1 Antragkarte — Status-Varianten |
 | `5792:22057` | R1 Utility-Spalte (Neuer Antrag + Informationen) |
 
-**Code:** `workspace-dashboard-shell.tsx`, `workspace-home-dashboard.tsx`, `workspace-my-tasks-view.tsx`, `workspace-applications-table.tsx`, `student-dashboard.tsx`, Tokens `workspace-dashboard.ts` (inkl. `WORKSPACE_HOME_TABLE_*`), `application-block.ts`, Brand `avalis-logo.tsx`.
+**Code:** `workspace-dashboard-shell.tsx`, `workspace-home-dashboard.tsx`, `workspace-my-tasks-view.tsx`, `workspace-applications-table.tsx`, `workspace-applications-table-toolbar.tsx`, `use-workspace-applications-table-state.ts`, `student-dashboard.tsx`, Tokens `workspace-dashboard.ts` (inkl. `WORKSPACE_HOME_TABLE_*`), `application-block.ts`, Brand `avalis-logo.tsx`.
 
 **Anträge-Toolbar (Figma `5948:27470`):** Suche/Filter/Download — `bg-transparent`, Rand `border-border`; Toggle aktiv `bg-primary` / `text-primary-foreground` / `rounded-full`; inaktiv `text-muted-foreground` / `rounded-[10px]`. Kein weisser Fill auf Panel-`stone-50`.
 

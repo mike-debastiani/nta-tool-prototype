@@ -36,7 +36,11 @@ import {
 } from "@/components/domain/dashboard-main-panel-scroll-context";
 import { AvalisLogo } from "@/components/icons/avalis-logo";
 import { usePortalDashboardToolbar } from "@/components/domain/portal-dashboard-toolbar-context";
-import { WorkspaceAccountMenu } from "@/components/domain/workspace-account-menu";
+import {
+  DashboardAccountMenuNavItem,
+  type DashboardAccountMenuNavConfig,
+  WorkspaceAccountMenu,
+} from "@/components/domain/workspace-account-menu";
 import { useWorkspaceR2Toolbar } from "@/components/domain/workspace-r2-toolbar-context";
 import { Button } from "@/components/ui/button";
 import {
@@ -105,6 +109,8 @@ type DashboardShellProps = {
   showTopBar: boolean;
   topItems: DashboardNavItemConfig[];
   bottomItems: DashboardNavItemConfig[];
+  /** Portal: «Profil» öffnet Account-Menü statt Navigation. */
+  accountMenuNavItem?: DashboardAccountMenuNavConfig;
   topBarLeadingSlot?: ReactNode;
   topBarTrailingSlot?: ReactNode;
 };
@@ -285,6 +291,7 @@ function WorkspaceSidebar({
   onCollapsedChange,
   topItems,
   bottomItems,
+  accountMenuNavItem,
   isActive,
 }: {
   collapsed: boolean;
@@ -292,6 +299,7 @@ function WorkspaceSidebar({
   onCollapsedChange: (collapsed: boolean) => void;
   topItems: DashboardNavItemConfig[];
   bottomItems: DashboardNavItemConfig[];
+  accountMenuNavItem?: DashboardAccountMenuNavConfig;
   isActive: (href: string) => boolean;
 }) {
   return (
@@ -339,6 +347,12 @@ function WorkspaceSidebar({
                 collapsed={collapsed}
               />
             ))}
+            {accountMenuNavItem ? (
+              <DashboardAccountMenuNavItem
+                {...accountMenuNavItem}
+                collapsed={collapsed}
+              />
+            ) : null}
           </nav>
         </div>
 
@@ -389,7 +403,11 @@ function PortalTopBar({
           >
             <Bell className="size-4" strokeWidth={1.75} aria-hidden />
           </button>
-          <WorkspaceAccountMenu initials={workspaceAccountInitials} size="workspace" />
+          <WorkspaceAccountMenu
+            initials={workspaceAccountInitials}
+            size="workspace"
+            variant="portal"
+          />
         </div>
       </div>
     </header>
@@ -629,6 +647,7 @@ function DashboardShellBody({
   showTopBar,
   topItems,
   bottomItems,
+  accountMenuNavItem,
   topBarLeadingSlot,
   topBarTrailingSlot,
 }: DashboardShellProps) {
@@ -646,6 +665,7 @@ function DashboardShellBody({
         onCollapsedChange={setCollapsed}
         topItems={topItems}
         bottomItems={bottomItems}
+        accountMenuNavItem={accountMenuNavItem}
         isActive={isActive}
       />
 
@@ -722,12 +742,16 @@ export function PortalDashboardShell({
         href: "/portal/home",
         icon: <House className="size-4" strokeWidth={1.75} />,
       },
-      {
-        label: "Profil",
-        href: "/portal/home?view=profil",
-        icon: <User className="size-4" strokeWidth={1.75} />,
-      },
     ],
+    [],
+  );
+
+  const accountMenuNavItem = useMemo<DashboardAccountMenuNavConfig>(
+    () => ({
+      label: "Profil",
+      icon: <User className="size-4" strokeWidth={1.75} />,
+      variant: "portal",
+    }),
     [],
   );
 
@@ -755,6 +779,7 @@ export function PortalDashboardShell({
       defaultSidebarCollapsed={defaultSidebarCollapsed}
       topItems={topItems}
       bottomItems={bottomItems}
+      accountMenuNavItem={accountMenuNavItem}
       topBarLeadingSlot={portalToolbar?.leadingSlot ?? portalDefaultBackButton}
       topBarTrailingSlot={portalToolbar?.trailingSlot ?? undefined}
     >

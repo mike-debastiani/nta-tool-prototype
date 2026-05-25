@@ -1,23 +1,27 @@
 import type { ApplicationStatus } from "@/lib/application-status";
 import { type UserRole } from "@/lib/auth";
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
-import { tryCreateServiceRoleClient } from "@/utils/supabase/service-role";
 import { type SupabaseClient } from "@supabase/supabase-js";
 
 const SELECT =
   "id,applicant_id,status,created_at,updated_at,data,users!applications_applicant_id_fkey(display_name,email)";
 
-/** DB-Status, die R4 in der Inbox sieht (fachlich: Entscheid ausstehend, Bewilligt, Abgelehnt). */
-const R4_WORKSPACE_LIST_STATUSES: readonly ApplicationStatus[] = [
+/**
+ * R4 Home: alle eingegangenen Anträge der sichtbaren Fakultät(en).
+ * RLS (`r4_application_in_department_scope`) filtert bereits nach Fakultät/Studiengang.
+ */
+const R4_WORKSPACE_HOME_STATUSES: readonly ApplicationStatus[] = [
+  "submitted",
+  "in_review",
+  "needs_correction",
   "in_implementation",
-  "in_decision",
   "approved",
   "rejected",
 ];
 
-function filterR4Inbox(rows: WorkspaceApplication[]): WorkspaceApplication[] {
-  const allow = new Set(R4_WORKSPACE_LIST_STATUSES);
-  return rows.filter((r) => allow.has(r.status));
+function filterR4WorkspaceHomeList(rows: WorkspaceApplication[]): WorkspaceApplication[] {
+  const allow = new Set(R4_WORKSPACE_HOME_STATUSES);
+  return rows.filter((row) => allow.has(row.status));
 }
 
 function applicationsListQuery(client: SupabaseClient) {
@@ -25,32 +29,23 @@ function applicationsListQuery(client: SupabaseClient) {
 }
 
 /**
- * Lädt die Workspace-Antragsliste. Für **R4** optional per Service-Role, wenn gesetzt — umgeht
- * RLS, falls die DB-Policy R4 noch nicht enthält (Prototyp; in Produktion Policy erweitern).
- *
- * R4-Inbox-Statusfilter passiert **nach** dem Select in TypeScript, damit PostgREST/Enum-Embed
- * nicht mit `.in("status", …)` leer zurückkommt.
+ * Lädt die Workspace-Antragsliste.
+ * **R4:** Lesen über Session + RLS (Fakultäts-Scope in der DB). Kein Service-Role-Fallback,
+ * damit die Liste nicht durch einen fehlgeschlagenen Scope-Lookup leer wird.
  */
 export async function fetchWorkspaceApplicationsList(
   sessionClient: SupabaseClient,
   role: UserRole,
 ): Promise<WorkspaceApplication[]> {
-  if (role === "R4") {
-    const admin = tryCreateServiceRoleClient();
-    if (admin) {
-      const { data, error } = await applicationsListQuery(admin);
-      if (!error) {
-        return filterR4Inbox((data ?? []) as WorkspaceApplication[]);
-      }
-    }
-  }
-
   const { data, error } = await applicationsListQuery(sessionClient);
 
   if (error) {
-    console.warn("[workspace-applications-list]", error.message);
+    console.error("[workspace-applications-list]", error.message, error.details, error.hint);
+    return [];
   }
 
   const rows = (data ?? []) as WorkspaceApplication[];
-  return role === "R4" ? filterR4Inbox(rows) : rows;
+  if (role !== "R4") return rows;
+
+  return filterR4WorkspaceHomeList(rows);
 }

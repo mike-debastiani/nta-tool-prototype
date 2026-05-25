@@ -90,7 +90,7 @@ export function r1FlowProgressContentClass(
   }
 }
 
-/** Statuspunkt rechts — Gradient nur bei complete / incomplete. */
+/** Statuspunkt rechts — bewilligt / abgelehnt bei complete / incomplete. */
 export function R1FlowProgressTrailingIndicator({
   visualState,
 }: {
@@ -100,14 +100,14 @@ export function R1FlowProgressTrailingIndicator({
     case "complete":
       return (
         <span
-          className="size-3.5 shrink-0 rounded-full bg-gradient-to-r from-bewilligt-100 to-bewilligt-300"
+          className="size-3.5 shrink-0 rounded-full bg-bewilligt-300"
           aria-hidden
         />
       );
     case "incomplete":
       return (
         <span
-          className="size-3.5 shrink-0 rounded-full bg-gradient-to-b from-abgelehnt-100 to-abgelehnt-400"
+          className="size-3.5 shrink-0 rounded-full bg-abgelehnt-400"
           aria-hidden
         />
       );

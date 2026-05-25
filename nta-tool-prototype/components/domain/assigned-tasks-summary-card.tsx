@@ -87,11 +87,12 @@ function AssignedTaskMetricItem({ bucket }: { bucket: AssignedTaskBucket }) {
           >
             {bucket.count}
           </span>
-          {bucket.sinceLastLogin > 0 ? (
+          {bucket.addedToday > 0 ? (
             <span
               className={cn(hfTypography.paragraphSmall, bucket.deltaClass)}
+              aria-label={`${bucket.addedToday} heute hinzugekommen`}
             >
-              +{bucket.sinceLastLogin}
+              +{bucket.addedToday}
             </span>
           ) : null}
         </div>
