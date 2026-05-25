@@ -1,6 +1,8 @@
 import {
   hfRecommendationReleasedBadgeClass,
   hfStatusBadgeClass,
+  hfStatusBadgeClassR1,
+  hfStatusBadgeClassR2,
 } from "@/lib/design-tokens/status-badge-colors";
 
 export type ApplicationStatus =
@@ -64,6 +66,15 @@ const canonicalStatusLabelR4: Partial<Record<CanonicalApplicationState, string>>
 
 export const statusBadgeClass: Record<CanonicalApplicationState, string> =
   hfStatusBadgeClass;
+
+export function getHfStatusBadgeClass(
+  state: CanonicalApplicationState,
+  audience: StatusAudience = "R1",
+): string {
+  return audience === "R1"
+    ? hfStatusBadgeClassR1[state]
+    : hfStatusBadgeClassR2[state];
+}
 
 const R2_RECOMMENDATION_RELEASED_BADGE_CLASS =
   hfRecommendationReleasedBadgeClass;
@@ -149,7 +160,7 @@ export function getApplicationStatusMeta(
   return {
     canonicalState,
     label: getStatusLabelForAudience(canonicalState, audience),
-    className: statusBadgeClass[canonicalState],
+    className: getHfStatusBadgeClass(canonicalState, audience),
   };
 }
 

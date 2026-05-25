@@ -20,8 +20,8 @@ export const DASHBOARD_NAV_ITEM_ACTIVE_LABEL_CLASS =
 /** Zeile mit weissem Hauptpanel + Antragdetails-Spalte (24px zum Viewport-Rand). */
 export const DASHBOARD_SHELL_CONTENT_ROW_PADDING_CLASS = "px-6";
 
-/** Weisses Inhalts-Panel — nur oben; horizontaler Inset liegt am Scroll-Viewport (`pl-6 pr-4` + `mr-2`). */
-export const DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS = "pt-10";
+/** Weisses Inhalts-Panel — kein Container-Padding; Inset am Scroll-Viewport (`dashboardMainPanelScrollAreaClass`). */
+export const DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS = "";
 
 /** Inhalt passt ohne Scroll: unterer Rand der Content-Zeile (= 24px) + `rounded-xl`. */
 export const DASHBOARD_SHELL_CONTENT_ROW_PADDING_BOTTOM_INSET_CLASS = "pb-6";
@@ -41,8 +41,8 @@ export const DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_ENTER_RATIO = 0.9;
 /** Unter dieser Ratio wieder Inset-Layout — niedriger als ENTER wegen Hysterese (Padding ändert clientHeight). */
 export const DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_EXIT_RATIO = 0.82;
 
-/** Weisses Inhalts-Panel, wenn Antrag geöffnet (horizontaler Inset am Page-Scroll). */
-export const DASHBOARD_SHELL_MAIN_PANEL_PADDING_OPEN_CLASS = "pt-10";
+/** Weisses Inhalts-Panel, wenn Antrag geöffnet (Inset am Page-Scroll des Kindes). */
+export const DASHBOARD_SHELL_MAIN_PANEL_PADDING_OPEN_CLASS = "";
 
 /** Antragdetails-Spalte: horizontaler Inset am Scroll-Viewport (`pl-6 pr-4` + `mr-2`). */
 export const DASHBOARD_DETAIL_PANEL_PADDING_CLASS = "";

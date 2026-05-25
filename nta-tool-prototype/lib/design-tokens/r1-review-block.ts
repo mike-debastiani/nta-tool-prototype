@@ -1,0 +1,31 @@
+/**
+ * R1 Review-Block — Figma Nodes 5641:23258, 5641:23217, 5792:23157, 5657:18445.
+ */
+
+/** Bemerkung der Fachstelle — `adjustment-100`. */
+export const R1_REVIEW_BLOCK_REMARK_SECTION_CLASS =
+  "flex flex-col gap-1 border-t border-border bg-adjustment-100 px-5 py-4";
+
+/** Aktionsleiste unten — `stone-50`, 52px. */
+export const R1_REVIEW_BLOCK_ACTION_FOOTER_CLASS =
+  "flex h-[52px] w-full shrink-0 items-center border-t border-border bg-stone-50 px-5";
+
+/** Rich-Option gewählt, gesperrt (`5792:23243`). */
+export const R1_RICH_OPTION_SELECTED_LOCKED_CLASS =
+  "flex gap-3 rounded-[10px] border border-border bg-background px-3 py-3";
+
+/** Rich-Option nicht gewählt, gesperrt (`5792:23253`). */
+export const R1_RICH_OPTION_UNSELECTED_LOCKED_CLASS =
+  "flex gap-3 rounded-[10px] bg-stone-50 px-3 py-3 text-neutral-400";
+
+/** Rich-Option im Bearbeitungsmodus (`5792:23163`). */
+export const R1_RICH_OPTION_EDITABLE_CLASS =
+  "flex w-full gap-3 rounded-[10px] border border-border bg-background px-3 py-3 text-left";
+
+export const R1_RICH_OPTION_GROUP_CLASS = "flex flex-col gap-3";
+
+export const R1_RICH_OPTION_STATUS_SELECTED_CLASS =
+  "shrink-0 text-hf-paragraph-mini text-foreground";
+
+export const R1_RICH_OPTION_STATUS_UNSELECTED_CLASS =
+  "shrink-0 text-hf-paragraph-mini text-neutral-400";

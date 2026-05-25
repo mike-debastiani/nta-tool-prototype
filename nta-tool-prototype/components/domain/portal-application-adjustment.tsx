@@ -14,13 +14,9 @@ import {
 } from "react";
 import {
   ArrowLeft,
-  CheckCheck,
   CircleAlert,
   Info,
   Loader2,
-  MessageSquareText,
-  PencilLine,
-  Save,
   Send,
   Trash2,
   Upload,
@@ -40,6 +36,8 @@ import {
   ApplicationReviewDetailSidebar,
   type SavedReviewComment,
 } from "@/components/domain/application-review-detail-sidebar";
+import { ApplicationReviewPageHeader } from "@/components/domain/application-review-page-header";
+import { ApplicationStatusCallout } from "@/components/domain/application-status-callout";
 import { useRegisterDashboardDetailPanel } from "@/components/domain/dashboard-detail-panel-context";
 import { useDashboardScrollRoot } from "@/components/domain/dashboard-main-panel-scroll-context";
 import { resolveApplicationAssignee } from "@/lib/application-assignee";
@@ -51,7 +49,11 @@ import {
   DurationChoiceCompare,
   MeasureChecklist,
   ReviewBlockCard,
-  ReviewBlockFooterStatus,
+  ReviewBlockConfirmedFooter,
+  ReviewBlockR1EditingFooter,
+  ReviewBlockR1RemarkSection,
+  ReviewBlockR1SavedRemarkActions,
+  ReviewBlockR1StartAdjustmentFooter,
   ReviewField,
   ReviewFileRow,
   ScopeChecklist,
@@ -59,8 +61,8 @@ import {
   formatReviewFileSize,
   revokeAttestFileUrls,
   sanitizeAttestFilesForDatabase,
-  shortApplicationRef,
 } from "@/components/domain/application-review-blocks";
+import { formatReviewSubmittedAt } from "@/lib/application-review-labels";
 import {
   ASSESSMENT_MEASURES_KEINE_DESCRIPTION,
   LECTURE_MEASURES_KEINE_DESCRIPTION,
@@ -80,6 +82,7 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import {
   applicationReviewScrollAreaClass,
+  applicationReviewSectionGapClass,
 } from "@/lib/design-tokens/application-scroll";
 import { cn } from "@/lib/utils";
 import { getApplicationStatusMeta } from "@/lib/application-status";
@@ -93,7 +96,16 @@ import {
   APPLICATION_ROW_BROADCAST_EVENT,
   applicationRowBroadcastChannelName,
 } from "@/lib/application-realtime-sync";
+import {
+  applyBaselineToData,
+  readR1AdjustmentBlockBaselines,
+} from "@/lib/r1-adjustment-baseline";
 import { r1AllRequestedAdjustmentsSaved } from "@/lib/r1-adjustment-release";
+import {
+  R1_RICH_OPTION_EDITABLE_CLASS,
+  R1_RICH_OPTION_GROUP_CLASS,
+} from "@/lib/design-tokens/r1-review-block";
+import { REVIEW_BLOCK_FIELD_GRID_CLASS } from "@/lib/design-tokens/review-block";
 import { CustomMeasureLinesField } from "@/components/domain/custom-measure-lines-field";
 
 type R2BlockPhase =
@@ -532,6 +544,48 @@ export function PortalApplicationAdjustment({
     setEditing(nextEdit);
   };
 
+
+  const resetBlock = async (blockId: ReviewWorkspaceBlockId) => {
+    if (!canEditBlocks) return;
+    setSaveError(null);
+    setErrors({});
+    setEditing(null);
+    setAutosave({ kind: "idle" });
+    setAutosaveBaseline(null);
+
+    const baseline = readR1AdjustmentBlockBaselines(data)[blockId];
+    if (!baseline) return;
+
+    let nextData = applyBaselineToData(data, blockId, baseline);
+    const nextRes = { ...(nextData.r1AdjustmentResolutions ?? {}) };
+    delete nextRes[blockId];
+    nextData = { ...nextData, r1AdjustmentResolutions: nextRes };
+
+    setSnapshot((prev) =>
+      prev.id !== snapshot.id ? prev : { ...prev, data: nextData },
+    );
+
+    setSaving(true);
+    const { data: updated, error } = await supabase
+      .from("applications")
+      .update({ data: nextData })
+      .eq("id", snapshot.id)
+      .select(
+        "id,applicant_id,status,data,created_at,updated_at,users!applications_applicant_id_fkey(display_name,email)",
+      )
+      .maybeSingle();
+
+    setSaving(false);
+    if (error) {
+      setSaveError(error.message);
+      return;
+    }
+    if (updated) {
+      setSnapshot(workspaceRowWithSanitizedAttests(updated as WorkspaceApplication));
+    }
+    onPersisted?.();
+  };
+
   const cancelEdit = () => {
     setEditing(null);
     setErrors({});
@@ -651,6 +705,10 @@ export function PortalApplicationAdjustment({
       [edit.blockId]: { resolvedAt: new Date().toISOString() },
     };
 
+    setSnapshot((prev) =>
+      prev.id !== snapshot.id ? prev : { ...prev, data: nextData },
+    );
+
     const { data: updated, error } = await supabase
       .from("applications")
       .update({ data: nextData })
@@ -764,6 +822,7 @@ export function PortalApplicationAdjustment({
     isEditing: canEditBlocks && editing?.blockId === id,
     canEdit: canEditBlocks,
     onStartEdit: () => startEdit(id),
+    onReset: () => void resetBlock(id),
     onCancel: cancelEdit,
     onSave: () => editing && void persistEdit(editing),
     saving,
@@ -795,7 +854,10 @@ export function PortalApplicationAdjustment({
         statusMeta.canonicalState,
         statusMeta.label,
         canEditBlocks ? "1" : "0",
-        savedComments.map((c) => `${c.id}:${c.createdAt}`).join(","),
+        savedComments
+          .map((c) => `${c.id}:${c.adjustmentResolutionStatus ?? ""}`)
+          .join(","),
+        JSON.stringify(resolutions),
       ].join("\u001e"),
     [
       snapshot.id,
@@ -804,10 +866,12 @@ export function PortalApplicationAdjustment({
       statusMeta.label,
       canEditBlocks,
       savedComments,
+      resolutions,
     ],
   );
 
   const scrollRootRef = useDashboardScrollRoot<HTMLDivElement>();
+  const submittedAtLabel = formatReviewSubmittedAt(snapshot.data);
 
   useRegisterDashboardDetailPanel(
     detailPanelSignature,
@@ -820,76 +884,64 @@ export function PortalApplicationAdjustment({
         savedReviewComments={savedComments}
         onSavedCommentNavigate={navigateFromComment}
         showCommentsSection={canEditBlocks}
+        bemerkungenVariant="r1"
       />
     ),
   );
 
   return (
     <div className="flex min-h-0 flex-1 w-full min-w-0 flex-col overflow-hidden">
-      <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
-        <div
-          ref={scrollRootRef}
-          className={cn("h-full", applicationReviewScrollAreaClass)}
-        >
-          <div className="mx-auto w-full max-w-4xl space-y-6">
-            <div>
-              <div className="min-w-0">
-                <h1 className="text-xl font-semibold tracking-tight text-foreground">
-                  Antrag auf Nachteilsausgleich (NTA) –{" "}
-                  {shortApplicationRef(snapshot.id)}
-                </h1>
-                {isInReviewPortal ? (
-                  <div className="mt-4 rounded-lg bg-blue-100 px-4 py-3">
-                    <div className="flex gap-3 text-left">
-                      <div className="flex shrink-0 items-start pt-0.5">
-                        <Info className="size-4 text-blue-500" strokeWidth={2} aria-hidden />
-                      </div>
-                      <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-blue-500">
-                        Die Fachstelle prüft Ihren Antrag auf Vollständigkeit. Die Bearbeitung dauert
-                        in der Regel 5–10 Werktage. Sie werden per E-Mail informiert, sobald es
-                        Neuigkeiten gibt.
-                      </p>
-                    </div>
-                  </div>
-                ) : null}
-                {canEditBlocks ? (
-                  <div className="mt-4 rounded-lg bg-orange-100 px-4 py-3">
-                    <div className="flex gap-3 text-left">
-                      <div className="flex shrink-0 items-start pt-0.5">
-                        <CircleAlert className="size-4 text-orange-400" strokeWidth={2} aria-hidden />
-                      </div>
-                      <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-orange-400">
-                        Die Fachstelle hat Ihren Antrag geprüft und Nachbesserungen festgestellt. Nehmen
-                        Sie die markierten Anpassungen vor und reichen Sie den Antrag erneut ein.
-                      </p>
-                    </div>
-                  </div>
-                ) : null}
-                {isInDecisionPortal ? (
-                  <div className="mt-4 rounded-lg bg-purple-100 px-4 py-3">
-                    <div className="flex gap-3 text-left">
-                      <div className="flex shrink-0 items-start pt-0.5">
-                        <Info className="size-4 text-purple-600" strokeWidth={2} aria-hidden />
-                      </div>
-                      <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-purple-600">
-                        Die Entscheidungsinstanz prüft Ihren Antrag. Die Bearbeitung dauert in der Regel
-                        5–10 Werktage. Sie werden per E-Mail informiert, sobald es Neuigkeiten gibt.
-                      </p>
-                    </div>
-                  </div>
-                ) : null}
-                {deleteError ? (
-                  <p className="mt-2 text-sm text-destructive" role="alert">
-                    Antrag konnte nicht zurückgezogen werden: {deleteError}
-                  </p>
-                ) : null}
-              </div>
-            </div>
+      <div
+        ref={scrollRootRef}
+        className={cn(
+          applicationReviewScrollAreaClass,
+          "flex flex-col",
+          applicationReviewSectionGapClass,
+        )}
+      >
+        <div className="flex flex-col gap-6">
+          <ApplicationReviewPageHeader submittedAtLabel={submittedAtLabel} />
+              {isInReviewPortal ? (
+                <ApplicationStatusCallout
+                  badgeClassName={statusMeta.className}
+                  icon={Info}
+                >
+                  Die Fachstelle prüft Ihren Antrag auf Vollständigkeit. Die Bearbeitung dauert
+                  in der Regel 5–10 Werktage. Sie werden per E-Mail informiert, sobald es
+                  Neuigkeiten gibt.
+                </ApplicationStatusCallout>
+              ) : null}
+              {canEditBlocks ? (
+                <ApplicationStatusCallout
+                  badgeClassName={statusMeta.className}
+                  icon={CircleAlert}
+                >
+                  Die Fachstelle hat Ihren Antrag geprüft und Nachbesserungen festgestellt. Nehmen
+                  Sie die markierten Anpassungen vor und reichen Sie den Antrag erneut ein.
+                </ApplicationStatusCallout>
+              ) : null}
+              {isInDecisionPortal ? (
+                <ApplicationStatusCallout
+                  badgeClassName={statusMeta.className}
+                  icon={Info}
+                >
+                  Die Entscheidungsinstanz prüft Ihren Antrag. Die Bearbeitung dauert in der Regel
+                  5–10 Werktage. Sie werden per E-Mail informiert, sobald es Neuigkeiten gibt.
+                </ApplicationStatusCallout>
+              ) : null}
+              {deleteError ? (
+                <p className="text-sm text-destructive" role="alert">
+                  Antrag konnte nicht zurückgezogen werden: {deleteError}
+                </p>
+              ) : null}
+        </div>
 
+        <div className="flex flex-col gap-6">
           {/* Antragsteller */}
           <R1BlockShell {...blockProps("applicant")}>
             {editing?.blockId === "applicant" && editing.personal ? (
               <PersonalEditForm
+                layout="r1"
                 value={editing.personal}
                 errors={errors}
                 onChange={(patch) =>
@@ -901,12 +953,12 @@ export function PortalApplicationAdjustment({
                 }
               />
             ) : personal ? (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className={REVIEW_BLOCK_FIELD_GRID_CLASS}>
                 <ReviewField
                   label="Name"
                   value={`${personal.vorname ?? ""} ${personal.name ?? ""}`.trim() || "—"}
                 />
-                <ReviewField label="Matrikelnummer" value={personal.matrikel ?? "—"} />
+                <ReviewField label="Martikelnummer" value={personal.matrikel ?? "—"} />
                 <ReviewField label="Studiengang" value={personal.studiengang ?? "—"} />
                 <ReviewField label="Semester" value={personal.semester ?? "—"} />
                 <ReviewField label="E-Mail" value={personal.email ?? "—"} />
@@ -1022,7 +1074,7 @@ export function PortalApplicationAdjustment({
                 }
               />
             ) : (
-              <DurationChoiceCompare selected={def?.duration} />
+              <DurationChoiceCompare selected={def?.duration} readonlyMode="r1" />
             )}
           </R1BlockShell>
 
@@ -1044,7 +1096,7 @@ export function PortalApplicationAdjustment({
                 }
               />
             ) : (
-              <ScopeChecklist selected={def?.scopeSelections ?? []} />
+              <ScopeChecklist selected={def?.scopeSelections ?? []} readonlyMode="r1" />
             )}
           </R1BlockShell>
 
@@ -1142,7 +1194,7 @@ export function PortalApplicationAdjustment({
             )}
           </R1BlockShell>
 
-          <div className="mt-8 flex w-full flex-row flex-wrap items-center justify-between gap-3">
+          <div className="flex w-full flex-row flex-wrap items-center justify-between gap-3 pt-2">
             <Button
               type="button"
               variant="ghost"
@@ -1183,14 +1235,12 @@ export function PortalApplicationAdjustment({
             ) : null}
           </div>
           {releaseError ? (
-            <p className="mt-2 text-sm text-destructive" role="alert">
+            <p className="text-sm text-destructive" role="alert">
               {releaseError}
             </p>
           ) : null}
-          </div>
         </div>
       </div>
-
     </div>
   );
 }
@@ -1205,6 +1255,7 @@ type R1BlockShellProps = {
   canEdit: boolean;
   isEditing: boolean;
   onStartEdit: () => void;
+  onReset: () => void;
   onCancel: () => void;
   onSave: () => void;
   saving: boolean;
@@ -1222,18 +1273,16 @@ function R1BlockShell({
   canEdit,
   isEditing,
   onStartEdit,
-  onCancel,
+  onReset,
   onSave,
   saving,
   saveError,
-  remarkComment,
   blockId,
   autosaveErrorMessage,
   children,
 }: R1BlockShellProps & { children: ReactNode }) {
   const anchorId = reviewWorkspaceAnchorId(blockId);
 
-  // Bestimme den Tonus.
   const isAdjustmentRequested = forwarded?.phase === "adjustment";
   const isResolved = isAdjustmentRequested && Boolean(resolution);
 
@@ -1245,72 +1294,59 @@ function R1BlockShell({
         : "default";
 
   const remark =
-    forwarded?.phase === "adjustment"
-      ? forwarded.remark
-      : (remarkComment?.body ?? null);
+    forwarded?.phase === "adjustment" ? forwarded.remark : null;
 
-  // Wenn Edit-Modus aktiv: Rahmen amber, Footer mit Speichern/Abbrechen.
+  const errorAlerts = (
+    <>
+      {autosaveErrorMessage ? (
+        <p className="text-sm text-destructive" role="alert">
+          {autosaveErrorMessage}
+        </p>
+      ) : null}
+      {saveError ? (
+        <p className="text-sm text-destructive" role="alert">
+          {saveError}
+        </p>
+      ) : null}
+    </>
+  );
+
   if (canEdit && isEditing) {
     return (
       <ReviewBlockCard
         anchorId={anchorId}
         title={title}
-        footerTone="adjustment"
+        variant="adjustment_active"
         footer={
-          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Button
-              type="button"
-              variant="ghost"
-              className="h-9 px-3 text-white hover:bg-amber-500 hover:text-white focus-visible:ring-white/80"
-              onClick={onCancel}
-              disabled={saving}
-            >
-              Abbrechen
-            </Button>
-            <Button
-              type="button"
-              className="h-9 gap-2 border border-white/80 bg-white text-amber-950 shadow-sm hover:bg-amber-50 hover:text-amber-950 focus-visible:ring-white/90 disabled:opacity-60 sm:ml-auto"
-              onClick={onSave}
-              disabled={saving}
-            >
-              <Save className="size-4 text-amber-800" aria-hidden />
-              {saving ? "Wird gespeichert…" : "Anpassung speichern"}
-            </Button>
-          </div>
+          <>
+            {remark ? <ReviewBlockR1RemarkSection remark={remark} /> : null}
+            <ReviewBlockR1EditingFooter
+              onReset={onReset}
+              onConfirm={onSave}
+              saving={saving}
+            />
+          </>
         }
       >
         <>
-          {remark ? <RemarkBox remark={remark} /> : null}
           {children}
-          {autosaveErrorMessage ? (
-            <p className="text-sm text-destructive" role="alert">
-              {autosaveErrorMessage}
-            </p>
-          ) : null}
-          {saveError ? (
-            <p className="text-sm text-destructive" role="alert">
-              {saveError}
-            </p>
-          ) : null}
+          {errorAlerts}
         </>
       </ReviewBlockCard>
     );
   }
 
-  // Confirmed: grüner Rahmen, kein Footer-Button.
   if (tone === "confirmed") {
     return (
       <ReviewBlockCard
         anchorId={anchorId}
         title={title}
-        footerTone="confirmed"
+        variant="confirmed"
         footer={
-          <div className="flex w-full justify-end">
-            <ReviewBlockFooterStatus
-              icon={CheckCheck}
-              label="Von der Fachstelle bestätigt"
-            />
-          </div>
+          <ReviewBlockConfirmedFooter
+            readOnly
+            statusLabel="Von Fachstelle bestätigt"
+          />
         }
       >
         {children}
@@ -1318,115 +1354,54 @@ function R1BlockShell({
     );
   }
 
-  // Adjustment requested + R1 hat gespeichert: wie Fachstellen-Teal, aber abgeschwächt; Done-Pill kräftig teal.
   if (isAdjustmentRequested && isResolved) {
     return (
       <ReviewBlockCard
         anchorId={anchorId}
         title={title}
-        footerTone="adjustment_done"
+        variant="adjustment_active"
         footer={
-          <div className="flex w-full flex-wrap items-center justify-between gap-3">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <span className="inline-flex shrink-0 rounded-full bg-teal-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm ring-1 ring-teal-950/20 dark:bg-teal-600 dark:text-white">
-                Done
-              </span>
-              <span className="text-sm font-medium text-white drop-shadow-sm">
-                Anpassung gespeichert
-              </span>
-            </div>
-            {canEdit ? (
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-9 gap-2 px-3 text-white hover:bg-white/20 hover:text-white focus-visible:ring-white/40"
-                onClick={onStartEdit}
-              >
-                <PencilLine className="size-4" aria-hidden />
-                Erneut bearbeiten
-              </Button>
-            ) : null}
-          </div>
+          remark ? (
+            <ReviewBlockR1RemarkSection
+              remark={remark}
+              footerActions={
+                canEdit ? (
+                  <ReviewBlockR1SavedRemarkActions onEdit={onStartEdit} />
+                ) : undefined
+              }
+            />
+          ) : null
         }
       >
-        <>
-          {remark ? <RemarkBox remark={remark} /> : null}
-          <ResolvedNotice />
-          {children}
-        </>
+        {children}
       </ReviewBlockCard>
     );
   }
 
-  // Adjustment requested, noch nicht bearbeitet: gelb + To-do-Pill + „Anpassung vornehmen".
   if (isAdjustmentRequested) {
     return (
       <ReviewBlockCard
         anchorId={anchorId}
         title={title}
-        footerTone="adjustment"
+        variant="adjustment_active"
         footer={
-          <div className="flex w-full flex-wrap items-center justify-between gap-3">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <span className="inline-flex shrink-0 rounded-full bg-white/25 px-2.5 py-1 text-xs font-semibold text-white">
-                To do
-              </span>
-              <span className="inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-white">
-                <MessageSquareText className="size-4 shrink-0" aria-hidden />
-                {canEdit ? "Anpassung erforderlich" : "Anpassung angefordert"}
-              </span>
-            </div>
+          <>
+            {remark ? <ReviewBlockR1RemarkSection remark={remark} /> : null}
             {canEdit ? (
-              <Button
-                type="button"
-                className="h-9 gap-2 border border-white/80 bg-white text-amber-950 shadow-sm hover:bg-amber-50 hover:text-amber-950 focus-visible:ring-white/90"
-                onClick={onStartEdit}
-              >
-                <PencilLine className="size-4 text-amber-800" aria-hidden />
-                Anpassung vornehmen
-              </Button>
+              <ReviewBlockR1StartAdjustmentFooter onStart={onStartEdit} />
             ) : null}
-          </div>
+          </>
         }
       >
-        <>
-          {remark ? <RemarkBox remark={remark} /> : null}
-          {children}
-        </>
+        {children}
       </ReviewBlockCard>
     );
   }
 
-  // Fallback: kein expliziter Snapshot — neutral.
   return (
-    <ReviewBlockCard anchorId={anchorId} title={title} footer={null}>
+    <ReviewBlockCard anchorId={anchorId} title={title} variant="default" footer={null}>
       {children}
     </ReviewBlockCard>
-  );
-}
-
-function RemarkBox({ remark }: { remark: string }) {
-  return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50/90 px-4 py-3 dark:border-amber-900/40 dark:bg-amber-950/35">
-      <p className="text-xs font-medium text-muted-foreground">
-        Bemerkung der Fachstelle
-      </p>
-      <p className="mt-1 whitespace-pre-wrap text-sm leading-5 text-foreground">
-        {remark}
-      </p>
-    </div>
-  );
-}
-
-function ResolvedNotice() {
-  return (
-    <div className="flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50/90 px-4 py-3 text-sm text-teal-800 dark:border-teal-800/45 dark:bg-teal-950/30 dark:text-teal-100/90">
-      <CheckCheck className="size-4 shrink-0 text-teal-600 dark:text-teal-400" aria-hidden />
-      <span>
-        Sie haben diesen Block angepasst. Die Bemerkung der Fachstelle bleibt
-        zur Nachvollziehbarkeit sichtbar.
-      </span>
-    </div>
   );
 }
 
@@ -1436,11 +1411,89 @@ function PersonalEditForm({
   value,
   errors,
   onChange,
+  layout = "default",
 }: {
   value: EditingPersonal;
   errors: FieldErrors;
   onChange: (patch: Partial<EditingPersonal>) => void;
+  layout?: "default" | "r1";
 }) {
+  if (layout === "r1") {
+    return (
+      <div className={REVIEW_BLOCK_FIELD_GRID_CLASS}>
+        <FieldGroup label="Name" error={errors.name ?? errors.vorname}>
+          <Input
+            value={`${value.vorname} ${value.name}`.trim()}
+            onChange={(e) => {
+              const parts = e.target.value.trim().split(/\s+/).filter(Boolean);
+              onChange({
+                vorname: parts[0] ?? "",
+                name: parts.slice(1).join(" "),
+              });
+            }}
+            aria-invalid={Boolean(errors.name || errors.vorname)}
+            className={cn((errors.name || errors.vorname) && "border-destructive")}
+          />
+        </FieldGroup>
+        <FieldGroup label="Martikelnummer" error={errors.matrikel}>
+          <Input
+            value={value.matrikel}
+            inputMode="numeric"
+            onChange={(e) =>
+              onChange({ matrikel: formatMatrikelInput(e.target.value) })
+            }
+            aria-invalid={Boolean(errors.matrikel)}
+            className={cn(errors.matrikel && "border-destructive")}
+          />
+        </FieldGroup>
+        <FieldGroup label="Studiengang" error={errors.studiengang}>
+          <StudiengangCombobox
+            value={value.studiengang}
+            onValueChange={(v) => onChange({ studiengang: v })}
+          />
+        </FieldGroup>
+        <FieldGroup label="Semester" error={errors.semester}>
+          <Select
+            value={value.semester || undefined}
+            onValueChange={(v: string) => onChange({ semester: v })}
+          >
+            <SelectTrigger
+              className={cn("w-full", errors.semester && "border-destructive")}
+              aria-invalid={Boolean(errors.semester)}
+            >
+              <SelectValue placeholder="Semester wählen" />
+            </SelectTrigger>
+            <SelectContent>
+              {SEMESTER_NUMBERS.map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  {n}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FieldGroup>
+        <FieldGroup label="E-Mail" error={errors.email}>
+          <Input
+            type="email"
+            value={value.email}
+            onChange={(e) => onChange({ email: e.target.value })}
+            aria-invalid={Boolean(errors.email)}
+            className={cn(errors.email && "border-destructive")}
+          />
+        </FieldGroup>
+        <FieldGroup label="Telefonnummer" error={errors.phone}>
+          <Input
+            type="tel"
+            value={value.phone}
+            onChange={(e) => onChange({ phone: e.target.value })}
+            aria-invalid={Boolean(errors.phone)}
+            className={cn(errors.phone && "border-destructive")}
+          />
+        </FieldGroup>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2">
@@ -1680,31 +1733,33 @@ function DurationEditForm({
     {
       id: "one_semester",
       title: "Einmalig für ein Semester",
-      hint: "Für episodische Erkrankungen oder zur erstmaligen Erprobung",
+      hint: "Für episodische Erkrankungen oder zur erstmaligen Erprobung der Massnahmen",
     },
   ];
   return (
-    <div className="space-y-2">
+    <div className={R1_RICH_OPTION_GROUP_CLASS}>
       {options.map((opt) => (
-        <label
+        <button
           key={opt.id}
-          className={cn(
-            "flex items-start gap-3 rounded-[10px] border bg-card px-3 py-3",
-            value === opt.id ? "border-foreground" : "border-border",
-          )}
+          type="button"
+          className={R1_RICH_OPTION_EDITABLE_CLASS}
+          onClick={() => onChange(opt.id)}
         >
-          <input
-            type="radio"
-            name="r1-duration"
-            checked={value === opt.id}
-            onChange={() => onChange(opt.id)}
-            className="mt-0.5 size-4 accent-primary"
-          />
-          <span className="space-y-1">
-            <span className="block text-sm text-foreground">{opt.title}</span>
-            <span className="block text-xs text-muted-foreground">{opt.hint}</span>
+          <span className="relative mt-0.5 flex size-4 shrink-0 items-center justify-center" aria-hidden>
+            <span
+              className={cn(
+                "flex size-4 items-center justify-center rounded-full border-2 bg-background",
+                value === opt.id ? "border-zinc-900" : "border-zinc-300",
+              )}
+            >
+              {value === opt.id ? <span className="size-2 rounded-full bg-zinc-900" /> : null}
+            </span>
           </span>
-        </label>
+          <span className="min-w-0 flex-1 space-y-1.5 text-left">
+            <span className="block text-sm leading-5 text-foreground">{opt.title}</span>
+            <span className="block text-xs leading-4 text-muted-foreground">{opt.hint}</span>
+          </span>
+        </button>
       ))}
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
     </div>

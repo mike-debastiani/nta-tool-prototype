@@ -67,8 +67,8 @@ Die Flow-Shell und die Dashboard-Shell **nicht mischen** (kein doppelte Sidebar,
 ```
 
 - **Seiten-Hintergrund:** `bg-stone-100`, `h-screen`, `overflow-hidden`.
-- **Inhalts-Panel:** `bg-background` + Shadow `APPLICATION_CONTENT_PANEL_SHADOW_CLASS` (`lib/design-tokens/application-content-panel.ts`); innen **`px-6 pt-10`** (24px seitlich, 40px oben); **Inset-Layout** (unten `pb-6`, `rounded-xl`) solange `scrollHeight / clientHeight` unter **90 %**; **Tight-Layout** (`pb-0`, nur `rounded-t-xl`) ab **90 %** (Hysterese-Ausstieg **82 %**). Konstanten: `DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_*` in `workspace-dashboard.ts`.
-- **Horizontaler Abstand:** Content-Zeile **`px-6`** (24px zum Viewport); weisses Hauptpanel **`px-6 pt-10`**; Nav-Sidebar **`pl-[18px] py-3`**; Top-Leiste **`px-6 py-3`**; Antragdetails-Spalte **`pl-6`**.
+- **Inhalts-Panel:** `bg-background` + Shadow `APPLICATION_CONTENT_PANEL_SHADOW_CLASS`; **kein** Container-Padding am Panel (`DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS` = `""`). Inset am **Scroll-Viewport** (`dashboardMainPanelScrollAreaClass`: `pl-6 pr-4`, **`pt-12`** = 48px oben, `pb-6`); **Inset-Layout** (`rounded-xl`, unten `pb-6` an Content-Zeile) vs. **Tight-Layout** (`rounded-t-xl`, `pb-0`) — Hysterese **90 %** / **82 %** (`DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_*`).
+- **Horizontaler Abstand:** Content-Zeile **`px-6`** (24px zum Viewport); Scroll-Inhalt **`pl-6 pr-4`** + Läufer-`mr-2`; Nav **`pl-[18px] py-3`**; Top-Leiste **`px-6 py-3`**; Antragdetails **`pl-6`**.
 
 ---
 
@@ -206,7 +206,7 @@ Default-Zurück: `portalDefaultBackButton` in `workspace-dashboard-shell.tsx`.
 | **Tabellen-Spalten** | Name (`resolveApplicantDisplayName`), Studiengang, Antragsnummer (`workspaceApplicationListNumber` in `application-review-blocks.tsx`), Datum (`submittedAt` oder `updated_at`), Status (`getApplicationStatusMeta`), Zugewiesen an (`resolveApplicationAssignee`) |
 | **Interaktion** | Zeile klickbar → `setSelectedApplicationId` → gleiche Review-/R4-Ansicht wie Inbox; Filter **Offen** (ohne bewilligt/abgelehnt) / **Alle**; lokale Suche |
 | **Tabelle UI** | ein `border-b` pro Zeile (nicht pro Zelle); letzte Zeile ohne Divider |
-| **Shell** | Normales Inset-Panel (`px-6 pt-10`); kein `edgeToEdge` |
+| **Shell** | Default-Scroll mit `pt-12` am Viewport; kein `edgeToEdge` |
 
 ### Top-Leiste
 
@@ -222,7 +222,7 @@ Default-Zurück: `portalDefaultBackButton` in `workspace-dashboard-shell.tsx`.
 |--------|-----|
 | **Figma** | Cards `5792:22019`, Table `5826:3088`, Card-States `5856:21926` |
 | **Route** | `/portal/home` |
-| **Komponente** | `StudentDashboard` — volle Panelbreite (`p-6` Shell, kein `HfPageGrid`) |
+| **Komponente** | `StudentDashboard` — volle Panelbreite (`edgeToEdge`, kein Shell-`p-6`; Inset nur am Scroll-Viewport) |
 | **Daten** | Supabase-Liste eigener Anträge (Server + Client-Polling 2s) |
 | **Ansichten** | Toggle **Cards** / **Table** (`localStorage`: `r1-applications-view`) |
 | **Cards** | CSS-Grid: 2 Spalten, ab **1600px** 3 Spalten; Status-spezifische Shell + Progress (`In Review → In Entscheid → Verfügung`); Utility-Spalte am Ende (`R1DashboardUtilityColumn`: Neuer Antrag + Informationen) |
@@ -262,7 +262,7 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 
 | Page | Shell | `edgeToEdge` | Inhalt |
 |------|-------|--------------|--------|
-| `app/portal/home/page.tsx` | Portal | nein (`p-6` + Scroll) | `StudentDashboard` (volle Breite) |
+| `app/portal/home/page.tsx` | Portal | **ja** (`edgeToEdge`) | `StudentDashboard` (volle Breite, `pt-12` am Scroll) |
 | `app/portal/antragserstellung/page.tsx` | nur bei **Adjustment** | ja | `PortalApplicationAdjustment` |
 | `app/portal/antragserstellung/page.tsx` | **keine** Shell bei Flow | — | `NtaAntragDesktop` |
 | `app/workspace/page.tsx` | Workspace | ja | `WorkspaceTestFlow` |
@@ -297,8 +297,10 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 | `workspaceDetailPanelContentTransitionClass` | *(später)* Panel-Inhalt Opacity 200ms |
 | `DASHBOARD_SIDEBAR_PADDING_CLASS` | `pl-[18px] py-3` |
 | `DASHBOARD_SHELL_CONTENT_ROW_PADDING_CLASS` | `px-6` |
-| `DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS` | `pt-10` — horizontal 24px am Scroll (`pl-6 pr-4` + `mr-2`) |
-| `DASHBOARD_SHELL_MAIN_PANEL_PADDING_OPEN_CLASS` | `pt-10` — Antrag geöffnet, Inset am Page-Scroll |
+| `DASHBOARD_SHELL_MAIN_PANEL_PADDING_CLASS` | `""` — horizontal/oben am Scroll (`dashboardMainPanelScrollAreaClass`) |
+| `DASHBOARD_SHELL_MAIN_PANEL_PADDING_OPEN_CLASS` | `""` — Antrag geöffnet; Inset am Page-Scroll (`applicationReviewScrollAreaClass` für Review) |
+| `dashboardMainPanelContentInsetTopClass` | `pt-12` (48px) — Dashboard-Home Workspace + Portal |
+| `applicationReviewContentInsetClass` | `px-12 pt-12` — Review / Portal-Adjustment / R4 |
 | `DASHBOARD_SHELL_CONTENT_ROW_PADDING_BOTTOM_INSET_CLASS` | `pb-6` — Inset-Modus |
 | `DASHBOARD_SHELL_CONTENT_ROW_PADDING_BOTTOM_SCROLL_CLASS` | `pb-0` — Tight-Modus |
 | `DASHBOARD_SHELL_MAIN_PANEL_ROUNDED_INSET_CLASS` | `rounded-xl` |

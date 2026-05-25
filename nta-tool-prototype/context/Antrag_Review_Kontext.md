@@ -43,8 +43,10 @@
 
 ## 3. Status & Badges
 
-- **Zentral:** `lib/application-status.ts` — `deriveCanonicalApplicationState`, `getApplicationStatusMeta`, Export **`ApplicationStatusMeta`**.
-- UI-Badges: `components/domain/application-status-badge.tsx`.
+- **Zentral:** `lib/application-status.ts` — `deriveCanonicalApplicationState`, `getApplicationStatusMeta`, Export **`ApplicationStatusMeta`**; Badge-Klassen über **`getHfStatusBadgeClass(state, audience)`** aus `lib/design-tokens/status-badge-colors.ts` (**`StatusAudience`:** `R1` \| `R2` \| `R4`).
+- **R1 «In Review»:** `bg-in-review-50 text-in-review-800`; **R2/R4 «Review erforderlich»:** `bg-adjustment-100 text-adjustment-600` (HF Erforderlich).
+- **Header-Callouts** in Review/Portal: `components/domain/application-status-callout.tsx` — Container-Farben aus dem Status-Badge (`hfStatusCalloutClasses`); optional **`muted`** für R4-Lesesicht.
+- UI-Badges (Sidebar, Listen): `components/domain/application-status-badge.tsx`; R1-Karten können abweichende Pills nutzen (`R1_CARD_STATUS_BADGE_CLASS`).
 - **Keine** zweite Statuslogik in Screens duplizieren.
 
 ---
@@ -65,7 +67,8 @@
   - `data.recommendation.workspaceReview.forwardedComments`: persistierte Kommentar-Chronik beim Weiterreichen.
 - **Legacy-Wurzelfelder** (`reviewComments`, `r2PostSubmitReview`, `r2ReviewDraft` direkt in `data`) werden vor jedem Save mit **`dataWithoutLegacyReviewRoots`** (`lib/r2-review-persist.ts`) entfernt — sonst feuert der Trigger.
 - **Forward-Aktion** geht über **`app/api/applications/review-forward/route.ts`** (Session-Client, RLS-konform — kein `SUPABASE_SERVICE_ROLE_KEY` nötig). Payload: `applicationId`, `nextStatus` (`in_implementation` \| `needs_correction`), `workspaceReview` inkl. `postSubmit` + `forwardedComments`. Setzt `applications.status` entsprechend und schreibt `recommendation.workspaceReview` final.  
-  **Trigger-Pitfall:** Root-Felder in `data` außerhalb `consultation` / `recommendation` dürfen von R2 **nicht** verändert werden. Insbesondere darf **`r1AdjustmentResolutions`** beim Forward **nicht** aus dem Merge entfernt werden (sonst `R2 may not change data except recommendation/consultation`); Zurücksetzen erfolgt bei R1 über **`r1-release-adjustments`**.
+  **Trigger-Pitfall:** Root-Felder in `data` außerhalb `consultation` / `recommendation` dürfen von R2 **nicht** verändert werden. Insbesondere darf **`r1AdjustmentResolutions`** beim Forward **nicht** aus dem Merge entfernt werden (sonst `R2 may not change data except recommendation/consultation`); Zurücksetzen erfolgt bei R1 über **`r1-release-adjustments`**.  
+  **R1-Baseline für R2-Anpassungsmodus:** Beim Forward mit `needs_correction` werden Studierenden-Snapshots pro Block unter **`data.recommendation.r1AdjustmentBlockBaselines`** persistiert (Lesen: `lib/r1-adjustment-baseline.ts` — **nicht** an der JSON-Wurzel, sonst Trigger-Fehler).
 - **R4-Bewilligung (separater JSON-Pfad):** Entscheidungs-Schalter und Block-Bestätigungen liegen unter **`data.r4DecisionReview`** (nicht unter `recommendation`, damit kein Konflikt mit dem R2-Trigger). Typen und Merge-Helfer: `lib/test-flow-types.ts`, `lib/r4-decision-state.ts`; UI-Flow `Antrag_Bewilligung_Kontext.md`.
 - **R1-Freigabe-API:** **`app/api/applications/r1-release-adjustments/route.ts`** — setzt Status `in_review`, merged `buildWorkspaceReviewAfterR1AdjustmentRelease`, leert `r1AdjustmentResolutions`, broadcastet Zeilen-Update.
 - **RLS-Anker:** `applications_select_r2_worklist` umfasst seit Migration `extend_workspace_select_to_decision_states` auch **`in_implementation` / `approved` / `rejected`**, damit R2 den weitergereichten Antrag nach dem Statuswechsel im Workspace im Modus `readonly_decision` weiter sehen kann (Details siehe `Antragerstellung_Kontext.md` § 10). Parallel: **`applications_select_r4_workspace`** + **`users_select_r4_workspace_applicants`** für **R4** (immer mit **`current_user_role()`**, siehe `Antrag_Bewilligung_Kontext.md` § 6 / `Antragerstellung_Kontext.md` § 10).
@@ -103,8 +106,14 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 
 | Komponente | Pfad | Rolle |
 |------------|------|--------|
-| Review-Hauptansicht | `components/domain/workspace-application-review.tsx` | Blockliste links, View Modes, State, Dialoge, Sidebar-Props, debounced Draft-Persist, Forward-Aufruf |
-| Detail-Sidebar | `components/domain/application-review-detail-sidebar.tsx` | Antragdetails, Kommentar-Composer (Vollspalte), Chronik |
+| Review-Hauptansicht | `components/domain/workspace-application-review.tsx` | Blockliste links, View Modes, State, Dialoge, Sidebar-Props, debounced Draft-Persist, Forward-Aufruf; Prop **`workspaceViewerRole`** (`R2` \| `R4`) |
+| Seiten-Header | `components/domain/application-review-page-header.tsx` | Geteilt: Titel «Antrag auf Nachteilsausgleich», «Eingereicht am» (`paragraphSmall`), Options-Button |
+| Status-Callout | `components/domain/application-status-callout.tsx` | Hinweiszeile unter dem Header (Badge-Farben aus Status-Meta) |
+| Review-Block-Tokens | `lib/design-tokens/review-block.ts` | Shell-Klassen, Footer 52px, Composer/Adjustment/Locked-Remark-Band |
+| Bemerkungen-Tokens | `lib/design-tokens/review-bemerkungen.ts` | R1 pending/done (`5858:22820`), R2 Chronik (`5866:2021`) |
+| R1-Block-Footer | `lib/design-tokens/r1-review-block.ts` | R1 Anpassungs-Footer («Anpassung vornehmen», Bearbeiten, Speichern, Zurücksetzen) |
+| R1-Baseline | `lib/r1-adjustment-baseline.ts` | `readR1AdjustmentBlockBaselines`, Merge mit `recommendation.r1AdjustmentBlockBaselines` |
+| Detail-Sidebar | `components/domain/application-review-detail-sidebar.tsx` | Antragdetails; Chronik **`bemerkungenVariant`** `r1` \| `r2`; **R4:** `secondarySection="r4_contacts"` ohne Bemerkungs-Panel |
 | Persistenz-Helfer | `lib/r2-review-persist.ts` | `dataWithoutLegacyReviewRoots`, Pfade unter `recommendation.workspaceReview` |
 | Forward-API | `app/api/applications/review-forward/route.ts` | Session-Client-Update auf `in_implementation` / `needs_correction`, schreibt finale Review-Snapshots |
 | R1-Release API | `app/api/applications/r1-release-adjustments/route.ts` | Antragsteller: `needs_correction` \| `needs_adjustment` → `in_review`, merged `workspaceReview`, Broadcast |
@@ -136,40 +145,44 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 
 **IDs im Code (`ReviewWorkspaceBlockId` in `lib/review-workspace-blocks.ts`):** `applicant` · `attest` · `definition` · `duration` · `scope` · `lectureMeasures` · `assessmentMeasures`
 
-### Block-Phasen (lokal, `ReviewBlockPhase`)
+### Review-Block — visuelle Varianten (`ReviewBlockVariant`)
 
-| Phase | Darstellung |
-|--------|-------------|
-| `pending` | Standard-Karte (`ReviewBlockCard`), Footer: **Anpassung anfordern** + **Bestätigen**. |
-| `confirmed` | Außenrahmen teal (`footerTone="confirmed"`), Footer-Balken teal, **Zurücksetzen** + „Reviewed & Bestätigt“. |
-| `adjustment` | Außenrahmen amber, Footer amber, Bemerkung im Inhalt, **Zurücksetzen** + „Anpassung angefordert“. |
-| `pending_after_adjustment` | Nach R1-Freigabe: erneut wie offenes Review; Fachstellen-Bemerkung als **gesperrte** Hinweiszeile (`lockedRemark` / `displayRemark`), bis R2 erneut eine Anpassung fordert. |
+**Code:** `components/domain/application-review-blocks.tsx`, Tokens `lib/design-tokens/review-block.ts`.  
+**Inhalt** der Blöcke kommt aus dem Antragsformular (Beispiel-Felder in Figma sind Platzhalter).
 
-- **Bestätigen:** setzt Block auf `confirmed`.
-- **Anpassung anfordern:** öffnet **nicht** mehr einen Modal-Dialog; setzt Sidebar in den **Kommentar-Composer** (siehe unten).
-- **Zurücksetzen:** Bei **`confirmed`** sofort zurück auf `pending`. Bei **`adjustment`** zuerst **Bestätigungsdialog** („Anpassung zurückziehen?“); bei Ja: Block `pending`, Einträge in **`savedReviewComments`** mit gleichem **`blockId`** entfernt, ggf. offener Entwurf für diesen Block geschlossen.
+| Variante | Rolle / Phase | Figma | Rahmen | Footer |
+|----------|---------------|-------|--------|--------|
+| `default` | **R1** read-only, kein Review-Auftrag | `5641:21990` | `border-border`, `rounded-xl`, `p-24` | keiner |
+| `pending` | **R2** `pending`, `pending_after_adjustment` (erneut prüfen) | `5641:21952` | `border-border` | geteilte Leiste **52px**: links `adjustment-200` **Anpassung anfordern** (`FilePenLine`), rechts `bewilligt-200` **Bestätigen** (`Check`) |
+| `composer` | **R2** Bemerkung schreiben (Pflicht vor Anpassung) | `5641:22599` | `border-adjustment-500` | `stone-50`: Textarea + **Abbrechen** / **Kommentieren** (primary pill) |
+| `confirmed` | **R2** Block bestätigt | `5641:22807` | `border-bewilligt-600` | `bewilligt-200`: **Zurücksetzen** + Status `bewilligt-600` «Reviewed & Bestätigt» |
+| `adjustment_active` | **R2** Anpassung mit gespeicherter Bemerkung | `5641:22767` | `border-adjustment-500` | `adjustment-100`: Bemerkung `adjustment-700`, **Zurücksetzen** / **Bearbeiten** |
+| `adjustment_sent` | **R2** read-only nach Weiterleitung an R1 | `5657:1673` | `border-adjustment-500` | `adjustment-100`: Label «Anpassung», Bemerkung, Status «Anpassung wurde angefordert» |
 
-### Footer-Aktionen (pending)
+**Typo (einheitlich):** Titel `hfBlockTitle` (18px medium); Felder `ReviewField` — Label `paragraphSmall` muted, Wert `paragraphMedium`; Grid `ReviewBlockFieldGrid` (2 Spalten, `gap-12`).
 
-- **Anpassung anfordern:** `bg-amber-400`, weiße Schrift, Icon **`MessageSquarePlus`** (Figma-Kit, z. B. Node `3542:10053`).
-- **Bestätigen:** teal (`bg-teal-600`), Icon **`Check`**.
-- Footer-Zeilenhöhe über alle States vereinheitlicht (`h-9`, gemeinsames `py-3`).
+### Block-Phasen (lokal, `ReviewBlockPhase`) → Variante
 
-### Sidebar „Antragdetails“ + „Kommentare“
+| Phase | `ReviewBlockVariant` | Verhalten |
+|--------|----------------------|-----------|
+| — (R1 neutral) | `default` | Nur Inhalt, keine Aktionen. |
+| `pending` | `pending` | R2 wählt Bestätigen oder Anpassung anfordern. |
+| (composer offen) | `composer` | `pendingComposer` für diesen Block; Bemerkung **im Block-Footer**, Sidebar bleibt bei Antragdetails + Chronik. |
+| `confirmed` | `confirmed` | R2 kann zurücksetzen → `pending`. |
+| `adjustment` | `adjustment_active` (interaktiv) / `adjustment_sent` (read-only) | Bemerkung im Footer; **Bearbeiten** öffnet `composer` mit vorausgefülltem Text. |
+| `pending_after_adjustment` | `pending` + `ReviewBlockLockedRemarkCallout` **im Footer** (vor Pending-Leiste) | Gesperrte frühere Bemerkung (`5905:23340`); darunter erneut **Anpassung anfordern** / **Bestätigen**. |
 
-**Normale Ansicht (kein aktiver Entwurf):**
+- **Bestätigen:** `confirmed`.
+- **Anpassung anfordern:** `composer` (leerer Entwurf); **Kommentieren** nur mit nicht-leerer Bemerkung → `adjustment`.
+- **Abbrechen** (composer): zurück zu `pending` (zwei Buttons).
+- **Zurücksetzen:** `confirmed` → sofort `pending`; `adjustment` → Dialog, dann `pending` + Kommentar aus Liste entfernen.
+- **Bearbeiten:** `adjustment` → `composer` mit bestehender Bemerkung.
 
-- Oben: **Antragdetails** (Status-Pill, Antragsteller inkl. ID-Kopie, Eingereicht, Aktualisiert, Zugewiesen an, Antrags-ID).
-- Unten: **Kommentare** — Hinweis oder **Chronik** gespeicherter Block-Kommentare (`SavedReviewComment`: `id`, `blockId`, `blockTitle`, `body`, `createdAt`, optional **`authorDisplayName`** — persistiert im Draft und bei Weiterreichung in `forwardedComments` / `ReviewCommentPersisted`).
+### Sidebar «Antragdetails» + Bemerkungen / Kontakte
 
-**Aktiver Kommentarentwurf (`adjustmentComposer` gesetzt):**
-
-- Die **gesamte rechte Spalte** zeigt nur die Kommentar-Ansicht (Antragdetails temporär ausgeblendet).
-- Kopfzeile: **X** + Titel **„Kommentare“** — **X** = `onCancel()` (wie **Abbrechen**).
-- Karte: amber Rahmen, Block-Titel, Textarea (Placeholder: *Erläutern Sie was konkret angepasst werden muss*), **Abbrechen** / **Speichern**.
-- **Speichern:** nur bei nicht-leerem Text; sonst Fehlertext unter dem Feld. Nach erfolgreichem Speichern schließt die Ansicht automatisch (`pendingComposer` → `null` im Parent), Block wechselt zu **`adjustment`** mit Remark; Chronik erhält einen Eintrag.
-
-**Figma-Referenz Sidebar-Kommentar:** Node `3550:7067` (Kit „Prototyp shadcn“).
+- **R2 Review:** Antragdetails oben; unten Chronik (`SavedReviewComment`, **`bemerkungenVariant="r2"`**) — kein Vollbild-Composer (`adjustmentComposer={null}`). **Eingabe** für neue Anpassungen im **Block-Footer** (`ReviewBlockComposerFooter`).
+- **R1 Anpassung:** Chronik mit **`bemerkungenVariant="r1"`** — pending (`adjustment-50`) vs. done (weiss + «Angepasst»); `detailPanelSignature` enthält `r1AdjustmentResolutions`, damit Sidebar nach Speichern/Zurücksetzen aktualisiert.
+- **R4:** `showCommentsSection={false}` bzw. bei Lesesicht **`workspaceViewerRole="R4"`** ohne Bemerkungs-Panel; stattdessen **`secondarySection="r4_contacts"`** (Kontakt-Cards) — siehe `Antrag_Bewilligung_Kontext.md`.
 
 ### Gesamtbutton unter den Blöcken (R2, `interactive` / `in_review`)
 
@@ -192,16 +205,36 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 |---------|-----------|
 | Shell | `h-screen overflow-hidden` |
 | Mittlere Spalte | nur dort `overflow-y-auto` (Review-Blöcke) |
-| Rechte Spalte | volle Höhe; bei **Kommentarentwurf** nimmt die Kommentar-Ansicht die **komplette** Sidebar ein |
+| Rechte Spalte | volle Höhe; Antragdetails + Kommentar-Chronik (Composer im Block, nicht Vollbild-Sidebar) |
 | Kommentarchronik (ohne Entwurf) | scrollbarer Bereich unter „Kommentare“ |
 
-**Äussere Dashboard-Shell** (Sidebar, Top-Bar, weisses Panel): `workspace-dashboard-shell.tsx` — **`Dashboard_Core_Layout_Kontext.md`**. Review-Innenlayout (3 Spalten, Scroll) bleibt in `WorkspaceApplicationReview` / `PortalApplicationAdjustment`.
+**Äussere Dashboard-Shell** (Sidebar, Top-Bar, weisses Panel): `workspace-dashboard-shell.tsx` — **`Dashboard_Core_Layout_Kontext.md`**.
+
+### Review / Portal-Adjustment — Scroll & Kopfzeile
+
+- **`edgeToEdge`** in `role-dashboard-layout.tsx` für Adjustment und Workspace-Detail (kein zusätzliches Shell-`p-6`).
+- Scroll + Inset: **`applicationReviewScrollAreaClass`** (`px-12 pt-12 pb-8`, `applicationReviewSectionGapClass` = `gap-8` zwischen Header-Bereich und Block-Stack) in `lib/design-tokens/application-scroll.ts`.
+- Geteilter Kopf: **`ApplicationReviewPageHeader`** + statusabhängige **`ApplicationStatusCallout`**-Zeilen; Block-Stack in `gap-6`-Sektionen (wie R2-Review und R1-`PortalApplicationAdjustment`).
+
+### R1 — Block-Zustände in `PortalApplicationAdjustment`
+
+**Tokens:** `lib/design-tokens/r1-review-block.ts`; Shell über **`R1BlockShell`** + `ReviewBlockCard` / `ReviewBlockR1*Footer`.
+
+| Zustand | Figma (HF) | Verhalten |
+|---------|------------|-----------|
+| Read-only / bestätigt durch Fachstelle | — | `variant="default"` |
+| Anpassung angefordert, offen | `5858:22820` pending | Footer «Anpassung vornehmen»; Sidebar-Eintrag pending |
+| Bearbeiten | `5858:22821` | R2-Bemerkung + Formular; Footer Speichern / Zurücksetzen |
+| Gespeichert (done) | `5858:22820` done | Grüner Rand; Footer «Bearbeiten»; Sidebar «Angepasst» |
+
+**Layout:** Gleiche Breite/Abstände wie R2-Review (kein `max-w-4xl`); volle Panelbreite mit `applicationReviewScrollAreaClass`.
 
 ### Block-Card-Styling (`ReviewBlockCard`)
 
-- **Surface:** `applicationBlockSurfaceClass` aus `lib/design-tokens/application-block.ts` — `rounded-lg border border-border bg-card`, **kein** Shadow (gleiches Muster in Portal-Adjustment, R4, R1-`R1FlowFormCard`, Empfehlungs-Accordion).
-- **Keine Header-Trennlinie mehr** zwischen Block-Titel und Inhalt (`border-b border-border` entfernt). Titel und Inhalt liegen in einem gemeinsamen Container `px-6 pt-5 pb-5` mit `space-y-4` — der Abstand Heading ↔ Content ist damit ~16 px statt vorher ~40 px.
-- Footer-Tonalitäten (`default` / `confirmed` teal / `adjustment` amber) unverändert; `RecommendationReleasedAccordion` und `RecommendationDraftEditor` orientieren sich am gleichen Header-Padding (kein eigenständiger Border-Divider mehr).
+- **HF Review-Blöcke:** `rounded-xl` (12px), `REVIEW_BLOCK_BODY_CLASS` (`p-6`, Titel↔Inhalt `gap-4`).
+- **Footer-Höhe:** einzeilige Aktionsleisten (`REVIEW_BLOCK_ACTION_FOOTER_BAR_CLASS`) **52px**; Composer- und Bemerkungs-Footer (`REVIEW_BLOCK_COMPOSER_*`, `REVIEW_BLOCK_ADJUSTMENT_*`) wachsen mit Inhalt.
+- **R1 Portal-Adjustment:** HF-Footer über `ReviewBlockR1*`-Komponenten und `r1-review-block.ts` (siehe oben); neutraler Block = `variant="default"`.
+- **Empfehlungs-Accordion** / R4: separates Layout; nicht über `ReviewBlockVariant`.
 
 ---
 
@@ -222,4 +255,4 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 
 ---
 
-*Letzte Aktualisierung: Broadcast auch nach R4 persist/complete; Verweis auf R4-Reconcile (`Antrag_Bewilligung_Kontext.md` § 7).*
+*Letzte Aktualisierung: HF `ReviewBlockVariant` + R1/R2-Sidebar; geteilter Review-Header/Callout; `r1AdjustmentBlockBaselines` unter `recommendation`; Scroll `applicationReviewScrollAreaClass`; R4 ohne Bemerkungs-Panel (`Antrag_Bewilligung_Kontext.md`).*

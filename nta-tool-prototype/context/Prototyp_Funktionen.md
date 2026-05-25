@@ -147,7 +147,7 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 
 ### F6 — Annotations-System (R2/R3 → R1 Korrektur-Loop)
 
-**Ist im Prototyp (Abweichung von Feld-Annotationen):** Statt einzelner Feld-Marker ein **Block-Review** im Workspace (`WorkspaceApplicationReview`): sieben inhaltliche Blöcke, je **Bestätigen** oder **Anpassung mit Bemerkung**; Persistenz unter `data.recommendation.workspaceReview`; Weiterleitung an R1 über `review-forward`; R1 bearbeitet in `PortalApplicationAdjustment`; Rückkehr in den R2-Review-Loop über **`r1-release-adjustments`** inkl. Phase **`pending_after_adjustment`** (gesperrte Fachstellen-Bemerkung). Vollständiger Ablauf → **`Antrag_Review_Kontext.md`**.
+**Ist im Prototyp (Abweichung von Feld-Annotationen):** **Block-Review** im Workspace (`WorkspaceApplicationReview`, HF `ReviewBlockVariant` in `application-review-blocks.tsx`): sieben Blöcke, **Bestätigen** / **Anpassung** (Composer im Block-Footer, Chronik in Sidebar); Persistenz `data.recommendation.workspaceReview`; Forward `review-forward` (Baselines `recommendation.r1AdjustmentBlockBaselines` bei Anpassung); R1 in `PortalApplicationAdjustment` (HF `R1BlockShell`); Rückkehr `r1-release-adjustments` + **`pending_after_adjustment`** (gesperrte Bemerkung im Block-Footer). R4: `WorkspaceR4DecisionView` / Lesesicht — **`Antrag_Review_Kontext.md`**, **`Antrag_Bewilligung_Kontext.md`**.
 
 **Vision / Zielbild (Feld-Ebene):**
 

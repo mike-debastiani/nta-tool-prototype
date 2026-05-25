@@ -1,7 +1,7 @@
 "use client";
 
-import { MessageSquare, MoreHorizontal, X } from "lucide-react";
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Check, EllipsisVertical, MessageSquare, MoreHorizontal, X } from "lucide-react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { ApplicationDetailsCard } from "@/components/domain/application-details-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,8 +10,19 @@ import type { ApplicationAssignee } from "@/lib/application-assignee";
 import { type ApplicationStatusMeta } from "@/lib/application-status";
 import {
   detailPanelContentInsetXClass,
-  whitePanelScrollViewportClass,
+  detailPanelScrollAreaClass,
 } from "@/lib/design-tokens/application-scroll";
+import {
+  REVIEW_BEMERKUNGEN_ACCENT_BAR_CLASS,
+  REVIEW_BEMERKUNGEN_ITEM_CLASS,
+  REVIEW_BEMERKUNGEN_ITEM_R1_DONE_CLASS,
+  REVIEW_BEMERKUNGEN_ITEM_R1_PENDING_CLASS,
+  REVIEW_BEMERKUNGEN_PANEL_CLASS,
+  REVIEW_BEMERKUNGEN_R1_AVATAR_CLASS,
+  REVIEW_BEMERKUNGEN_R1_BLOCK_TITLE_CLASS,
+  REVIEW_BEMERKUNGEN_R1_DONE_LABEL_CLASS,
+} from "@/lib/design-tokens/review-bemerkungen";
+import { hfTypography } from "@/lib/design-tokens/typography";
 import { cn } from "@/lib/utils";
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
 import {
@@ -35,7 +46,13 @@ export type SavedReviewComment = {
   adjustmentResolutionStatus?: "todo" | "done";
 };
 
-const REVIEW_COMMENT_AUTHOR_FALLBACK = "NTA Fachstelle";
+/** Figma `5866:2028` — Monat + Jahr in der Bemerkungsliste. */
+function formatBemerkungDate(ts: number): string {
+  return new Date(ts).toLocaleDateString("de-CH", {
+    month: "long",
+    year: "numeric",
+  });
+}
 
 export type ReviewAdjustmentComposerProps = {
   blockTitle: string;
@@ -59,12 +76,14 @@ type ApplicationReviewDetailSidebarProps = {
   /** Optionaler Empty-State für reine Detailansichten ohne Review-Kommentarflow. */
   emptyCommentsLabel?: string;
   /**
-   * Wenn false: kein Bereich «Kommentare» und kein Trennstrich unter den Antragdetails
+   * Wenn false: kein Bereich «Bemerkungen» unter den Antragdetails
    * (z. B. R1-Portal solange nicht «Anpassung erforderlich», R2 «Beratung & Empfehlung»).
    */
   showCommentsSection?: boolean;
   /** R4: Kontakt-Cards statt Kommentarbereich. */
   secondarySection?: "comments" | "r4_contacts";
+  /** R1 «Anpassung erforderlich» — Figma `5858:22820`; sonst R2 `5866:2021`. */
+  bemerkungenVariant?: "r1" | "r2";
 };
 
 function formatCommentTimestamp(ts: number): string {
@@ -93,6 +112,7 @@ export function ApplicationReviewDetailSidebar({
   emptyCommentsLabel = "Klicken Sie bei einem Block auf «Anpassung anfordern», um hier eine Bemerkung zu verfassen.",
   showCommentsSection = true,
   secondarySection = "comments",
+  bemerkungenVariant = "r2",
 }: ApplicationReviewDetailSidebarProps) {
   const orderedSavedReviewComments = useMemo(() => {
     const orderIndex = new Map<ReviewWorkspaceBlockId, number>(
@@ -142,7 +162,7 @@ export function ApplicationReviewDetailSidebar({
   return (
     <div
       className={cn(
-        "flex h-full min-h-0 w-full min-w-0 flex-col gap-4 overflow-hidden",
+        "flex h-full min-h-0 w-full min-w-0 flex-col gap-6 overflow-hidden",
         detailPanelContentInsetXClass,
       )}
     >
@@ -154,41 +174,14 @@ export function ApplicationReviewDetailSidebar({
       />
 
       {showCommentsSection && secondarySection === "comments" ? (
-        <section
-          className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-background px-6 pb-4 pt-4"
-          aria-labelledby="review-comments-heading"
-        >
-          <div className="mb-5 flex shrink-0 items-center gap-2">
-            <h3 id="review-comments-heading" className="text-lg font-medium leading-[27px] text-foreground">
-              Kommentare
-            </h3>
-          </div>
-          <div
-            className={cn(
-              whitePanelScrollViewportClass,
-              "flex min-h-0 flex-1 flex-col gap-5",
-            )}
-          >
-            {orderedSavedReviewComments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                {emptyCommentsLabel}
-              </p>
-            ) : null}
-            {orderedSavedReviewComments.map((c) => (
-              <SavedReviewCommentCard
-                key={c.id}
-                comment={c}
-                onNavigate={
-                  onSavedCommentNavigate
-                    ? () => onSavedCommentNavigate(c.blockId)
-                    : undefined
-                }
-              />
-            ))}
-          </div>
-        </section>
+        <ReviewBemerkungenPanel
+          comments={orderedSavedReviewComments}
+          emptyLabel={emptyCommentsLabel}
+          onNavigate={onSavedCommentNavigate}
+          variant={bemerkungenVariant}
+        />
       ) : null}
-      {showCommentsSection && secondarySection === "r4_contacts" ? (
+      {secondarySection === "r4_contacts" ? (
         <R4ContactsSection application={application} />
       ) : null}
     </div>
@@ -307,99 +300,210 @@ function ReviewAdjustmentDraftCard({
   );
 }
 
-function SavedReviewCommentCard({
+
+function initialsFromAuthor(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return "NF";
+  const parts = trimmed.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0]![0]}${parts[parts.length - 1]![0]}`.toUpperCase();
+  }
+  const compact = trimmed.replace(/\s+/g, "");
+  if (compact.length >= 2) return compact.slice(0, 2).toUpperCase();
+  return `${compact[0] ?? "?"}${compact[0] ?? "?"}`.toUpperCase();
+}
+
+function bemerkungItemInteractionProps(onNavigate?: () => void) {
+  return {
+    onClick: onNavigate,
+    onKeyDown: onNavigate
+      ? (e: KeyboardEvent) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onNavigate();
+          }
+        }
+      : undefined,
+    role: onNavigate ? ("button" as const) : undefined,
+    tabIndex: onNavigate ? 0 : undefined,
+  };
+}
+
+/** Figma `5866:2021` / `5858:22820` — Bemerkungen-Container unter Antragdetails. */
+function ReviewBemerkungenPanel({
+  comments,
+  emptyLabel,
+  onNavigate,
+  variant = "r2",
+}: {
+  comments: SavedReviewComment[];
+  emptyLabel: string;
+  onNavigate?: (blockId: string) => void;
+  variant?: "r1" | "r2";
+}) {
+  const panelTitle =
+    variant === "r1" ? "Bemerkungen der Fachstelle" : "Bemerkungen";
+
+  return (
+    <section
+      className={REVIEW_BEMERKUNGEN_PANEL_CLASS}
+      aria-labelledby="review-bemerkungen-heading"
+    >
+      <div className="flex shrink-0 items-center justify-between gap-2">
+        <h3
+          id="review-bemerkungen-heading"
+          className={cn(hfTypography.paragraphLargeMedium, "text-foreground")}
+        >
+          {panelTitle}
+        </h3>
+        <button
+          type="button"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-stone-150 text-foreground-alt transition-colors hover:bg-stone-200/80"
+          aria-label="Weitere Optionen"
+        >
+          <EllipsisVertical className="size-4" strokeWidth={1.75} aria-hidden />
+        </button>
+      </div>
+
+      <div className={cn(detailPanelScrollAreaClass, "min-h-0 flex-1")}>
+        {comments.length === 0 ? (
+          <p className={cn(hfTypography.paragraphSmall, "text-muted-foreground")}>
+            {emptyLabel}
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {comments.map((comment) =>
+              variant === "r1" ? (
+                <ReviewBemerkungItemR1
+                  key={comment.id}
+                  comment={comment}
+                  onNavigate={
+                    onNavigate ? () => onNavigate(comment.blockId) : undefined
+                  }
+                />
+              ) : (
+                <ReviewBemerkungItemR2
+                  key={comment.id}
+                  comment={comment}
+                  onNavigate={
+                    onNavigate ? () => onNavigate(comment.blockId) : undefined
+                  }
+                />
+              ),
+            )}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/** Figma `5858:22824` / `5858:22852` — R1-Bemerkung (ausstehend / angepasst). */
+function ReviewBemerkungItemR1({
   comment,
   onNavigate,
 }: {
   comment: SavedReviewComment;
   onNavigate?: () => void;
 }) {
-  const trimmedAuthor = comment.authorDisplayName?.trim();
-  const authorName = trimmedAuthor || REVIEW_COMMENT_AUTHOR_FALLBACK;
-  /** Ohne persistierten Namen (Legacy): fest „NF“ für Fachstelle, nicht aus dem Langtext abgeleitet. */
-  const authorInitials = trimmedAuthor ? initialsFromName(trimmedAuthor) : "NF";
-  const adjStatus = comment.adjustmentResolutionStatus;
+  const isDone = comment.adjustmentResolutionStatus === "done";
+  const authorName = comment.authorDisplayName?.trim() || "NTA Fachstelle";
 
   return (
     <article
       className={cn(
-        "flex max-w-full flex-col gap-4 rounded-lg border bg-muted/80 p-4",
-        adjStatus === "todo" && "border-[1.5px] border-amber-400",
-        adjStatus === "done" &&
-          "border-[1.5px] border-solid [border-color:rgb(13_148_136/0.6)] dark:[border-color:rgb(20_184_166/0.6)]",
-        !adjStatus && "border border-border",
-        onNavigate && "cursor-pointer transition-colors hover:bg-muted",
-        onNavigate && adjStatus === "todo" && "hover:border-amber-500",
-        onNavigate &&
-          adjStatus === "done" &&
-          "hover:[border-color:rgb(13_148_136/0.8)] dark:hover:[border-color:rgb(20_184_166/0.8)]",
-        onNavigate && !adjStatus && "hover:border-border",
+        isDone
+          ? REVIEW_BEMERKUNGEN_ITEM_R1_DONE_CLASS
+          : REVIEW_BEMERKUNGEN_ITEM_R1_PENDING_CLASS,
+        onNavigate && "cursor-pointer transition-colors hover:opacity-95",
       )}
-      onClick={onNavigate}
-      onKeyDown={
-        onNavigate
-          ? (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onNavigate();
-              }
-            }
-          : undefined
-      }
-      role={onNavigate ? "button" : undefined}
-      tabIndex={onNavigate ? 0 : undefined}
+      {...bemerkungItemInteractionProps(onNavigate)}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 flex-1 items-center gap-4">
-          <span
-            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-sm leading-none font-semibold text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100"
-            aria-hidden
-          >
-            {authorInitials}
-          </span>
-          <div className="min-w-0">
-            <p className="text-sm font-medium leading-5 text-foreground">{authorName}</p>
-            <p className="text-xs font-medium leading-4 text-muted-foreground">
-              {formatCommentTimestamp(comment.createdAt)}
-            </p>
-          </div>
-        </div>
-        <button
-          type="button"
-          className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-background/80 hover:text-foreground"
-          aria-label="Weitere Optionen"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <MoreHorizontal className="size-4" aria-hidden />
-        </button>
-      </div>
-      <div className="flex flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-xs font-medium leading-4 text-muted-foreground">
-            Block: {comment.blockTitle}
+      <div className="flex items-center gap-3">
+        <span className={REVIEW_BEMERKUNGEN_R1_AVATAR_CLASS} aria-hidden>
+          {initialsFromAuthor(authorName)}
+        </span>
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <p className={cn(hfTypography.paragraphSmallMedium, "text-foreground")}>
+            {authorName}
           </p>
-          {adjStatus === "todo" ? (
-            <span className="inline-flex shrink-0 items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold leading-none text-amber-950 dark:bg-amber-950/40 dark:text-amber-50">
-              To do
-            </span>
-          ) : null}
-          {adjStatus === "done" ? (
-            <span className="inline-flex shrink-0 items-center rounded-full bg-teal-600 px-2 py-0.5 text-[11px] font-semibold leading-none text-white shadow-sm ring-1 ring-teal-700/20 dark:bg-teal-600 dark:text-white">
-              Done
-            </span>
-          ) : null}
+          <time
+            className={cn(hfTypography.paragraphMini, "text-stone-500")}
+            dateTime={new Date(comment.createdAt).toISOString()}
+          >
+            {formatCommentTimestamp(comment.createdAt)}
+          </time>
         </div>
-        <p className="whitespace-pre-wrap text-sm leading-5 text-foreground">{comment.body}</p>
       </div>
+
+      <div className="flex flex-col gap-2">
+        <p className={REVIEW_BEMERKUNGEN_R1_BLOCK_TITLE_CLASS}>{comment.blockTitle}</p>
+        <div className="flex items-center gap-4">
+          <div className={REVIEW_BEMERKUNGEN_ACCENT_BAR_CLASS} aria-hidden />
+          <p
+            className={cn(
+              hfTypography.paragraphSmall,
+              "min-w-0 flex-1 whitespace-pre-wrap text-foreground",
+            )}
+          >
+            {comment.body}
+          </p>
+        </div>
+      </div>
+
+      {isDone ? (
+        <div className="flex items-end justify-start">
+          <span className={REVIEW_BEMERKUNGEN_R1_DONE_LABEL_CLASS}>
+            <Check className="size-4 shrink-0" strokeWidth={2} aria-hidden />
+            Angepasst
+          </span>
+        </div>
+      ) : null}
     </article>
   );
 }
 
-function initialsFromName(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
+/** Figma `5866:2025` — R2-Bemerkung in der Sidebar. */
+function ReviewBemerkungItemR2({
+  comment,
+  onNavigate,
+}: {
+  comment: SavedReviewComment;
+  onNavigate?: () => void;
+}) {
+  return (
+    <article
+      className={cn(
+        REVIEW_BEMERKUNGEN_ITEM_CLASS,
+        onNavigate && "cursor-pointer transition-colors hover:bg-stone-100",
+      )}
+      {...bemerkungItemInteractionProps(onNavigate)}
+    >
+      <div className="flex w-full items-center justify-between gap-2">
+        <p className={cn(hfTypography.paragraphMedium, "min-w-0 text-foreground")}>
+          {comment.blockTitle}
+        </p>
+        <time
+          className={cn(hfTypography.paragraphMini, "shrink-0 text-stone-500")}
+          dateTime={new Date(comment.createdAt).toISOString()}
+        >
+          {formatBemerkungDate(comment.createdAt)}
+        </time>
+      </div>
+
+      <div className="flex w-full items-start gap-4">
+        <div className={REVIEW_BEMERKUNGEN_ACCENT_BAR_CLASS} aria-hidden />
+        <p
+          className={cn(
+            hfTypography.paragraphSmall,
+            "min-w-0 flex-1 whitespace-pre-wrap text-foreground",
+          )}
+        >
+          {comment.body}
+        </p>
+      </div>
+    </article>
+  );
 }
 
 /** Aligns with Antragsteller block: Formularname zuerst, dann Profil, dann Fallback. */

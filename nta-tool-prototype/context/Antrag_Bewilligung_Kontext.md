@@ -29,12 +29,14 @@ Login: **`/staff/login`** erlaubt weiterhin R2–R6 inkl. R4; Redirect nach erfo
 
 ## 3. UI — Layout
 
-- **Gleiche dreispaltige Logik** wie `WorkspaceApplicationReview`: scrollbare Blockspalte links, **fixe Sidebar** rechts (`366px`), `WorkspaceDashboardShell` / `WorkspaceR2ToolbarProvider` — **„Zurück zur Liste“** im Workspace-Top-Bar-`leadingSlot`.
-- **Sidebar „Antragdetails“:** oben unverändert Metadaten (Status-Pill, Antragsteller, Daten, Zugewiesen, IDs).
-- **Unterhalb** (anstelle der Kommentar-Chronik im R4-Entscheid-Flow): **Kontakt-Cards**
-  - **Antragstellende Person** (Name, E-Mail aus Antrag / verknüpftem User).
-  - **Kontaktperson Fachstelle** (z. B. aus `consultation.advisor` oder Fallback auf Freigabe-Name `recommendation.releasedBy` / Platzhalter-E-Mail für den Prototyp).
-- Zweck: Hinweis, diese Personen bei Rückfragen während der Bewilligung zu konsultieren.
+- **Gleiche Komposition wie R2-Review:** scrollbare Blockspalte links, **fixe Sidebar** rechts (`w-[330px]`), `WorkspaceDashboardShell` / `WorkspaceR2ToolbarProvider` — **„Zurück zur Liste“** im Workspace-Top-Bar-`leadingSlot`.
+- **Kopfzeile:** geteilt mit R2/R1 — **`ApplicationReviewPageHeader`** + **`ApplicationStatusCallout`** (R4-Hinweis in `in_implementation`).
+- **Scroll/Inset:** `applicationReviewScrollAreaClass` + `applicationReviewSectionGapClass` (`lib/design-tokens/application-scroll.ts`) — **kein** `max-w-4xl`, volle Panelbreite wie `WorkspaceApplicationReview`.
+- **Sidebar «Antragdetails»:** oben Metadaten (`ApplicationDetailsCard`); **kein Bemerkungs-Panel** (`showCommentsSection={false}` in `WorkspaceR4DecisionView`).
+- **Statt Kommentar-Chronik:** **`secondarySection="r4_contacts"`** — Kontakt-Cards (`R4ContactsSection` in `application-review-detail-sidebar.tsx`):
+  - **Antragstellende Person** (Name, E-Mail).
+  - **Kontaktperson Fachstelle** (`consultation.advisor` / `recommendation.releasedBy` / Platzhalter).
+- **R4 Lesesicht** (andere Status): `WorkspaceApplicationReview` mit `workspaceViewerRole="R4"` — ebenfalls **ohne** Bemerkungen, nur Kontakte + read-only Callouts (`muted`).
 
 ---
 
@@ -47,7 +49,7 @@ Folgende Blöcke sind **nicht** bewillig-/ablehnbar und **ohne** grüne R2-„Be
 - Empfehlungsschreiben der Fachstelle (`RecommendationReleasedAccordion` wie R2)  
 - Antragsdefinition  
 
-Darstellung: neutraler **Card**-Rahmen (`footerTone`/`border` wie Standard-Review-Block ohne Teal). Unten **rechts** dezenter Hinweis mit Icon **Doppel-Häkchen** (`CheckCheck`) und Text **„Von der Fachstelle bestätigt“**.
+Darstellung: **`R4FacultyConfirmedBlock`** (`components/domain/r4-decision-review-blocks.tsx`) — neutraler Rahmen (`R4_FACULTY_CONFIRMED_BLOCK_CLASS` = Review-`default`). Footer **`bg-stone-100`**, rechts **«Von Fachstelle bestätigt»** + `CheckCheck` (Figma `5641:23410`).
 
 ---
 
@@ -55,13 +57,16 @@ Darstellung: neutraler **Card**-Rahmen (`footerTone`/`border` wie Standard-Revie
 
 Betroffen: **Gültigkeitsdauer**, **Geltungsbereich**, **Massnahmen LV**, **Massnahmen Leistungsnachweise** (gleiche Sichtbarkeitsregeln wie im R2-Review: leere/abschaltbare Blöcke ausblenden).
 
-### Figma-Referenzen (Mid-Fi shadcn Kit)
+### Figma-Referenzen (High-Fi — [BA-Prototyp-High-Fi](https://www.figma.com/design/pwLFwfIPnr9ZuYcot9pyyU))
 
 | Node | Inhalt |
 |------|--------|
-| [3800-7590](https://www.figma.com/design/Zsfu5vNE9nR0QPRNbUzy0K/BA-Prototyp-Mid-Fi--shadcn-Kit-?node-id=3800-7590&m=dev) | Ausgang: vom Studierenden Gewähltes, alle relevanten Schalter **an** → Kennzeichnung **bewilligt** |
-| [3800-7722](https://www.figma.com/design/Zsfu5vNE9nR0QPRNbUzy0K/BA-Prototyp-Mid-Fi--shadcn-Kit-?node-id=3800-7722&m=dev) | Bearbeitung: abgelehnt / Vorschlag / Zurücksetzen |
-| [3800-7886](https://www.figma.com/design/Zsfu5vNE9nR0QPRNbUzy0K/BA-Prototyp-Mid-Fi--shadcn-Kit-?node-id=3800-7886&m=dev) | Nach **„Auswahl bestätigen“**: bestätigter Block; **Bearbeiten** (Ghost) öffnet wieder die bearbeitbare Ansicht |
+| `5641:23410` | Fachstelle-bestätigte Blöcke (Antragsteller, Attest, Definition, …) |
+| `5657:17967` | Entscheid-Block **Ausgang:** Studierenden-Wahl = Schalter **an** → **Bewilligt** (`bewilligt-50` / `bewilligt-500`) |
+| `5907:23351` | **Bearbeitung:** Abgelehnt / Vorschlag / **Zurücksetzen** + **Auswahl bestätigen** |
+| `5657:18077` | Nach **Auswahl bestätigen:** `border-bewilligt-600`, Footer `bewilligt-200`, **Bearbeiten** + **Auswahl bestätigt** |
+
+**Tokens:** `lib/design-tokens/r4-decision-block.ts` (Zeilen, Footer, Switch-Gruppe **125px** — Schalter linksbündig).
 
 ### Regeln pro Zeile (Massnahmen / Geltungsbereich)
 
@@ -74,7 +79,8 @@ Betroffen: **Gültigkeitsdauer**, **Geltungsbereich**, **Massnahmen LV**, **Mass
 ### Aktionen im Block
 
 - Nach erster Änderung der Auswahl: Button **„Zurücksetzen“** links unten (stellt die **Arbeitskopie** dieser Zeilen auf den Ausgangszustand aus den Antragsdaten zurück).
-- **„Auswahl bestätigen“** rechts: persistiert den Block, wendet **bestätigtes** Styling an (vgl. Figma 3800-7886); **„Bearbeiten“** (Ghost) hebt die Bestätigung nur UI-seitig auf, bis erneut bestätigt oder persistiert wird.
+- **„Auswahl bestätigen“** rechts (primary pill, `CircleCheckBig`): persistiert den Block; bestätigter Block zeigt Zeilen weiter mit Schaltern (read-only), Footer wie Figma `5657:18077`. **„Bearbeiten“** hebt `confirmed` auf und öffnet die bearbeitbare Ansicht erneut.
+- **Switch-Gruppe:** feste Breite **125px**, Schalter **linksbündig** in jeder Zeile (`R4_DECISION_SWITCH_GROUP_CLASS`).
 - **„Entscheid abschliessen“** unten rechts: solange **deaktiviert**, bis **alle sichtbaren** R4-Entscheid-Blöcke bestätigt sind; dann aktiv. *(Prototyp: setzt Status auf `approved` und broadcastet — Ablehnungs-/Teilentzugs-Fälle können später ergänzt werden.)*
 
 ---
@@ -120,7 +126,10 @@ Ziel: kein „Kreuzschalten“ (ein Klick ändert scheinbar eine andere Zeile) u
 | Bereich | Pfad |
 |---------|------|
 | R4 Vollansicht | `components/domain/workspace-r4-decision-view.tsx` |
-| Sidebar Kontakte + Metadaten | `components/domain/application-review-detail-sidebar.tsx` (Erweiterung `contactsSection`) |
+| R4 UI-Bausteine | `components/domain/r4-decision-review-blocks.tsx` (`R4Switch`, `R4DecisionOptionRow`, `R4FacultyConfirmedBlock`, Footer) |
+| R4 Design-Tokens | `lib/design-tokens/r4-decision-block.ts` |
+| Review-Header / Callout | `application-review-page-header.tsx`, `application-status-callout.tsx` |
+| Sidebar Kontakte | `application-review-detail-sidebar.tsx` (`secondarySection="r4_contacts"`) |
 | Workspace-Einbindung | `components/domain/workspace-test-flow.tsx`, `app/workspace/page.tsx`, `lib/workspace-applications-list.ts`, `app/api/workspace/applications/route.ts` |
 | Login / Profil | `components/domain/login-card.tsx` (`getSession()` nach `signInWithPassword`, dann `users.role`) |
 | Layout / Avatar | `components/domain/role-dashboard-layout.tsx` (`workspaceAccountInitials`) |
@@ -140,4 +149,4 @@ Ziel: kein „Kreuzschalten“ (ein Klick ändert scheinbar eine andere Zeile) u
 
 ---
 
-*Letzte Aktualisierung: R4 Client-Persistenz, UPDATE-RLS, reconcile-Logik; Workspace-Dashboard-Shell → `Dashboard_Core_Layout_Kontext.md`.*
+*Letzte Aktualisierung: HF R4-Blöcke (`r4-decision-review-blocks`, Figma 5641/5657/5907); Layout wie R2-Review; Sidebar ohne Bemerkungen; Switch-Gruppe 125px; `Antrag_Review_Kontext.md` für geteilte Review-Block-Varianten.*

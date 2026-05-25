@@ -65,7 +65,8 @@ Zentral in `lib/design-tokens/status-badge-colors.ts`, konsumiert von `lib/appli
 |--------|-------------------|
 | Entwurf | `bg-entwurf-100 text-entwurf-500` |
 | Beratung & Empfehlung | `bg-beratung-100 text-beratung-500` |
-| In Review | `bg-in-review-100 text-in-review-500` |
+| In Review (R1) | `bg-in-review-50 text-in-review-800` |
+| In Review (R2 «Review erforderlich») | `bg-adjustment-100 text-adjustment-600` |
 | Anpassung | `bg-adjustment-100 text-adjustment-500` |
 | In Entscheid | `bg-in-decision-100 text-in-decision-500` |
 | Bewilligt | `bg-bewilligt-100 text-bewilligt-700` |
@@ -180,15 +181,26 @@ Utility-Klassen: `hf-px-page` (Toolbar-Padding), `hf-gap-grid` (Gap = Gutter).
 
 **Code:** `components/domain/workspace-dashboard-shell.tsx`, `workspace-home-dashboard.tsx`, `student-dashboard.tsx`, Tokens `lib/design-tokens/workspace-dashboard.ts`, Antragsblöcke `lib/design-tokens/application-block.ts`, Brand `components/icons/avalis-logo.tsx` («avalis» = `hfTypography.h4`).
 
-**Status-Badge (global):** `in_review` → `adjustment`-Palette (`status-badge-colors.ts`); R1-Karten können abweichende Pills nutzen (`R1_CARD_STATUS_BADGE_CLASS`).
+**Status-Badge:** audience-spezifisch in `status-badge-colors.ts` (`getHfStatusBadgeClass`); R1 `in_review` = In-Review-50/800; R2 = adjustment-100/600. R1-Karten können eigene Pills nutzen (`R1_CARD_STATUS_BADGE_CLASS`).
 
 **Nav aktiv:** `bg-primary` / `text-primary-foreground`, `rounded-[7px]` — Tokens `DASHBOARD_NAV_ITEM_ACTIVE_*` (Label ohne `hfTypography`-`foreground-alt`).
 
 **Portal-Besonderheiten:** 16px-Rand (`h-4` / `PORTAL_DASHBOARD_RIM_HEIGHT_CLASS`) auf `/portal/home`; Top-Bar auf `/portal/antragserstellung` (Adjustment), Ist ohne Höhen-Morph.
 
-**Inhalts-Panel:** **Inset** (`rounded-xl`, `pb-6`) oder **Tight** (`rounded-t-xl`, `pb-0`) je nach Füllhöhe (Hysterese 90 % / 82 %); `edgeToEdge` für Review/Adjustment mit optionalem externem Scroll-Root.
+**Inhalts-Panel:** **Inset** (`rounded-xl`, `pb-6`) oder **Tight** (`rounded-t-xl`, `pb-0`) je nach Füllhöhe (Hysterese 90 % / 82 %); `edgeToEdge` für Review/Adjustment/Home ohne Shell-`p-6`.
 
-Vollständige Mechanik (Collapse, `layoutMini`, Nav-Aktiv, Shell vs. Flow) → **`Dashboard_Core_Layout_Kontext.md`**.
+**Scroll-Inset Dashboard-Home:** `dashboardMainPanelScrollAreaClass` — **`pt-12`** (48px) über der Begrüssung/Headings; Review-Detail **`applicationReviewScrollAreaClass`** — `px-12 pt-12`.
+
+### Review- & R4-Blöcke (HF umgesetzt)
+
+| Node | Inhalt |
+|------|--------|
+| `5641:21990` … `5641:22807` | R2 Review-Block-Varianten (`ReviewBlockVariant`, `review-block.ts`) |
+| `5858:22820` … | R1 Anpassung Sidebar + Block-Footer (`review-bemerkungen.ts`, `r1-review-block.ts`) |
+| `5641:23410` | R4 Fachstelle-bestätigt |
+| `5657:17967` / `5907:23351` / `5657:18077` | R4 Entscheid-Schalter |
+
+Vollständige Mechanik → **`Antrag_Review_Kontext.md`**, R4 → **`Antrag_Bewilligung_Kontext.md`**, Shell → **`Dashboard_Core_Layout_Kontext.md`**.
 
 ---
 

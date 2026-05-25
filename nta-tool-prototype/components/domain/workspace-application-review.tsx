@@ -10,14 +10,9 @@ import {
   useState,
 } from "react";
 import {
-  Check,
-  CheckCheck,
   CircleAlert,
   Info,
   Loader2,
-  MessageSquarePlus,
-  MessageSquareText,
-  RotateCcw,
   Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,6 +28,8 @@ import {
   ApplicationReviewDetailSidebar,
   type SavedReviewComment,
 } from "@/components/domain/application-review-detail-sidebar";
+import { ApplicationReviewPageHeader } from "@/components/domain/application-review-page-header";
+import { ApplicationStatusCallout } from "@/components/domain/application-status-callout";
 import { useRegisterDashboardDetailPanel } from "@/components/domain/dashboard-detail-panel-context";
 import { useDashboardScrollRoot } from "@/components/domain/dashboard-main-panel-scroll-context";
 import {
@@ -44,14 +41,19 @@ import {
   DurationChoiceCompare,
   LECTURE_MEASURE_OPTIONS,
   MeasureChecklist,
+  ReviewBlockAdjustmentActiveFooter,
+  ReviewBlockAdjustmentSentFooter,
   ReviewBlockCard,
-  ReviewBlockFooterStatus,
+  ReviewBlockComposerFooter,
+  ReviewBlockConfirmedFooter,
+  ReviewBlockFieldGrid,
+  ReviewBlockLockedRemarkCallout,
+  ReviewBlockPendingFooter,
   ReviewField,
   ReviewFileRow,
   ScopeChecklist,
   formatReviewFileSize,
   sanitizeAttestFilesForDatabase,
-  shortApplicationRef,
 } from "@/components/domain/application-review-blocks";
 import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
 import {
@@ -71,7 +73,11 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import {
   applicationReviewScrollAreaClass,
+  applicationReviewSectionGapClass,
 } from "@/lib/design-tokens/application-scroll";
+import { REVIEW_BLOCK_READONLY_STATUS_FOOTER_CLASS } from "@/lib/design-tokens/review-block";
+import { hfTypography } from "@/lib/design-tokens/typography";
+import { formatReviewSubmittedAt } from "@/lib/application-review-labels";
 import { cn } from "@/lib/utils";
 import {
   type ApplicationStatus,
@@ -325,6 +331,7 @@ export function WorkspaceApplicationReview({
     workspaceViewerRole === "R4" ? "R4" : "R2";
   const statusMeta = getApplicationStatusMeta(application, statusAudience);
   const r4ReadOnlyCopy = workspaceViewerRole === "R4";
+  const submittedAtLabel = formatReviewSubmittedAt(data);
   const def = data.applicationDefinition;
   const supabase = useMemo(() => createClient(), []);
 
@@ -531,44 +538,76 @@ export function WorkspaceApplicationReview({
   const onPersistedRef = useRef(onPersisted);
   onPersistedRef.current = onPersisted;
 
-  const openAdjustmentComposer = (blockId: ReviewWorkspaceBlockId, blockTitle: string) => {
+  const openAdjustmentComposer = (
+    blockId: ReviewWorkspaceBlockId,
+    blockTitle: string,
+    initialDraft = "",
+  ) => {
     setAdjustmentRemarkSaveError(false);
-    setPendingComposer({ blockId, blockTitle, draft: "" });
+    setPendingComposer({ blockId, blockTitle, draft: initialDraft });
   };
 
-  const handleSaveAdjustmentFromSidebar = () => {
-    if (!pendingComposer) return;
-    const trimmed = pendingComposer.draft.trim();
-    if (!trimmed) {
-      setAdjustmentRemarkSaveError(true);
-      return;
-    }
-    adjustBlock(pendingComposer.blockId, trimmed);
-    const bid = pendingComposer.blockId;
-    setSavedReviewComments((prev) => [
-      {
-        id: crypto.randomUUID(),
-        blockId: bid,
-        blockTitle: pendingComposer.blockTitle,
-        body: trimmed,
-        createdAt: Date.now(),
-        authorDisplayName: reviewerDisplayName.trim() || undefined,
+  const requestAdjustmentForBlock = useCallback(
+    (blockId: ReviewWorkspaceBlockId, blockTitle: string) => {
+      const ph = blockPhases[blockId];
+      if (ph.phase === "adjustment") {
+        openAdjustmentComposer(blockId, blockTitle, ph.remark);
+      } else {
+        openAdjustmentComposer(blockId, blockTitle);
+      }
+    },
+    [blockPhases],
+  );
+
+  const handleSaveAdjustmentFromSidebar = useCallback((draftOverride?: string) => {
+    setPendingComposer((composer) => {
+      if (!composer) return null;
+      const trimmed = (draftOverride ?? composer.draft).trim();
+      if (!trimmed) {
+        setAdjustmentRemarkSaveError(true);
+        return composer;
+      }
+      setAdjustmentRemarkSaveError(false);
+      setBlockPhases((prev) => ({
+        ...prev,
+        [composer.blockId]: { phase: "adjustment", remark: trimmed },
+      }));
+      setSavedReviewComments((prev) => [
+        {
+          id: crypto.randomUUID(),
+          blockId: composer.blockId,
+          blockTitle: composer.blockTitle,
+          body: trimmed,
+          createdAt: Date.now(),
+          authorDisplayName: reviewerDisplayName.trim() || undefined,
+        },
+        ...prev.filter((c) => c.blockId !== composer.blockId),
+      ]);
+      return null;
+    });
+  }, [reviewerDisplayName]);
+
+  const blockComposerHandlers = useMemo(
+    () => ({
+      onDraftChange: (value: string) => {
+        setPendingComposer((prev) => (prev ? { ...prev, draft: value } : null));
+        setAdjustmentRemarkSaveError((err) => (err && value.trim() ? false : err));
       },
-      ...prev.filter((c) => c.blockId !== bid),
-    ]);
-    setPendingComposer(null);
-    setAdjustmentRemarkSaveError(false);
-  };
+      onCancel: () => {
+        setPendingComposer(null);
+        setAdjustmentRemarkSaveError(false);
+      },
+      onSave: (draft: string) => handleSaveAdjustmentFromSidebar(draft),
+      saveError: adjustmentRemarkSaveError,
+    }),
+    [adjustmentRemarkSaveError, handleSaveAdjustmentFromSidebar],
+  );
+
+  /** Nach Weiterleitung an R1 (`readonly_adjustment_pending` / andere read-only Modi). */
+  const adjustmentSentReadOnly = readOnly;
 
   const confirmBlock = (id: ReviewWorkspaceBlockId) => {
     setBlockPhases((prev) => ({ ...prev, [id]: { phase: "confirmed" } }));
-  };
-
-  const adjustBlock = (id: ReviewWorkspaceBlockId, remark: string) => {
-    setBlockPhases((prev) => ({
-      ...prev,
-      [id]: { phase: "adjustment", remark },
-    }));
   };
 
   const resetBlock = (id: ReviewWorkspaceBlockId) => {
@@ -741,31 +780,13 @@ export function WorkspaceApplicationReview({
         application={application}
         statusMeta={statusMeta}
         assignee={assignee}
-        adjustmentComposer={
-          readOnly || !pendingComposer
-            ? null
-            : {
-                blockTitle: pendingComposer.blockTitle,
-                draft: pendingComposer.draft,
-                onDraftChange: (value) => {
-                  setPendingComposer((prev) =>
-                    prev ? { ...prev, draft: value } : null,
-                  );
-                  setAdjustmentRemarkSaveError((err) =>
-                    err && value.trim() ? false : err,
-                  );
-                },
-                onCancel: () => {
-                  setPendingComposer(null);
-                  setAdjustmentRemarkSaveError(false);
-                },
-                onSave: handleSaveAdjustmentFromSidebar,
-                saveError: adjustmentRemarkSaveError,
-              }
-        }
+        adjustmentComposer={null}
         savedReviewComments={savedReviewComments}
         onSavedCommentNavigate={navigateFromSavedComment}
-        showCommentsSection={viewMode !== "readonly_consultation"}
+        showCommentsSection={
+          workspaceViewerRole !== "R4" && viewMode !== "readonly_consultation"
+        }
+        secondarySection={workspaceViewerRole === "R4" ? "r4_contacts" : "comments"}
       />
     ),
   );
@@ -774,216 +795,118 @@ export function WorkspaceApplicationReview({
     <div className="flex min-h-0 flex-1 w-full min-w-0 flex-col overflow-hidden">
       <div
         ref={scrollRootRef}
-        className={applicationReviewScrollAreaClass}
+        className={cn(
+          applicationReviewScrollAreaClass,
+          "flex flex-col",
+          applicationReviewSectionGapClass,
+        )}
       >
-        <div className="mx-auto w-full max-w-4xl space-y-6">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
-            Antrag auf Nachteilsausgleich (NTA) – {shortApplicationRef(application.id)}
-          </h1>
+        <div className="flex flex-col gap-6">
+          <ApplicationReviewPageHeader submittedAtLabel={submittedAtLabel} />
           {statusMeta.canonicalState === "consultation_recommendation"
           && !hasText(data.recommendation?.releasedHtml) ? (
-            <div
-              className={cn(
-                "mt-4 rounded-lg px-4 py-3",
-                r4ReadOnlyCopy ? "bg-muted" : "bg-sky-100",
-              )}
+            <ApplicationStatusCallout
+              badgeClassName={statusMeta.className}
+              muted={r4ReadOnlyCopy}
+              icon={CircleAlert}
             >
-              <div className="flex gap-3 text-left">
-                <div className="flex shrink-0 items-start pt-0.5">
-                  <CircleAlert
-                    className={cn(
-                      "size-4",
-                      r4ReadOnlyCopy ? "text-muted-foreground" : "text-sky-500",
-                    )}
-                    strokeWidth={2}
-                    aria-hidden
-                  />
-                </div>
-                <p
-                  className={cn(
-                    "min-w-0 flex-1 text-sm font-medium leading-5",
-                    r4ReadOnlyCopy ? "text-muted-foreground" : "text-sky-500",
-                  )}
-                >
-                  {r4ReadOnlyCopy ? (
-                    <>
-                      Sie sehen diese Angaben nur zur Information. Beratung und Empfehlungsschreiben
-                      bearbeitet die Fachstelle.
-                    </>
-                  ) : (
-                    <>
-                      Nach einem erfolgreich durchgeführten Beratungsgespräch ist ein Empfehlungsschreiben
-                      zu verfassen. Sobald Sie dieses freigeben, wird der Antrag für die antragstellende
-                      Person freigeschaltet.
-                    </>
-                  )}
-                </p>
-              </div>
-            </div>
+              {r4ReadOnlyCopy ? (
+                <>
+                  Sie sehen diese Angaben nur zur Information. Beratung und Empfehlungsschreiben
+                  bearbeitet die Fachstelle.
+                </>
+              ) : (
+                <>
+                  Nach einem erfolgreich durchgeführten Beratungsgespräch ist ein Empfehlungsschreiben
+                  zu verfassen. Sobald Sie dieses freigeben, wird der Antrag für die antragstellende
+                  Person freigeschaltet.
+                </>
+              )}
+            </ApplicationStatusCallout>
           ) : null}
           {statusMeta.canonicalState === "consultation_recommendation"
           && hasText(data.recommendation?.releasedHtml) ? (
-            <div
-              className={cn(
-                "mt-4 rounded-lg px-4 py-3",
-                r4ReadOnlyCopy ? "bg-muted" : "bg-neutral-100",
-              )}
+            <ApplicationStatusCallout
+              badgeClassName={statusMeta.className}
+              muted={r4ReadOnlyCopy}
+              icon={Info}
             >
-              <div className="flex gap-3 text-left">
-                <div className="flex shrink-0 items-start pt-0.5">
-                  <Info
-                    className={cn(
-                      "size-4",
-                      r4ReadOnlyCopy ? "text-muted-foreground" : "text-neutral-500",
-                    )}
-                    strokeWidth={2}
-                    aria-hidden
-                  />
-                </div>
-                <p
-                  className={cn(
-                    "min-w-0 flex-1 text-sm font-medium leading-5",
-                    r4ReadOnlyCopy ? "text-muted-foreground" : "text-neutral-500",
-                  )}
-                >
-                  {r4ReadOnlyCopy ? (
-                    <>
-                      Sie sehen diese Angaben nur zur Information. Die weiteren Schritte bis zur
-                      Einreichung führt die antragstellende Person aus.
-                    </>
-                  ) : (
-                    <>
-                      Das Empfehlungsschreiben wurde verfasst und die Antragstellung für die antragstellende
-                      Person freigeschaltet. Sie werden benachrichtigt, sobald der Antrag zur Prüfung
-                      eingeht.
-                    </>
-                  )}
-                </p>
-              </div>
-            </div>
+              {r4ReadOnlyCopy ? (
+                <>
+                  Sie sehen diese Angaben nur zur Information. Die weiteren Schritte bis zur
+                  Einreichung führt die antragstellende Person aus.
+                </>
+              ) : (
+                <>
+                  Das Empfehlungsschreiben wurde verfasst und die Antragstellung für die antragstellende
+                  Person freigeschaltet. Sie werden benachrichtigt, sobald der Antrag zur Prüfung
+                  eingeht.
+                </>
+              )}
+            </ApplicationStatusCallout>
           ) : null}
           {statusMeta.canonicalState === "in_review" ? (
-            <div
-              className={cn(
-                "mt-4 rounded-lg px-4 py-3",
-                r4ReadOnlyCopy ? "bg-muted" : "bg-blue-100",
-              )}
+            <ApplicationStatusCallout
+              badgeClassName={statusMeta.className}
+              muted={r4ReadOnlyCopy}
+              icon={Info}
             >
-              <div className="flex gap-3 text-left">
-                <div className="flex shrink-0 items-start pt-0.5">
-                  <Info
-                    className={cn(
-                      "size-4",
-                      r4ReadOnlyCopy ? "text-muted-foreground" : "text-blue-500",
-                    )}
-                    strokeWidth={2}
-                    aria-hidden
-                  />
-                </div>
-                <p
-                  className={cn(
-                    "min-w-0 flex-1 text-sm font-medium leading-5",
-                    r4ReadOnlyCopy ? "text-muted-foreground" : "text-blue-500",
-                  )}
-                >
-                  {r4ReadOnlyCopy ? (
-                    <>
-                      Sie sehen diese Angaben nur zur Information. Prüfung, Review und Weiterleitung
-                      obliegen der Fachstelle.
-                    </>
-                  ) : (
-                    <>
-                      Überprüfen Sie die Angaben auf Vollständigkeit und leiten Sie den Antrag weiter oder
-                      senden Sie ihn zur Nachbesserung zurück.
-                    </>
-                  )}
-                </p>
-              </div>
-            </div>
+              {r4ReadOnlyCopy ? (
+                <>
+                  Sie sehen diese Angaben nur zur Information. Prüfung, Review und Weiterleitung
+                  obliegen der Fachstelle.
+                </>
+              ) : (
+                <>
+                  Überprüfen Sie die Angaben auf Vollständigkeit und leiten Sie den Antrag weiter oder
+                  senden Sie ihn zur Nachbesserung zurück.
+                </>
+              )}
+            </ApplicationStatusCallout>
           ) : null}
           {statusMeta.canonicalState === "needs_adjustment" ? (
-            <div
-              className={cn(
-                "mt-4 rounded-lg px-4 py-3",
-                r4ReadOnlyCopy ? "bg-muted" : "bg-orange-100",
-              )}
+            <ApplicationStatusCallout
+              badgeClassName={statusMeta.className}
+              muted={r4ReadOnlyCopy}
+              icon={Info}
             >
-              <div className="flex gap-3 text-left">
-                <div className="flex shrink-0 items-start pt-0.5">
-                  <Info
-                    className={cn(
-                      "size-4",
-                      r4ReadOnlyCopy ? "text-muted-foreground" : "text-orange-400",
-                    )}
-                    strokeWidth={2}
-                    aria-hidden
-                  />
-                </div>
-                <p
-                  className={cn(
-                    "min-w-0 flex-1 text-sm font-medium leading-5",
-                    r4ReadOnlyCopy ? "text-muted-foreground" : "text-orange-400",
-                  )}
-                >
-                  {r4ReadOnlyCopy ? (
-                    <>
-                      Sie sehen diese Angaben nur zur Information. Nachbesserungen nimmt die
-                      antragstellende Person vor.
-                    </>
-                  ) : (
-                    <>
-                      Dieser Antrag wurde zur Nachbesserung an die antragstellende Person zurückgesendet.
-                      Sie werden benachrichtigt, sobald die Anpassungen eingereicht wurden.
-                    </>
-                  )}
-                </p>
-              </div>
-            </div>
+              {r4ReadOnlyCopy ? (
+                <>
+                  Sie sehen diese Angaben nur zur Information. Nachbesserungen nimmt die
+                  antragstellende Person vor.
+                </>
+              ) : (
+                <>
+                  Dieser Antrag wurde zur Nachbesserung an die antragstellende Person zurückgesendet.
+                  Sie werden benachrichtigt, sobald die Anpassungen eingereicht wurden.
+                </>
+              )}
+            </ApplicationStatusCallout>
           ) : null}
           {statusMeta.canonicalState === "in_decision" ? (
-            <div
-              className={cn(
-                "mt-4 rounded-lg px-4 py-3",
-                r4ReadOnlyCopy ? "bg-muted" : "bg-purple-100",
-              )}
+            <ApplicationStatusCallout
+              badgeClassName={statusMeta.className}
+              muted={r4ReadOnlyCopy}
+              icon={Info}
             >
-              <div className="flex gap-3 text-left">
-                <div className="flex shrink-0 items-start pt-0.5">
-                  <Info
-                    className={cn(
-                      "size-4",
-                      r4ReadOnlyCopy ? "text-muted-foreground" : "text-purple-600",
-                    )}
-                    strokeWidth={2}
-                    aria-hidden
-                  />
-                </div>
-                <p
-                  className={cn(
-                    "min-w-0 flex-1 text-sm font-medium leading-5",
-                    r4ReadOnlyCopy ? "text-muted-foreground" : "text-purple-600",
-                  )}
-                >
-                  {r4ReadOnlyCopy ? (
-                    <>
-                      Sie sehen diese Angaben nur zur Information. Sobald die Fachstelle den Antrag in die
-                      Entscheidung weitergeleitet hat und der Eintrag hier den Status «Entscheid
-                      ausstehend» erreicht, stehen Ihnen die Bewilligungsfunktionen zur Verfügung.
-                    </>
-                  ) : (
-                    <>
-                      Der Antrag wurde an die Entscheidungsinstanz weitergeleitet und kann nicht mehr
-                      bearbeitet werden. Wird der Antrag bewilligt oder abgelehnt, werden Sie benachrichtigt.
-                      Bei einer Ablehnung ist eine Begründung pro Abschnitt hinterlegt.
-                    </>
-                  )}
-                </p>
-              </div>
-            </div>
+              {r4ReadOnlyCopy ? (
+                <>
+                  Sie sehen diese Angaben nur zur Information. Sobald die Fachstelle den Antrag in die
+                  Entscheidung weitergeleitet hat und der Eintrag hier den Status «Entscheid
+                  ausstehend» erreicht, stehen Ihnen die Bewilligungsfunktionen zur Verfügung.
+                </>
+              ) : (
+                <>
+                  Der Antrag wurde an die Entscheidungsinstanz weitergeleitet und kann nicht mehr
+                  bearbeitet werden. Wird der Antrag bewilligt oder abgelehnt, werden Sie benachrichtigt.
+                  Bei einer Ablehnung ist eine Begründung pro Abschnitt hinterlegt.
+                </>
+              )}
+            </ApplicationStatusCallout>
           ) : null}
         </div>
 
+        <div className="flex flex-col gap-6">
         {!hasVisibleBlocks ? (
           <ReviewBlockCard title="Noch keine übermittelten Angaben" footer={null}>
             <p className="text-sm text-muted-foreground">
@@ -997,18 +920,23 @@ export function WorkspaceApplicationReview({
         {showApplicantBlock ? (
           <InteractiveReviewBlock
           blockId="applicant"
-          composerActive={pendingComposer?.blockId === "applicant"}
+          composer={reviewBlockComposerProps(
+            "applicant",
+            pendingComposer,
+            blockComposerHandlers,
+          )}
+          adjustmentSentReadOnly={adjustmentSentReadOnly}
           readOnly={readOnly}
           compactReadOnly={compactReadOnlyBlocks}
           title="Antragsteller"
           phase={blockPhases.applicant}
           onConfirm={() => confirmBlock("applicant")}
           onRequestAdjustment={() =>
-            openAdjustmentComposer("applicant", "Antragsteller")}
+            requestAdjustmentForBlock("applicant", "Antragsteller")}
           onReset={() => handleResetRequest("applicant")}
         >
           {data.personalData ? (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <ReviewBlockFieldGrid>
               <ReviewField
                 label="Name"
                 value={`${data.personalData.vorname ?? ""} ${data.personalData.name ?? ""}`.trim() || "—"}
@@ -1033,7 +961,7 @@ export function WorkspaceApplicationReview({
                 label="Telefonnummer"
                 value={data.personalData.phone ?? "—"}
               />
-            </div>
+            </ReviewBlockFieldGrid>
           ) : (
             <p className="text-sm text-muted-foreground">Keine Daten erfasst.</p>
           )}
@@ -1044,14 +972,19 @@ export function WorkspaceApplicationReview({
         {showAttestBlock ? (
           <InteractiveReviewBlock
           blockId="attest"
-          composerActive={pendingComposer?.blockId === "attest"}
+          composer={reviewBlockComposerProps(
+            "attest",
+            pendingComposer,
+            blockComposerHandlers,
+          )}
+          adjustmentSentReadOnly={adjustmentSentReadOnly}
           readOnly={readOnly}
           compactReadOnly={compactReadOnlyBlocks}
           title="Fachärztliches Attest"
           phase={blockPhases.attest}
           onConfirm={() => confirmBlock("attest")}
           onRequestAdjustment={() =>
-            openAdjustmentComposer("attest", "Fachärztliches Attest")}
+            requestAdjustmentForBlock("attest", "Fachärztliches Attest")}
           onReset={() => handleResetRequest("attest")}
         >
           {data.attestFiles?.length ? (
@@ -1093,14 +1026,19 @@ export function WorkspaceApplicationReview({
         {showDefinitionBlock ? (
           <InteractiveReviewBlock
           blockId="definition"
-          composerActive={pendingComposer?.blockId === "definition"}
+          composer={reviewBlockComposerProps(
+            "definition",
+            pendingComposer,
+            blockComposerHandlers,
+          )}
+          adjustmentSentReadOnly={adjustmentSentReadOnly}
           readOnly={readOnly}
           compactReadOnly={compactReadOnlyBlocks}
           title="Antragsdefinition"
           phase={blockPhases.definition}
           onConfirm={() => confirmBlock("definition")}
           onRequestAdjustment={() =>
-            openAdjustmentComposer("definition", "Antragsdefinition")}
+            requestAdjustmentForBlock("definition", "Antragsdefinition")}
           onReset={() => handleResetRequest("definition")}
         >
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
@@ -1115,14 +1053,19 @@ export function WorkspaceApplicationReview({
         {showDurationBlock ? (
           <InteractiveReviewBlock
           blockId="duration"
-          composerActive={pendingComposer?.blockId === "duration"}
+          composer={reviewBlockComposerProps(
+            "duration",
+            pendingComposer,
+            blockComposerHandlers,
+          )}
+          adjustmentSentReadOnly={adjustmentSentReadOnly}
           readOnly={readOnly}
           compactReadOnly={compactReadOnlyBlocks}
           title="Gültigkeitsdauer des Nachteilsausgleiches"
           phase={blockPhases.duration}
           onConfirm={() => confirmBlock("duration")}
           onRequestAdjustment={() =>
-            openAdjustmentComposer(
+            requestAdjustmentForBlock(
               "duration",
               "Gültigkeitsdauer des Nachteilsausgleiches",
             )}
@@ -1136,14 +1079,19 @@ export function WorkspaceApplicationReview({
         {showScopeBlock ? (
           <InteractiveReviewBlock
           blockId="scope"
-          composerActive={pendingComposer?.blockId === "scope"}
+          composer={reviewBlockComposerProps(
+            "scope",
+            pendingComposer,
+            blockComposerHandlers,
+          )}
+          adjustmentSentReadOnly={adjustmentSentReadOnly}
           readOnly={readOnly}
           compactReadOnly={compactReadOnlyBlocks}
           title="Geltungsbereich des beantragten Nachteilsausgleiches"
           phase={blockPhases.scope}
           onConfirm={() => confirmBlock("scope")}
           onRequestAdjustment={() =>
-            openAdjustmentComposer(
+            requestAdjustmentForBlock(
               "scope",
               "Geltungsbereich des beantragten Nachteilsausgleiches",
             )}
@@ -1157,14 +1105,19 @@ export function WorkspaceApplicationReview({
         {showLectureMeasuresBlock ? (
           <InteractiveReviewBlock
           blockId="lectureMeasures"
-          composerActive={pendingComposer?.blockId === "lectureMeasures"}
+          composer={reviewBlockComposerProps(
+            "lectureMeasures",
+            pendingComposer,
+            blockComposerHandlers,
+          )}
+          adjustmentSentReadOnly={adjustmentSentReadOnly}
           readOnly={readOnly}
           compactReadOnly={compactReadOnlyBlocks}
           title="Ausgleichsmassnahmen für Lehrveranstaltungen"
           phase={blockPhases.lectureMeasures}
           onConfirm={() => confirmBlock("lectureMeasures")}
           onRequestAdjustment={() =>
-            openAdjustmentComposer(
+            requestAdjustmentForBlock(
               "lectureMeasures",
               "Ausgleichsmassnahmen für Lehrveranstaltungen",
             )}
@@ -1186,14 +1139,19 @@ export function WorkspaceApplicationReview({
         {showAssessmentMeasuresBlock ? (
           <InteractiveReviewBlock
           blockId="assessmentMeasures"
-          composerActive={pendingComposer?.blockId === "assessmentMeasures"}
+          composer={reviewBlockComposerProps(
+            "assessmentMeasures",
+            pendingComposer,
+            blockComposerHandlers,
+          )}
+          adjustmentSentReadOnly={adjustmentSentReadOnly}
           readOnly={readOnly}
           compactReadOnly={compactReadOnlyBlocks}
           title="Ausgleichsmassnahmen für Leistungsnachweise"
           phase={blockPhases.assessmentMeasures}
           onConfirm={() => confirmBlock("assessmentMeasures")}
           onRequestAdjustment={() =>
-            openAdjustmentComposer(
+            requestAdjustmentForBlock(
               "assessmentMeasures",
               "Ausgleichsmassnahmen für Leistungsnachweise",
             )}
@@ -1285,59 +1243,13 @@ export function WorkspaceApplicationReview({
   );
 }
 
-function ReviewBlockActions({
-  onAdjust,
-  onConfirm,
-}: {
-  onAdjust: () => void;
-  onConfirm: () => void;
-}) {
-  return (
-    <>
-      <Button
-        type="button"
-        variant="ghost"
-        className={cn(
-          "h-9 gap-2 rounded-lg border-0 bg-amber-400 px-4 text-white shadow-xs",
-          "hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500",
-          "focus-visible:text-white focus-visible:ring-amber-400/45",
-          "dark:bg-amber-400 dark:text-white dark:hover:text-white",
-        )}
-        onClick={onAdjust}
-      >
-        <MessageSquarePlus className="size-4" aria-hidden />
-        Anpassung anfordern
-      </Button>
-      <Button
-        type="button"
-        className="h-9 gap-2 bg-teal-600 text-white hover:bg-teal-700"
-        onClick={onConfirm}
-      >
-        <Check className="size-4" aria-hidden />
-        Bestätigen
-      </Button>
-    </>
-  );
-}
-
-/** Ghost-Button auf farbigem Footer; gleiche Höhe wie ReviewBlockActions (`h-9`). */
-function ReviewBlockFooterResetButton({ onReset }: { onReset: () => void }) {
-  return (
-    <Button
-      type="button"
-      variant="ghost"
-      className={cn(
-        "h-9 shrink-0 gap-1.5 px-2.5 text-sm font-medium text-white",
-        "hover:bg-destructive hover:text-destructive-foreground",
-        "focus-visible:ring-white/80",
-      )}
-      onClick={onReset}
-    >
-      <RotateCcw className="size-4 shrink-0" aria-hidden />
-      Zurücksetzen
-    </Button>
-  );
-}
+type ReviewBlockComposerProps = {
+  draft: string;
+  onDraftChange: (value: string) => void;
+  onCancel: () => void;
+  onSave: (draft: string) => void;
+  saveError?: boolean;
+};
 
 function InteractiveReviewBlock({
   blockId,
@@ -1348,7 +1260,8 @@ function InteractiveReviewBlock({
   onReset,
   readOnly = false,
   compactReadOnly = false,
-  composerActive = false,
+  adjustmentSentReadOnly = false,
+  composer = null,
   children,
 }: {
   blockId: ReviewWorkspaceBlockId;
@@ -1359,35 +1272,74 @@ function InteractiveReviewBlock({
   onReset: () => void;
   readOnly?: boolean;
   compactReadOnly?: boolean;
-  /** Sidebar-Kommentarentwurf ist für diesen Block geöffnet — amber Card-Rahmen wie bei gespeicherter Anpassung. */
-  composerActive?: boolean;
+  /** Nach Weiterleitung an R1: Anpassungsblöcke nur noch «angefordert» (`5657:1673`). */
+  adjustmentSentReadOnly?: boolean;
+  /** Bemerkung im Block-Footer (`5641:22599`), nicht in der Sidebar. */
+  composer?: ReviewBlockComposerProps | null;
   children: ReactNode;
 }) {
   const anchorId = reviewWorkspaceAnchorId(blockId);
+
+  if (composer) {
+    return (
+      <ReviewBlockCard
+        anchorId={anchorId}
+        title={title}
+        variant="composer"
+        footer={
+          <ReviewBlockComposerFooter
+            draft={composer.draft}
+            onDraftChange={composer.onDraftChange}
+            onCancel={composer.onCancel}
+            onSave={composer.onSave}
+            saveError={composer.saveError}
+          />
+        }
+      >
+        {children}
+      </ReviewBlockCard>
+    );
+  }
 
   if (phase.phase === "confirmed") {
     return (
       <ReviewBlockCard
         anchorId={anchorId}
         title={title}
-        footerTone="confirmed"
+        variant="confirmed"
         footer={
-          readOnly ? (
-            <div className="flex w-full justify-end">
-              <ReviewBlockFooterStatus
-                icon={CheckCheck}
-                label="Reviewed & Bestätigt"
-              />
-            </div>
-          ) : (
-            <>
-              <ReviewBlockFooterResetButton onReset={onReset} />
-              <ReviewBlockFooterStatus
-                icon={CheckCheck}
-                label="Reviewed & Bestätigt"
-              />
-            </>
-          )
+          <ReviewBlockConfirmedFooter onReset={onReset} readOnly={readOnly} />
+        }
+      >
+        {children}
+      </ReviewBlockCard>
+    );
+  }
+
+  if (phase.phase === "adjustment") {
+    if (adjustmentSentReadOnly || readOnly) {
+      return (
+        <ReviewBlockCard
+          anchorId={anchorId}
+          title={title}
+          variant="adjustment_sent"
+          footer={<ReviewBlockAdjustmentSentFooter remark={phase.remark} />}
+        >
+          {children}
+        </ReviewBlockCard>
+      );
+    }
+    return (
+      <ReviewBlockCard
+        anchorId={anchorId}
+        title={title}
+        variant="adjustment_active"
+        footer={
+          <ReviewBlockAdjustmentActiveFooter
+            remark={phase.remark}
+            onReset={onReset}
+            onEdit={onRequestAdjustment}
+          />
         }
       >
         {children}
@@ -1396,69 +1348,33 @@ function InteractiveReviewBlock({
   }
 
   if (phase.phase === "pending_after_adjustment") {
-    return (
-      <ReviewBlockCard
-        anchorId={anchorId}
-        title={title}
-        footerTone="default"
-        footer={
-          readOnly && compactReadOnly ? null : readOnly ? (
-            <p className="text-xs text-muted-foreground">Nur Ansicht.</p>
-          ) : (
-            <ReviewBlockActions
-              onAdjust={onRequestAdjustment}
-              onConfirm={onConfirm}
-            />
-          )
-        }
-      >
-        <>
-          {children}
-          <div className="rounded-lg border border-amber-200 bg-amber-50/90 px-4 py-3 dark:border-amber-900/40 dark:bg-amber-950/35">
-            <p className="text-xs font-medium text-muted-foreground">
-              Bemerkung der Fachstelle (Anpassung)
-            </p>
-            <p className="mt-1 whitespace-pre-wrap text-sm leading-5 text-foreground">
-              {phase.displayRemark}
-            </p>
-          </div>
-        </>
-      </ReviewBlockCard>
-    );
-  }
+    const actionFooter =
+      readOnly && compactReadOnly
+        ? null
+        : readOnly
+          ? (
+              <p className={REVIEW_BLOCK_READONLY_STATUS_FOOTER_CLASS}>Nur Ansicht.</p>
+            )
+          : (
+              <ReviewBlockPendingFooter
+                onRequestAdjustment={onRequestAdjustment}
+                onConfirm={onConfirm}
+              />
+            );
 
-  if (phase.phase === "adjustment") {
     return (
       <ReviewBlockCard
         anchorId={anchorId}
         title={title}
-        footerTone="adjustment"
+        variant="pending"
         footer={
-          readOnly ? (
-            <div className="flex w-full justify-end">
-              <ReviewBlockFooterStatus
-                icon={MessageSquareText}
-                label="Anpassung angefordert"
-              />
-            </div>
-          ) : (
-            <>
-              <ReviewBlockFooterResetButton onReset={onReset} />
-              <ReviewBlockFooterStatus
-                icon={MessageSquareText}
-                label="Anpassung angefordert"
-              />
-            </>
-          )
+          <>
+            <ReviewBlockLockedRemarkCallout remark={phase.displayRemark} />
+            {actionFooter}
+          </>
         }
       >
-        <>
-          {children}
-          <div className="rounded-lg border border-amber-200 bg-amber-50/90 px-4 py-3 dark:border-amber-900/40 dark:bg-amber-950/35">
-            <p className="text-xs font-medium text-muted-foreground">Bemerkung</p>
-            <p className="mt-1 whitespace-pre-wrap text-sm leading-5 text-foreground">{phase.remark}</p>
-          </div>
-        </>
+        {children}
       </ReviewBlockCard>
     );
   }
@@ -1467,13 +1383,13 @@ function InteractiveReviewBlock({
     <ReviewBlockCard
       anchorId={anchorId}
       title={title}
-      cardBorderTone={composerActive ? "adjustment" : undefined}
+      variant="pending"
       footer={
         readOnly && compactReadOnly ? null : readOnly ? (
-          <p className="text-xs text-muted-foreground">Nur Ansicht.</p>
+          <p className={REVIEW_BLOCK_READONLY_STATUS_FOOTER_CLASS}>Nur Ansicht.</p>
         ) : (
-          <ReviewBlockActions
-            onAdjust={onRequestAdjustment}
+          <ReviewBlockPendingFooter
+            onRequestAdjustment={onRequestAdjustment}
             onConfirm={onConfirm}
           />
         )
@@ -1482,4 +1398,27 @@ function InteractiveReviewBlock({
       {children}
     </ReviewBlockCard>
   );
+}
+
+function reviewBlockComposerProps(
+  blockId: ReviewWorkspaceBlockId,
+  pendingComposer: {
+    blockId: ReviewWorkspaceBlockId;
+    draft: string;
+  } | null,
+  handlers: {
+    onDraftChange: (value: string) => void;
+    onCancel: () => void;
+    onSave: (draft: string) => void;
+    saveError: boolean;
+  },
+): ReviewBlockComposerProps | null {
+  if (!pendingComposer || pendingComposer.blockId !== blockId) return null;
+  return {
+    draft: pendingComposer.draft,
+    onDraftChange: handlers.onDraftChange,
+    onCancel: handlers.onCancel,
+    onSave: (draft: string) => handlers.onSave(draft),
+    saveError: handlers.saveError,
+  };
 }

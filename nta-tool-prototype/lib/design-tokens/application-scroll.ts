@@ -32,18 +32,33 @@ export const whitePanelScrollViewportClass = [
 /** @deprecated Nur noch für Kompatibilität — bitte Viewport + Inset-Klassen nutzen. */
 export const whitePanelScrollbarGutterClass = whitePanelScrollViewportMarginClass;
 
-/** Dashboard-Home & Listen (Shell-Panel nur `pl-6 pt-10`). */
+/**
+ * Dashboard-Home (Workspace & Portal «Meine Anträge») — Figma `p-48` oben.
+ * Läufer-Abstand oben/unten am Track: `.hf-content-panel-scroll` (`margin-block: 1rem`).
+ */
+export const dashboardMainPanelContentInsetTopClass = "pt-12";
+
 export const dashboardMainPanelScrollAreaClass = [
   whitePanelScrollViewportClass,
   whitePanelScrollContentInsetXClass,
+  dashboardMainPanelContentInsetTopClass,
   "pb-6",
 ].join(" ");
+
+/**
+ * Review / Portal-Adjustment / R4 — Figma `5623:17867` (`p-48`, `gap-32` zum Block-Stack).
+ * Horizontal: 48px; Läufer bleibt im Viewport-`mr-2`.
+ */
+export const applicationReviewContentInsetClass = "px-12 pt-12";
+
+/** Abstand Header/Callout → erster Review-Block (32px). */
+export const applicationReviewSectionGapClass = "gap-8";
 
 /** Review / Portal-Adjustment / R4 (edge-to-edge). */
 export const applicationReviewScrollAreaClass = [
   whitePanelScrollViewportClass,
-  whitePanelScrollContentInsetXClass,
-  "pt-6 pb-8",
+  applicationReviewContentInsetClass,
+  "pb-8",
 ].join(" ");
 
 /**

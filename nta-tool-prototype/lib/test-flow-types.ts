@@ -152,6 +152,17 @@ export type ApplicationData = {
     releasedBy?: string;
     /** Post-Submit-R2-Review — einziger erlaubter Ort für Draft/Snapshot (Trigger). */
     workspaceReview?: RecommendationWorkspaceReview;
+    /**
+     * Eingereichte Block-Inhalte beim Weiterreichen mit Anpassungsanforderung;
+     * Basis für «Zurücksetzen» in der R1-Korrekturansicht. Liegt unter
+     * `recommendation`, damit R2 beim Forward trigger-konform schreiben darf.
+     */
+    r1AdjustmentBlockBaselines?: Partial<
+      Record<
+        ReviewWorkspaceBlockId,
+        import("@/lib/r1-adjustment-baseline").R1AdjustmentBlockBaseline
+      >
+    >;
   };
   applicationDefinition?: ApplicationDefinitionData;
   /**
@@ -182,6 +193,16 @@ export type ApplicationData = {
    */
   r1AdjustmentResolutions?: Partial<
     Record<import("@/lib/review-workspace-blocks").ReviewWorkspaceBlockId, R1AdjustmentResolution>
+  >;
+  /**
+   * @deprecated Unter `recommendation.r1AdjustmentBlockBaselines` — nur noch lesen
+   * für ältere Datensätze.
+   */
+  r1AdjustmentBlockBaselines?: Partial<
+    Record<
+      ReviewWorkspaceBlockId,
+      import("@/lib/r1-adjustment-baseline").R1AdjustmentBlockBaseline
+    >
   >;
   /**
    * R4 Entscheidungsinstanz: Bewilligung pro sichtbarem Block (Dauer, Geltung,

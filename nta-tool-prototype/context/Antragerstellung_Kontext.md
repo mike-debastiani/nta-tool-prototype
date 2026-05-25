@@ -64,9 +64,15 @@ Hinweise:
 | `components/studiengang-combobox.tsx` | Studiengang Step 1 (HF-Select-Trigger aus `r1-form.ts`) |
 | `lib/design-tokens/r1-form.ts` | Feld-Gaps + Choice-Karten + Select-Trigger (SSOT für `R1FlowField*`) |
 | `app/portal/antragserstellung/page.tsx` | Steuert Initial-Load: `?new` ⇒ leer; `?applicationId` ⇒ `PortalApplicationAdjustment`; sonst nur **resumable** Anträge auto-laden |
-| `components/domain/portal-application-adjustment.tsx` | R1 Block-Detailansicht (Layout wie R2-Review). Edit nur bei kanonisch `needs_adjustment`; per-Block Autosave; Freigabe **„Anpassungen für Review freigeben“** → `POST /api/applications/r1-release-adjustments`; Realtime-Broadcast-Listener + Refetch |
+| `components/domain/portal-application-adjustment.tsx` | R1 Block-Detail (HF wie R2: `ApplicationReviewPageHeader`, `applicationReviewScrollAreaClass`, `R1BlockShell` / `r1-review-block.ts`). Edit nur bei `needs_adjustment`; Sidebar `bemerkungenVariant="r1"`; Freigabe → `r1-release-adjustments` |
 | `components/domain/student-dashboard.tsx` | R1 Dashboard (Liste; Klick → `?applicationId=<uuid>`); **Polling** der Anträge des eingeloggten Antragstellers für aktuelle `status`/Badges |
-| `app/portal/home/page.tsx` | Serverpage R1 Dashboard |
+| `app/portal/home/page.tsx` | Serverpage R1 Dashboard; `RoleDashboardLayout` mit **`edgeToEdge`** (kein doppeltes Shell-`p-6`) |
+| `components/domain/application-review-page-header.tsx` | Geteilter Review-Seitenkopf (Portal-Adjustment + Workspace) |
+| `components/domain/application-status-callout.tsx` | Status-Callout unter Review-Header |
+| `lib/design-tokens/review-block.ts` | HF Review-Block-Layouts (R2 + R1 read-only default) |
+| `lib/design-tokens/r1-review-block.ts` | R1 Anpassungs-Block-Footer |
+| `lib/design-tokens/review-bemerkungen.ts` | R1/R2 Sidebar-Bemerkungen |
+| `lib/r1-adjustment-baseline.ts` | Baselines unter `data.recommendation.r1AdjustmentBlockBaselines` |
 | `components/domain/workspace-test-flow.tsx` | Workspace: Liste, View-Mode-Ableitung, R4-Entscheid-View in `in_implementation`, Refresh-Liste per **`GET /api/workspace/applications`**, `RecommendationDraftEditor` als `bottomAction` in `consultation_recommendation` |
 | `components/domain/workspace-application-review.tsx` | R2/R4 Block-Review inkl. Persistenz, Forward, View Modes (`interactive` / `readonly_consultation` / `readonly_adjustment_pending` / `readonly_decision`), Prop **`workspaceViewerRole`** |
 | `components/domain/workspace-r4-decision-view.tsx` | R4 Bewilligungs-UI (`in_implementation`) |

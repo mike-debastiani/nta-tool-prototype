@@ -18,6 +18,7 @@ export default async function PortalHomePage() {
   return (
     <RoleDashboardLayout
       role="R1"
+      edgeToEdge
       userLabel=""
       workspaceAccountInitials={initialsFromProfile(
         profile.display_name,

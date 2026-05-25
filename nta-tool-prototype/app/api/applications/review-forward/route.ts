@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
+import { captureAdjustmentBaselines } from "@/lib/r1-adjustment-baseline";
 import { dataWithoutLegacyReviewRoots } from "@/lib/r2-review-persist";
+import {
+  REVIEW_WORKSPACE_BLOCK_IDS,
+  type ReviewWorkspaceBlockId,
+} from "@/lib/review-workspace-blocks";
 import {
   type ApplicationData,
   type RecommendationWorkspaceReview,
@@ -71,11 +76,23 @@ export async function POST(request: Request) {
   }
 
   const base = dataWithoutLegacyReviewRoots(row.data);
+
+  const adjustmentBlockIds =
+    nextStatus === "needs_correction"
+      ? REVIEW_WORKSPACE_BLOCK_IDS.filter((id) => {
+          const phase = workspaceReview.postSubmit?.blocks?.[id]?.phase;
+          return phase === "adjustment";
+        })
+      : [];
+
+  const r1AdjustmentBlockBaselines =
+    adjustmentBlockIds.length > 0
+      ? captureAdjustmentBaselines(base, adjustmentBlockIds as ReviewWorkspaceBlockId[])
+      : undefined;
+
   /**
-   * `r1AdjustmentResolutions` darf hier nicht entfallen oder geleert werden:
-   * Trigger `enforce_r2_application_update_columns` erlaubt R2 nur Änderungen
-   * unter `data.recommendation` / `data.consultation`. Markierungen werden
-   * ohnehin bei R1-Freigabe (`r1-release-adjustments`) und durch R1-Saves neu geführt.
+   * Baselines unter `recommendation` — trigger-konform für R2.
+   * `r1AdjustmentResolutions` (Root) darf nicht entfernt oder geändert werden.
    */
   const payload = {
     status: nextStatus,
@@ -84,6 +101,9 @@ export async function POST(request: Request) {
       recommendation: {
         ...row.data.recommendation,
         workspaceReview,
+        ...(r1AdjustmentBlockBaselines
+          ? { r1AdjustmentBlockBaselines }
+          : {}),
       },
     },
   };

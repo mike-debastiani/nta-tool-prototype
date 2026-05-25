@@ -73,11 +73,14 @@ export async function POST(request: Request) {
   }
 
   const base = dataWithoutLegacyReviewRoots(data);
+  const { r1AdjustmentBlockBaselines: _dropBaselines, ...recommendationRest } =
+    data.recommendation ?? {};
+
   const nextData: ApplicationData = {
     ...base,
     r1AdjustmentResolutions: {},
     recommendation: {
-      ...data.recommendation,
+      ...recommendationRest,
       workspaceReview: built.workspaceReview,
     },
   };

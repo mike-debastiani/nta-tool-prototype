@@ -6,10 +6,7 @@ import {
   deriveCanonicalApplicationState,
   getApplicationStatusMeta,
 } from "@/lib/application-status";
-import {
-  getR1CardVisualConfig,
-  R1_CARD_STATUS_BADGE_CLASS,
-} from "@/lib/r1-application-card-visual";
+import { getR1CardVisualConfig } from "@/lib/r1-application-card-visual";
 import {
   r1ApplicationDateMeta,
   r1ApplicationDisplayTitle,
@@ -28,7 +25,6 @@ export function R1ApplicationCard({ application, className }: R1ApplicationCardP
   const canonicalState = deriveCanonicalApplicationState(application);
   const visual = getR1CardVisualConfig(canonicalState);
   const statusMeta = getApplicationStatusMeta(application, "R1");
-  const statusBadgeClass = R1_CARD_STATUS_BADGE_CLASS[statusMeta.canonicalState];
   const dateMeta = r1ApplicationDateMeta(application);
   const href = `/portal/antragserstellung?applicationId=${application.id}`;
 
@@ -68,7 +64,7 @@ export function R1ApplicationCard({ application, className }: R1ApplicationCardP
                 "inline-flex shrink-0 items-center justify-center rounded-lg px-2 py-0.5",
                 hfTypography.paragraphMiniMedium,
                 "font-medium",
-                statusBadgeClass,
+                statusMeta.className,
               )}
             >
               {statusMeta.label}

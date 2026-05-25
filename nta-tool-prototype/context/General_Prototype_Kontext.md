@@ -140,6 +140,15 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `components/domain/workspace-r2-toolbar-context.tsx` | Workspace-Top-Bar `leadingSlot` (z. B. Zurück zur Liste) |
 | `lib/design-tokens/workspace-dashboard.ts` | Sidebar-Breiten, Padding, Nav-Aktiv (`DASHBOARD_NAV_ITEM_*`), Inset/Tight-Ratios, Portal-Rim/Top-Bar |
 | `lib/design-tokens/application-block.ts` | `applicationBlockSurfaceClass` — Antragsblöcke: `rounded-lg border-border`, kein Shadow |
+| `lib/design-tokens/review-block.ts` | HF Review-Block-Shells, Footer 52px, Locked-Remark-Band |
+| `lib/design-tokens/r1-review-block.ts` | R1 Anpassungs-Footer in `PortalApplicationAdjustment` |
+| `lib/design-tokens/review-bemerkungen.ts` | Sidebar-Bemerkungen R1/R2 |
+| `lib/design-tokens/status-badge-colors.ts` | HF Status-Badges + Callout-Farben (`getHfStatusBadgeClass`) |
+| `lib/r1-adjustment-baseline.ts` | R1 Block-Baselines unter `recommendation` (Forward/Reset) |
+| `components/domain/application-review-page-header.tsx` | Geteilter Review-Titel (R1 Portal, R2, R4) |
+| `components/domain/application-status-callout.tsx` | Status-Hinweis unter Review-Header |
+| `components/domain/r4-decision-review-blocks.tsx` | R4 Schalter-Zeilen, Fachstelle-bestätigt, Footer |
+| `lib/design-tokens/r4-decision-block.ts` | R4 Bewilligung — HF Tokens |
 | `components/icons/avalis-logo.tsx` | Brand-Logo in Dashboard-Sidebar |
 | `components/domain/` | Fachliche UI (Dashboard, Workspace-Flow, Badges, **Block-Review**, **Empfehlungs-Editor & -Accordion**, R1-Anpassungsansicht) |
 | `components/domain/rich-text-editor.tsx` | TipTap-Wrapper für das Empfehlungsschreiben |

@@ -2754,6 +2754,7 @@ export function NtaAntragDesktop({
               adjustmentComposer={null}
               savedReviewComments={savedReviewCommentsForSidebar}
               onSavedCommentNavigate={navigateFromSavedComment}
+              bemerkungenVariant="r1"
             />
           </div>
         ) : undefined
