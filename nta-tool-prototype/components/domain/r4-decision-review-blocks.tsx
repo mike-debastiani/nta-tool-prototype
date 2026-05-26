@@ -1,6 +1,8 @@
 "use client";
 
-import { CheckCheck, CircleCheckBig, Pencil, RotateCcw } from "lucide-react";
+import { useState } from "react";
+import { CheckCheck, CircleCheckBig, Pencil, Plus, RotateCcw } from "lucide-react";
+import { AutoGrowTextarea } from "@/components/ui/auto-grow-textarea";
 import { ReviewField } from "@/components/domain/application-review-blocks";
 import {
   r4RowBadge,
@@ -19,6 +21,7 @@ import {
   R4_DECISION_ROW_DESCRIPTION_CLASS,
   R4_DECISION_ROW_LABEL_ACTIVE_CLASS,
   R4_DECISION_ROW_LABEL_MUTED_CLASS,
+  R4_DECISION_PROPOSAL_INPUT_CLASS,
   R4_DECISION_ROW_LIST_CLASS,
   R4_DECISION_ROW_SURFACE_CLASS,
   R4_DECISION_ROW_TITLE_CLASS,
@@ -172,6 +175,46 @@ function R4DecisionSwitchGroup({
         {statusLabel}
       </span>
     </div>
+  );
+}
+
+/** Freitext unter Optionen — Commit per Enter/Blur (`5907:23378`). */
+export function R4DecisionProposalInput({
+  disabled,
+  onAddProposal,
+}: {
+  disabled?: boolean;
+  onAddProposal: (text: string) => void;
+}) {
+  const [draft, setDraft] = useState("");
+
+  const commit = () => {
+    const trimmed = draft.trim();
+    if (!trimmed || disabled) return;
+    onAddProposal(trimmed);
+    setDraft("");
+  };
+
+  return (
+    <li className={R4_DECISION_PROPOSAL_INPUT_CLASS}>
+      <div className="flex h-5 shrink-0 items-center">
+        <Plus className="size-5 text-muted-foreground" aria-hidden />
+      </div>
+      <AutoGrowTextarea
+        value={draft}
+        disabled={disabled}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault();
+            commit();
+          }
+        }}
+        placeholder="Formulieren Sie einen anderen Vorschlag …"
+        className="min-h-5 flex-1 border-0 bg-transparent px-0 py-0 text-sm leading-5 shadow-none focus-visible:border-0 focus-visible:ring-0"
+      />
+    </li>
   );
 }
 

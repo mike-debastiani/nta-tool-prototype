@@ -27,7 +27,7 @@ export const r1FlowFieldOptionsClassName = "flex w-full flex-col gap-2";
 /** Checkbox-/Massnahmen-Karte im R1-Formular (Figma: 10px Radius, Primary-Rahmen wenn aktiv). */
 export function r1FlowChoiceCardClassName(selected: boolean): string {
   return cn(
-    "flex w-full cursor-pointer items-center gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm transition-colors",
+    "flex w-full cursor-pointer items-start gap-3 rounded-[10px] border bg-card px-3 py-3 text-sm transition-colors",
     selected ? "border-foreground" : "border-border",
   );
 }

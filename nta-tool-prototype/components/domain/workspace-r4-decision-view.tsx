@@ -21,6 +21,7 @@ import {
   R4DecisionConfirmedFooter,
   R4DecisionEditingFooter,
   R4DecisionOptionRow,
+  R4DecisionProposalInput,
   R4DecisionReadonlyConfirmedFooter,
   R4FacultyConfirmedBlock,
   ReviewField,
@@ -33,10 +34,13 @@ import {
   buildDurationRows,
   buildLectureMeasureRows,
   buildScopeRows,
+  createR4ProposalRow,
   getR4BlockVisibility,
   isR4BlockDirty,
+  isR4ProposalRowKey,
   mergeR4DecisionReview,
   mergeR4DecisionReviewRespectingLocalDirty,
+  supportsR4CustomProposalInput,
 } from "@/lib/r4-decision-state";
 import {
   completeR4DecisionWithSupabaseClient,
@@ -266,17 +270,64 @@ export function WorkspaceR4DecisionView({
         if (!row) return prev;
         const nextApproved = !row.r4Approved;
 
+        if (isR4ProposalRowKey(key) && !nextApproved) {
+          return {
+            ...prev,
+            blocks: {
+              ...prev.blocks,
+              [id]: {
+                ...block,
+                confirmed: block.confirmed ?? false,
+                rows: block.rows.filter((r) => r.key !== key),
+              },
+            },
+          };
+        }
+
         let nextRows = block.rows.map((r) =>
           r.key === key ? { ...r, r4Approved: nextApproved } : r,
         );
 
+        if (id === "duration" && nextApproved) {
+          nextRows = nextRows.map((r) => ({
+            ...r,
+            r4Approved: r.key === key,
+          }));
+        }
+
+        return {
+          ...prev,
+          blocks: {
+            ...prev.blocks,
+            [id]: {
+              ...block,
+              confirmed: block.confirmed ?? false,
+              rows: nextRows,
+            },
+          },
+        };
+      });
+    });
+    scheduleR4Autosave();
+  };
+
+  const handleAddProposal = (id: R4DecisionReviewBlockId, text: string) => {
+    if (!canEdit || !supportsR4CustomProposalInput(id)) return;
+
+    flushSync(() => {
+      setReview((prev) => {
+        const block = prev.blocks[id];
+        if (!block) return prev;
+        if (block.confirmed && !editingRef.current[id]) return prev;
+
+        const newRow = createR4ProposalRow(text);
+        let nextRows = [...block.rows, newRow];
+
         if (id === "duration") {
-          if (nextApproved) {
-            nextRows = nextRows.map((r) => ({
-              ...r,
-              r4Approved: r.key === key,
-            }));
-          }
+          nextRows = nextRows.map((r) => ({
+            ...r,
+            r4Approved: r.key === newRow.key,
+          }));
         }
 
         return {
@@ -417,6 +468,12 @@ export function WorkspaceR4DecisionView({
                 onToggle={() => handleToggleRow(id, row.key)}
               />
             ))}
+            {canEdit && !switchesDisabled && supportsR4CustomProposalInput(id) ? (
+              <R4DecisionProposalInput
+                disabled={disableInteractions}
+                onAddProposal={(text) => handleAddProposal(id, text)}
+              />
+            ) : null}
           </ul>
         </div>
         {footer}

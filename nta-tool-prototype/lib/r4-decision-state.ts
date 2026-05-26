@@ -6,6 +6,7 @@ import {
 import {
   definitionShowsAssessmentCustomMeasures,
   definitionShowsLectureCustomMeasures,
+  persistMeasureOtherLines,
 } from "@/lib/measure-custom-lines";
 import {
   type ApplicationData,
@@ -17,6 +18,33 @@ import {
 } from "@/lib/test-flow-types";
 
 export type R4RowBadge = "bewilligt" | "abgelehnt" | "vorschlag" | "vorschlagen";
+
+const R4_PROPOSAL_ROW_KEY_PREFIX = "proposal:";
+
+export function isR4ProposalRowKey(key: string): boolean {
+  return key.startsWith(R4_PROPOSAL_ROW_KEY_PREFIX);
+}
+
+/** Freitext-Vorschlag der Entscheidungsinstanz (Figma `5907:23378`). */
+const LECTURE_MEASURE_KEYS = new Set(LECTURE_MEASURE_OPTIONS.map((o) => o.key));
+const ASSESSMENT_MEASURE_KEYS = new Set(ASSESSMENT_MEASURE_OPTIONS.map((o) => o.key));
+
+/** Freitext-Vorschläge nur bei Massnahmen-Blöcken (nicht Dauer / Geltungsbereich). */
+export function supportsR4CustomProposalInput(
+  blockId: R4DecisionReviewBlockId,
+): boolean {
+  return blockId === "lectureMeasures" || blockId === "assessmentMeasures";
+}
+
+export function createR4ProposalRow(text: string): R4DecisionRow {
+  const trimmed = text.trim();
+  return {
+    key: `${R4_PROPOSAL_ROW_KEY_PREFIX}${Date.now()}`,
+    title: trimmed,
+    studentSelected: false,
+    r4Approved: true,
+  };
+}
 
 export function r4RowBadge(row: R4DecisionRow): R4RowBadge {
   if (row.studentSelected && row.r4Approved) return "bewilligt";
@@ -172,6 +200,7 @@ export function mergeR4DecisionReview(data: ApplicationData): R4DecisionReview {
       continue;
     }
     const prevByKey = new Map(prev.rows.map((r) => [r.key, r]));
+    const freshKeys = new Set(fresh.rows.map((r) => r.key));
     const mergedRows = fresh.rows.map((fr) => {
       const p = prevByKey.get(fr.key);
       if (!p) return fr;
@@ -180,9 +209,12 @@ export function mergeR4DecisionReview(data: ApplicationData): R4DecisionReview {
         r4Approved: p.r4Approved,
       };
     });
+    const proposalRows = prev.rows
+      .filter((r) => isR4ProposalRowKey(r.key) && !freshKeys.has(r.key))
+      .map((r) => ({ ...r }));
     blocks[id] = {
       confirmed: prev.confirmed,
-      rows: mergedRows,
+      rows: [...mergedRows, ...proposalRows],
     };
   }
 
@@ -221,6 +253,11 @@ export function localR4BlockDiffersFromServerMerge(
     const lr = localByKey.get(sr.key);
     if (lr && lr.r4Approved !== sr.r4Approved) return true;
   }
+  for (const lr of localBlock.rows) {
+    if (!serverBlock.rows.some((sr) => sr.key === lr.key)) {
+      return true;
+    }
+  }
   return false;
 }
 
@@ -245,14 +282,19 @@ export function mergeR4DecisionReviewRespectingLocalDirty(
     if (!localR4BlockDiffersFromServerMerge(localBlock, sBlock)) continue;
 
     const localByKey = new Map(localBlock.rows.map((r) => [r.key, r]));
+    const serverKeys = new Set(sBlock.rows.map((r) => r.key));
+    const mergedServerRows = sBlock.rows.map((sr) => {
+      const lr = localByKey.get(sr.key);
+      if (!lr) return sr;
+      return { ...sr, r4Approved: lr.r4Approved };
+    });
+    const localProposalRows = localBlock.rows.filter(
+      (r) => isR4ProposalRowKey(r.key) && !serverKeys.has(r.key),
+    );
     outBlocks[id] = {
       ...sBlock,
       confirmed: localBlock.confirmed,
-      rows: sBlock.rows.map((sr) => {
-        const lr = localByKey.get(sr.key);
-        if (!lr) return sr;
-        return { ...sr, r4Approved: lr.r4Approved };
-      }),
+      rows: [...mergedServerRows, ...localProposalRows],
     };
   }
 
@@ -300,6 +342,144 @@ export function allVisibleR4BlocksConfirmed(
  * Schreibt `r4DecisionReview` in `ApplicationData` — `blocks` pro Schlüssel mergen,
  * damit partielle Payloads nie andere Entscheid-Blöcke aus der DB-JSON löschen.
  */
+function materializeMeasureBlock(
+  block: R4DecisionBlockSnapshot | undefined,
+  validKeys: Set<string>,
+  kind: "lecture" | "assessment",
+  def: ApplicationDefinitionData,
+): void {
+  if (!block?.confirmed) return;
+
+  const approved = block.rows.filter((r) => r.r4Approved);
+  if (approved.some((r) => r.key === "__keine__")) {
+    if (kind === "lecture") {
+      def.lectureMeasuresKeine = true;
+      def.lectureMeasures = [];
+      delete def.lectureOtherLines;
+      delete def.lectureOtherEnabled;
+      delete def.lectureOtherText;
+    } else {
+      def.assessmentMeasuresKeine = true;
+      def.assessmentMeasures = [];
+      delete def.assessmentOtherLines;
+      delete def.assessmentOtherEnabled;
+      delete def.assessmentOtherText;
+    }
+    return;
+  }
+
+  const measureKeys: string[] = [];
+  const otherTexts: string[] = [];
+
+  for (const row of approved) {
+    if (row.key === "__keine__") continue;
+    if (isR4ProposalRowKey(row.key)) {
+      const text = row.title.trim();
+      if (text) otherTexts.push(text);
+      continue;
+    }
+    if (row.key.startsWith("other:")) {
+      const text = (row.description ?? row.title).trim();
+      if (text) otherTexts.push(text);
+      continue;
+    }
+    if (validKeys.has(row.key)) {
+      measureKeys.push(row.key);
+    }
+  }
+
+  const otherLines = persistMeasureOtherLines(otherTexts);
+
+  if (kind === "lecture") {
+    def.lectureMeasuresKeine = false;
+    if (measureKeys.length) {
+      def.lectureMeasures = measureKeys;
+    } else {
+      delete def.lectureMeasures;
+    }
+    if (otherLines) {
+      def.lectureOtherLines = otherLines;
+    } else {
+      delete def.lectureOtherLines;
+      delete def.lectureOtherEnabled;
+      delete def.lectureOtherText;
+    }
+  } else {
+    def.assessmentMeasuresKeine = false;
+    if (measureKeys.length) {
+      def.assessmentMeasures = measureKeys;
+    } else {
+      delete def.assessmentMeasures;
+    }
+    if (otherLines) {
+      def.assessmentOtherLines = otherLines;
+    } else {
+      delete def.assessmentOtherLines;
+      delete def.assessmentOtherEnabled;
+      delete def.assessmentOtherText;
+    }
+  }
+}
+
+/**
+ * Übernimmt bestätigte R4-Entscheide (inkl. Freitext-Vorschläge) in `applicationDefinition`,
+ * damit bewilligte Anträge in Review-/Portal-Ansichten die genehmigten Massnahmen zeigen.
+ */
+export function materializeApprovedR4DecisionReview(
+  data: ApplicationData,
+): ApplicationData {
+  const review = data.r4DecisionReview;
+  if (!review?.blocks) return data;
+
+  const def: ApplicationDefinitionData = {
+    ...(data.applicationDefinition ?? {}),
+  };
+
+  const durationBlock = review.blocks.duration;
+  if (durationBlock?.confirmed) {
+    const approved = durationBlock.rows.find(
+      (r) =>
+        r.r4Approved
+        && !isR4ProposalRowKey(r.key)
+        && (r.key === "full_study" || r.key === "one_semester"),
+    );
+    if (approved) {
+      def.duration = approved.key as "full_study" | "one_semester";
+    }
+  }
+
+  const scopeBlock = review.blocks.scope;
+  if (scopeBlock?.confirmed) {
+    const selections = scopeBlock.rows
+      .filter((r) => r.r4Approved)
+      .map((r) => (isR4ProposalRowKey(r.key) ? r.title.trim() : r.key))
+      .filter(Boolean);
+    if (selections.length) {
+      def.scopeSelections = selections;
+    } else {
+      delete def.scopeSelections;
+    }
+  }
+
+  materializeMeasureBlock(
+    review.blocks.lectureMeasures,
+    LECTURE_MEASURE_KEYS,
+    "lecture",
+    def,
+  );
+  materializeMeasureBlock(
+    review.blocks.assessmentMeasures,
+    ASSESSMENT_MEASURE_KEYS,
+    "assessment",
+    def,
+  );
+
+  return {
+    ...data,
+    applicationDefinition: def,
+  };
+}
+
 export function mergeApplicationDataWithR4Review(
   base: ApplicationData,
   incoming: R4DecisionReview,

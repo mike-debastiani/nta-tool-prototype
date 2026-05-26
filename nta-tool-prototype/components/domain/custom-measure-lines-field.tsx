@@ -1,8 +1,8 @@
 "use client";
 
 import { X } from "lucide-react";
+import { AutoGrowTextarea } from "@/components/ui/auto-grow-textarea";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   normalizeMeasureOtherInputLines,
 } from "@/lib/measure-custom-lines";
@@ -57,27 +57,29 @@ export function CustomMeasureLinesField({
             key={`${idPrefix}-row-${index}`}
             className={r1FlowChoiceCardClassName(hasText)}
           >
-            <input
-              type="checkbox"
-              className="mt-0.5 size-4 shrink-0 accent-primary"
-              checked={hasText}
-              disabled={disabled}
-              onChange={(e) => {
-                if (!e.target.checked) {
-                  handleChange(index, "");
-                  return;
+            <div className="flex h-5 shrink-0 items-center">
+              <input
+                type="checkbox"
+                className="size-4 shrink-0 accent-primary"
+                checked={hasText}
+                disabled={disabled}
+                onChange={(e) => {
+                  if (!e.target.checked) {
+                    handleChange(index, "");
+                    return;
+                  }
+                  if (!line.trim()) {
+                    document.getElementById(inputId)?.focus();
+                  }
+                }}
+                aria-label={
+                  hasText
+                    ? "Sonstige Massnahme ausgewählt"
+                    : "Sonstige Massnahme hinzufügen"
                 }
-                if (!line.trim()) {
-                  document.getElementById(inputId)?.focus();
-                }
-              }}
-              aria-label={
-                hasText
-                  ? "Sonstige Massnahme ausgewählt"
-                  : "Sonstige Massnahme hinzufügen"
-              }
-            />
-            <Input
+              />
+            </div>
+            <AutoGrowTextarea
               id={inputId}
               value={line}
               disabled={disabled}
@@ -85,25 +87,27 @@ export function CustomMeasureLinesField({
               placeholder={placeholder}
               className={cn(
                 r1FlowInputClassName,
-                "h-8 min-h-8 flex-1",
+                "min-h-5 flex-1 py-0 text-sm leading-5",
                 error && isTrailingEmptySlot && "border-destructive",
               )}
               aria-invalid={Boolean(error && isTrailingEmptySlot)}
             />
             {showRemove ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="size-8 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                onClick={() => handleRemove(index)}
-                disabled={disabled}
-                aria-label="Massnahme entfernen"
-              >
-                <X className="size-4" strokeWidth={2} aria-hidden />
-              </Button>
+              <div className="flex h-5 shrink-0 items-center">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-5 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => handleRemove(index)}
+                  disabled={disabled}
+                  aria-label="Massnahme entfernen"
+                >
+                  <X className="size-4" strokeWidth={2} aria-hidden />
+                </Button>
+              </div>
             ) : (
-              <span className="size-8 shrink-0" aria-hidden />
+              <span className="size-5 shrink-0" aria-hidden />
             )}
           </div>
         );

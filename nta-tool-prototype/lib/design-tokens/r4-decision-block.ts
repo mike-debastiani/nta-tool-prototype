@@ -25,6 +25,10 @@ export const R4_DECISION_BLOCK_BODY_CLASS = REVIEW_BLOCK_BODY_CLASS;
 /** Zeilenliste — `gap-8` zwischen Optionen (`xs`). */
 export const R4_DECISION_ROW_LIST_CLASS = "flex flex-col gap-2";
 
+/** Freitext-Vorschlag unter den Optionen (`5907:23378`). */
+export const R4_DECISION_PROPOSAL_INPUT_CLASS =
+  "flex min-h-12 w-full items-start gap-2 rounded-[10px] border border-border bg-background px-3 py-2 shadow-xs";
+
 /** Rich-Radio-Zeile — `gap-24` Inhalt ↔ Schalter (`xl`). */
 export const R4_DECISION_ROW_CLASS =
   "flex items-center gap-6 rounded-[10px] border border-border pl-3 pr-2 py-3";

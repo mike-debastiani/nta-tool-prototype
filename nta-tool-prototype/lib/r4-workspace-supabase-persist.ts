@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   allVisibleR4BlocksConfirmed,
   getR4BlockVisibility,
+  materializeApprovedR4DecisionReview,
   mergeApplicationDataWithR4Review,
 } from "@/lib/r4-decision-state";
 import type { UserRole } from "@/lib/auth";
@@ -138,9 +139,11 @@ export async function completeR4DecisionWithSupabaseClient(
     };
   }
 
+  const finalizedData = materializeApprovedR4DecisionReview(mergedData);
+
   const { data: updatedRows, error: updateError } = await supabase
     .from("applications")
-    .update({ status: "approved", data: mergedData })
+    .update({ status: "approved", data: finalizedData })
     .eq("id", applicationId)
     .select("id");
 
