@@ -91,7 +91,7 @@ export function R1ApplicationsTable({ applications }: R1ApplicationsTableProps) 
           </colgroup>
           <thead>
             <tr className="border-b border-border">
-              <TableHeaderCell>Antragsnummer</TableHeaderCell>
+              <TableHeaderCell>Antrags ID</TableHeaderCell>
               <TableHeaderCell>Einreichedatum</TableHeaderCell>
               <TableHeaderCell>Gültigkeitsdauer</TableHeaderCell>
               <TableHeaderCell className="pr-6">Gültig bis</TableHeaderCell>

@@ -76,6 +76,38 @@ export function WorkspaceTestFlow({
   }, []);
 
   const dashboardView = searchParams.get("view");
+  const selectedApplicationParam = searchParams.get("application");
+
+  const updateWorkspaceQuery = useCallback(
+    (
+      next: { applicationId?: string | null; view?: string | null },
+      mode: "push" | "replace" = "replace",
+    ) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      if (next.applicationId === null) params.delete("application");
+      else if (typeof next.applicationId === "string") params.set("application", next.applicationId);
+
+      if (next.view === null) params.delete("view");
+      else if (typeof next.view === "string") params.set("view", next.view);
+
+      const query = params.toString();
+      const href = query ? `${pathname}?${query}` : pathname;
+      const navigate = mode === "push" ? router.push : router.replace;
+      navigate(href, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
+  const handleSelectApplication = useCallback((applicationId: string) => {
+    setSelectedApplicationId(applicationId);
+    updateWorkspaceQuery({ applicationId }, "push");
+  }, [updateWorkspaceQuery]);
+
+  const handleCloseApplication = useCallback(() => {
+    setSelectedApplicationId(null);
+    updateWorkspaceQuery({ applicationId: null }, "replace");
+  }, [updateWorkspaceQuery]);
 
   useEffect(() => {
     if (
@@ -87,10 +119,14 @@ export function WorkspaceTestFlow({
   }, [dashboardView, router, workspaceRole]);
 
   useEffect(() => {
-    if (dashboardView === "aufgaben" || dashboardView === "terminplaner") {
-      setSelectedApplicationId(null);
+    if (selectedApplicationParam) {
+      setSelectedApplicationId(selectedApplicationParam);
+      return;
     }
-  }, [dashboardView]);
+    // Kein `application`-Queryparameter bedeutet immer Listen-/Dashboard-Ansicht.
+    // Dadurch schliesst auch Navigation zu `/workspace` (Home) die Detailansicht zuverlässig.
+    setSelectedApplicationId(null);
+  }, [dashboardView, selectedApplicationParam]);
 
   useEffect(() => {
     if (!selectedApplicationId) {
@@ -263,7 +299,7 @@ export function WorkspaceTestFlow({
         size="sm"
         className="-ml-2 gap-2 px-2 text-muted-foreground hover:text-foreground"
         type="button"
-        onClick={() => setSelectedApplicationId(null)}
+        onClick={handleCloseApplication}
       >
         <ArrowLeft className="size-4 shrink-0" aria-hidden />
         Zurück zur Liste
@@ -271,7 +307,7 @@ export function WorkspaceTestFlow({
     );
 
     return () => setLeadingToolbarSlot(null);
-  }, [selectedCanonicalState, setLeadingToolbarSlot, selectedApplication]);
+  }, [selectedCanonicalState, setLeadingToolbarSlot, selectedApplication, handleCloseApplication]);
 
   const workspaceReviewMode: WorkspaceReviewViewMode =
     selectedCanonicalState === "consultation_recommendation"
@@ -316,7 +352,7 @@ export function WorkspaceTestFlow({
           reviewerDisplayName={reviewerDisplayName}
           applications={applications}
           workspaceRole={workspaceRole}
-          onSelectApplication={setSelectedApplicationId}
+          onSelectApplication={handleSelectApplication}
         />
       );
     }
@@ -327,7 +363,7 @@ export function WorkspaceTestFlow({
           reviewerDisplayName={reviewerDisplayName}
           applications={applications}
           workspaceRole={workspaceRole}
-          onSelectApplication={setSelectedApplicationId}
+          onSelectApplication={handleSelectApplication}
         />
       );
     }
@@ -354,7 +390,7 @@ export function WorkspaceTestFlow({
               <button
                 key={application.id}
                 type="button"
-                onClick={() => setSelectedApplicationId(application.id)}
+                onClick={() => handleSelectApplication(application.id)}
                 className="w-full rounded-md border p-3 text-left transition hover:bg-muted/30"
               >
                 <div className="flex items-start justify-between gap-2">

@@ -73,6 +73,7 @@ import {
 } from "@/lib/application-review-labels";
 import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
 import {
+  REVIEW_WORKSPACE_APPLICANT_BLOCK_TITLE,
   REVIEW_WORKSPACE_BLOCK_IDS,
   reviewWorkspaceAnchorId,
   type ReviewWorkspaceBlockId,
@@ -119,7 +120,7 @@ type R2BlockPhase =
 const SEMESTER_NUMBERS = Array.from({ length: 12 }, (_, i) => i + 1);
 
 const BLOCK_TITLES: Record<ReviewWorkspaceBlockId, string> = {
-  applicant: "Antragsteller",
+  applicant: REVIEW_WORKSPACE_APPLICANT_BLOCK_TITLE,
   attest: "Fachärztliches Attest",
   definition: "Antragsdefinition",
   duration: "Gültigkeitsdauer des Nachteilsausgleiches",

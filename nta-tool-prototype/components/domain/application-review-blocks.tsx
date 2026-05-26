@@ -208,7 +208,7 @@ export function shortApplicationRef(id: string) {
   return id.replace(/-/g, "").slice(0, 8).toUpperCase();
 }
 
-/** Anzeige in Workspace-Listen (Figma «Antragsnummer», z. B. `NTA-2026-A1B2`). */
+/** Anzeige als UI-«Antrags ID» (z. B. `NTA-2026-A1B2`). */
 export function workspaceApplicationListNumber(application: {
   id: string;
   created_at: string;

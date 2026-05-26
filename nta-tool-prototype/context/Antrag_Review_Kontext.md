@@ -135,7 +135,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 
 ### Review-Blöcke (Reihenfolge)
 
-1. **Antragsteller** — Persönliche Angaben ohne Antragsart.
+1. **Antragstellende Person** — Persönliche Angaben ohne Antragsart.
 2. **Fachärztliches Attest** — Dateizeilen (Placeholder wenn keine URL).
 3. **Empfehlungsschreiben** — **`RecommendationReleasedAccordion`** (HF 5247:5570, einheitlich mit R1), wird ab dem Moment gerendert, in dem `data.recommendation.releasedHtml` existiert — **unabhängig vom View-Mode**, also in `interactive`, `readonly_consultation`, `readonly_adjustment_pending`, `readonly_decision`. Der frühere Legacy-Block über `recommendation.url` (Datei-Kachel mit `ReviewFileRow` + `fileNameFromUrl`) ist vollständig entfernt; vor dem Release wird in dieser Position nichts angezeigt.
 4. **Antragsdefinition** — `situationDescription`.
@@ -182,6 +182,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 
 - **R2 Review:** Antragdetails oben; unten Chronik (`SavedReviewComment`, **`bemerkungenVariant="r2"`**) — kein Vollbild-Composer (`adjustmentComposer={null}`). **Eingabe** für neue Anpassungen im **Block-Footer** (`ReviewBlockComposerFooter`).
 - **R1 Anpassung:** Chronik mit **`bemerkungenVariant="r1"`** — pending (`adjustment-50`) vs. done (weiss + «Angepasst»); `detailPanelSignature` enthält `r1AdjustmentResolutions`, damit Sidebar nach Speichern/Zurücksetzen aktualisiert.
+- **Chronik — Textlänge:** Bemerkungstext in R1/R2-Items max. **250px** Höhe, danach Ellipsis (`application-review-detail-sidebar.tsx`).
 - **R4:** `showCommentsSection={false}` bzw. bei Lesesicht **`workspaceViewerRole="R4"`** ohne Bemerkungs-Panel; stattdessen **`secondarySection="r4_contacts"`** (Kontakt-Cards) — siehe `Antrag_Bewilligung_Kontext.md`.
 
 ### Gesamtbutton unter den Blöcken (R2, `interactive` / `in_review`)
@@ -194,7 +195,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 ### Workspace-Chrome (Review)
 
 - `userLabel=""` auf Workspace-Page.
-- **„Zurück zur Liste“** über `setLeadingSlot` im `WorkspaceTestFlow` bei `in_review`.
+- **„Zurück zur Liste“** über `setLeadingSlot` im `WorkspaceTestFlow` bei geöffnetem Antrag; URL-Query `application` wird entfernt (`handleCloseApplication`).
 - Kein zweiter Status unter dem Seitentitel (Vermeidung Doppelung zur Sidebar).
 
 ---

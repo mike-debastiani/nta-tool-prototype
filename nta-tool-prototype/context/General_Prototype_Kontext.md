@@ -146,7 +146,7 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `lib/workspace-role.ts` | Kombinierte Rolle **R2R4**: Capability-Flags, Status-Audience pro Antrag |
 | `lib/workspace-nav-access.ts` | Workspace-Nav «Beratungen planen» (R2/R3/R2R4) |
 | `lib/workspace-application-table-rows.ts` | Tabellenzeilen für `WorkspaceApplicationsTable` |
-| `components/domain/application-review-blocks.tsx` | Review-Blöcke + `shortApplicationRef` / `workspaceApplicationListNumber` (Listen-Spalte Antragsnummer) |
+| `components/domain/application-review-blocks.tsx` | Review-Blöcke + `workspaceApplicationListNumber` (UI-**Antrags ID** `NTA-YYYY-XXXX` in Listen + Antragdetails) |
 | `components/domain/dashboard-main-panel-scroll-context.tsx` | Scroll-Root-Registrierung für `edgeToEdge`-Pages → Inset/Tight-Messung in der Shell |
 | `app/api/applications/r1-release-adjustments/route.ts` | R1: zurück nach `in_review` inkl. `workspaceReview`-Merge |
 | `lib/r1-adjustment-release.ts` | Regeln und Builder für Post-Submit nach R1-Freigabe |

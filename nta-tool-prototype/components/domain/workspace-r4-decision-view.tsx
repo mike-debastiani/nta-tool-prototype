@@ -27,7 +27,11 @@ import {
   ReviewField,
 } from "@/components/domain/r4-decision-review-blocks";
 import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
-import { reviewWorkspaceAnchorId, type ReviewWorkspaceBlockId } from "@/lib/review-workspace-blocks";
+import {
+  REVIEW_WORKSPACE_APPLICANT_BLOCK_TITLE,
+  reviewWorkspaceAnchorId,
+  type ReviewWorkspaceBlockId,
+} from "@/lib/review-workspace-blocks";
 import {
   allVisibleR4BlocksConfirmed,
   buildAssessmentMeasureRows,
@@ -553,7 +557,7 @@ export function WorkspaceR4DecisionView({
           {showApplicantBlock ? (
             <R4FacultyConfirmedBlock
               anchorId={reviewWorkspaceAnchorId("applicant")}
-              title="Antragsteller"
+              title={REVIEW_WORKSPACE_APPLICANT_BLOCK_TITLE}
             >
               {data.personalData ? (
                 <div className="grid gap-4 sm:grid-cols-2">

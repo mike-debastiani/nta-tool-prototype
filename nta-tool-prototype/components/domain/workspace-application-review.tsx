@@ -57,6 +57,7 @@ import {
 } from "@/components/domain/application-review-blocks";
 import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
 import {
+  REVIEW_WORKSPACE_APPLICANT_BLOCK_TITLE,
   REVIEW_WORKSPACE_BLOCK_IDS,
   reviewWorkspaceAnchorId,
   type ReviewWorkspaceBlockId,
@@ -926,11 +927,14 @@ export function WorkspaceApplicationReview({
           adjustmentSentReadOnly={adjustmentSentReadOnly}
           readOnly={readOnly}
           compactReadOnly={compactReadOnlyBlocks}
-          title="Antragsteller"
+          title={REVIEW_WORKSPACE_APPLICANT_BLOCK_TITLE}
           phase={blockPhases.applicant}
           onConfirm={() => confirmBlock("applicant")}
           onRequestAdjustment={() =>
-            requestAdjustmentForBlock("applicant", "Antragsteller")}
+            requestAdjustmentForBlock(
+              "applicant",
+              REVIEW_WORKSPACE_APPLICANT_BLOCK_TITLE,
+            )}
           onReset={() => handleResetRequest("applicant")}
         >
           {data.personalData ? (

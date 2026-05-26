@@ -46,6 +46,8 @@ export type SavedReviewComment = {
   adjustmentResolutionStatus?: "todo" | "done";
 };
 
+const BEMERKUNG_ITEM_BODY_MAX_HEIGHT_PX = 250;
+
 /** Figma `5866:2028` — Monat + Jahr in der Bemerkungsliste. */
 function formatBemerkungDate(ts: number): string {
   return new Date(ts).toLocaleDateString("de-CH", {
@@ -443,8 +445,14 @@ function ReviewBemerkungItemR1({
           <p
             className={cn(
               hfTypography.paragraphSmall,
-              "min-w-0 flex-1 whitespace-pre-wrap text-foreground",
+              "min-w-0 flex-1 overflow-hidden whitespace-pre-line text-foreground",
             )}
+            style={{
+              maxHeight: `${BEMERKUNG_ITEM_BODY_MAX_HEIGHT_PX}px`,
+              display: "-webkit-box",
+              WebkitBoxOrient: "vertical",
+              WebkitLineClamp: 10,
+            }}
           >
             {comment.body}
           </p>
@@ -496,8 +504,14 @@ function ReviewBemerkungItemR2({
         <p
           className={cn(
             hfTypography.paragraphSmall,
-            "min-w-0 flex-1 whitespace-pre-wrap text-foreground",
+            "min-w-0 flex-1 overflow-hidden whitespace-pre-line text-foreground",
           )}
+          style={{
+            maxHeight: `${BEMERKUNG_ITEM_BODY_MAX_HEIGHT_PX}px`,
+            display: "-webkit-box",
+            WebkitBoxOrient: "vertical",
+            WebkitLineClamp: 10,
+          }}
         >
           {comment.body}
         </p>

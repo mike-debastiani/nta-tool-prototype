@@ -18,6 +18,7 @@ import {
   formatDurationLabel,
   formatReviewSubmittedAt,
 } from "@/lib/application-review-labels";
+import { workspaceApplicationListNumber } from "@/components/domain/application-review-blocks";
 import type { ApplicationAssignee } from "@/lib/application-assignee";
 import type { ApplicationStatusMeta } from "@/lib/application-status";
 import { resolveApplicantDisplayName } from "@/lib/application-assignee";
@@ -89,16 +90,17 @@ export function ApplicationDetailsCard({
   const applicantName = resolveApplicantDisplayName(application);
   const personal = application.data.personalData;
   const statusDotColor = statusTextColorFromBadgeClass(statusMeta.className);
+  const displayApplicationId = workspaceApplicationListNumber(application);
 
   const copyApplicationId = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(application.id);
+      await navigator.clipboard.writeText(displayApplicationId);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
       /* ignore */
     }
-  }, [application.id]);
+  }, [displayApplicationId]);
 
   return (
     <div
@@ -193,7 +195,7 @@ export function ApplicationDetailsCard({
           icon={Hash}
           label="Antrags-ID"
           value={
-            <span className="max-w-[169px] break-all text-right">{application.id}</span>
+            <span className="max-w-[169px] break-all text-right">{displayApplicationId}</span>
           }
         />
       </div>

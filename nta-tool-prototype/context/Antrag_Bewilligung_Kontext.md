@@ -49,7 +49,7 @@ Login: **`/staff/login`** — R2–R6 inkl. **R4** / **R2R4**; Redirect **`/work
 
 Folgende Blöcke sind **nicht** bewillig-/ablehnbar und **ohne** grüne R2-„Bestätigt“-Kodierung:
 
-- Antragsteller  
+- Antragstellende Person (Review-Block-Titel; Konstante `REVIEW_WORKSPACE_APPLICANT_BLOCK_TITLE`)  
 - Fachärztliches Attest  
 - Empfehlungsschreiben der Fachstelle (`RecommendationReleasedAccordion` wie R2)  
 - Antragsdefinition  

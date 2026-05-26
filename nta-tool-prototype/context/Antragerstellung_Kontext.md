@@ -256,7 +256,7 @@ Ausnahme Step 4/5 ohne Kenntnisnahme: Erst-Freischaltung blockiert; nach Sticky 
   - **Header:** Begrüssung mit `studentDisplayName`, aktuelles Datum.
   - **Ansichten:** Toggle **Cards** / **Table** (Persistenz `localStorage` `r1-applications-view`).
   - **Cards:** Grid 2 Spalten, ab Viewport **1600px** 3 Spalten; jede Karte statuskodiert (`r1-application-card-visual.ts`), 3-Schritt-Progress (`In Review → In Entscheid → Verfügung`), Status-Pill via `R1_CARD_STATUS_BADGE_CLASS`; **ganze Karte** ist Link.
-  - **Table:** Spalten Antragsnummer, Einreichedatum, Gültigkeitsdauer, Gültig bis, Status; nur Header-Unterrand + Zeilen-Unterränder (letzte Zeile ohne); **ganze Zeile** klickbar.
+  - **Table:** Spalten **Antrags ID** (`r1ApplicationListNumber` / `NTA-YYYY-XXXX`), Einreichedatum, Gültigkeitsdauer, Gültig bis, Status; nur Header-Unterrand + Zeilen-Unterränder (letzte Zeile ohne); **ganze Zeile** klickbar.
   - **Utility-Spalte** (`R1DashboardUtilityColumn`, Figma `5792:22057`): «Neuer Antrag erstellen» + «Informationen» (Links `size="sm"`) am Ende des Grids.
   - **Daten:** Server-Liste + Client-Polling (2s); Meta via `r1-application-list-meta.ts`.
 - **Neuen Antrag erstellen** → **`?new=1`** → **Antragsflow** ohne Dashboard-Shell.

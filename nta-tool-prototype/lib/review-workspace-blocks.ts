@@ -12,6 +12,9 @@ export type ReviewWorkspaceBlockId =
   | "lectureMeasures"
   | "assessmentMeasures";
 
+/** Review-Block «Persönliche Angaben» (genderneutral). */
+export const REVIEW_WORKSPACE_APPLICANT_BLOCK_TITLE = "Antragstellende Person";
+
 /** Reihenfolge wie im R2-Review-Workspace — alle mit Bestätigen/Anpassung. */
 export const REVIEW_WORKSPACE_BLOCK_IDS: ReviewWorkspaceBlockId[] = [
   "applicant",

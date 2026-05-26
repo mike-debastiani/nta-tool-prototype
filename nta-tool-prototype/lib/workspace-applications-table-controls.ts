@@ -434,7 +434,7 @@ export const WORKSPACE_TABLE_SORT_COLUMN_LABELS: Record<
   applicantName: "Name",
   studiengang: "Studiengang",
   fakultaet: "Fakultät",
-  ref: "Antragsnummer",
+  ref: "Antrags ID",
   date: "Datum",
   statusLabel: "Status",
   assignee: "Zugewiesen an",

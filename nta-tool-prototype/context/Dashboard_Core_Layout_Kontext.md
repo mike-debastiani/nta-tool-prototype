@@ -211,7 +211,7 @@ Default-Zurück: `portalDefaultBackButton` in `workspace-dashboard-shell.tsx`.
 | **Figma Home R2R4** | `5949:3172` (`Dashboard_R2/R4`) — wie R2: drei KPI-Zeilen; «Zugewiesene Aufgaben» **319px** breit, **drei** Buckets (Beratungen · Reviews · Entscheidungen) |
 | **Figma Anträge-Toolbar** | `5948:27466` / `5948:27470` — Suche, Toggle, Filter, Download |
 | **Figma Tabelle maximiert** | `5955:21930` — KPI ausgeblendet, Minimize oben rechts im Panel |
-| **Routing** | `workspace-test-flow.tsx` entscheidet anhand `searchParams.get("view")` und `selectedApplicationId` |
+| **Routing** | `workspace-test-flow.tsx`: `searchParams.get("view")`, `searchParams.get("application")` (UUID), Client-State `selectedApplicationId` |
 
 | Route / Zustand | Komponente | Rollen |
 |-----------------|------------|--------|
@@ -219,9 +219,9 @@ Default-Zurück: `portalDefaultBackButton` in `workspace-dashboard-shell.tsx`.
 | `/workspace?view=aufgaben` | `WorkspaceMyTasksView` | R2, R3, R4, **R2R4** |
 | `/workspace?view=terminplaner` | `WorkspaceConsultationPlannerView` (R2/R3/**R2R4**, leer) | R4 → Redirect `/workspace` |
 | kein Antrag selektiert, sonstige `?view=` | Inbox-Card-Liste | R5/R6 bzw. Platzhalter |
-| `selectedApplicationId` gesetzt | Review / R4-Entscheid (unverändert) | je Status/Rolle |
+| `?application=<uuid>` gesetzt | Review / R4-Entscheid | je Status/Rolle |
 
-Beim Wechsel zu `?view=aufgaben` setzt `WorkspaceTestFlow` `selectedApplicationId` auf `null` (kein Detail hinter der Listen-URL).
+**Antrag öffnen/schliessen:** Zeilenklick → `router.push` mit `?application=<uuid>`; «Zurück zur Liste» / Home-Nav ohne `application` → `router.replace` und `selectedApplicationId = null`. Sync-Effect: fehlt `application` in der URL, wird die Detailansicht immer geschlossen (auch nach Sidebar «Home» → `/workspace`).
 
 ### Abhängigkeiten (Daten & UI)
 
@@ -330,7 +330,7 @@ Credentials: mit Testpersonen abgestimmt (nicht in Repo). Login **`/staff/login`
 | **Komponente** | `workspace-my-tasks-view.tsx` — Panel + **dieselbe** `WorkspaceApplicationsTableToolbar` wie Home (ohne Offen/Alle) |
 | **Vorfilter** | `filterMyTasksApplications` — identisch zu KPI «Zugewiesene Aufgaben» (s. Tabelle oben) |
 | **Danach** | `useWorkspaceApplicationsTableState({ prefilteredApplications })` — Suche, Facetten, Sortierung |
-| **Interaktion** | Zeilenklick → `setSelectedApplicationId` → Review wie von Home |
+| **Interaktion** | Zeilenklick → `?application=<uuid>` → Review wie von Home |
 
 ### Anträge-Panel (Home)
 
@@ -339,11 +339,11 @@ Credentials: mit Testpersonen abgestimmt (nicht in Repo). Login **`/staff/login`
 | **Toolbar** | `workspace-applications-table-toolbar.tsx`; Tokens `WORKSPACE_HOME_TABLE_*` (Figma `5948:27470`) |
 | **Offen/Alle** | Nur Home; `isOpenApplication` = nicht `approved` / `rejected` (R2/R3 Default **Offen**, R4 Default **Alle**) |
 | **Facettierte Filter** | `workspace-applications-table-controls.ts`: Status, Studiengang, Fakultät (Kürzel), Zugewiesen an, «Nur mir zugewiesen»; Pills zum Entfernen |
-| **Suche** | Name, Studiengang, Fakultät (Kürzel + Vollname), Antragsnummer, Status-Label, Assignee |
+| **Suche** | Name, Studiengang, Fakultät (Kürzel + Vollname), **Antrags ID** (`NTA-YYYY-XXXX`), Status-Label, Assignee |
 | **Sortierung** | Spaltenköpfe in `workspace-applications-table.tsx` |
 | **Tabellen-Layout** | Container `@container/applications-table`: **&gt; 1150px** → Name `14%`, Studiengang `32%`, Fakultät `5.75rem` (links), Ref/Assignee shrink, Datum `5.25rem`, Status `15rem`, Menü `sticky right-0`. **≤ 1150px** → `min-w-[62rem]` + Scroll (`WORKSPACE_APPLICATIONS_TABLE_*`) |
 | **Maximize** | Nur R2/R4: Panel-Header; KPI-Zeile ausgeblendet; Minimize stellt KPI wieder her |
-| **Tabellen-Spalten** | Name, Studiengang, **Fakultät** (Kürzel, Tooltip Vollname), Antragsnummer, Datum, Status, Zugewiesen an (Avatar) |
+| **Tabellen-Spalten** | Name, Studiengang, **Fakultät** (Kürzel, Tooltip Vollname), **Antrags ID**, Datum, Status, Zugewiesen an (Avatar) |
 | **R4 Fakultäts-Scope** | DB: `departments`, `study_programs`, `r4_department_scopes`; RLS `r4_application_in_department_scope`; Liste: **nur** Session-Client (`fetchWorkspaceApplicationsList`), kein Service-Role-Fallback |
 | **R4 Test-Accounts** | `r4.test@example.com` = alle Fakultäten; `r4.rf.test@example.com` = nur `rwf` — volle Matrix § **4b** |
 | **Studiengang (R1)** | `lib/uzh-studiengaenge-data.ts` — Fakultäten alphabetisch, gruppierte Combobox |
@@ -367,7 +367,7 @@ Credentials: mit Testpersonen abgestimmt (nicht in Repo). Login **`/staff/login`
 | **Daten** | Supabase-Liste eigener Anträge (Server + Client-Polling 2s) |
 | **Ansichten** | Toggle **Cards** / **Table** (`localStorage`: `r1-applications-view`) |
 | **Cards** | CSS-Grid: 2 Spalten, ab **1600px** 3 Spalten; Status-spezifische Shell + Progress (`In Review → In Entscheid → Verfügung`); Utility-Spalte am Ende (`R1DashboardUtilityColumn`: Neuer Antrag + Informationen) |
-| **Table** | Spalten Antragsnummer, Einreichedatum, Gültigkeitsdauer, Gültig bis, Status; Header + Zeilen mit je einem `border-b` (letzte Zeile ohne); ganze Zeile klickbar |
+| **Table** | Spalten **Antrags ID**, Einreichedatum, Gültigkeitsdauer, Gültig bis, Status; Header + Zeilen mit je einem `border-b` (letzte Zeile ohne); ganze Zeile klickbar |
 | **Status-Pills auf Karten** | `R1_CARD_STATUS_BADGE_CLASS` (HF-pro Status, z. B. Beratung `beratung-100/500`) — kann von globalen Badges abweichen |
 | **Interaktion** | Klick Karte/Zeile → `/portal/antragserstellung?applicationId=<uuid>`; «Neuer Antrag» → `?new=1` |
 
@@ -382,7 +382,7 @@ Gemeinsam für **Portal (Adjustment)** und **Workspace (Review, R4, …)** — n
 - Registrierung: `useRegisterDashboardDetailPanel(signature, render, enabled)` (`dashboard-detail-panel-context.tsx`).
 - Shell rendert rechts neben dem weissen Inhalts-Panel eine Spalte auf **`bg-stone-100`** (Rahmen zum Viewport).
 - **Geschlossen:** `w-0`, kein Inhalt.
-- **Geöffnet:** **`w-[330px]`** (`DASHBOARD_DETAIL_PANEL_WIDTH_CLASS`) — Karte **Antragdetails** (Figma `5652:18411`, `application-details-card.tsx`, `hf-content-panel-card` + Shadow): Reihenfolge **Status** → **Zuletzt aktualisiert** → Antragsteller → … + Kommentare/Kontakte je nach Page.
+- **Geöffnet:** **`w-[330px]`** (`DASHBOARD_DETAIL_PANEL_WIDTH_CLASS`) — Karte **Antragdetails** (Figma `5652:18411`, `application-details-card.tsx`, `hf-content-panel-card` + Shadow): Reihenfolge **Status** → **Zuletzt aktualisiert** → Antragsteller → … → **Antrags-ID** (UI: `workspaceApplicationListNumber`, z. B. `NTA-2026-CDF5`; technische UUID unverändert in DB) + Kommentare/Kontakte je nach Page.
 
 ### Verhalten (Ist)
 
