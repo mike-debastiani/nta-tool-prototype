@@ -4,7 +4,6 @@ import {
   type StatusAudience,
 } from "@/lib/application-status";
 import {
-  initialsFromDisplayName,
   resolveApplicantDisplayName,
   resolveApplicationAssigneeForWorkspace,
   type ApplicationAssignee,
@@ -17,7 +16,6 @@ import type { WorkspaceApplication } from "@/lib/test-flow-types";
 export type WorkspaceApplicationTableRow = {
   application: WorkspaceApplication;
   applicantName: string;
-  applicantInitials: string;
   studiengang: string;
   /** Fakultäts-Kürzel (MNF, PhF, …) für Tabellen-Spalte und Filter. */
   fakultaet: string;
@@ -74,7 +72,6 @@ export function buildWorkspaceApplicationTableRows(
     return {
       application,
       applicantName,
-      applicantInitials: initialsFromDisplayName(applicantName),
       studiengang,
       fakultaet: programMeta?.facultyShortCode ?? "—",
       fakultaetFullName: programMeta?.facultyName,

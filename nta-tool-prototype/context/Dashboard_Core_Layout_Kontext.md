@@ -297,7 +297,7 @@ Zuweisung: `resolveApplicationAssigneeForWorkspace` + Name-Match mit `reviewerDi
 | **Suche** | Name, Studiengang, Fakultät (Kürzel + Vollname), Antragsnummer, Status-Label, Assignee |
 | **Sortierung** | Spaltenköpfe in `workspace-applications-table.tsx` |
 | **Maximize** | Nur R2/R4: Panel-Header; KPI-Zeile ausgeblendet; Minimize stellt KPI wieder her |
-| **Tabellen-Spalten** | Name (Avatar), Studiengang, **Fakultät** (Kürzel, Tooltip Vollname), Antragsnummer, Datum, Status, Zugewiesen an (Avatar) |
+| **Tabellen-Spalten** | Name, Studiengang, **Fakultät** (Kürzel, Tooltip Vollname), Antragsnummer, Datum, Status, Zugewiesen an (Avatar) |
 | **R4 Fakultäts-Scope** | DB: `departments`, `study_programs`, `r4_department_scopes`; RLS `r4_application_in_department_scope`; Liste: **nur** Session-Client (`fetchWorkspaceApplicationsList`), kein Service-Role-Fallback |
 | **R4 Test-Accounts** | `r4.test@example.com` = alle Fakultäten; `r4.rf.test@example.com` = nur `rwf` |
 | **Studiengang (R1)** | `lib/uzh-studiengaenge-data.ts` — Fakultäten alphabetisch, gruppierte Combobox |

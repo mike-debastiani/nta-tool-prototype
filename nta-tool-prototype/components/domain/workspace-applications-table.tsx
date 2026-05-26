@@ -177,17 +177,9 @@ export function WorkspaceApplicationsTable({
                   aria-label={`Antrag ${row.applicantName} öffnen`}
                 >
                   <td className="h-14 px-2">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="flex size-8 shrink-0 items-center justify-center rounded-full bg-stone-150 text-[10px] font-semibold text-foreground"
-                        aria-hidden
-                      >
-                        {row.applicantInitials}
-                      </span>
-                      <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
-                        {row.applicantName}
-                      </span>
-                    </div>
+                    <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
+                      {row.applicantName}
+                    </span>
                   </td>
                   <td className="h-14 px-2">
                     <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
