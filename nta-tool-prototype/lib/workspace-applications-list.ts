@@ -1,5 +1,6 @@
 import type { ApplicationStatus } from "@/lib/application-status";
 import { type UserRole } from "@/lib/auth";
+import { usesR4OnlyHomeLayout } from "@/lib/workspace-role";
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
 import { type SupabaseClient } from "@supabase/supabase-js";
 
@@ -45,7 +46,7 @@ export async function fetchWorkspaceApplicationsList(
   }
 
   const rows = (data ?? []) as WorkspaceApplication[];
-  if (role !== "R4") return rows;
+  if (!usesR4OnlyHomeLayout(role)) return rows;
 
   return filterR4WorkspaceHomeList(rows);
 }

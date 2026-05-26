@@ -9,9 +9,10 @@ import {
   WorkspaceDashboardShell,
 } from "@/components/domain/workspace-dashboard-shell";
 import { WorkspaceR2ToolbarProvider } from "@/components/domain/workspace-r2-toolbar-context";
+import type { UserRole } from "@/lib/auth";
 
 type RoleDashboardLayoutProps = {
-  role: "R1" | "R2" | "R3" | "R4" | "R5" | "R6";
+  role: UserRole;
   userLabel: string;
   /** Initialen im Header-Avatar (R1 Portal + R2–R6 Workspace). */
   workspaceAccountInitials?: string;
@@ -46,6 +47,7 @@ export function RoleDashboardLayout({
       <WorkspaceR2ToolbarProvider>
         <WorkspaceDashboardShell
           workspaceAccountInitials={workspaceAccountInitials}
+          workspaceRole={role}
           tasksBadgeCount={workspaceTasksBadgeCount}
           defaultSidebarCollapsed={defaultSidebarCollapsed}
         >

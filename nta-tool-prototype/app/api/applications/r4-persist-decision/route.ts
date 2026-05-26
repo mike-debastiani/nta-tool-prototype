@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { broadcastApplicationRowUpdated } from "@/lib/application-realtime-sync";
 import { mergeApplicationDataWithR4Review } from "@/lib/r4-decision-state";
 import { type ApplicationData, type R4DecisionReview } from "@/lib/test-flow-types";
+import type { UserRole } from "@/lib/auth";
+import { hasR4WorkspaceCapabilities } from "@/lib/workspace-role";
 import { createClient } from "@/utils/supabase/server";
 import { tryCreateServiceRoleClient } from "@/utils/supabase/service-role";
 
@@ -43,9 +45,9 @@ export async function POST(request: Request) {
     .from("users")
     .select("role")
     .eq("id", user.id)
-    .maybeSingle<{ role: string }>();
+    .maybeSingle<{ role: UserRole }>();
 
-  if (profile?.role !== "R4") {
+  if (!profile?.role || !hasR4WorkspaceCapabilities(profile.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

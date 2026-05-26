@@ -42,6 +42,7 @@ import {
   WorkspaceAccountMenu,
 } from "@/components/domain/workspace-account-menu";
 import { useWorkspaceR2Toolbar } from "@/components/domain/workspace-r2-toolbar-context";
+import { workspaceShowsConsultationPlannerNav } from "@/lib/workspace-nav-access";
 import { Button } from "@/components/ui/button";
 import {
   dashboardMainPanelScrollAreaClass,
@@ -89,6 +90,7 @@ export type DashboardNavItemConfig = {
 type WorkspaceDashboardShellProps = {
   children: ReactNode;
   workspaceAccountInitials?: string;
+  workspaceRole: "R2" | "R3" | "R4" | "R5" | "R6" | "R2R4";
   /** Badge auf «Meine Aufgaben» (Figma: 24). */
   tasksBadgeCount?: number;
   defaultSidebarCollapsed?: boolean;
@@ -791,10 +793,12 @@ export function PortalDashboardShell({
 export function WorkspaceDashboardShell({
   children,
   workspaceAccountInitials = "NF",
+  workspaceRole,
   tasksBadgeCount,
   defaultSidebarCollapsed = false,
 }: WorkspaceDashboardShellProps) {
   const workspaceToolbar = useWorkspaceR2Toolbar();
+  const showConsultationPlannerNav = workspaceShowsConsultationPlannerNav(workspaceRole);
 
   const topItems = useMemo<DashboardNavItemConfig[]>(
     () => [
@@ -805,18 +809,22 @@ export function WorkspaceDashboardShell({
         icon: <ClipboardList className="size-4" strokeWidth={1.75} />,
         badge: tasksBadgeCount,
       },
-      {
-        label: "Beratungen planen",
-        href: "/workspace?view=terminplaner",
-        icon: <Calendar className="size-4" strokeWidth={1.75} />,
-      },
+      ...(showConsultationPlannerNav
+        ? [
+            {
+              label: "Beratungen planen",
+              href: "/workspace?view=terminplaner",
+              icon: <Calendar className="size-4" strokeWidth={1.75} />,
+            },
+          ]
+        : []),
       {
         label: "Auswerten",
         href: "/workspace?view=auswerten",
         icon: <ChartPie className="size-4" strokeWidth={1.75} />,
       },
     ],
-    [tasksBadgeCount],
+    [showConsultationPlannerNav, tasksBadgeCount],
   );
 
   const bottomItems = useMemo<DashboardNavItemConfig[]>(

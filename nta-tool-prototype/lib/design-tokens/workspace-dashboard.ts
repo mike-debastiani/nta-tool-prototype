@@ -122,10 +122,14 @@ export const WORKSPACE_HOME_KPI_CARD_CLASS =
  * der Zeilenbreite minus `WORKSPACE_HOME_KPI_ROW_GAP_CLASS`.
  */
 export const WORKSPACE_HOME_R4_OPEN_CARD_CLASS =
-  "min-h-[220px] min-w-0 flex-[7] basis-0 self-stretch";
+  "h-[320px] min-w-0 shrink-0 flex-[7] basis-0";
 
 export const WORKSPACE_HOME_R4_TASKS_CARD_CLASS =
-  "min-h-[220px] min-w-0 flex-[3] basis-0 self-stretch";
+  "h-[320px] min-w-0 shrink-0 flex-[3] basis-0";
+
+/** Figma `5949:3192` (Dashboard_R2/R4): «Zugewiesene Aufgaben» feste Breite. */
+export const WORKSPACE_HOME_R2R4_ASSIGNED_TASKS_CARD_CLASS =
+  "min-h-[220px] w-[319px] shrink-0 self-stretch";
 
 /** Figma `5948:27469` / `5955:21930` — Maximize/Minimize oben rechts im Anträge-Panel. */
 export const WORKSPACE_HOME_TABLE_PANEL_TOGGLE_BUTTON_CLASS =

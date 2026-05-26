@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { HfGridCell, HfPageGrid } from "@/components/layout/hf-grid";
 import { useWorkspaceR2Toolbar } from "@/components/domain/workspace-r2-toolbar-context";
 import { ArrowLeft, Loader2, Save, Send } from "lucide-react";
@@ -20,11 +20,18 @@ import {
   WorkspaceApplicationReview,
   type WorkspaceReviewViewMode,
 } from "@/components/domain/workspace-application-review";
+import { WorkspaceConsultationPlannerView } from "@/components/domain/workspace-consultation-planner-view";
 import { WorkspaceHomeDashboard } from "@/components/domain/workspace-home-dashboard";
 import { WorkspaceMyTasksView } from "@/components/domain/workspace-my-tasks-view";
+import { workspaceShowsConsultationPlannerView } from "@/lib/workspace-nav-access";
 import { WorkspaceR4DecisionView } from "@/components/domain/workspace-r4-decision-view";
 import { RichTextEditor } from "@/components/domain/rich-text-editor";
 import { type UserRole } from "@/lib/auth";
+import {
+  hasR4WorkspaceCapabilities,
+  statusAudienceForWorkspaceApplication,
+  usesR4OnlyHomeLayout,
+} from "@/lib/workspace-role";
 
 /** Removed product copy — never show between draft / release actions. */
 const SUPPRESS_EDITOR_NOTICE = "Empfehlungsschreiben an R1 freigegeben.";
@@ -45,6 +52,7 @@ export function WorkspaceTestFlow({
   workspaceRole,
 }: WorkspaceTestFlowProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const setLeadingToolbarSlot = useWorkspaceR2Toolbar()?.setLeadingSlot;
 
@@ -68,7 +76,16 @@ export function WorkspaceTestFlow({
   const dashboardView = searchParams.get("view");
 
   useEffect(() => {
-    if (dashboardView === "aufgaben") {
+    if (
+      dashboardView === "terminplaner"
+      && !workspaceShowsConsultationPlannerView(workspaceRole)
+    ) {
+      router.replace("/workspace");
+    }
+  }, [dashboardView, router, workspaceRole]);
+
+  useEffect(() => {
+    if (dashboardView === "aufgaben" || dashboardView === "terminplaner") {
       setSelectedApplicationId(null);
     }
   }, [dashboardView]);
@@ -264,10 +281,26 @@ export function WorkspaceTestFlow({
     const isWorkspaceHome = pathname === "/workspace" && !dashboardView;
     const showHomeDashboard =
       isWorkspaceHome
-      && (workspaceRole === "R2" || workspaceRole === "R3" || workspaceRole === "R4");
+      && (workspaceRole === "R2"
+        || workspaceRole === "R3"
+        || workspaceRole === "R4"
+        || workspaceRole === "R2R4");
     const showMyTasksView =
       dashboardView === "aufgaben"
-      && (workspaceRole === "R2" || workspaceRole === "R3" || workspaceRole === "R4");
+      && (workspaceRole === "R2"
+        || workspaceRole === "R3"
+        || workspaceRole === "R4"
+        || workspaceRole === "R2R4");
+
+    const showConsultationPlannerView =
+      dashboardView === "terminplaner"
+      && workspaceShowsConsultationPlannerView(workspaceRole);
+
+    if (showConsultationPlannerView) {
+      return (
+        <WorkspaceConsultationPlannerView workspaceRole={workspaceRole} />
+      );
+    }
 
     if (showMyTasksView) {
       return (
@@ -307,7 +340,7 @@ export function WorkspaceTestFlow({
           {applications.map((application) => {
             const statusMeta = getApplicationStatusMeta(
               application,
-              workspaceRole === "R4" ? "R4" : "R2",
+              statusAudienceForWorkspaceApplication(workspaceRole, application),
             );
             return (
               <button
@@ -357,7 +390,8 @@ export function WorkspaceTestFlow({
     || selectedCanonicalState === "rejected"
   ) {
     const r4EntscheidEditing =
-      workspaceRole === "R4" && selectedApplication.status === "in_implementation";
+      hasR4WorkspaceCapabilities(workspaceRole)
+      && selectedApplication.status === "in_implementation";
 
     if (r4EntscheidEditing) {
       return (
@@ -371,14 +405,14 @@ export function WorkspaceTestFlow({
     }
 
     const r4ViewMode: WorkspaceReviewViewMode =
-      workspaceRole === "R4" && workspaceReviewMode === "interactive"
+      usesR4OnlyHomeLayout(workspaceRole) && workspaceReviewMode === "interactive"
         ? "readonly_decision"
         : workspaceReviewMode;
 
     const recommendationBottomAction =
       selectedCanonicalState === "consultation_recommendation"
       && !selectedApplication.data.recommendation?.releasedHtml
-      && workspaceRole !== "R4" ? (
+      && !usesR4OnlyHomeLayout(workspaceRole) ? (
         <RecommendationDraftEditor
           key={`${selectedApplication.id}-recommendation-editor`}
           initialHtml={
@@ -410,7 +444,10 @@ export function WorkspaceTestFlow({
         application={selectedApplication}
         reviewerDisplayName={reviewerDisplayName}
         viewMode={r4ViewMode}
-        workspaceViewerRole={workspaceRole === "R4" ? "R4" : "R2"}
+        workspaceViewerRole={statusAudienceForWorkspaceApplication(
+          workspaceRole,
+          selectedApplication,
+        )}
         onPersisted={handleApplicationPersisted}
         bottomAction={recommendationBottomAction}
       />

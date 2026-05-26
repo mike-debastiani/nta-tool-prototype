@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
-export type UserRole = "R1" | "R2" | "R3" | "R4" | "R5" | "R6";
+export type UserRole = "R1" | "R2" | "R3" | "R4" | "R5" | "R6" | "R2R4";
 
 export type UserProfile = {
   id: string;

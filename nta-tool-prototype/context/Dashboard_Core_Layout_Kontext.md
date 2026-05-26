@@ -46,7 +46,7 @@ DashboardShell (intern)
 | `lib/r4-department-access.ts` | Hilfs-Lookup R4-Scope (optional; Liste verlässt sich auf RLS) |
 | `components/domain/student-dashboard.tsx` | R1 Home «Meine Anträge» (Figma `5792:22019` / `5826:3088`); Cards/Table-Toggle, Live-Polling |
 | `components/domain/r1-application-card.tsx` | R1-Antragkarte nach Status (Figma `5856:21926`); ganze Karte klickbar |
-| `components/domain/r1-applications-table.tsx` | R1-Anträge-Tabelle; klickbare Zeilen |
+| `components/domain/r1-applications-table.tsx` | R1-Anträge-Tabelle (`table-fixed` + `colgroup`); Status via `r1-application-status-pill.tsx` |
 | `lib/design-tokens/workspace-dashboard.ts` | Breiten, Padding, Nav-Aktiv-Farben, Inset/Tight-Layout-Ratios, `WORKSPACE_HOME_KPI_*` |
 | `lib/design-tokens/application-content-panel.ts` | Weisses Panel: Shadow, Card-Surface (`APPLICATION_CONTENT_PANEL_*`) |
 | `lib/design-tokens/application-scroll.ts` | Scroll-Viewport vs. Inhalts-Inset (`whitePanelScroll*`, `dashboardMainPanelScrollAreaClass`) |
@@ -154,7 +154,7 @@ Beim **Aufklappen:** `layoutMini` sofort `false`, dann `collapsed` → `false` (
 |---------|--------|
 | Home | `/workspace` |
 | Meine Aufgaben | `/workspace?view=aufgaben` (+ optional Badge) |
-| Beratungen planen | `/workspace?view=terminplaner` |
+| Beratungen planen | `/workspace?view=terminplaner` — **R2, R3, R2R4** (Sidebar via `lib/workspace-nav-access.ts`); **R4** ohne Eintrag; Platzhalter `WorkspaceConsultationPlannerView` (`stone-50`, noch ohne Inhalt) |
 | Auswerten | `/workspace?view=auswerten` |
 | Einstellungen / Hilfe | `?view=einstellungen` / `?view=hilfe` |
 
@@ -207,16 +207,17 @@ Default-Zurück: `portalDefaultBackButton` in `workspace-dashboard-shell.tsx`.
 | Aspekt | Ist |
 |--------|-----|
 | **Figma Home R2/R3** | `5509:11682` — KPI-Zeile + Anträge-Panel |
-| **Figma Home R4** | `5948:27359` — «Alle Anträge» 7/10 + «Zugewiesene Aufgaben» 3/10 (keine dritte KPI-Karte) |
+| **Figma Home R4** | `5948:27359` — «Alle Anträge» 7/10 + «Zugewiesene Aufgaben» 3/10, je **`h-[320px]`** (keine dritte KPI-Karte) |
+| **Figma Home R2R4** | `5949:3172` (`Dashboard_R2/R4`) — wie R2: drei KPI-Zeilen; «Zugewiesene Aufgaben» **319px** breit, **drei** Buckets (Beratungen · Reviews · Entscheidungen) |
 | **Figma Anträge-Toolbar** | `5948:27466` / `5948:27470` — Suche, Toggle, Filter, Download |
 | **Figma Tabelle maximiert** | `5955:21930` — KPI ausgeblendet, Minimize oben rechts im Panel |
 | **Routing** | `workspace-test-flow.tsx` entscheidet anhand `searchParams.get("view")` und `selectedApplicationId` |
 
 | Route / Zustand | Komponente | Rollen |
 |-----------------|------------|--------|
-| `/workspace` ohne `?view=` | `WorkspaceHomeDashboard` | R2, R3, R4 |
-| `/workspace?view=aufgaben` | `WorkspaceMyTasksView` | R2, R3, R4 |
-| `/workspace?view=terminplaner` | *(noch keine eigene Page — Fallback Inbox-Liste)* | Nav-Ziel aus KPI «Beratungen» |
+| `/workspace` ohne `?view=` | `WorkspaceHomeDashboard` | R2, R3, R4, **R2R4** |
+| `/workspace?view=aufgaben` | `WorkspaceMyTasksView` | R2, R3, R4, **R2R4** |
+| `/workspace?view=terminplaner` | `WorkspaceConsultationPlannerView` (R2/R3/**R2R4**, leer) | R4 → Redirect `/workspace` |
 | kein Antrag selektiert, sonstige `?view=` | Inbox-Card-Liste | R5/R6 bzw. Platzhalter |
 | `selectedApplicationId` gesetzt | Review / R4-Entscheid (unverändert) | je Status/Rolle |
 
@@ -252,8 +253,9 @@ WorkspaceTestFlow(applications, workspaceRole, reviewerDisplayName)
 
 | Rolle | Layout erste Zeile | KPI-Karten |
 |-------|-------------------|------------|
-| **R2, R3** | 3× `WORKSPACE_HOME_KPI_CARD_CLASS` (`flex-1`, `gap-6`) | Offene Antragsverfahren · Zugewiesene Aufgaben · Beratungen diese Woche (Mock) |
-| **R4** | `WORKSPACE_HOME_R4_OPEN_CARD_CLASS` (7/10) + `WORKSPACE_HOME_R4_TASKS_CARD_CLASS` (3/10) | Alle Anträge · Zugewiesene Aufgaben |
+| **R2, R3** | 3× `WORKSPACE_HOME_KPI_CARD_CLASS` (`flex-1`, `min-h-[220px]`, `gap-6`) | Offene Antragsverfahren · Zugewiesene Aufgaben · Beratungen diese Woche (Mock) |
+| **R4** | `WORKSPACE_HOME_R4_OPEN_CARD_CLASS` (7/10) + `WORKSPACE_HOME_R4_TASKS_CARD_CLASS` (3/10), je **`h-[320px]`** | Alle Anträge · Zugewiesene Aufgaben |
+| **R2R4** | Wie R2/R3-Zeile; «Zugewiesene Aufgaben» mit `WORKSPACE_HOME_R2R4_ASSIGNED_TASKS_CARD_CLASS` (`w-[319px]`) | Offene Antragsverfahren · Zugewiesene Aufgaben (3 Buckets) · Beratungen diese Woche (Mock) |
 
 **KPI «Offene Antragsverfahren» (R2/R3)** — `lib/workspace-open-applications-stats.ts`: Total und Balken nur **`in_review`**, **`needs_adjustment`**, **`in_decision`** (kein `consultation_recommendation` im Total).
 
@@ -264,6 +266,7 @@ WorkspaceTestFlow(applications, workspaceRole, reviewerDisplayName)
 | Rolle | Status in KPI & Meine Aufgaben | Ausgeschlossen |
 |-------|--------------------------------|----------------|
 | **R2** | `consultation_recommendation` (ohne freigegebene Empfehlung), `in_review` | «Empfehlung verfasst» (`recommendation.releasedHtml`), alle anderen States |
+| **R2R4** | Union R2 + R4: Beratung (ohne freigegebene Empfehlung), `in_review`, **`in_decision`** | wie R2 bzgl. freigegebener Empfehlung |
 | **R3, R4** | `in_decision` | alle anderen States |
 
 Zuweisung: `resolveApplicationAssigneeForWorkspace` + Name-Match mit `reviewerDisplayName` (`isApplicationAssignedToReviewer`). Details → `lib/application-assignee.ts` (Status → Antragsteller / R2-Konto / R4-Konto; Avatar-Initialen in Tabelle + Antragdetails).
@@ -336,7 +339,7 @@ Gemeinsam für **Portal (Adjustment)** und **Workspace (Review, R4, …)** — n
 - Registrierung: `useRegisterDashboardDetailPanel(signature, render, enabled)` (`dashboard-detail-panel-context.tsx`).
 - Shell rendert rechts neben dem weissen Inhalts-Panel eine Spalte auf **`bg-stone-100`** (Rahmen zum Viewport).
 - **Geschlossen:** `w-0`, kein Inhalt.
-- **Geöffnet:** **`w-[330px]`** (`DASHBOARD_DETAIL_PANEL_WIDTH_CLASS`) — Karte **Antragdetails** (Figma `5652:18411`, `application-details-card.tsx`, `hf-content-panel-card` + Shadow) + Kommentare/Kontakte je nach Page.
+- **Geöffnet:** **`w-[330px]`** (`DASHBOARD_DETAIL_PANEL_WIDTH_CLASS`) — Karte **Antragdetails** (Figma `5652:18411`, `application-details-card.tsx`, `hf-content-panel-card` + Shadow): Reihenfolge **Status** → **Zuletzt aktualisiert** → Antragsteller → … + Kommentare/Kontakte je nach Page.
 
 ### Verhalten (Ist)
 
@@ -403,7 +406,10 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 | `DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_ENTER_RATIO` | `0.9` — Einstieg Tight |
 | `DASHBOARD_MAIN_PANEL_TIGHT_LAYOUT_EXIT_RATIO` | `0.82` — Rückkehr Inset (Hysterese) |
 | `WORKSPACE_HOME_KPI_CARD_CLASS` | R2/R3: drei gleich breite KPI-Karten |
-| `WORKSPACE_HOME_R4_OPEN_CARD_CLASS` / `WORKSPACE_HOME_R4_TASKS_CARD_CLASS` | R4: 7/10 + 3/10 |
+| `WORKSPACE_HOME_R4_OPEN_CARD_CLASS` / `WORKSPACE_HOME_R4_TASKS_CARD_CLASS` | R4: 7/10 + 3/10, **`h-[320px]`** |
+| `WORKSPACE_HOME_R2R4_ASSIGNED_TASKS_CARD_CLASS` | R2R4: «Zugewiesene Aufgaben» 319px breit |
+| `lib/workspace-role.ts` | `R2R4`, `hasR2WorkspaceCapabilities`, `hasR4WorkspaceCapabilities`, `statusAudienceForWorkspaceApplication` |
+| `lib/workspace-nav-access.ts` | Sidebar «Beratungen planen» (R2/R3/R2R4) |
 | `WORKSPACE_HOME_TABLE_PANEL_TOGGLE_BUTTON_CLASS` | Maximize/Minimize im Anträge-Panel |
 | `WORKSPACE_HOME_TABLE_SEARCH_*` | Suche 320px, pill, transparent |
 | `WORKSPACE_HOME_TABLE_FILTER_*` | Toggle Offen/Alle (Segment + Tab active/inactive) |

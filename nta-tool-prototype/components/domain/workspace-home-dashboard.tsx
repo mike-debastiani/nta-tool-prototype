@@ -16,10 +16,15 @@ import {
   WORKSPACE_HOME_KPI_ROW_GAP_CLASS,
   WORKSPACE_HOME_R4_OPEN_CARD_CLASS,
   WORKSPACE_HOME_R4_TASKS_CARD_CLASS,
+  WORKSPACE_HOME_R2R4_ASSIGNED_TASKS_CARD_CLASS,
   WORKSPACE_HOME_TABLE_PANEL_TOGGLE_BUTTON_CLASS,
 } from "@/lib/design-tokens/workspace-dashboard";
 import { computeAllApplicationsStats } from "@/lib/workspace-all-applications-stats";
 import { type UserRole } from "@/lib/auth";
+import {
+  isCombinedR2R4Role,
+  usesR4OnlyHomeLayout,
+} from "@/lib/workspace-role";
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
 import { computeAssignedTasksStats } from "@/lib/workspace-assigned-tasks-stats";
 import { computeOpenApplicationsStats } from "@/lib/workspace-open-applications-stats";
@@ -123,8 +128,9 @@ export function WorkspaceHomeDashboard({
     workspaceRole,
   });
 
-  const isR4Home = workspaceRole === "R4";
-  const supportsTableExpand = workspaceRole === "R2" || workspaceRole === "R4";
+  const isR4Home = usesR4OnlyHomeLayout(workspaceRole);
+  const supportsTableExpand =
+    workspaceRole === "R2" || workspaceRole === "R4" || isCombinedR2R4Role(workspaceRole);
 
   const maximizeApplicationsTable = useCallback(() => {
     if (!supportsTableExpand) return;
@@ -191,7 +197,11 @@ export function WorkspaceHomeDashboard({
             />
             <AssignedTasksSummaryCard
               buckets={assignedTasksStats.buckets}
-              className={WORKSPACE_HOME_KPI_CARD_CLASS}
+              className={
+                isCombinedR2R4Role(workspaceRole)
+                  ? WORKSPACE_HOME_R2R4_ASSIGNED_TASKS_CARD_CLASS
+                  : WORKSPACE_HOME_KPI_CARD_CLASS
+              }
               onHeaderIconClick={openMyTasks}
               headerIconAriaLabel="Meine Aufgaben öffnen"
             />

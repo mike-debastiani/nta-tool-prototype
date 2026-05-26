@@ -2,10 +2,8 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 import { R1ApplicationProgress } from "@/components/domain/r1-application-progress";
-import {
-  deriveCanonicalApplicationState,
-  getApplicationStatusMeta,
-} from "@/lib/application-status";
+import { R1ApplicationStatusPill } from "@/components/domain/r1-application-status-pill";
+import { deriveCanonicalApplicationState } from "@/lib/application-status";
 import { getR1CardVisualConfig } from "@/lib/r1-application-card-visual";
 import {
   r1ApplicationDateMeta,
@@ -24,7 +22,6 @@ type R1ApplicationCardProps = {
 export function R1ApplicationCard({ application, className }: R1ApplicationCardProps) {
   const canonicalState = deriveCanonicalApplicationState(application);
   const visual = getR1CardVisualConfig(canonicalState);
-  const statusMeta = getApplicationStatusMeta(application, "R1");
   const dateMeta = r1ApplicationDateMeta(application);
   const href = `/portal/antragserstellung?applicationId=${application.id}`;
 
@@ -59,16 +56,7 @@ export function R1ApplicationCard({ application, className }: R1ApplicationCardP
             <p className={cn(hfTypography.paragraphMini, "text-muted-foreground")}>
               {dateMeta.prefix} {dateMeta.value}
             </p>
-            <span
-              className={cn(
-                "inline-flex shrink-0 items-center justify-center rounded-lg px-2 py-0.5",
-                hfTypography.paragraphMiniMedium,
-                "font-medium",
-                statusMeta.className,
-              )}
-            >
-              {statusMeta.label}
-            </span>
+            <R1ApplicationStatusPill application={application} />
           </div>
           <p className={cn(hfTypography.paragraphMedium, "text-foreground")}>
             {r1ApplicationDisplayTitle(application)}

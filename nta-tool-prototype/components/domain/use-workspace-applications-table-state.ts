@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { deriveCanonicalApplicationState } from "@/lib/application-status";
 import type { UserRole } from "@/lib/auth";
+import { usesR4OnlyHomeLayout } from "@/lib/workspace-role";
 import type { WorkspaceApplication } from "@/lib/test-flow-types";
 import { buildWorkspaceApplicationTableRows } from "@/lib/workspace-application-table-rows";
 import {
@@ -42,7 +43,7 @@ export function useWorkspaceApplicationsTableState({
   initialOpenAllFilter,
 }: UseWorkspaceApplicationsTableStateOptions) {
   const defaultOpenAllFilter =
-    initialOpenAllFilter ?? (workspaceRole === "R4" ? "all" : "open");
+    initialOpenAllFilter ?? (usesR4OnlyHomeLayout(workspaceRole) ? "all" : "open");
   const [searchQuery, setSearchQuery] = useState("");
   const [openAllFilter, setOpenAllFilter] =
     useState<WorkspaceApplicationsOpenAllFilter>(defaultOpenAllFilter);

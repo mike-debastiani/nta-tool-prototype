@@ -3,6 +3,7 @@ import {
   type CanonicalApplicationState,
 } from "@/lib/application-status";
 import type { UserRole } from "@/lib/auth";
+import { isCombinedR2R4Role } from "@/lib/workspace-role";
 import type { WorkspaceApplication } from "@/lib/test-flow-types";
 
 export type ApplicationAssignee = {
@@ -61,12 +62,12 @@ export function resolveWorkspaceRoleAssigneeNames(options: {
   const role = options.workspaceRole;
 
   const r2ReviewerDisplayName =
-    role === "R2"
+    role === "R2" || isCombinedR2R4Role(role)
       ? loggedIn || R2_FALLBACK
       : WORKSPACE_PROTOTYPE_R2_REVIEWER_NAME;
 
   const r4ReviewerDisplayName =
-    role === "R4" || role === "R3"
+    role === "R4" || role === "R3" || isCombinedR2R4Role(role)
       ? loggedIn || R4_FALLBACK
       : WORKSPACE_PROTOTYPE_R4_REVIEWER_NAME;
 

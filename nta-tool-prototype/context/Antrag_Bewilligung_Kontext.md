@@ -90,7 +90,7 @@ Betroffen: **Gültigkeitsdauer**, **Geltungsbereich**, **Massnahmen LV**, **Mass
 - Persistenz unter **`data.r4DecisionReview`** (`ApplicationData` in `lib/test-flow-types.ts`), damit **kein** Konflikt mit dem R2-Trigger-Pfad **`data.recommendation`** / **`data.consultation`** entsteht.
 - Struktur: pro Entscheid-Block (`duration` \| `scope` \| `lectureMeasures` \| `assessmentMeasures`) gespeicherte **Zeilen** (`key`, `studentSelected`, `r4Approved`) und Flag **`confirmed`** nach Klick auf „Auswahl bestätigen“.
 - **APIs (Server, optional / Fallback):**
-  - **`POST /api/applications/r4-persist-decision`** — merge `r4DecisionReview` (nur R4, nur Status `in_implementation`).
+  - **`POST /api/applications/r4-persist-decision`** — merge `r4DecisionReview` (**R4** oder **R2R4** via `hasR4WorkspaceCapabilities`, nur Status `in_implementation`).
   - **`POST /api/applications/r4-complete-decision`** — prüft alle sichtbaren Entscheid-Blöcke `confirmed`, setzt **`approved`**, Broadcast wie bei anderen Antrags-Mutationen.
 - **Ist-Pfad im UI:** Speichern und Abschliessen laufen primär **direkt im Browser** über den Session-Supabase-Client (`lib/r4-workspace-supabase-persist.ts`: `persistR4DecisionWithSupabaseClient`, `completeR4DecisionWithSupabaseClient`) — umgeht fehleranfällige Cookie-/SSR-Kombination auf den API-Routen; die Routen bleiben als Referenz/Fallback nutzbar.
 
@@ -101,7 +101,7 @@ Betroffen: **Gültigkeitsdauer**, **Geltungsbereich**, **Massnahmen LV**, **Mass
   - **`users_select_r4_workspace_applicants`** — R4 darf Zeilen in `public.users` lesen für **eigene Profilzeile** (`users.id = auth.uid()`) und für **Antragsteller**, die einen passenden Antrag haben (Embed `users!applications_applicant_id_fkey` in der Listen-Query).
 - **UPDATE für R4** (Migration `supabase/migrations/20260514120000_applications_update_r4_decision.sql`): Policy **`applications_update_r4_decision`** — R4 darf `applications` aktualisieren, wenn `status = in_implementation` (`USING`); `WITH CHECK` erlaubt Ziel `in_implementation` **oder** `approved` (Abschluss). Ohne diese Policy schlagen Client-Updates mit dem normalen Supabase-Key fehl, wenn kein Service-Role verwendet wird.
 - **Pflicht für alle neuen Policies auf `users`/`applications`:** Rolle des eingeloggten Users **nur** über **`current_user_role()`** ausdrücken (bereits im Projekt als `SECURITY DEFINER` — gleiches Muster wie `applications_select_r2_worklist`). **Nicht** `EXISTS (SELECT 1 FROM public.users …)` innerhalb von RLS auf `users` verwenden → sonst Postgres **„infinite recursion detected in policy for relation users“** (betrifft dann auch R1/R2-Login beim Profil-Select).
-- **APIs** `r4-persist-decision` / `r4-complete-decision` können weiterhin optional den **Service-Role-Client** nutzen, wenn Schreib-RLS für R4 in einer Umgebung noch fehlt — **nur** nach Session-Auth und Rollenprüfung **R4**. Produktiv sind dedizierte UPDATE-Policies vorzuziehen.
+- **APIs** `r4-persist-decision` / `r4-complete-decision` können weiterhin optional den **Service-Role-Client** nutzen, wenn Schreib-RLS für R4/R2R4 in einer Umgebung noch fehlt — nach Session-Auth und Rollenprüfung **`hasR4WorkspaceCapabilities`** (R4, R2R4). Produktiv sind dedizierte UPDATE-Policies vorzuziehen.
 - **Supabase Free Egress:** Überschreitung drosselt Traffic, **nicht** die genannte Policy-Rekursion (das ist rein Postgres-RLS).
 
 ---

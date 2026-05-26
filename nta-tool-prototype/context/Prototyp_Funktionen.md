@@ -71,6 +71,7 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 | R2 — Zentrale Fachstelle | `/workspace` | Beraten, Empfehlung verfassen, **Block-Review** nach Einreichung, Antrag an Entscheid / zur Korrektur weiterleiten |
 | R3 — Workspace-Rolle | `/workspace` | Im Prototyp weiterhin im Policy-Set mit R2 gruppiert; fachliche „dezentrale Entscheid“-Simulation siehe auch **R4** |
 | **R4 — Entscheidungsinstanz (Ist-Code)** | `/workspace` | Bewilligungsflow nach R2-Forward: gleiche Workspace-Shell wie R2, eigene UI in `in_implementation`, RLS-Policies — **`Antrag_Bewilligung_Kontext.md`** |
+| **R2R4 — kombinierte Testrolle** | `/workspace` | Ein Account mit R2- und R4-Befugnissen (Review bis Entscheid); Home `5949:3172`; Test `r2and4.combined.test@example.com` |
 | R5 — Prüfungsadministration | `/workspace` | Massnahmen-Listen pro Prüfung, Umsetzung organisieren |
 | R6 — Modulverantwortliche | `/workspace` | Massnahmen für eigene Module einsehen (ohne medizinische Details) |
 
@@ -138,8 +139,8 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 ### F5 — Workspace pro Verwaltungsrolle (R2-R6)
 
 - Eine `/workspace`-Hülle (`WorkspaceDashboardShell` via `RoleDashboardLayout`): einklappbare Sidebar (240/68px), Nav-Aktiv Primary (`5509:11682`), Top-Bar mit Suche/Inbox/Account, weisses Inhalts-Panel Inset/Tight je nach Scroll-Füllung — **`Dashboard_Core_Layout_Kontext.md`**
-- **Home:** R2–R4 auf `/workspace` ohne `?view=` → `WorkspaceHomeDashboard` (Figma `5509:11682`, R4 KPI `5948:27359`): KPI live; R4 nur «Alle Anträge» + «Zugewiesene Aufgaben»; R2/R3 zusätzlich «Beratungen diese Woche» (Mock); Anträge-Tabelle mit Toolbar (Suche, **facettierte Filter**, Offen/Alle, Sortierung, Spalte Fakultät Kürzel); Maximize (R2/R4); KPI `+N` = heute neu ohne «heute»-Label
-- **Meine Aufgaben:** `/workspace?view=aufgaben` → `WorkspaceMyTasksView` — Vorfilter `filterMyTasksApplications` (gleich KPI), danach gleiche Toolbar/Filter/Sort; **kein** Offen/Alle: R2 = Beratung (ohne freigegebene Empfehlung) + Review; R3/R4 = In Entscheid + Zuweisung an eingeloggten Namen
+- **Home:** R2–R4 und **R2R4** auf `/workspace` ohne `?view=` → `WorkspaceHomeDashboard` (Figma `5509:11682`, R4 `5948:27359`, R2R4 `5949:3172`): KPI live; R4 nur «Alle Anträge» + «Zugewiesene Aufgaben» (**320px** Höhe); R2/R3/R2R4 zusätzlich «Beratungen diese Woche» (Mock); R2R4: drei Aufgaben-Buckets in KPI; Anträge-Tabelle mit Toolbar (Suche, **facettierte Filter**, Offen/Alle, Sortierung, Spalte Fakultät Kürzel); Maximize (R2/R4/R2R4); KPI `+N` = heute neu ohne «heute»-Label
+- **Meine Aufgaben:** `/workspace?view=aufgaben` → `WorkspaceMyTasksView` — Vorfilter `filterMyTasksApplications` (gleich KPI), danach gleiche Toolbar/Filter/Sort; **kein** Offen/Alle: R2/R2R4 = Beratung (ohne freigegebene Empfehlung) + Review (+ **R2R4:** In Entscheid); R3/R4 = In Entscheid + Zuweisung an eingeloggten Namen
 - **Home-Inbox vs. Aufgaben:** Home zeigt breite RLS-Liste (R2/R3 Default Offen); Meine Aufgaben nur persönliche Bearbeitungsfälle — siehe `Dashboard_Core_Layout_Kontext.md` § Workspace Home
 - **R4:** Fakultäts-Scope in Supabase (RLS); Test-Accounts `r4.test` / `r4.rf.test`; Studiengang-Katalog UZH in `uzh-studiengaenge-data.ts`
 - Rollenspezifische Sichten innerhalb (`WorkspaceTestFlow`, R4-Entscheid-View, …)

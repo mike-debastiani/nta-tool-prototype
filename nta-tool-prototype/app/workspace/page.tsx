@@ -8,7 +8,7 @@ import { createClient } from "@/utils/supabase/server";
 
 export default async function WorkspacePage() {
   const profile = await requireUserProfile(
-    ["R2", "R3", "R4", "R5", "R6"],
+    ["R2", "R3", "R4", "R5", "R6", "R2R4"],
     "/staff/login",
   );
 

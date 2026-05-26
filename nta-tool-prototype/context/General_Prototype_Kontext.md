@@ -54,6 +54,7 @@ Eine Codebase, ein Supabase-Backend; Trennung über Routen und Layouts (`RoleDas
 | **R2** | `/workspace` | Zentrale Fachstelle: Beratung, Empfehlung, im Prototyp begrenzte Schreibzugriffe auf `applications.data`. |
 | **R3** | `/workspace` | Workspace-Rolle (Prototyp); fachliche Entscheid-Simulation teils parallel zu **R4** — Umsetzungsgrad siehe Repo. |
 | **R4** | `/workspace` | **Entscheidungsinstanz (Bewilligung)** im Code: gleiche Shell wie R2 (`RoleDashboardLayout`), Inbox-Liste, Block-Review read-only ausserhalb `in_implementation`, Bewilligungs-UI in `in_implementation` — siehe `Antrag_Bewilligung_Kontext.md`. |
+| **R2R4** | `/workspace` | Kombinierte Testrolle (Fachstelle + Entscheid): Enum `R2R4`, Home Figma `5949:3172`, KPI mit drei Aufgaben-Buckets; RLS/Policies in `20260526120000_*` / `20260526120100_*`; Test `r2and4.combined.test@example.com` |
 | **R5 / R6** | `/workspace` | Prüfungsadministration / Modulverantwortliche — reduzierte oder geplante Sichten. |
 
 **Hinweis:** `Prototyp_Funktionen.md` führt die dezentrale Entscheid teils als **R3**; im **Ist-Code** ist die Bewilligungsinstanz **`R4`** mit eigenen APIs/RLS-Policies. Bei Abgleich immer `requireUserProfile`, Routen und Supabase-Policies prüfen.
@@ -136,12 +137,14 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `components/domain/assigned-tasks-summary-card.tsx` | KPI «Zugewiesene Aufgaben»; optional `onHeaderIconClick` → Meine Aufgaben |
 | `components/domain/student-dashboard.tsx` | R1 Home «Meine Anträge»: Cards/Table-Toggle, Live-Polling, Utility-Spalte |
 | `components/domain/r1-application-card.tsx` | Statuskodierte R1-Antragkarte mit Progress-Stepper (klickbare Karte) |
-| `components/domain/r1-applications-table.tsx` | R1-Tabellenansicht mit klickbaren Zeilen |
+| `components/domain/r1-applications-table.tsx` | R1-Tabellenansicht (`table-fixed`, Spaltenverteilung); `r1-application-status-pill.tsx` |
 | `lib/r1-application-card-visual.ts` | Karten-Shell, Progress-States, `R1_CARD_STATUS_BADGE_CLASS` |
 | `lib/r1-application-list-meta.ts` | Titel, Datums- und Gültigkeits-Spalten für Cards/Table |
 | `lib/workspace-open-applications-stats.ts` | KPI «Offene Antragsverfahren» (R2/R3): `in_review`, `needs_adjustment`, `in_decision` |
 | `lib/workspace-all-applications-stats.ts` | KPI «Alle Anträge» (R4): `in_decision`, `approved`, `rejected` |
 | `lib/workspace-assigned-tasks-stats.ts` | KPI + Meine Aufgaben: `isApplicationInMyTasksForRole`, `filterMyTasksApplications` |
+| `lib/workspace-role.ts` | Kombinierte Rolle **R2R4**: Capability-Flags, Status-Audience pro Antrag |
+| `lib/workspace-nav-access.ts` | Workspace-Nav «Beratungen planen» (R2/R3/R2R4) |
 | `lib/workspace-application-table-rows.ts` | Tabellenzeilen für `WorkspaceApplicationsTable` |
 | `components/domain/application-review-blocks.tsx` | Review-Blöcke + `shortApplicationRef` / `workspaceApplicationListNumber` (Listen-Spalte Antragsnummer) |
 | `components/domain/dashboard-main-panel-scroll-context.tsx` | Scroll-Root-Registrierung für `edgeToEdge`-Pages → Inset/Tight-Messung in der Shell |

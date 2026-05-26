@@ -3,7 +3,7 @@ import { type UserRole } from "@/lib/auth";
 import { fetchWorkspaceApplicationsList } from "@/lib/workspace-applications-list";
 import { createClient } from "@/utils/supabase/server";
 
-const WORKSPACE_ROLES: UserRole[] = ["R2", "R3", "R4", "R5", "R6"];
+const WORKSPACE_ROLES: UserRole[] = ["R2", "R3", "R4", "R5", "R6", "R2R4"];
 
 export async function GET() {
   const supabase = await createClient();

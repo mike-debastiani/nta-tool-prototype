@@ -13,6 +13,7 @@ import {
   resolveApplicationAssigneeForWorkspace,
 } from "@/lib/application-assignee";
 import type { UserRole } from "@/lib/auth";
+import { isCombinedR2R4Role } from "@/lib/workspace-role";
 import type { WorkspaceApplication } from "@/lib/test-flow-types";
 
 export type AssignedTaskBucketId = "beratungen" | "reviews" | "entscheidungen";
@@ -34,6 +35,11 @@ export type AssignedTasksStats = {
 };
 
 const BUCKET_ORDER_R2: AssignedTaskBucketId[] = ["beratungen", "reviews"];
+const BUCKET_ORDER_R2R4: AssignedTaskBucketId[] = [
+  "beratungen",
+  "reviews",
+  "entscheidungen",
+];
 const BUCKET_ORDER_DECISION: AssignedTaskBucketId[] = ["entscheidungen"];
 
 const BUCKET_META: Record<
@@ -107,6 +113,13 @@ function taskBucketForState(
     return state === "in_decision" ? "entscheidungen" : null;
   }
 
+  if (isCombinedR2R4Role(workspaceRole)) {
+    if (state === "consultation_recommendation") return "beratungen";
+    if (state === "in_review") return "reviews";
+    if (state === "in_decision") return "entscheidungen";
+    return null;
+  }
+
   if (workspaceRole === "R2") {
     if (state === "consultation_recommendation") return "beratungen";
     if (state === "in_review") return "reviews";
@@ -138,7 +151,10 @@ export function isApplicationInMyTasksForRole(
   ) {
     return false;
   }
-  if (workspaceRole === "R2" && isR2RecommendationReleased(application)) {
+  if (
+    (workspaceRole === "R2" || isCombinedR2R4Role(workspaceRole))
+    && isR2RecommendationReleased(application)
+  ) {
     return false;
   }
   const state = deriveCanonicalApplicationState(application);
@@ -158,6 +174,9 @@ export function filterMyTasksApplications(
 }
 
 function bucketOrderForRole(workspaceRole: UserRole): AssignedTaskBucketId[] {
+  if (isCombinedR2R4Role(workspaceRole)) {
+    return BUCKET_ORDER_R2R4;
+  }
   if (workspaceRole === "R3" || workspaceRole === "R4") {
     return BUCKET_ORDER_DECISION;
   }

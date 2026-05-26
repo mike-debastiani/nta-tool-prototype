@@ -4,7 +4,7 @@ import { ChevronsUpDown, MoreVertical } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { KeyboardEvent, ReactNode } from "react";
 
-import { ApplicationStatusBadge } from "@/components/domain/application-status-badge";
+import { R1ApplicationStatusPill } from "@/components/domain/r1-application-status-pill";
 import {
   formatR1SubmittedDate,
   formatR1ValidUntil,
@@ -80,15 +80,23 @@ export function R1ApplicationsTable({ applications }: R1ApplicationsTableProps) 
       </h2>
 
       <div className="w-full overflow-x-auto">
-        <table className="w-full min-w-[720px] border-collapse">
+        <table className="w-full min-w-[800px] table-fixed border-collapse">
+          <colgroup>
+            <col className="w-[19%]" />
+            <col className="w-[14%]" />
+            <col className="w-[24%]" />
+            <col className="w-[17%]" />
+            <col className="w-[22%]" />
+            <col className="w-12" />
+          </colgroup>
           <thead>
             <tr className="border-b border-border">
-              <TableHeaderCell className="w-[220px]">Antragsnummer</TableHeaderCell>
-              <TableHeaderCell className="w-[200px]">Einreichedatum</TableHeaderCell>
-              <TableHeaderCell className="w-[200px]">Gültigkeitsdauer</TableHeaderCell>
-              <TableHeaderCell className="w-[146px]">Gültig bis</TableHeaderCell>
-              <TableHeaderCell>Status</TableHeaderCell>
-              <th scope="col" className="w-10 px-2 pb-2 pt-2">
+              <TableHeaderCell>Antragsnummer</TableHeaderCell>
+              <TableHeaderCell>Einreichedatum</TableHeaderCell>
+              <TableHeaderCell>Gültigkeitsdauer</TableHeaderCell>
+              <TableHeaderCell className="pr-6">Gültig bis</TableHeaderCell>
+              <TableHeaderCell className="pl-2">Status</TableHeaderCell>
+              <th scope="col" className="w-12 px-2 pb-2 pt-2">
                 <span className="sr-only">Aktionen</span>
               </th>
             </tr>
@@ -141,20 +149,13 @@ export function R1ApplicationsTable({ applications }: R1ApplicationsTableProps) 
                       {formatR1ValidityDuration(application)}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="pr-6">
                     <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
                       {formatR1ValidUntil(application)}
                     </span>
                   </TableCell>
-                  <TableCell>
-                    <ApplicationStatusBadge
-                      application={application}
-                      audience="R1"
-                      className={cn(
-                        hfTypography.paragraphMiniMedium,
-                        "rounded-lg px-2 py-0.5 font-medium",
-                      )}
-                    />
+                  <TableCell className="pl-2">
+                    <R1ApplicationStatusPill application={application} />
                   </TableCell>
                   <TableCell className="w-10 text-center">
                     <MoreVertical

@@ -1,8 +1,5 @@
 import { workspaceApplicationListNumber } from "@/components/domain/application-review-blocks";
-import {
-  getApplicationStatusMeta,
-  type StatusAudience,
-} from "@/lib/application-status";
+import { getApplicationStatusMeta } from "@/lib/application-status";
 import {
   resolveApplicantDisplayName,
   resolveApplicationAssigneeForWorkspace,
@@ -12,6 +9,7 @@ import { getStudyProgramMeta } from "@/lib/uzh-studiengaenge";
 import { formatReviewSubmittedAt } from "@/lib/application-review-labels";
 import type { UserRole } from "@/lib/auth";
 import type { WorkspaceApplication } from "@/lib/test-flow-types";
+import { statusAudienceForWorkspaceApplication } from "@/lib/workspace-role";
 
 export type WorkspaceApplicationTableRow = {
   application: WorkspaceApplication;
@@ -29,10 +27,6 @@ export type WorkspaceApplicationTableRow = {
   statusClass: string;
   assignee: ApplicationAssignee;
 };
-
-export function statusAudienceForWorkspaceRole(role: UserRole): StatusAudience {
-  return role === "R4" ? "R4" : "R2";
-}
 
 function formatApplicationTableDate(application: WorkspaceApplication): string {
   const submitted = formatReviewSubmittedAt(application.data);
@@ -52,10 +46,12 @@ export function buildWorkspaceApplicationTableRows(
   },
 ): WorkspaceApplicationTableRow[] {
   const { reviewerDisplayName, workspaceRole } = options;
-  const statusAudience = statusAudienceForWorkspaceRole(workspaceRole);
 
   return applications.map((application) => {
-    const statusMeta = getApplicationStatusMeta(application, statusAudience);
+    const statusMeta = getApplicationStatusMeta(
+      application,
+      statusAudienceForWorkspaceApplication(workspaceRole, application),
+    );
     const applicantName = resolveApplicantDisplayName(application);
     const studiengang = application.data.personalData?.studiengang?.trim() || "—";
     const assignee = resolveApplicationAssigneeForWorkspace(application, {

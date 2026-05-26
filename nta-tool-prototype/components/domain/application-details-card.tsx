@@ -145,6 +145,8 @@ export function ApplicationDetailsCard({
           </span>
         </div>
 
+        <DetailRow icon={RefreshCcw} label="Zuletzt aktualisiert" value={updated} />
+
         <DetailRow icon={User} label="Antragsteller" value={applicantName} />
 
         <DetailRow
@@ -164,8 +166,6 @@ export function ApplicationDetailsCard({
           label="Eingereicht am"
           value={submitted ?? "—"}
         />
-
-        <DetailRow icon={RefreshCcw} label="Zuletzt aktualisiert" value={updated} />
 
         <DetailRow
           icon={CalendarCheck}

@@ -8,12 +8,13 @@ import { Label } from "@/components/ui/label";
 import { APPLICATION_CONTENT_PANEL_CARD_CLASS } from "@/lib/design-tokens/application-content-panel";
 import { hfTypography } from "@/lib/design-tokens/typography";
 import { cn } from "@/lib/utils";
+import type { UserRole } from "@/lib/auth";
 import { createClient } from "@/utils/supabase/client";
 
 type LoginCardProps = {
   title: string;
   description?: string;
-  allowedRoles: ("R1" | "R2" | "R3" | "R4" | "R5" | "R6")[];
+  allowedRoles: UserRole[];
 };
 
 export function LoginCard({ title, description, allowedRoles }: LoginCardProps) {
@@ -58,7 +59,7 @@ export function LoginCard({ title, description, allowedRoles }: LoginCardProps) 
       .from("users")
       .select("role")
       .eq("id", data.user.id)
-      .maybeSingle<{ role: "R1" | "R2" | "R3" | "R4" | "R5" | "R6" }>();
+      .maybeSingle<{ role: UserRole }>();
 
     if (profileError) {
       await supabase.auth.signOut();
