@@ -184,11 +184,10 @@ export const WORKSPACE_HOME_TABLE_FILTER_PILL_CLASS = [
 /**
  * Anträge-Tabelle (Home / Meine Aufgaben), Container-Query auf dem Scroll-Wrapper.
  *
- * **> 1150px (Fit):** `table-fixed` volle Breite, kein horizontales Scrollen. Spalten 3–8
- * schrumpfen auf Mindestbreite (`width: 1%` + `nowrap`). Nur **Name** und **Studiengang** dürfen
- * umbrechen. Status-Pills nie umbrechen.
+ * **> 1150px (Fit):** volle Breite, kein horizontales Scrollen; kurze Spalten mit Mindestbreite,
+ * **Studiengang** nimmt flexibel zu und darf umbrechen. Status-Pills nie umbrechen.
  *
- * **≤ 1150px (Kompakt):** `min-w-[62rem]` + horizontales Scrollen; gleiche Umbruch-Regel für Sp. 1–2.
+ * **≤ 1150px (Kompakt):** feste Mindestbreite + horizontales Scrollen; gleiche Umbruch-Regel.
  */
 export const WORKSPACE_APPLICATIONS_TABLE_CONTAINER_CLASS = [
   "@container/applications-table w-full min-w-0",
@@ -203,20 +202,18 @@ export const WORKSPACE_APPLICATIONS_TABLE_COMPACT_QUERY =
 export const WORKSPACE_APPLICATIONS_TABLE_FIT_QUERY =
   "@min-[1151px]/applications-table" as const;
 
-export const WORKSPACE_APPLICATIONS_TABLE_MIN_WIDTH_CLASS = "min-w-[62rem]";
-
-/** Fit-Modus: schmale Spalten (`table-fixed` + `w-px` am `<td>`). */
-export const WORKSPACE_APPLICATIONS_TABLE_SHRINK_COL_WIDTH = "1%";
+/** Summe der Spalten im Kompaktmodus inkl. etwas Luft für Fakultät/Datum; entspricht ca. 1186px @16px. */
+export const WORKSPACE_APPLICATIONS_TABLE_MIN_WIDTH_CLASS = "min-w-[74.125rem]";
 
 /** Menü-Spalte (3-Punkte): Icon + Abstand zu «Zugewiesen an», immer rechts (`sticky`). */
 export const WORKSPACE_APPLICATIONS_TABLE_ACTIONS_COL_WIDTH = "3rem";
 
 export const WORKSPACE_APPLICATIONS_TABLE_ACTIONS_HEADER_CLASS = [
-  "sticky right-0 z-10 box-border w-12 min-w-12 max-w-12 bg-transparent p-0 pl-4 pr-2 align-middle",
+  "sticky right-0 z-10 box-border w-12 min-w-12 max-w-12 bg-transparent p-0 pl-2 pr-2 align-middle",
 ].join(" ");
 
 export const WORKSPACE_APPLICATIONS_TABLE_ACTIONS_CELL_CLASS = [
-  "sticky right-0 z-10 box-border h-14 w-12 min-w-12 max-w-12 bg-transparent p-0 pl-4 pr-2 align-middle text-right",
+  "sticky right-0 z-10 box-border h-14 w-10 min-w-12 max-w-10 bg-transparent p-0 pl-2 pr-2 align-middle text-right",
 ].join(" ");
 
 /**
@@ -228,26 +225,30 @@ export const WORKSPACE_APPLICATIONS_TABLE_STATUS_COL_WIDTH = "15rem";
 
 /** Fit-Modus: Anteil für flexible Textspalten (Rest = feste/shrink-Spalten). */
 export const WORKSPACE_APPLICATIONS_TABLE_FIT_COL_PERCENT = {
-  applicantName: "14%",
-  studiengang: "32%",
+  applicantName: "13%",
+  studiengang: "35%",
 } as const;
 
 export const WORKSPACE_APPLICATIONS_TABLE_FIT_COL_WIDTH = {
-  /** «Fakultät» + Sort-Icon einzeilig; Inhalt linksbündig. */
-  fakultaet: "5.75rem",
-  /** DD.MM.YYYY — reduziert zugunsten Status. */
-  date: "5.25rem",
+  /** «Fakultät» + Sort-Icon + Abstand zur nächsten Spalte. */
+  fakultaet: "5.5rem",
+  /** DD.MM.YYYY + Abstand vor Status-Badge. */
+  date: "5.5rem",
+  /** UI-Format NTA-YYYY-XXXX bleibt einzeilig stabil. */
+  ref: "9rem",
   statusLabel: WORKSPACE_APPLICATIONS_TABLE_STATUS_COL_WIDTH,
+  /** Längster Name in «Zugewiesen an» bestimmt die benötigte Mindestbreite. */
+  assignee: "max-content",
 } as const;
 
 /** Feste Spaltenbreiten (Kompakt-Modus / Scroll); Studiengang ohne feste width. */
 export const WORKSPACE_APPLICATIONS_TABLE_COL_WIDTH = {
   applicantName: "10.5rem",
   fakultaet: WORKSPACE_APPLICATIONS_TABLE_FIT_COL_WIDTH.fakultaet,
-  ref: "9rem",
+  ref: WORKSPACE_APPLICATIONS_TABLE_FIT_COL_WIDTH.ref,
   date: WORKSPACE_APPLICATIONS_TABLE_FIT_COL_WIDTH.date,
   statusLabel: WORKSPACE_APPLICATIONS_TABLE_FIT_COL_WIDTH.statusLabel,
-  assignee: "13.5rem",
+  assignee: WORKSPACE_APPLICATIONS_TABLE_FIT_COL_WIDTH.assignee,
   actions: WORKSPACE_APPLICATIONS_TABLE_ACTIONS_COL_WIDTH,
   studiengangMin: "7rem",
 } as const;
@@ -256,11 +257,11 @@ export const WORKSPACE_APPLICATIONS_TABLE_COL_WIDTH = {
 export const WORKSPACE_APPLICATIONS_TABLE_COL_MIN_CLASS = {
   applicantName: "min-w-[10.5rem]",
   studiengang: "min-w-[7rem]",
-  fakultaet: "min-w-[5.75rem] max-w-[5.75rem]",
+  fakultaet: "min-w-[5.5rem] max-w-[5.5rem]",
   ref: "min-w-[9rem]",
-  date: "min-w-[5.25rem] max-w-[5.25rem]",
+  date: "min-w-[5.5rem] max-w-[5.5rem]",
   statusLabel: "min-w-[15rem]",
-  assignee: "min-w-[13.5rem]",
+  assignee: "min-w-max",
   actions: "min-w-12 max-w-12",
 } as const;
 

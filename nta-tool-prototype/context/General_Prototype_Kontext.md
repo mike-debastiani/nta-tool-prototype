@@ -132,7 +132,7 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `components/domain/workspace-test-flow.tsx` | Routing: Home / `?view=aufgaben` / Review; R2–R4 Home + Meine Aufgaben; R5/R6 Inbox |
 | `components/domain/workspace-home-dashboard.tsx` | Workspace-Home: KPI-Zeile, Anträge-Toolbar, Maximize, KPI-Icon-Navigation |
 | `components/domain/workspace-my-tasks-view.tsx` | `/workspace?view=aufgaben` — gefilterte Aufgaben-Tabelle |
-| `components/domain/workspace-applications-table.tsx` | Sortierbare Anträge-Tabelle (Fakultät, Assignee-Avatar) |
+| `components/domain/workspace-applications-table.tsx` | Sortierbare Anträge-Tabelle (Home + Meine Aufgaben): responsive Spalten, Studiengang-Umbruch, Name-Umbruch ab 24 Zeichen, Assignee-Avatar |
 | `components/domain/open-applications-summary-card.tsx` | KPI Charts; optional `onHeaderIconClick`, `allowedViews` (R4 nur Vertikal/Horizontal) |
 | `components/domain/assigned-tasks-summary-card.tsx` | KPI «Zugewiesene Aufgaben»; optional `onHeaderIconClick` → Meine Aufgaben |
 | `components/domain/student-dashboard.tsx` | R1 Home «Meine Anträge»: Cards/Table-Toggle, Live-Polling, Utility-Spalte |

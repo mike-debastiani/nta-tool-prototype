@@ -294,6 +294,7 @@ Vollständige Mechanik → **`Antrag_Review_Kontext.md`**, R4 → **`Antrag_Bewi
 | 2026-05-19 | R1 Flow Grid-Margin | `.hf-page-grid--r1-flow`: Seitenrand **24px** (Desktop); Dashboard/Liste weiter **48px** |
 | 2026-05-20 | Dashboard HF Polish | Nav-Aktiv Primary + Workspace Home `5509:11682`; Inset/Tight-Panel + Hysterese; `application-block.ts` für Antragskarten |
 | 2026-05-20 | Workspace Home table | Anträge-Tabelle: Live-`applications`, Zeilenklick, ein Divider pro Zeile; `workspaceApplicationListNumber` |
+| 2026-05-27 | Workspace applications table layout | `workspace-applications-table.tsx` + `WORKSPACE_APPLICATIONS_TABLE_*`: `table-auto`, Studiengang wrap, Name wrap &gt;24 chars, compact cols nowrap, scroll ≤1150px (`74.125rem`), tighter actions padding |
 
 ---
 

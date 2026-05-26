@@ -21,7 +21,6 @@ import {
   WORKSPACE_APPLICATIONS_TABLE_FIT_COL_WIDTH,
   WORKSPACE_APPLICATIONS_TABLE_FIT_QUERY,
   WORKSPACE_APPLICATIONS_TABLE_MIN_WIDTH_CLASS,
-  WORKSPACE_APPLICATIONS_TABLE_SHRINK_COL_WIDTH,
 } from "@/lib/design-tokens/workspace-dashboard";
 import { hfTypography } from "@/lib/design-tokens/typography";
 import { cn } from "@/lib/utils";
@@ -63,14 +62,14 @@ const SORTABLE_COLUMNS: WorkspaceTableSortColumn[] = [
   "assignee",
 ];
 
-/** Spalten 1–2: dürfen umbrechen; alle übrigen: Mindestbreite ohne Umbruch. */
+/** Nur Studiengang darf umbrechen; alle übrigen bleiben einzeilig. */
 function isWrapColumn(column: WorkspaceTableSortColumn): boolean {
-  return column === "applicantName" || column === "studiengang";
+  return column === "studiengang";
 }
 
-/** Fit-Modus: `w-px` + `1%` — Spalte nur so breit wie Inhalt. */
+/** Fit-Modus: Referenzspalte darf auf Inhaltsbreite zusammenschrumpfen. */
 function usesFitShrinkWidth(column: WorkspaceTableSortColumn): boolean {
-  return column === "ref" || column === "assignee";
+  return column === "ref";
 }
 
 function isFakultaetColumn(column: WorkspaceTableSortColumn): boolean {
@@ -81,11 +80,27 @@ function isDateColumn(column: WorkspaceTableSortColumn): boolean {
   return column === "date";
 }
 
+function keepsIntrinsicMinWidth(column: WorkspaceTableSortColumn): boolean {
+  return (
+    column === "fakultaet" ||
+    column === "ref" ||
+    column === "date" ||
+    column === "statusLabel" ||
+    column === "assignee"
+  );
+}
+
 function fitDateColClasses(fitQ: string): string {
-  return `${fitQ}:w-[5.25rem] ${fitQ}:min-w-[5.25rem] ${fitQ}:max-w-[5.25rem]`;
+  return `${fitQ}:w-[5.5rem] ${fitQ}:min-w-[5.5rem] ${fitQ}:max-w-[5.5rem]`;
 }
 
 const wrapCellTextClass = "block whitespace-normal break-words text-foreground";
+const nonWrapCellTextClass = "block whitespace-nowrap text-foreground";
+const APPLICANT_NAME_WRAP_THRESHOLD = 24;
+
+function shouldWrapApplicantName(name: string): boolean {
+  return name.trim().length > APPLICANT_NAME_WRAP_THRESHOLD;
+}
 
 function RowActionsCell({ applicantName }: { applicantName: string }) {
   return (
@@ -115,6 +130,7 @@ function headerCellClass(
     "py-2.5 text-left whitespace-nowrap",
     isFakultaetColumn(column) ? "px-2" : isDateColumn(column) ? "px-2" : "px-3",
     column === "statusLabel" && "overflow-visible",
+    keepsIntrinsicMinWidth(column) && `${fitQ}:min-w-max`,
     usesFitShrinkWidth(column) && `${fitQ}:w-px`,
     isDateColumn(column) && fitDateColClasses(fitQ),
     `${compactQ}:${minClass}`,
@@ -135,6 +151,7 @@ function bodyCellClass(
     isFakultaetColumn(column) && "text-left",
     isFakultaetColumn(column) ? "px-2" : isDateColumn(column) ? "px-2" : "px-3",
     column === "statusLabel" && "overflow-visible",
+    keepsIntrinsicMinWidth(column) && `${fitQ}:min-w-max`,
     usesFitShrinkWidth(column) && `${fitQ}:w-px`,
     isDateColumn(column) && fitDateColClasses(fitQ),
     `${compactQ}:${minClass}`,
@@ -235,7 +252,6 @@ export function WorkspaceApplicationsTable({
   const w = WORKSPACE_APPLICATIONS_TABLE_COL_WIDTH;
   const wf = WORKSPACE_APPLICATIONS_TABLE_FIT_COL_WIDTH;
   const wp = WORKSPACE_APPLICATIONS_TABLE_FIT_COL_PERCENT;
-  const shrinkW = WORKSPACE_APPLICATIONS_TABLE_SHRINK_COL_WIDTH;
   const actionsW = w.actions;
 
   const compactQ = WORKSPACE_APPLICATIONS_TABLE_COMPACT_QUERY;
@@ -245,19 +261,19 @@ export function WorkspaceApplicationsTable({
     <div className={cn(WORKSPACE_APPLICATIONS_TABLE_CONTAINER_CLASS, className)}>
       <table
         className={cn(
-          "w-full table-fixed border-collapse text-left",
+          "w-full table-auto border-collapse text-left",
           `${compactQ}:${WORKSPACE_APPLICATIONS_TABLE_MIN_WIDTH_CLASS}`,
         )}
       >
-        {/* Fit (>1150px): Studiengang mit Anteil; Ref/Assignee shrink; Datum/Status fest. */}
+        {/* Fit (>1150px): Studiengang flexibel; kurze Spalten einzeilig; Assignee min-content-basiert. */}
         <colgroup className={cn("hidden", `${fitQ}:table-column-group`)}>
           <col style={{ width: wp.applicantName }} />
           <col style={{ width: wp.studiengang }} />
           <col style={{ width: wf.fakultaet }} />
-          <col style={{ width: shrinkW }} />
+          <col style={{ width: wf.ref }} />
           <col style={{ width: wf.date }} />
           <col style={{ width: wf.statusLabel }} />
-          <col style={{ width: shrinkW }} />
+          <col style={{ width: wf.assignee }} />
           <col style={{ width: actionsW }} />
         </colgroup>
         {/* Kompakt (≤1150px): feste rem-Breiten + Scroll. */}
@@ -321,7 +337,14 @@ export function WorkspaceApplicationsTable({
                   aria-label={`Antrag ${row.applicantName} öffnen`}
                 >
                   <td className={bodyCellClass("applicantName", fitQ, compactQ)}>
-                    <span className={cn(hfTypography.paragraphSmall, wrapCellTextClass)}>
+                    <span
+                      className={cn(
+                        hfTypography.paragraphSmall,
+                        shouldWrapApplicantName(row.applicantName)
+                          ? wrapCellTextClass
+                          : nonWrapCellTextClass,
+                      )}
+                    >
                       {row.applicantName}
                     </span>
                   </td>
@@ -360,7 +383,7 @@ export function WorkspaceApplicationsTable({
                       WORKSPACE_APPLICATIONS_TABLE_ASSIGNEE_CELL_CLASS,
                     )}
                   >
-                    <div className="flex w-max max-w-full items-center gap-2">
+                    <div className="flex min-w-0 items-center gap-2 whitespace-nowrap">
                       <span
                         className="flex size-8 shrink-0 items-center justify-center rounded-full bg-stone-150 text-[10px] font-semibold text-foreground"
                         aria-hidden
@@ -370,7 +393,7 @@ export function WorkspaceApplicationsTable({
                       <span
                         className={cn(
                           hfTypography.paragraphSmall,
-                          "whitespace-nowrap text-foreground",
+                          "shrink-0 whitespace-nowrap text-foreground",
                         )}
                       >
                         {row.assignee.displayName}

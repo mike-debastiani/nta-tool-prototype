@@ -341,7 +341,7 @@ Credentials: mit Testpersonen abgestimmt (nicht in Repo). Login **`/staff/login`
 | **Facettierte Filter** | `workspace-applications-table-controls.ts`: Status, Studiengang, Fakultät (Kürzel), Zugewiesen an, «Nur mir zugewiesen»; Pills zum Entfernen |
 | **Suche** | Name, Studiengang, Fakultät (Kürzel + Vollname), **Antrags ID** (`NTA-YYYY-XXXX`), Status-Label, Assignee |
 | **Sortierung** | Spaltenköpfe in `workspace-applications-table.tsx` |
-| **Tabellen-Layout** | Container `@container/applications-table`: **&gt; 1150px** → Name `14%`, Studiengang `32%`, Fakultät `5.75rem` (links), Ref/Assignee shrink, Datum `5.25rem`, Status `15rem`, Menü `sticky right-0`. **≤ 1150px** → `min-w-[62rem]` + Scroll (`WORKSPACE_APPLICATIONS_TABLE_*`) |
+| **Tabellen-Layout** | Container `@container/applications-table` auf `WorkspaceApplicationsTable`: **`table-auto`**. **&gt; 1150px (Fit):** kein horizontales Scrollen; Name `13%` (einzeilig bis **&gt; 24 Zeichen**, dann Umbruch), Studiengang `35%` (**einzige** Standard-Umbruchspalte), Fakultät/Datum je **`5.5rem`**, Ref `9rem`, Status `15rem`, Zugewiesen an **`max-content`** + `min-w-max` (kein Überlauf in Menü-Spalte). Fakultät, Antrags ID, Datum, Status, Zugewiesen an: **immer `nowrap`**, Mindestbreite = Inhalt. **≤ 1150px:** `min-w-[74.125rem]` + horizontaler Scroll. Menü-Spalte `sticky right-0`, `pl-2` zum Assignee. Tokens: `WORKSPACE_APPLICATIONS_TABLE_*` in `workspace-dashboard.ts`. |
 | **Maximize** | Nur R2/R4: Panel-Header; KPI-Zeile ausgeblendet; Minimize stellt KPI wieder her |
 | **Tabellen-Spalten** | Name, Studiengang, **Fakultät** (Kürzel, Tooltip Vollname), **Antrags ID**, Datum, Status, Zugewiesen an (Avatar) |
 | **R4 Fakultäts-Scope** | DB: `departments`, `study_programs`, `r4_department_scopes`; RLS `r4_application_in_department_scope`; Liste: **nur** Session-Client (`fetchWorkspaceApplicationsList`), kein Service-Role-Fallback |
@@ -458,6 +458,7 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 | `WORKSPACE_HOME_TABLE_SEARCH_*` | Suche 320px, pill, transparent |
 | `WORKSPACE_HOME_TABLE_FILTER_*` | Toggle Offen/Alle (Segment + Tab active/inactive) |
 | `WORKSPACE_HOME_TABLE_OUTLINE_BUTTON_CLASS` | Filter + Liste herunterladen (outline, transparent) |
+| `WORKSPACE_APPLICATIONS_TABLE_*` | Anträge-Tabelle Home + Meine Aufgaben: Container-Query 1150px, Fit-/Kompakt-Spalten, Actions `pl-2` |
 | `DASHBOARD_NAV_ITEM_ACTIVE_CLASS` | `rounded-[7px] bg-primary text-primary-foreground` |
 | `DASHBOARD_NAV_ITEM_IDLE_CLASS` | inaktiv + Hover |
 | `DASHBOARD_NAV_ITEM_ACTIVE_LABEL_CLASS` | Label aktiv ohne `text-foreground-alt` |
