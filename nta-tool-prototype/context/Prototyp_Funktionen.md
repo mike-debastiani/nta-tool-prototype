@@ -145,7 +145,8 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 - **R4:** Fakultäts-Scope in Supabase (RLS); Test-Accounts `r4.test` / `r4.rf.test`; Studiengang-Katalog UZH in `uzh-studiengaenge-data.ts`
 - Rollenspezifische Sichten innerhalb (`WorkspaceTestFlow`, R4-Entscheid-View, …)
 - R2 sieht Beratungs-/Review-Inbox, Empfehlungen, Block-Review, Weiterleitung an Entscheid
-- **R4 (Ist-Code):** Entscheidungs-Inbox wie R2 lesbar; in `in_implementation` Bewilligungs-UI (`WorkspaceR4DecisionView`); Zwischenstand **debounced** nach `data.r4DecisionReview`, Abschluss → `approved`; Client-Reconcile gegen Server-Snapshots siehe `Antrag_Bewilligung_Kontext.md` § 7 — Details → `Antrag_Bewilligung_Kontext.md`
+- **R4 (Ist-Code):** Entscheidungs-Inbox; in `in_implementation` **`WorkspaceR4DecisionView`** inkl. **Freitext-Vorschläge** (nur Massnahmen-Blöcke); debounced `r4DecisionReview`; Abschluss → `approved` + **`materializeApprovedR4DecisionReview`**; R2R4-Trigger für `applicationDefinition` beim Abschluss — **`Antrag_Bewilligung_Kontext.md`**
+- **Freitext UI (R1 + R4):** `AutoGrowTextarea` / `CustomMeasureLinesField` — mehrzeilige Sonstige-Massnahmen ohne Layout-Bruch
 - R3/R5/R6: reduzierte oder geplante Sichten; RLS gruppiert R2/R3/R5/R6 in Worklist-Policies, R4 separat (siehe Kontext DB)
 - Berechtigungen via RLS-Policies durchgesetzt, nicht im Frontend
 
@@ -219,17 +220,18 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 
 ### F12 — Test-Account-System
 
-Vorab angelegte Accounts, ~9 pro Test-Setting:
+Vorab angelegte Accounts; Credentials nicht im Repo. **Workspace-Matrix (Ist):** `Dashboard_Core_Layout_Kontext.md` § **4b**.
 
-| Rolle | Anzahl | Differenzierung |
-|---|---|---|
-| R1 | 3 | Verschiedene Datenstände: kein Antrag / aktiver Antrag / abgeschlossen |
-| R2 | 1-2 | Eine Hauptperson, eine zweite für Parallel-Tests |
-| R3 | 1 | |
-| R5 | 1 | |
-| R6 | 2 | Verschiedene Modul-Zuweisungen |
+| E-Mail (Beispiel) | Rolle | Zweck im Prototyp |
+|-------------------|-------|-------------------|
+| *(R1-Accounts)* | R1 | Portal `/portal` — Antrag, Anpassung, bewilligte Ansicht |
+| *(R2 Staff)* | R2 | Review, Empfehlung, Forward → Entscheid |
+| *(R3 Staff)* | R3 | Meine Aufgaben «In Entscheid» (Worklist) |
+| **`r4.test@example.com`** | R4 | Entscheid alle Fakultäten; Home 2 KPI |
+| **`r4.rf.test@example.com`** | R4 | Entscheid nur Fakultät RWF (`rwf`) |
+| **`r2and4.combined.test@example.com`** | **R2R4** | Fachstelle **und** Entscheid in einem Login; Home Figma `5949:3172` |
 
-Mit "Persönlichkeit" angereichert (z.B. "Anna Müller, BSc 3. Semester"). Test-Credentials werden Testpersonen vorab kommuniziert.
+Mit «Persönlichkeit» angereichert (z. B. Anna Müller). Abhängigkeiten pro Rolle/Status: § 4b + `Antrag_Bewilligung_Kontext.md` § 2.
 
 ### F13 — Admin-Simulation (`/admin`)
 

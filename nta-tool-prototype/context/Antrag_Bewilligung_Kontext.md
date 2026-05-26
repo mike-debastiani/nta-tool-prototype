@@ -18,12 +18,17 @@
 
 ## 2. Rechte & Sichtbarkeit
 
-| Rolle | Anträge in `in_implementation` | Andere Status (z. B. `in_review`, `needs_adjustment`, …) |
-|--------|--------------------------------|------------------------------------------------------------|
-| **R4** | Volle **Bewilligungs-UI** in `in_implementation` | **Lesen** gleiche Ansichtskomposition in anderen Status (wie R2-Review, student-ähnliche Nur-Lese-Hinweise); Empfehlungs-Editor ausgeblendet |
-| **R2** | Unverändert: read-only Entscheid-Modus wie bisher | unverändert |
+| Rolle | DB-Status `in_implementation` (kanonisch **In Entscheid** / R4-Label **Entscheid ausstehend**) | Andere Status |
+|--------|------------------------------------------------------------------------------------------------|---------------|
+| **R4** | **`WorkspaceR4DecisionView`** — Schalter, Block-Bestätigung, Freitext-Vorschläge, Abschluss | **`WorkspaceApplicationReview`** read-only (`readonly_decision`); kein Empfehlungs-Editor |
+| **R2R4** | Wie **R4** (Capability `hasR4WorkspaceCapabilities`) | Wie **R2** in Review-Phasen (`hasR2WorkspaceCapabilities`); in `in_decision` zusätzlich Status-Audience **R4** («Entscheid ausstehend») |
+| **R2** | Read-only Entscheid-Modus (`readonly_decision`) | Interaktives Block-Review bis Forward |
 
-Login: **`/staff/login`** erlaubt weiterhin R2–R6 inkl. R4; Redirect nach erfolgreichem Login **`/workspace`**.
+**Capability-Helfer** (`lib/workspace-role.ts`): `hasR4WorkspaceCapabilities` = **R4** \| **R2R4**; `canEditR4DecisionApplication` (`lib/workspace-application-visibility.ts`) = nur wenn `application.status === in_implementation`.
+
+**Routing** (`workspace-test-flow.tsx`): `showR4DecisionView` = `hasR4WorkspaceCapabilities(role)` **und** kanonisch `in_decision` — nicht nur reine DB-Spalte prüfen.
+
+Login: **`/staff/login`** — R2–R6 inkl. **R4** / **R2R4**; Redirect **`/workspace`**. Test-Accounts und Matrix → **`Dashboard_Core_Layout_Kontext.md` § 4b**.
 
 ---
 
@@ -76,25 +81,59 @@ Betroffen: **Gültigkeitsdauer**, **Geltungsbereich**, **Massnahmen LV**, **Mass
 
 **Gültigkeitsdauer:** zwei optionale Zeilen (gesamte Studiendauer / ein Semester); logisch **exklusiv** — höchstens eine Zeile kann auf **bewilligt** stehen; Umsetzung im Prototyp als gekoppelte Schalter-Gruppe analog zur Intention „eine Dauer gewählt“.
 
+### Freitext-Vorschläge (Massnahmen-Blöcke)
+
+Nur **`lectureMeasures`** und **`assessmentMeasures`** (`supportsR4CustomProposalInput` in `lib/r4-decision-state.ts`) — **nicht** Gültigkeitsdauer / Geltungsbereich.
+
+| Aspekt | Ist |
+|--------|-----|
+| **UI** | `R4DecisionProposalInput` unter der Optionenliste (Figma `5907:23378`): Plus-Icon, Platzhalter «Formulieren Sie einen anderen Vorschlag …» |
+| **Eingabe** | `AutoGrowTextarea` — mehrzeilig, Höhe wächst mit Inhalt; Checkbox/Plus an **erster Textzeile** ausgerichtet (`h-5` / `leading-5`) |
+| **Anlegen** | Text eingeben → **Blur** oder **Strg/Cmd+Enter** → neue Zeile als **Vorschlag** (`studentSelected: false`, `r4Approved: true`, gelbe Kodierung) |
+| **Entfernen** | Schalter auf der Vorschlagszeile **aus** → Zeile wird gelöscht (nicht nur abgewählt) |
+| **Persistenz-Zwischenstand** | `data.r4DecisionReview.blocks[id].rows` mit Schlüssel-Präfix **`proposal:<timestamp>`**; Merge in `mergeR4DecisionReview` erhält solche Zeilen neben Baseline-Optionen |
+| **Zurücksetzen** | «Zurücksetzen» im Block entfernt Vorschläge (nur Studierenden-Baseline) |
+
 ### Aktionen im Block
 
 - Nach erster Änderung der Auswahl: Button **„Zurücksetzen“** links unten (stellt die **Arbeitskopie** dieser Zeilen auf den Ausgangszustand aus den Antragsdaten zurück).
 - **„Auswahl bestätigen“** rechts (primary pill, `CircleCheckBig`): persistiert den Block; bestätigter Block zeigt Zeilen weiter mit Schaltern (read-only), Footer wie Figma `5657:18077`. **„Bearbeiten“** hebt `confirmed` auf und öffnet die bearbeitbare Ansicht erneut.
 - **Switch-Gruppe:** feste Breite **125px**, Schalter **linksbündig** in jeder Zeile (`R4_DECISION_SWITCH_GROUP_CLASS`).
-- **„Entscheid abschliessen“** unten rechts: solange **deaktiviert**, bis **alle sichtbaren** R4-Entscheid-Blöcke bestätigt sind; dann aktiv. *(Prototyp: setzt Status auf `approved` und broadcastet — Ablehnungs-/Teilentzugs-Fälle können später ergänzt werden.)*
+- **„Entscheid abschliessen“** unten rechts: solange **deaktiviert**, bis **alle sichtbaren** R4-Entscheid-Blöcke bestätigt sind; dann aktiv. Setzt **`status = approved`**, merged `r4DecisionReview`, ruft **`materializeApprovedR4DecisionReview`** auf und broadcastet. *(Ablehnung gesamten Antrags: später.)*
 
 ---
 
 ## 6. Datenhaltung (Prototyp)
 
-- Persistenz unter **`data.r4DecisionReview`** (`ApplicationData` in `lib/test-flow-types.ts`), damit **kein** Konflikt mit dem R2-Trigger-Pfad **`data.recommendation`** / **`data.consultation`** entsteht.
-- Struktur: pro Entscheid-Block (`duration` \| `scope` \| `lectureMeasures` \| `assessmentMeasures`) gespeicherte **Zeilen** (`key`, `studentSelected`, `r4Approved`) und Flag **`confirmed`** nach Klick auf „Auswahl bestätigen“.
+### 6.1 `r4DecisionReview` (Arbeits- und Audit-Snapshot)
+
+- Persistenz unter **`data.r4DecisionReview`** (`lib/test-flow-types.ts`), getrennt von **`data.recommendation`** / **`data.consultation`** (R2-Trigger).
+- Pro Block (`duration` \| `scope` \| `lectureMeasures` \| `assessmentMeasures`): **Zeilen** (`key`, `title`, `description?`, `studentSelected`, `r4Approved`) + **`confirmed`** nach «Auswahl bestätigen».
+- Zwischenstand: debounced Autosave (`WorkspaceR4DecisionView` → `persistR4DecisionWithSupabaseClient`).
+
+### 6.2 Materialisierung bei Bewilligung (`applicationDefinition`)
+
+Nach erfolgreichem Abschluss schreibt **`materializeApprovedR4DecisionReview`** (`lib/r4-decision-state.ts`) die **bestätigten** R4-Entscheide in **`data.applicationDefinition`**, damit bewilligte Anträge in **R2/R4-Lesesicht**, R1-Portal und KPI/Gültigkeit dieselben Massnahmen zeigen wie der Entscheid:
+
+| Block | Materialisierung |
+|-------|------------------|
+| **duration** | `applicationDefinition.duration` = bewilligte Zeile (`full_study` \| `one_semester`) |
+| **scope** | `scopeSelections` = alle Zeilen mit `r4Approved` (Label-Keys; Freitext nur falls historisch als `proposal:` gespeichert) |
+| **lectureMeasures** | `lectureMeasures[]`, `lectureOtherLines[]`, `lectureMeasuresKeine`; Freitext-Vorschläge → **Other-Lines** |
+| **assessmentMeasures** | analog mit `assessmentMeasures` / `assessmentOtherLines` |
+
+`r4DecisionReview` bleibt **zusätzlich** in `data` erhalten (vollständiger Entscheid-Snapshot inkl. abgelehnter Studierenden-Optionen).
+
+**R2R4-Trigger:** Beim UPDATE `in_implementation` → `approved` darf **R2R4** kurzzeitig auch **`applicationDefinition`** ändern — Migration **`20260526200000_r2r4_trigger_allow_definition_on_approve.sql`** (sonst Exception «R2R4 may not change data except …»). Während laufender Bewilligung (nur `r4DecisionReview`) bleibt die Definition unverändert.
+
+### 6.3 APIs & Persistenz-Pfade
+
 - **APIs (Server, optional / Fallback):**
   - **`POST /api/applications/r4-persist-decision`** — merge `r4DecisionReview` (**R4** oder **R2R4** via `hasR4WorkspaceCapabilities`, nur Status `in_implementation`).
-  - **`POST /api/applications/r4-complete-decision`** — prüft alle sichtbaren Entscheid-Blöcke `confirmed`, setzt **`approved`**, Broadcast wie bei anderen Antrags-Mutationen.
-- **Ist-Pfad im UI:** Speichern und Abschliessen laufen primär **direkt im Browser** über den Session-Supabase-Client (`lib/r4-workspace-supabase-persist.ts`: `persistR4DecisionWithSupabaseClient`, `completeR4DecisionWithSupabaseClient`) — umgeht fehleranfällige Cookie-/SSR-Kombination auf den API-Routen; die Routen bleiben als Referenz/Fallback nutzbar.
+  - **`POST /api/applications/r4-complete-decision`** — prüft alle sichtbaren Entscheid-Blöcke `confirmed`, setzt **`approved`**, ruft Materialisierung auf, Broadcast.
+- **Ist-Pfad im UI:** Speichern und Abschliessen primär per Browser-Session (`lib/r4-workspace-supabase-persist.ts`: `persistR4DecisionWithSupabaseClient`, `completeR4DecisionWithSupabaseClient`).
 
-**Hinweis RLS / Supabase (Ist):**
+### 6.4 RLS / Supabase (Ist)
 
 - **Additive Policies** (Migration `supabase/migrations/20260513190000_r4_workspace_select_policies.sql`):
   - **`applications_select_r4_workspace`** — R4 darf `applications` in den üblichen Workspace-Status lesen (inkl. `in_decision`, `in_implementation`, `approved`, `rejected`, …).
@@ -135,8 +174,11 @@ Ziel: kein „Kreuzschalten“ (ein Klick ändert scheinbar eine andere Zeile) u
 | Layout / Avatar | `components/domain/role-dashboard-layout.tsx` (`workspaceAccountInitials`) |
 | Status / Labels R4 | `lib/application-status.ts` |
 | Typen | `lib/test-flow-types.ts` |
-| Merge / Zeilenbau / Sichtbarkeit | `lib/r4-decision-state.ts` (`mergeR4DecisionReview`, `mergeR4DecisionReviewRespectingLocalDirty`, `localR4BlockDiffersFromServerMerge`, `mergeApplicationDataWithR4Review`, …) |
+| Merge / Zeilenbau / Sichtbarkeit | `lib/r4-decision-state.ts` (`mergeR4DecisionReview`, `createR4ProposalRow`, `supportsR4CustomProposalInput`, `materializeApprovedR4DecisionReview`, `mergeR4DecisionReviewRespectingLocalDirty`, …) |
+| Sichtbarkeit / Edit-Gate | `lib/workspace-application-visibility.ts` (`filterWorkspaceApplicationsForRole`, `canEditR4DecisionApplication`) |
 | Browser-Persistenz R4 | `lib/r4-workspace-supabase-persist.ts` |
+| Auto-Grow-Freitext | `components/ui/auto-grow-textarea.tsx` (R4-Vorschlag + R1-Sonstige-Massnahmen) |
+| Freitext Massnahmen R1 | `components/domain/custom-measure-lines-field.tsx` |
 | APIs (optional) | `app/api/applications/r4-persist-decision/route.ts`, `r4-complete-decision/route.ts` |
 
 ---
@@ -149,4 +191,4 @@ Ziel: kein „Kreuzschalten“ (ein Klick ändert scheinbar eine andere Zeile) u
 
 ---
 
-*Letzte Aktualisierung: HF R4-Blöcke (`r4-decision-review-blocks`, Figma 5641/5657/5907); Layout wie R2-Review; Sidebar ohne Bemerkungen; Switch-Gruppe 125px; `Antrag_Review_Kontext.md` für geteilte Review-Block-Varianten.*
+*Letzte Aktualisierung: Freitext-Vorschläge (nur Massnahmen-Blöcke); Materialisierung bei `approved`; R2R4-Trigger für `applicationDefinition`; `AutoGrowTextarea`; Test-Matrix → `Dashboard_Core_Layout_Kontext.md` § 4b.*

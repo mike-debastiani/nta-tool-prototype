@@ -9,6 +9,20 @@ import {
   type WorkspaceTableSort,
   type WorkspaceTableSortColumn,
 } from "@/lib/workspace-applications-table-controls";
+import {
+  WORKSPACE_APPLICATIONS_TABLE_ACTIONS_CELL_CLASS,
+  WORKSPACE_APPLICATIONS_TABLE_ACTIONS_HEADER_CLASS,
+  WORKSPACE_APPLICATIONS_TABLE_ASSIGNEE_CELL_CLASS,
+  WORKSPACE_APPLICATIONS_TABLE_COL_MIN_CLASS,
+  WORKSPACE_APPLICATIONS_TABLE_COL_WIDTH,
+  WORKSPACE_APPLICATIONS_TABLE_COMPACT_QUERY,
+  WORKSPACE_APPLICATIONS_TABLE_CONTAINER_CLASS,
+  WORKSPACE_APPLICATIONS_TABLE_FIT_COL_PERCENT,
+  WORKSPACE_APPLICATIONS_TABLE_FIT_COL_WIDTH,
+  WORKSPACE_APPLICATIONS_TABLE_FIT_QUERY,
+  WORKSPACE_APPLICATIONS_TABLE_MIN_WIDTH_CLASS,
+  WORKSPACE_APPLICATIONS_TABLE_SHRINK_COL_WIDTH,
+} from "@/lib/design-tokens/workspace-dashboard";
 import { hfTypography } from "@/lib/design-tokens/typography";
 import { cn } from "@/lib/utils";
 
@@ -23,11 +37,14 @@ type WorkspaceApplicationsTableProps = {
   totalRowCount?: number;
 };
 
+/** Status-Pill — Hintergrund hugged den Text (wie `R1ApplicationStatusPill`). */
 function StatusBadge({ label, className }: { label: string; className: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-lg px-2 py-0.5 text-hf-paragraph-mini-medium",
+        "inline-flex w-max shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-2 py-0.5",
+        hfTypography.paragraphMiniMedium,
+        "font-medium",
         className,
       )}
     >
@@ -46,14 +63,96 @@ const SORTABLE_COLUMNS: WorkspaceTableSortColumn[] = [
   "assignee",
 ];
 
+/** Spalten 1–2: dürfen umbrechen; alle übrigen: Mindestbreite ohne Umbruch. */
+function isWrapColumn(column: WorkspaceTableSortColumn): boolean {
+  return column === "applicantName" || column === "studiengang";
+}
+
+/** Fit-Modus: `w-px` + `1%` — Spalte nur so breit wie Inhalt. */
+function usesFitShrinkWidth(column: WorkspaceTableSortColumn): boolean {
+  return column === "ref" || column === "assignee";
+}
+
+function isFakultaetColumn(column: WorkspaceTableSortColumn): boolean {
+  return column === "fakultaet";
+}
+
+function isDateColumn(column: WorkspaceTableSortColumn): boolean {
+  return column === "date";
+}
+
+function fitDateColClasses(fitQ: string): string {
+  return `${fitQ}:w-[5.25rem] ${fitQ}:min-w-[5.25rem] ${fitQ}:max-w-[5.25rem]`;
+}
+
+const wrapCellTextClass = "block whitespace-normal break-words text-foreground";
+
+function RowActionsCell({ applicantName }: { applicantName: string }) {
+  return (
+    <td className={WORKSPACE_APPLICATIONS_TABLE_ACTIONS_CELL_CLASS}>
+      <button
+        type="button"
+        className="ml-auto inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-transparent text-foreground-alt hover:bg-stone-100/80"
+        aria-label={`Menü für ${applicantName}`}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <MoreVertical className="size-4" strokeWidth={1.75} />
+      </button>
+    </td>
+  );
+}
+
+function headerCellClass(
+  column: WorkspaceTableSortColumn,
+  fitQ: string,
+  compactQ: string,
+): string {
+  if (isWrapColumn(column)) {
+    return cn("px-3 py-2.5 text-left", `${fitQ}:min-w-0`, `${compactQ}:min-w-0`);
+  }
+  const minClass = WORKSPACE_APPLICATIONS_TABLE_COL_MIN_CLASS[column];
+  return cn(
+    "py-2.5 text-left whitespace-nowrap",
+    isFakultaetColumn(column) ? "px-2" : isDateColumn(column) ? "px-2" : "px-3",
+    column === "statusLabel" && "overflow-visible",
+    usesFitShrinkWidth(column) && `${fitQ}:w-px`,
+    isDateColumn(column) && fitDateColClasses(fitQ),
+    `${compactQ}:${minClass}`,
+  );
+}
+
+function bodyCellClass(
+  column: WorkspaceTableSortColumn,
+  fitQ: string,
+  compactQ: string,
+): string {
+  if (isWrapColumn(column)) {
+    return cn("h-14 px-3 align-middle", `${fitQ}:min-w-0`, `${compactQ}:min-w-0`);
+  }
+  const minClass = WORKSPACE_APPLICATIONS_TABLE_COL_MIN_CLASS[column];
+  return cn(
+    "h-14 align-middle whitespace-nowrap",
+    isFakultaetColumn(column) && "text-left",
+    isFakultaetColumn(column) ? "px-2" : isDateColumn(column) ? "px-2" : "px-3",
+    column === "statusLabel" && "overflow-visible",
+    usesFitShrinkWidth(column) && `${fitQ}:w-px`,
+    isDateColumn(column) && fitDateColClasses(fitQ),
+    `${compactQ}:${minClass}`,
+  );
+}
+
 function SortableHeaderCell({
   column,
   sort,
   onSortChange,
+  fitQ,
+  compactQ,
 }: {
   column: WorkspaceTableSortColumn;
   sort: WorkspaceTableSort | null;
   onSortChange?: (sort: WorkspaceTableSort | null) => void;
+  fitQ: string;
+  compactQ: string;
 }) {
   const isActive = sort?.column === column;
   const label = WORKSPACE_TABLE_SORT_COLUMN_LABELS[column];
@@ -66,24 +165,28 @@ function SortableHeaderCell({
 
   if (!onSortChange) {
     return (
-      <th className="px-2 py-2 text-left">
-        <span className="inline-flex items-center gap-2">
+      <th className={headerCellClass(column, fitQ, compactQ)}>
+        <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
           <span className={cn(hfTypography.paragraphSmallMedium, "text-foreground")}>
             {label}
           </span>
-          <ChevronsUpDown className="size-4 text-muted-foreground" aria-hidden />
+          <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" aria-hidden />
         </span>
       </th>
     );
   }
 
   return (
-    <th className="px-2 py-2 text-left">
+    <th className={headerCellClass(column, fitQ, compactQ)}>
       <button
         type="button"
         onClick={() => onSortChange(nextWorkspaceTableSort(sort, column))}
         className={cn(
-          "inline-flex items-center gap-2 rounded-md py-0.5 pr-1 transition-colors",
+          "inline-flex items-center gap-1.5 rounded-md py-0.5 transition-colors",
+          isWrapColumn(column)
+            ? "max-w-full min-w-0 text-left"
+            : "whitespace-nowrap",
+          isFakultaetColumn(column) && "justify-start",
           "hover:bg-stone-100/80",
           isActive && "text-foreground",
         )}
@@ -129,9 +232,45 @@ export function WorkspaceApplicationsTable({
       ? "Keine Anträge für die aktuelle Suche oder Filter."
       : emptyMessage;
 
+  const w = WORKSPACE_APPLICATIONS_TABLE_COL_WIDTH;
+  const wf = WORKSPACE_APPLICATIONS_TABLE_FIT_COL_WIDTH;
+  const wp = WORKSPACE_APPLICATIONS_TABLE_FIT_COL_PERCENT;
+  const shrinkW = WORKSPACE_APPLICATIONS_TABLE_SHRINK_COL_WIDTH;
+  const actionsW = w.actions;
+
+  const compactQ = WORKSPACE_APPLICATIONS_TABLE_COMPACT_QUERY;
+  const fitQ = WORKSPACE_APPLICATIONS_TABLE_FIT_QUERY;
+
   return (
-    <div className={cn("w-full overflow-x-auto", className)}>
-      <table className="w-full min-w-[1068px] border-collapse text-left">
+    <div className={cn(WORKSPACE_APPLICATIONS_TABLE_CONTAINER_CLASS, className)}>
+      <table
+        className={cn(
+          "w-full table-fixed border-collapse text-left",
+          `${compactQ}:${WORKSPACE_APPLICATIONS_TABLE_MIN_WIDTH_CLASS}`,
+        )}
+      >
+        {/* Fit (>1150px): Studiengang mit Anteil; Ref/Assignee shrink; Datum/Status fest. */}
+        <colgroup className={cn("hidden", `${fitQ}:table-column-group`)}>
+          <col style={{ width: wp.applicantName }} />
+          <col style={{ width: wp.studiengang }} />
+          <col style={{ width: wf.fakultaet }} />
+          <col style={{ width: shrinkW }} />
+          <col style={{ width: wf.date }} />
+          <col style={{ width: wf.statusLabel }} />
+          <col style={{ width: shrinkW }} />
+          <col style={{ width: actionsW }} />
+        </colgroup>
+        {/* Kompakt (≤1150px): feste rem-Breiten + Scroll. */}
+        <colgroup className={cn("hidden", `${compactQ}:table-column-group`)}>
+          <col style={{ width: w.applicantName }} />
+          <col style={{ minWidth: w.studiengangMin }} />
+          <col style={{ width: w.fakultaet }} />
+          <col style={{ width: w.ref }} />
+          <col style={{ width: w.date }} />
+          <col style={{ width: w.statusLabel }} />
+          <col style={{ width: w.assignee }} />
+          <col style={{ width: w.actions }} />
+        </colgroup>
         <thead>
           <tr className="border-b border-border">
             {SORTABLE_COLUMNS.map((column) => (
@@ -140,9 +279,14 @@ export function WorkspaceApplicationsTable({
                 column={column}
                 sort={sort}
                 onSortChange={onSortChange}
+                fitQ={fitQ}
+                compactQ={compactQ}
               />
             ))}
-            <th className="w-10 px-2 py-2" />
+            <th
+              className={WORKSPACE_APPLICATIONS_TABLE_ACTIONS_HEADER_CLASS}
+              aria-hidden
+            />
           </tr>
         </thead>
         <tbody>
@@ -162,7 +306,7 @@ export function WorkspaceApplicationsTable({
                 <tr
                   key={row.application.id}
                   className={cn(
-                    "cursor-pointer transition-colors hover:bg-background/80",
+                    "group/tr cursor-pointer transition-colors hover:bg-background/80",
                     !isLast && "border-b border-stone-300",
                   )}
                   onClick={() => onSelectApplication(row.application.id)}
@@ -176,39 +320,47 @@ export function WorkspaceApplicationsTable({
                   role="button"
                   aria-label={`Antrag ${row.applicantName} öffnen`}
                 >
-                  <td className="h-14 px-2">
-                    <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
+                  <td className={bodyCellClass("applicantName", fitQ, compactQ)}>
+                    <span className={cn(hfTypography.paragraphSmall, wrapCellTextClass)}>
                       {row.applicantName}
                     </span>
                   </td>
-                  <td className="h-14 px-2">
-                    <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
+                  <td className={bodyCellClass("studiengang", fitQ, compactQ)}>
+                    <span className={cn(hfTypography.paragraphSmall, wrapCellTextClass)}>
                       {row.studiengang}
                     </span>
                   </td>
-                  <td className="h-14 px-2">
+                  <td className={bodyCellClass("fakultaet", fitQ, compactQ)}>
                     <span
-                      className={cn(hfTypography.paragraphSmall, "text-foreground")}
+                      className={cn(
+                        hfTypography.paragraphSmall,
+                        "block text-left text-foreground tabular-nums",
+                      )}
                       title={row.fakultaetFullName}
                     >
                       {row.fakultaet}
                     </span>
                   </td>
-                  <td className="h-14 px-2">
+                  <td className={bodyCellClass("ref", fitQ, compactQ)}>
                     <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
                       {row.ref}
                     </span>
                   </td>
-                  <td className="h-14 px-2">
+                  <td className={bodyCellClass("date", fitQ, compactQ)}>
                     <span className={cn(hfTypography.paragraphSmall, "text-foreground")}>
                       {row.date}
                     </span>
                   </td>
-                  <td className="h-14 px-2">
+                  <td className={bodyCellClass("statusLabel", fitQ, compactQ)}>
                     <StatusBadge label={row.statusLabel} className={row.statusClass} />
                   </td>
-                  <td className="h-14 px-2">
-                    <div className="flex items-center gap-2">
+                  <td
+                    className={cn(
+                      bodyCellClass("assignee", fitQ, compactQ),
+                      WORKSPACE_APPLICATIONS_TABLE_ASSIGNEE_CELL_CLASS,
+                    )}
+                  >
+                    <div className="flex w-max max-w-full items-center gap-2">
                       <span
                         className="flex size-8 shrink-0 items-center justify-center rounded-full bg-stone-150 text-[10px] font-semibold text-foreground"
                         aria-hidden
@@ -218,23 +370,14 @@ export function WorkspaceApplicationsTable({
                       <span
                         className={cn(
                           hfTypography.paragraphSmall,
-                          "min-w-0 truncate text-foreground",
+                          "whitespace-nowrap text-foreground",
                         )}
                       >
                         {row.assignee.displayName}
                       </span>
                     </div>
                   </td>
-                  <td className="h-14 px-2">
-                    <button
-                      type="button"
-                      className="inline-flex size-6 items-center justify-center text-foreground-alt"
-                      aria-label={`Menü für ${row.applicantName}`}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <MoreVertical className="size-4" strokeWidth={1.75} />
-                    </button>
-                  </td>
+                  <RowActionsCell applicantName={row.applicantName} />
                 </tr>
               );
             })

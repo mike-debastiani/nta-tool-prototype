@@ -181,5 +181,91 @@ export const WORKSPACE_HOME_TABLE_FILTER_PILL_CLASS = [
   "text-hf-paragraph-mini-medium text-foreground",
 ].join(" ");
 
+/**
+ * Anträge-Tabelle (Home / Meine Aufgaben), Container-Query auf dem Scroll-Wrapper.
+ *
+ * **> 1150px (Fit):** `table-fixed` volle Breite, kein horizontales Scrollen. Spalten 3–8
+ * schrumpfen auf Mindestbreite (`width: 1%` + `nowrap`). Nur **Name** und **Studiengang** dürfen
+ * umbrechen. Status-Pills nie umbrechen.
+ *
+ * **≤ 1150px (Kompakt):** `min-w-[62rem]` + horizontales Scrollen; gleiche Umbruch-Regel für Sp. 1–2.
+ */
+export const WORKSPACE_APPLICATIONS_TABLE_CONTAINER_CLASS = [
+  "@container/applications-table w-full min-w-0",
+  "overflow-x-auto @min-[1151px]/applications-table:overflow-x-hidden",
+].join(" ");
+
+export const WORKSPACE_APPLICATIONS_TABLE_COMPACT_CONTAINER_MAX = "1150px";
+
+export const WORKSPACE_APPLICATIONS_TABLE_COMPACT_QUERY =
+  `@max-[${WORKSPACE_APPLICATIONS_TABLE_COMPACT_CONTAINER_MAX}]/applications-table` as const;
+
+export const WORKSPACE_APPLICATIONS_TABLE_FIT_QUERY =
+  "@min-[1151px]/applications-table" as const;
+
+export const WORKSPACE_APPLICATIONS_TABLE_MIN_WIDTH_CLASS = "min-w-[62rem]";
+
+/** Fit-Modus: schmale Spalten (`table-fixed` + `w-px` am `<td>`). */
+export const WORKSPACE_APPLICATIONS_TABLE_SHRINK_COL_WIDTH = "1%";
+
+/** Menü-Spalte (3-Punkte): Icon + Abstand zu «Zugewiesen an», immer rechts (`sticky`). */
+export const WORKSPACE_APPLICATIONS_TABLE_ACTIONS_COL_WIDTH = "3rem";
+
+export const WORKSPACE_APPLICATIONS_TABLE_ACTIONS_HEADER_CLASS = [
+  "sticky right-0 z-10 box-border w-12 min-w-12 max-w-12 bg-transparent p-0 pl-4 pr-2 align-middle",
+].join(" ");
+
+export const WORKSPACE_APPLICATIONS_TABLE_ACTIONS_CELL_CLASS = [
+  "sticky right-0 z-10 box-border h-14 w-12 min-w-12 max-w-12 bg-transparent p-0 pl-4 pr-2 align-middle text-right",
+].join(" ");
+
+/**
+ * Fit-Modus (>1150px): feste Breiten für kurze + Pill-Spalten; Name/Studiengang ohne width (Rest).
+ * `statusLabel` breit genug für «Beratung & Empfehlung» ohne Überlappung.
+ */
+/** Längste Workspace-Labels: «Beratung & Empfehlung», «Anpassung erforderlich». */
+export const WORKSPACE_APPLICATIONS_TABLE_STATUS_COL_WIDTH = "15rem";
+
+/** Fit-Modus: Anteil für flexible Textspalten (Rest = feste/shrink-Spalten). */
+export const WORKSPACE_APPLICATIONS_TABLE_FIT_COL_PERCENT = {
+  applicantName: "14%",
+  studiengang: "32%",
+} as const;
+
+export const WORKSPACE_APPLICATIONS_TABLE_FIT_COL_WIDTH = {
+  /** «Fakultät» + Sort-Icon einzeilig; Inhalt linksbündig. */
+  fakultaet: "5.75rem",
+  /** DD.MM.YYYY — reduziert zugunsten Status. */
+  date: "5.25rem",
+  statusLabel: WORKSPACE_APPLICATIONS_TABLE_STATUS_COL_WIDTH,
+} as const;
+
+/** Feste Spaltenbreiten (Kompakt-Modus / Scroll); Studiengang ohne feste width. */
+export const WORKSPACE_APPLICATIONS_TABLE_COL_WIDTH = {
+  applicantName: "10.5rem",
+  fakultaet: WORKSPACE_APPLICATIONS_TABLE_FIT_COL_WIDTH.fakultaet,
+  ref: "9rem",
+  date: WORKSPACE_APPLICATIONS_TABLE_FIT_COL_WIDTH.date,
+  statusLabel: WORKSPACE_APPLICATIONS_TABLE_FIT_COL_WIDTH.statusLabel,
+  assignee: "13.5rem",
+  actions: WORKSPACE_APPLICATIONS_TABLE_ACTIONS_COL_WIDTH,
+  studiengangMin: "7rem",
+} as const;
+
+/** Mindestbreiten — nur Kompakt-Modus. */
+export const WORKSPACE_APPLICATIONS_TABLE_COL_MIN_CLASS = {
+  applicantName: "min-w-[10.5rem]",
+  studiengang: "min-w-[7rem]",
+  fakultaet: "min-w-[5.75rem] max-w-[5.75rem]",
+  ref: "min-w-[9rem]",
+  date: "min-w-[5.25rem] max-w-[5.25rem]",
+  statusLabel: "min-w-[15rem]",
+  assignee: "min-w-[13.5rem]",
+  actions: "min-w-12 max-w-12",
+} as const;
+
+/** Zusätzlicher Abstand zwischen «Zugewiesen an» und Menü-Spalte. */
+export const WORKSPACE_APPLICATIONS_TABLE_ASSIGNEE_CELL_CLASS = "pr-3";
+
 export const WORKSPACE_HOME_TABLE_FILTER_PILL_REMOVE_CLASS =
   "flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-stone-200/90 hover:text-foreground";

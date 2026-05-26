@@ -202,7 +202,7 @@ Utility-Klassen: `hf-px-page` (Toolbar-Padding), `hf-gap-grid` (Gap = Gutter).
 | `5641:21990` … `5641:22807` | R2 Review-Block-Varianten (`ReviewBlockVariant`, `review-block.ts`) |
 | `5858:22820` … | R1 Anpassung Sidebar + Block-Footer (`review-bemerkungen.ts`, `r1-review-block.ts`) |
 | `5641:23410` | R4 Fachstelle-bestätigt |
-| `5657:17967` / `5907:23351` / `5657:18077` | R4 Entscheid-Schalter |
+| `5657:17967` / `5907:23351` / `5657:18077` | R4 Entscheid-Schalter; `5907:23378` Freitext-Vorschlag (nur Massnahmen; `AutoGrowTextarea`) |
 
 Vollständige Mechanik → **`Antrag_Review_Kontext.md`**, R4 → **`Antrag_Bewilligung_Kontext.md`**, Shell → **`Dashboard_Core_Layout_Kontext.md`**.
 

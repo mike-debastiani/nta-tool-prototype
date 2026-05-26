@@ -655,7 +655,7 @@ export function ReviewBlockLockedRemarkCallout({ remark }: { remark: string }) {
   return (
     <div className={REVIEW_BLOCK_LOCKED_REMARK_BAND_CLASS}>
       <p className={REVIEW_BLOCK_LOCKED_REMARK_TITLE_CLASS}>
-        Bemerkung der Fachstelle zur angeforderten Anpassung
+        Bemerkung der Fachstelle
       </p>
       <p className={REVIEW_BLOCK_LOCKED_REMARK_BODY_CLASS}>{remark}</p>
     </div>

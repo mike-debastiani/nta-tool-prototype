@@ -271,6 +271,48 @@ WorkspaceTestFlow(applications, workspaceRole, reviewerDisplayName)
 
 Zuweisung: `resolveApplicationAssigneeForWorkspace` + Name-Match mit `reviewerDisplayName` (`isApplicationAssignedToReviewer`). Details → `lib/application-assignee.ts` (Status → Antragsteller / R2-Konto / R4-Konto; Avatar-Initialen in Tabelle + Antragdetails).
 
+### 4b. Test-Accounts & Berechtigungs-Matrix (Ist)
+
+Credentials: mit Testpersonen abgestimmt (nicht in Repo). Login **`/staff/login`**; nach Sign-In **`getSession()`** vor `users.role`-Select (RLS).
+
+| Account (E-Mail) | `users.role` | Home-Layout | Listen-Filter (Client) | Antrag öffnen — typische Views |
+|------------------|--------------|-------------|------------------------|--------------------------------|
+| **`r4.test@example.com`** | **R4** | 2 KPI (`5948:27359`), je 320px | Nur `in_implementation`, `approved`, `rejected` + RLS alle Fakultäten | `in_decision` → **`WorkspaceR4DecisionView`**; sonst Review read-only |
+| **`r4.rf.test@example.com`** | **R4** | wie R4 | wie R4, RLS nur Fakultät **`rwf`** | wie R4 |
+| **`r2and4.combined.test@example.com`** | **R2R4** | 3 KPI (`5949:3172`), Aufgaben-Bucket 319px | Wie R2 (≠ `draft`) + R4-SELECT-Policies | `in_review` / Beratung → **R2-Review**; `in_decision` → **R4-Entscheid** + Label «Entscheid ausstehend» |
+| **R2 / R3** (weitere Staff-Tests) | R2 / R3 | 3 KPI | R2: ≠ `draft`; R3: Worklist-Policy | R2: Review + Forward; **kein** R4-Edit |
+
+**Fachliche Capabilities** (`lib/workspace-role.ts`):
+
+| Flag | Rollen | Wirkung |
+|------|--------|---------|
+| `hasR2WorkspaceCapabilities` | R2, **R2R4** | Empfehlung, Block-Review, Forward, «Beratungen planen» |
+| `hasR4WorkspaceCapabilities` | R4, **R2R4** | R4-Entscheid-UI, persist/complete, APIs |
+| `usesR4OnlyHomeLayout` | nur **R4** | Zwei KPI-Karten (keine «Beratungen diese Woche») |
+| `statusAudienceForWorkspaceApplication` | **R2R4** in `in_decision` → Audience **R4** | Badge «Entscheid ausstehend» statt «In Entscheid» |
+
+**Antragsdetail — Routing** (`workspace-test-flow.tsx`):
+
+| Kanonischer State | R2 | R4 | R2R4 |
+|-------------------|----|----|------|
+| `consultation_recommendation` / `in_review` | Review (interaktiv / readonly je Modus) | Review readonly | Review wie R2 |
+| `needs_adjustment` | readonly | readonly | readonly |
+| **`in_decision`** | readonly Entscheid | **`WorkspaceR4DecisionView`** | **R4-Entscheid** (editierbar) |
+| `approved` / `rejected` | readonly | readonly | readonly |
+
+**Detail-Panel:** Registrierung über `useRegisterDashboardDetailPanel` — Panel bleibt bei geöffnetem Antrag sichtbar (kein Unmount-Cleanup in Kind-Komponenten); Clear nur bei Deselektion in der Liste.
+
+**R4 Schreiben / Trigger:**
+
+| Aktion | R4 | R2R4 |
+|--------|----|------|
+| Autosave `r4DecisionReview` | RLS `applications_update_r4_decision` | + Trigger: nur `recommendation` / `consultation` / **`r4DecisionReview`** |
+| «Entscheid abschliessen» | `approved` + **`materializeApprovedR4DecisionReview`** | + Trigger erlaubt zusätzlich **`applicationDefinition`** nur bei `in_implementation` → `approved` (`20260526200000_*`) |
+
+**RLS-Migrationen (Auszug):** `20260513190000` (R4 SELECT), `20260514120000` (R4 UPDATE), `20260526120100` (R2R4 Policies + combined User), `20260526140000` (R2R4 `r4DecisionReview`), `20260526150000` (Worklist/Forward-Fixes), `20260526160000` (R2 Forward `WITH CHECK`), `20260526200000` (R2R4 Definition on approve).
+
+→ Entscheidungs-UI im Detail: **`Antrag_Bewilligung_Kontext.md`**; Freitext-Massnahmen R1: **`Antragerstellung_Kontext.md`** § 4 Step 4.
+
 **KPI-Delta `+N`:** `addedToday` = Anträge im Bucket mit `submittedAt` bzw. `updated_at` auf heutigem Kalendertag (de-CH). UI nur `+N` (kein «heute»-Suffix); Bedeutung per `aria-label`.
 
 **KPI Icon-Buttons (Header):**
@@ -299,10 +341,11 @@ Zuweisung: `resolveApplicationAssigneeForWorkspace` + Name-Match mit `reviewerDi
 | **Facettierte Filter** | `workspace-applications-table-controls.ts`: Status, Studiengang, Fakultät (Kürzel), Zugewiesen an, «Nur mir zugewiesen»; Pills zum Entfernen |
 | **Suche** | Name, Studiengang, Fakultät (Kürzel + Vollname), Antragsnummer, Status-Label, Assignee |
 | **Sortierung** | Spaltenköpfe in `workspace-applications-table.tsx` |
+| **Tabellen-Layout** | Container `@container/applications-table`: **&gt; 1150px** → Name `14%`, Studiengang `32%`, Fakultät `5.75rem` (links), Ref/Assignee shrink, Datum `5.25rem`, Status `15rem`, Menü `sticky right-0`. **≤ 1150px** → `min-w-[62rem]` + Scroll (`WORKSPACE_APPLICATIONS_TABLE_*`) |
 | **Maximize** | Nur R2/R4: Panel-Header; KPI-Zeile ausgeblendet; Minimize stellt KPI wieder her |
 | **Tabellen-Spalten** | Name, Studiengang, **Fakultät** (Kürzel, Tooltip Vollname), Antragsnummer, Datum, Status, Zugewiesen an (Avatar) |
 | **R4 Fakultäts-Scope** | DB: `departments`, `study_programs`, `r4_department_scopes`; RLS `r4_application_in_department_scope`; Liste: **nur** Session-Client (`fetchWorkspaceApplicationsList`), kein Service-Role-Fallback |
-| **R4 Test-Accounts** | `r4.test@example.com` = alle Fakultäten; `r4.rf.test@example.com` = nur `rwf` |
+| **R4 Test-Accounts** | `r4.test@example.com` = alle Fakultäten; `r4.rf.test@example.com` = nur `rwf` — volle Matrix § **4b** |
 | **Studiengang (R1)** | `lib/uzh-studiengaenge-data.ts` — Fakultäten alphabetisch, gruppierte Combobox |
 | **Shell** | Default-Scroll `dashboardMainPanelScrollAreaClass` mit `pt-12`; kein `edgeToEdge` |
 
@@ -408,7 +451,8 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 | `WORKSPACE_HOME_KPI_CARD_CLASS` | R2/R3: drei gleich breite KPI-Karten |
 | `WORKSPACE_HOME_R4_OPEN_CARD_CLASS` / `WORKSPACE_HOME_R4_TASKS_CARD_CLASS` | R4: 7/10 + 3/10, **`h-[320px]`** |
 | `WORKSPACE_HOME_R2R4_ASSIGNED_TASKS_CARD_CLASS` | R2R4: «Zugewiesene Aufgaben» 319px breit |
-| `lib/workspace-role.ts` | `R2R4`, `hasR2WorkspaceCapabilities`, `hasR4WorkspaceCapabilities`, `statusAudienceForWorkspaceApplication` |
+| `lib/workspace-role.ts` | `R2R4`, Capability-Flags, `statusAudienceForWorkspaceApplication` |
+| `lib/workspace-application-visibility.ts` | R4-Listen-Whitelist, `canEditR4DecisionApplication` |
 | `lib/workspace-nav-access.ts` | Sidebar «Beratungen planen» (R2/R3/R2R4) |
 | `WORKSPACE_HOME_TABLE_PANEL_TOGGLE_BUTTON_CLASS` | Maximize/Minimize im Anträge-Panel |
 | `WORKSPACE_HOME_TABLE_SEARCH_*` | Suche 320px, pill, transparent |
@@ -452,4 +496,4 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 
 ---
 
-*Letzte Aktualisierung: Workspace-Home R4-Layout (7/10); Meine Aufgaben-View mit rollenspezifischem Task-Filter; Anträge-Toolbar/Maximize (Figma `5948:27466` ff.); gemeinsame `WorkspaceApplicationsTable`; KPI-Icon-Navigation zu Aufgaben/Terminplaner/Maximize.*
+*Letzte Aktualisierung: § **4b** Test-Accounts & Berechtigungs-Matrix (R4 / R2R4 / Routing); Detail-Panel-Persistenz; R4 KPI 320px; Meine Aufgaben; Anträge-Toolbar/Maximize.*

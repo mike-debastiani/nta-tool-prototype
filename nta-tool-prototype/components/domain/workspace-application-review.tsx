@@ -857,7 +857,7 @@ export function WorkspaceApplicationReview({
                 </>
               ) : (
                 <>
-                  Überprüfen Sie die Angaben auf Vollständigkeit und leiten Sie den Antrag weiter oder
+                  Überprüfen Sie die Angaben auf Inhalt & Vollständigkeit und leiten Sie den Antrag weiter oder
                   senden Sie ihn zur Nachbesserung zurück.
                 </>
               )}
@@ -876,7 +876,7 @@ export function WorkspaceApplicationReview({
                 </>
               ) : (
                 <>
-                  Dieser Antrag wurde zur Nachbesserung an die antragstellende Person zurückgesendet.
+                  Dieser Antrag wurde zur Anpassung an die antragstellende Person zurückgesendet.
                   Sie werden benachrichtigt, sobald die Anpassungen eingereicht wurden.
                 </>
               )}
@@ -898,7 +898,6 @@ export function WorkspaceApplicationReview({
                 <>
                   Der Antrag wurde an die Entscheidungsinstanz weitergeleitet und kann nicht mehr
                   bearbeitet werden. Wird der Antrag bewilligt oder abgelehnt, werden Sie benachrichtigt.
-                  Bei einer Ablehnung ist eine Begründung pro Abschnitt hinterlegt.
                 </>
               )}
             </ApplicationStatusCallout>
@@ -1188,8 +1187,8 @@ export function WorkspaceApplicationReview({
                 <>
                   <Send className="size-4 shrink-0" aria-hidden />
                   {forwardCtaHasAdjustment
-                    ? "Anpassungen weiterleiten"
-                    : "Antrag weiterreichen"}
+                    ? "Zur Anpassung zurücksenden"
+                    : "An Entscheidungsinstanz weiterleiten"}
                 </>
               )}
             </Button>

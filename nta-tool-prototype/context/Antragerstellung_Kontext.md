@@ -60,7 +60,8 @@ Hinweise:
 | `components/domain/r1-booking-scheduler.tsx` | Step 3 `step3_booking`: Kalender + Slots + Termindetails (Figma `5307:7575`) |
 | `components/domain/r1-booking-confirmation.tsx` | Step 3 `step3_booked`: Terminbestätigung, Karte, Footer (Figma `5307:7907` / `5307:8254`) |
 | `components/domain/r1-application-definition-section.tsx` | Step 4 + Step 5: **Antragsstellung** (HF-Feldabstände, `spacing="definition"`) |
-| `components/domain/custom-measure-lines-field.tsx` | Sonstige-Massnahmen-Zeilen (Step 4; wiederverwendet in Anpassungsansicht) |
+| `components/domain/custom-measure-lines-field.tsx` | Sonstige-Massnahmen-Zeilen (Step 4 + `PortalApplicationAdjustment`) — `AutoGrowTextarea`, Checkbox an erster Zeile |
+| `components/ui/auto-grow-textarea.tsx` | Gemeinsame mitwachsende Textarea (R1 + R4, siehe `Antrag_Bewilligung_Kontext.md`) |
 | `components/studiengang-combobox.tsx` | Studiengang Step 1 (HF-Select-Trigger aus `r1-form.ts`) |
 | `lib/design-tokens/r1-form.ts` | Feld-Gaps + Choice-Karten + Select-Trigger (SSOT für `R1FlowField*`) |
 | `app/portal/antragserstellung/page.tsx` | Steuert Initial-Load: `?new` ⇒ leer; `?applicationId` ⇒ `PortalApplicationAdjustment`; sonst nur **resumable** Anträge auto-laden |
@@ -142,6 +143,17 @@ UI-Substeps in `nta-antrag-desktop.tsx` (ein Sidebar-Step „Beratung und Empfeh
 - `R1FlowSectionTitle spacingBelow="compact"` + `R1FlowFieldStack spacing="definition"` (**40px** zwischen den fünf Blöcken).
 - Pro Block: `R1FlowField described` (12px Beschreibung→Control), volle Breite Choice-Karten (`R1FlowFieldOptions` / `gap-2`).
 - Pflicht: Freitext, Dauer, Geltungsbereich, Lehrveranstaltungs- und Leistungsnachweis-Massnahmen (inkl. «Keine» / Sonstige-Zeilen).
+
+**Sonstige Massnahmen (Freitext-Zeilen):**
+
+| Aspekt | Ist |
+|--------|-----|
+| **Komponente** | `CustomMeasureLinesField` — eine Karte pro Zeile (`r1FlowChoiceCardClassName`, `items-start`) |
+| **Eingabe** | `AutoGrowTextarea` statt einzeiligem `Input`; mehrzeiliger Text bricht um, Feld wächst mit (`field-sizing-content` + `scrollHeight`) |
+| **Ausrichtung** | Checkbox in `h-5 flex items-center` — bündig mit **erster Textzeile** (`leading-5`, `py-0` am Textarea) |
+| **Persistenz** | `lectureOtherLines` / `assessmentOtherLines` (kompakt, ohne leere Slots) — `lib/measure-custom-lines.ts` |
+| **Wiederverwendung** | Gleiche Komponente in **`portal-application-adjustment.tsx`** (Status `needs_adjustment`) |
+| **Nach R4-Bewilligung** | Genehmigte Freitext-Vorschläge der Entscheidung landen in denselben `*OtherLines`-Feldern — `materializeApprovedR4DecisionReview` |
 
 ### Step 5 — Übersicht
 

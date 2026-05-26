@@ -69,7 +69,7 @@
 - **Forward-Aktion** geht über **`app/api/applications/review-forward/route.ts`** (Session-Client, RLS-konform — kein `SUPABASE_SERVICE_ROLE_KEY` nötig). Rollen: **R2, R3, R2R4** (`hasR2WorkspaceCapabilities` bzw. R3). Payload: `applicationId`, `nextStatus` (`in_implementation` \| `needs_correction`), `workspaceReview` inkl. `postSubmit` + `forwardedComments`. Setzt `applications.status` entsprechend und schreibt `recommendation.workspaceReview` final.  
   **Trigger-Pitfall:** Root-Felder in `data` außerhalb `consultation` / `recommendation` dürfen von R2 **nicht** verändert werden. Insbesondere darf **`r1AdjustmentResolutions`** beim Forward **nicht** aus dem Merge entfernt werden (sonst `R2 may not change data except recommendation/consultation`); Zurücksetzen erfolgt bei R1 über **`r1-release-adjustments`**.  
   **R1-Baseline für R2-Anpassungsmodus:** Beim Forward mit `needs_correction` werden Studierenden-Snapshots pro Block unter **`data.recommendation.r1AdjustmentBlockBaselines`** persistiert (Lesen: `lib/r1-adjustment-baseline.ts` — **nicht** an der JSON-Wurzel, sonst Trigger-Fehler).
-- **R4-Bewilligung (separater JSON-Pfad):** Entscheidungs-Schalter und Block-Bestätigungen liegen unter **`data.r4DecisionReview`** (nicht unter `recommendation`, damit kein Konflikt mit dem R2-Trigger). Typen und Merge-Helfer: `lib/test-flow-types.ts`, `lib/r4-decision-state.ts`; UI-Flow `Antrag_Bewilligung_Kontext.md`.
+- **R4-Bewilligung (separater JSON-Pfad):** **`data.r4DecisionReview`** — Schalter, Block-`confirmed`, Freitext-Vorschläge (`proposal:*` nur Massnahmen-Blöcke). Abschluss: **`materializeApprovedR4DecisionReview`** → `applicationDefinition` (sichtbar in Review-Lesesicht). **R2R4:** Trigger erlaubt `applicationDefinition` nur beim Statuswechsel auf `approved`. Details → `Antrag_Bewilligung_Kontext.md` § 5–6.
 - **R1-Freigabe-API:** **`app/api/applications/r1-release-adjustments/route.ts`** — setzt Status `in_review`, merged `buildWorkspaceReviewAfterR1AdjustmentRelease`, leert `r1AdjustmentResolutions`, broadcastet Zeilen-Update.
 - **RLS-Anker:** `applications_select_r2_worklist` umfasst seit Migration `extend_workspace_select_to_decision_states` auch **`in_implementation` / `approved` / `rejected`**, damit R2 den weitergereichten Antrag nach dem Statuswechsel im Workspace im Modus `readonly_decision` weiter sehen kann (Details siehe `Antragerstellung_Kontext.md` § 10). Parallel: **`applications_select_r4_workspace`** + **`users_select_r4_workspace_applicants`** für **R4** (immer mit **`current_user_role()`**, siehe `Antrag_Bewilligung_Kontext.md` § 6 / `Antragerstellung_Kontext.md` § 10).
 
@@ -79,7 +79,7 @@
 
 ### Auslösung Review-Ansicht
 
-- **`workspace-test-flow.tsx`:** Ausgewählter Antrag mit `deriveCanonicalApplicationState ∈ { consultation_recommendation, in_review, in_decision, needs_adjustment, approved, rejected }` → **`WorkspaceApplicationReview`** (unterschiedliche View Modes; **R4:** `workspaceViewerRole="R4"`, eingeschränkte Interaktion). In **`in_implementation`** zusätzlich für **R4** → **`WorkspaceR4DecisionView`**. Toolbar **„Zurück zur Liste“** für alle genannten Detail-States inkl. `approved`/`rejected`. Reine Listen-States ohne Detail (`draft`, …) bleiben auf der Karte.
+- **`workspace-test-flow.tsx`:** Detail-States `consultation_recommendation` … `approved`/`rejected` → **`WorkspaceApplicationReview`** (View Modes; **R4/R2R4:** `workspaceViewerRole="R4"` wo Lesesicht). Kanonisch **`in_decision`** und **`hasR4WorkspaceCapabilities`** (R4 **oder** R2R4) → **`WorkspaceR4DecisionView`** statt Review. **R2** allein: in `in_decision` nur `readonly_decision`. Detail-Panel bleibt über `useRegisterDashboardDetailPanel` registriert (kein Verschwinden bei Statuswechsel innerhalb Detail). Matrix → **`Dashboard_Core_Layout_Kontext.md` § 4b**.
 - Die alte „Empfehlung freigeben“-Karte ist abgelöst durch den `WorkspaceApplicationReview` mit `viewMode="readonly_consultation"` + `RecommendationDraftEditor` als `bottomAction`.
 
 ### View Modes (`WorkspaceReviewViewMode`)
@@ -255,4 +255,4 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 
 ---
 
-*Letzte Aktualisierung: HF `ReviewBlockVariant` + R1/R2-Sidebar; geteilter Review-Header/Callout; `r1AdjustmentBlockBaselines` unter `recommendation`; Scroll `applicationReviewScrollAreaClass`; R4 ohne Bemerkungs-Panel (`Antrag_Bewilligung_Kontext.md`).*
+*Letzte Aktualisierung: R2R4 Forward; Routing R4/R2R4 → `WorkspaceR4DecisionView`; R4 ohne Bemerkungs-Panel; Test-Matrix `Dashboard_Core_Layout_Kontext.md` § 4b; Bewilligung → `Antrag_Bewilligung_Kontext.md`.*
