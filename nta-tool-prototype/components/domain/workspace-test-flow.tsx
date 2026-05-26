@@ -399,6 +399,7 @@ export function WorkspaceTestFlow({
           key={`${selectedApplication.id}-${selectedApplication.status}`}
           application={selectedApplication}
           reviewerDisplayName={reviewerDisplayName}
+          workspaceRole={workspaceRole}
           onPersisted={handleApplicationPersisted}
         />
       );

@@ -6,12 +6,16 @@ import {
   REVIEW_WORKSPACE_BLOCK_IDS,
   type ReviewWorkspaceBlockId,
 } from "@/lib/review-workspace-blocks";
+import type { UserRole } from "@/lib/auth";
 import {
   type ApplicationData,
   type RecommendationWorkspaceReview,
 } from "@/lib/test-flow-types";
+import { hasR2WorkspaceCapabilities } from "@/lib/workspace-role";
 
-const ALLOWED_ROLES = ["R2", "R3"] as const;
+function canForwardWorkspaceReview(role: UserRole): boolean {
+  return hasR2WorkspaceCapabilities(role) || role === "R3";
+}
 
 type ForwardBody = {
   applicationId: string;
@@ -49,12 +53,9 @@ export async function POST(request: Request) {
     .from("users")
     .select("id,role")
     .eq("id", user.id)
-    .maybeSingle<{ id: string; role: string }>();
+    .maybeSingle<{ id: string; role: UserRole }>();
 
-  if (
-    !profile
-    || !ALLOWED_ROLES.includes(profile.role as (typeof ALLOWED_ROLES)[number])
-  ) {
+  if (!profile || !canForwardWorkspaceReview(profile.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

@@ -4,7 +4,9 @@ import {
   getR4BlockVisibility,
   mergeApplicationDataWithR4Review,
 } from "@/lib/r4-decision-state";
+import type { UserRole } from "@/lib/auth";
 import type { ApplicationData, R4DecisionReview } from "@/lib/test-flow-types";
+import { hasR4WorkspaceCapabilities } from "@/lib/workspace-role";
 
 export type R4WorkspacePersistFailure = {
   status: number;
@@ -25,13 +27,16 @@ async function assertWorkspaceR4User(
     .from("users")
     .select("role")
     .eq("id", user.id)
-    .maybeSingle<{ role: string }>();
+    .maybeSingle<{ role: UserRole }>();
 
   if (error) {
     return { status: 500, message: error.message };
   }
-  if (profile?.role !== "R4") {
-    return { status: 403, message: "Keine Berechtigung (nur R4)." };
+  if (!profile?.role || !hasR4WorkspaceCapabilities(profile.role)) {
+    return {
+      status: 403,
+      message: "Keine Berechtigung für die Entscheidungsbearbeitung.",
+    };
   }
   return null;
 }

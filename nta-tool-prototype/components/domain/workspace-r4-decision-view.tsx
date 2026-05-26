@@ -63,11 +63,13 @@ import { hfBlockTitle } from "@/lib/design-tokens/typography";
 import { cn } from "@/lib/utils";
 import { formatReviewSubmittedAt } from "@/lib/application-review-labels";
 import { getApplicationStatusMeta } from "@/lib/application-status";
+import type { UserRole } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
 type WorkspaceR4DecisionViewProps = {
   application: WorkspaceApplication;
   reviewerDisplayName: string;
+  workspaceRole: UserRole;
   onPersisted?: () => void;
 };
 
@@ -86,6 +88,7 @@ function hasText(value: unknown): value is string {
 export function WorkspaceR4DecisionView({
   application,
   reviewerDisplayName,
+  workspaceRole,
   onPersisted,
 }: WorkspaceR4DecisionViewProps) {
   const supabase = useMemo(() => createClient(), []);
@@ -428,10 +431,10 @@ export function WorkspaceR4DecisionView({
   const assignee = useMemo(
     () =>
       resolveApplicationAssigneeForWorkspace(application, {
-        workspaceRole: "R4",
+        workspaceRole,
         reviewerDisplayName,
       }),
-    [application, reviewerDisplayName],
+    [application, reviewerDisplayName, workspaceRole],
   );
 
   const detailPanelSignature = useMemo(
