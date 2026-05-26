@@ -84,6 +84,8 @@ import {
   type StatusAudience,
   getApplicationStatusMeta,
 } from "@/lib/application-status";
+import type { UserRole } from "@/lib/auth";
+import { statusAudienceForWorkspaceApplication } from "@/lib/workspace-role";
 import {
   ASSESSMENT_MEASURES_KEINE_DESCRIPTION,
   LECTURE_MEASURES_KEINE_DESCRIPTION,
@@ -309,9 +311,11 @@ type WorkspaceApplicationReviewProps = {
   onPersisted?: () => void;
   /** Optionaler CTA unterhalb der Blocks, z. B. Beratung durchgeführt. */
   bottomAction?: ReactNode;
+  /** Eingeloggte Workspace-Rolle (R2, R4, R2R4, …) — für «Zugewiesen an». */
+  workspaceRole: UserRole;
   /**
-   * R4: gleiche Block-Ansicht wie R2, aber Nur-Lese-Hinweise und Status-Badge für die
-   * Entscheidungsinstanz (`R4` in `getApplicationStatusMeta`). Standard: R2.
+   * Status-Labels: R4-Audience nur wenn reine R4-Rolle oder R2R4 in Entscheid.
+   * Optional überschreiben; sonst aus `workspaceRole` + Antrag abgeleitet.
    */
   workspaceViewerRole?: "R2" | "R4";
 };
@@ -322,13 +326,16 @@ export function WorkspaceApplicationReview({
   viewMode = "interactive",
   onPersisted,
   bottomAction,
-  workspaceViewerRole = "R2",
+  workspaceRole,
+  workspaceViewerRole: workspaceViewerRoleProp,
 }: WorkspaceApplicationReviewProps) {
   const readOnly = viewMode !== "interactive";
   const compactReadOnlyBlocks = viewMode === "readonly_consultation";
   const data = application.data;
-  const statusAudience: StatusAudience =
-    workspaceViewerRole === "R4" ? "R4" : "R2";
+  const workspaceViewerRole =
+    workspaceViewerRoleProp
+    ?? statusAudienceForWorkspaceApplication(workspaceRole, application);
+  const statusAudience: StatusAudience = workspaceViewerRole;
   const statusMeta = getApplicationStatusMeta(application, statusAudience);
   const r4ReadOnlyCopy = workspaceViewerRole === "R4";
   const submittedAtLabel = formatReviewSubmittedAt(data);
@@ -729,10 +736,10 @@ export function WorkspaceApplicationReview({
   const assignee = useMemo(
     () =>
       resolveApplicationAssigneeForWorkspace(application, {
-        workspaceRole: workspaceViewerRole,
+        workspaceRole,
         reviewerDisplayName,
       }),
-    [application, reviewerDisplayName, workspaceViewerRole],
+    [application, reviewerDisplayName, workspaceRole],
   );
 
   const detailPanelSignature = useMemo(

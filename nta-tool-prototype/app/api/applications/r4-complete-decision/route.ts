@@ -5,8 +5,10 @@ import {
   getR4BlockVisibility,
   mergeApplicationDataWithR4Review,
 } from "@/lib/r4-decision-state";
+import type { ApplicationStatus } from "@/lib/application-status";
 import { type ApplicationData, type R4DecisionReview } from "@/lib/test-flow-types";
 import type { UserRole } from "@/lib/auth";
+import { canEditR4DecisionApplication } from "@/lib/workspace-application-visibility";
 import { hasR4WorkspaceCapabilities } from "@/lib/workspace-role";
 import { createClient } from "@/utils/supabase/server";
 import { tryCreateServiceRoleClient } from "@/utils/supabase/service-role";
@@ -62,13 +64,13 @@ export async function POST(request: Request) {
     .from("applications")
     .select("id,status,data")
     .eq("id", applicationId)
-    .maybeSingle<{ id: string; status: string; data: ApplicationData }>();
+    .maybeSingle<{ id: string; status: ApplicationStatus; data: ApplicationData }>();
 
   if (fetchError || !row) {
     return NextResponse.json({ error: "Antrag nicht gefunden" }, { status: 404 });
   }
 
-  if (row.status !== "in_implementation") {
+  if (!canEditR4DecisionApplication(row)) {
     return NextResponse.json(
       { error: "Abschluss nur im Status «In Entscheid» möglich." },
       { status: 409 },

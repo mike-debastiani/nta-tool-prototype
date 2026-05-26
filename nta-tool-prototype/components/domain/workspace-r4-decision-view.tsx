@@ -64,6 +64,7 @@ import { cn } from "@/lib/utils";
 import { formatReviewSubmittedAt } from "@/lib/application-review-labels";
 import { getApplicationStatusMeta } from "@/lib/application-status";
 import type { UserRole } from "@/lib/auth";
+import { canEditR4DecisionApplication } from "@/lib/workspace-application-visibility";
 import { Button } from "@/components/ui/button";
 
 type WorkspaceR4DecisionViewProps = {
@@ -94,7 +95,7 @@ export function WorkspaceR4DecisionView({
   const supabase = useMemo(() => createClient(), []);
   const data = application.data;
   const def = data.applicationDefinition;
-  const canEdit = application.status === "in_implementation";
+  const canEdit = canEditR4DecisionApplication(application);
   const canEditRef = useRef(canEdit);
   canEditRef.current = canEdit;
 

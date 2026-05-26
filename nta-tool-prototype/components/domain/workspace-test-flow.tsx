@@ -32,6 +32,7 @@ import {
   statusAudienceForWorkspaceApplication,
   usesR4OnlyHomeLayout,
 } from "@/lib/workspace-role";
+import { useDashboardDetailPanel } from "@/components/domain/dashboard-detail-panel-context";
 
 /** Removed product copy — never show between draft / release actions. */
 const SUPPRESS_EDITOR_NOTICE = "Empfehlungsschreiben an R1 freigegeben.";
@@ -57,6 +58,7 @@ export function WorkspaceTestFlow({
   const setLeadingToolbarSlot = useWorkspaceR2Toolbar()?.setLeadingSlot;
 
   const supabase = useMemo(() => createClient(), []);
+  const { setRegistration: setDetailPanelRegistration } = useDashboardDetailPanel();
   const [applications, setApplications] =
     useState<WorkspaceApplication[]>(initialApplications);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
@@ -89,6 +91,12 @@ export function WorkspaceTestFlow({
       setSelectedApplicationId(null);
     }
   }, [dashboardView]);
+
+  useEffect(() => {
+    if (!selectedApplicationId) {
+      setDetailPanelRegistration(null);
+    }
+  }, [selectedApplicationId, setDetailPanelRegistration]);
 
   const refreshApplications = useCallback(async () => {
     const seq = ++refreshApplicationsSeq.current;
@@ -389,11 +397,11 @@ export function WorkspaceTestFlow({
     || selectedCanonicalState === "approved"
     || selectedCanonicalState === "rejected"
   ) {
-    const r4EntscheidEditing =
+    const showR4DecisionView =
       hasR4WorkspaceCapabilities(workspaceRole)
-      && selectedApplication.status === "in_implementation";
+      && selectedCanonicalState === "in_decision";
 
-    if (r4EntscheidEditing) {
+    if (showR4DecisionView) {
       return (
         <WorkspaceR4DecisionView
           key={`${selectedApplication.id}-${selectedApplication.status}`}
@@ -444,11 +452,8 @@ export function WorkspaceTestFlow({
         key={`${selectedApplication.id}-${selectedApplication.status}-${workspaceReviewPostSubmitHydrationKey(selectedApplication)}`}
         application={selectedApplication}
         reviewerDisplayName={reviewerDisplayName}
+        workspaceRole={workspaceRole}
         viewMode={r4ViewMode}
-        workspaceViewerRole={statusAudienceForWorkspaceApplication(
-          workspaceRole,
-          selectedApplication,
-        )}
         onPersisted={handleApplicationPersisted}
         bottomAction={recommendationBottomAction}
       />

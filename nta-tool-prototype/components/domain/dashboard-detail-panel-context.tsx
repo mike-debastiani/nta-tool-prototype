@@ -99,6 +99,4 @@ export function useRegisterDashboardDetailPanel(
       render: () => renderRef.current(),
     });
   }, [enabled, signature, setRegistration]);
-
-  useEffect(() => () => setRegistration(null), [setRegistration]);
 }
