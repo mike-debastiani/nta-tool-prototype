@@ -12,7 +12,7 @@ import type { WorkspaceApplication } from "@/lib/test-flow-types";
 
 /**
  * Reine R4-Home-Liste: Entscheid (`in_implementation`) + Bewilligt + Abgelehnt.
- * Kanonisch «Entscheid ausstehend» = DB-Status `in_implementation` (nicht separates Enum `in_decision`).
+ * Kanonisch «Entscheid erforderlich» = DB-Status `in_implementation` (nicht separates Enum `in_decision`).
  */
 const R4_HOME_DB_STATUSES: readonly ApplicationStatus[] = [
   "in_implementation",
@@ -43,7 +43,7 @@ export function filterWorkspaceApplicationsForRole(
   return rows;
 }
 
-/** R4 / R2R4: DB-Status «In Entscheid» (technisch `in_implementation`). */
+/** R4 / R2R4: DB-Status «Entscheid erforderlich» (technisch `in_implementation`). */
 export function isR4DecisionEditableStatus(status: ApplicationStatus): boolean {
   return status === "in_implementation";
 }

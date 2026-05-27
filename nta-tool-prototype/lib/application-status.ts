@@ -61,7 +61,7 @@ const canonicalStatusLabelR2: Partial<Record<CanonicalApplicationState, string>>
 };
 
 const canonicalStatusLabelR4: Partial<Record<CanonicalApplicationState, string>> = {
-  in_decision: "Entscheid ausstehend",
+  in_decision: "Entscheid erforderlich",
 };
 
 export const statusBadgeClass: Record<CanonicalApplicationState, string> =

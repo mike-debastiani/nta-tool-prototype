@@ -1,7 +1,14 @@
 "use client";
 
 import { ArrowUpRight, ChevronDown } from "lucide-react";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 
 import {
   Select,
@@ -65,6 +72,14 @@ const BUCKET_STYLES: Record<
   },
 };
 
+const BUCKET_LABELS: Record<ApplicationsChartBucketId, string> = {
+  in_review: "In Review",
+  adjustment: "Anpassung angefordert",
+  in_decision: "Entscheid erforderlich",
+  approved: "Bewilligt",
+  rejected: "Abgelehnt",
+};
+
 /** 16px unter Header-Zeile (Titel + Icon) — `gap-4` am Card-Container. */
 const HEADER_TO_CONTENT_GAP_CLASS = "gap-4";
 const CHART_BAR_GAP_PX = 24;
@@ -76,6 +91,8 @@ const COMBINED_VALUE_INSET_TOP_PX = 8;
 const COMBINED_SEGMENT_OVERLAP_PX = 12;
 const COMBINED_SEGMENT_MIN_HEIGHT_PX = 24;
 const COMBINED_BORDER_RADIUS_PX = 12;
+const BAR_TOOLTIP_SHOW_DELAY_MS = 250;
+const BAR_TOOLTIP_HIDE_DELAY_MS = 80;
 
 /**
  * Stapel unten → oben (Figma `5862:24126`).
@@ -100,6 +117,7 @@ type OpenApplicationsSummaryCardProps = {
   allowedViews?: OpenApplicationsChartView[];
   onHeaderIconClick?: () => void;
   headerIconAriaLabel?: string;
+  onBucketClick?: (bucketId: ApplicationsChartBucketId) => void;
 };
 
 type CombinedSegmentLayout = {
@@ -111,6 +129,93 @@ type CombinedSegmentLayout = {
 
 function bucketStyle(id: ApplicationsChartBucketId) {
   return BUCKET_STYLES[id];
+}
+
+function bucketLabel(id: ApplicationsChartBucketId) {
+  return BUCKET_LABELS[id];
+}
+
+function BucketBarTooltip({
+  bucketId,
+  anchor,
+}: {
+  bucketId: ApplicationsChartBucketId;
+  anchor: "vertical" | "horizontal" | "combined";
+}) {
+  const [open, setOpen] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
+  const styles = bucketStyle(bucketId);
+
+  const clearTimer = () => {
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  };
+
+  const scheduleOpen = () => {
+    clearTimer();
+    timeoutRef.current = window.setTimeout(() => setOpen(true), BAR_TOOLTIP_SHOW_DELAY_MS);
+  };
+
+  const scheduleClose = () => {
+    clearTimer();
+    timeoutRef.current = window.setTimeout(() => setOpen(false), BAR_TOOLTIP_HIDE_DELAY_MS);
+  };
+
+  useEffect(() => () => clearTimer(), []);
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Escape") {
+      clearTimer();
+      setOpen(false);
+    }
+  };
+
+  const tooltipPositionClass =
+    anchor === "vertical"
+      ? "bottom-full left-1/2 mb-2 -translate-x-1/2"
+      : anchor === "horizontal"
+        ? "left-full top-1/2 ml-2 -translate-y-1/2"
+        : "bottom-full left-1/2 mb-2 -translate-x-1/2";
+  const tickPositionClass =
+    anchor === "vertical"
+      ? "left-1/2 top-full -translate-x-1/2 -translate-y-1/2"
+      : anchor === "horizontal"
+        ? "left-0 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        : "left-1/2 top-full -translate-x-1/2 -translate-y-1/2";
+
+  return (
+    <div
+      className="absolute inset-0 z-20"
+      onPointerEnter={scheduleOpen}
+      onPointerLeave={scheduleClose}
+      onFocus={scheduleOpen}
+      onBlur={scheduleClose}
+      onKeyDown={handleKeyDown}
+      role="presentation"
+    >
+      <div
+        className={cn(
+          "pointer-events-none absolute rounded-md px-2 py-1 text-hf-paragraph-mini-medium whitespace-nowrap transition-opacity duration-150",
+          tooltipPositionClass,
+          styles.barClass,
+          styles.textClass,
+          open ? "opacity-100" : "opacity-0",
+        )}
+      >
+        {bucketLabel(bucketId)}
+        <span
+          aria-hidden
+          className={cn(
+            "absolute h-[7px] w-[7px] rotate-45",
+            tickPositionClass,
+            styles.barClass,
+          )}
+        />
+      </div>
+    </div>
+  );
 }
 
 function PrimaryIconLinkButton({
@@ -284,8 +389,10 @@ function computeCombinedSegmentLayout(
 
 function VerticalBarsChart({
   buckets,
+  onBucketClick,
 }: {
   buckets: ApplicationsChartStats["buckets"];
+  onBucketClick?: (bucketId: ApplicationsChartBucketId) => void;
 }) {
   const max = Math.max(...buckets.map((bucket) => bucket.value), 1);
 
@@ -302,13 +409,15 @@ function VerticalBarsChart({
           <div key={bucket.id} className="flex h-full min-w-0 flex-1 items-end justify-center">
             <div
               className={cn(
-                "flex w-full min-w-0 flex-col justify-end rounded-xl",
+                "relative flex w-full min-w-0 cursor-pointer flex-col justify-end rounded-xl",
                 styles.barClass,
               )}
               style={{
                 height: `${Math.max(heightPct, bucket.value > 0 ? 12 : 0)}%`,
               }}
+              onClick={() => onBucketClick?.(bucket.id)}
             >
+              <BucketBarTooltip bucketId={bucket.id} anchor="vertical" />
               <VerticalBarValue value={bucket.value} bucketId={bucket.id} />
             </div>
           </div>
@@ -320,8 +429,10 @@ function VerticalBarsChart({
 
 function HorizontalBarsChart({
   buckets,
+  onBucketClick,
 }: {
   buckets: ApplicationsChartStats["buckets"];
+  onBucketClick?: (bucketId: ApplicationsChartBucketId) => void;
 }) {
   const max = Math.max(...buckets.map((bucket) => bucket.value), 1);
 
@@ -337,11 +448,13 @@ function HorizontalBarsChart({
         return (
           <div key={bucket.id} className="flex min-h-0 flex-1 items-center">
             <div
-              className={cn("flex h-full min-w-[58px] rounded-xl", styles.barClass)}
+              className={cn("relative flex h-full min-w-[58px] cursor-pointer rounded-xl", styles.barClass)}
               style={{
                 width: `${Math.max(widthPct, bucket.value > 0 ? 12 : 0)}%`,
               }}
+              onClick={() => onBucketClick?.(bucket.id)}
             >
+              <BucketBarTooltip bucketId={bucket.id} anchor="horizontal" />
               <HorizontalBarValue value={bucket.value} bucketId={bucket.id} />
             </div>
           </div>
@@ -353,8 +466,10 @@ function HorizontalBarsChart({
 
 function CombinedBarsChart({
   buckets,
+  onBucketClick,
 }: {
   buckets: ApplicationsChartStats["buckets"];
+  onBucketClick?: (bucketId: ApplicationsChartBucketId) => void;
 }) {
   const { ref, height: chartHeightPx } = useChartAreaHeight<HTMLDivElement>();
 
@@ -378,9 +493,11 @@ function CombinedBarsChart({
             }}
           >
             <div
-              className={cn("relative h-full w-full", styles.barClass)}
+              className={cn("relative h-full w-full cursor-pointer", styles.barClass)}
               style={{ borderRadius: COMBINED_BORDER_RADIUS_PX }}
+              onClick={() => onBucketClick?.(bucket.id)}
             >
+              <BucketBarTooltip bucketId={bucket.id} anchor="combined" />
               <CombinedSegmentLabel value={bucket.value} bucketId={bucket.id} />
             </div>
           </div>
@@ -390,11 +507,19 @@ function CombinedBarsChart({
   );
 }
 
-function PieDonutChart({ buckets }: { buckets: ApplicationsChartStats["buckets"] }) {
+function PieDonutChart({
+  buckets,
+  onBucketClick,
+}: {
+  buckets: ApplicationsChartStats["buckets"];
+  onBucketClick?: (bucketId: ApplicationsChartBucketId) => void;
+}) {
   const total = buckets.reduce((sum, bucket) => sum + bucket.value, 0);
-  const { ref, height: areaHeight } = useChartAreaHeight<HTMLDivElement>();
-  const size = Math.min(Math.max(areaHeight, 120), 200);
-  const stroke = 28;
+  const pieAreaRef = useRef<HTMLDivElement>(null);
+  const [pieAreaSize, setPieAreaSize] = useState({ width: 0, height: 0 });
+  const shortestEdge = Math.min(pieAreaSize.width, pieAreaSize.height);
+  const size = Math.max(96, Math.min(shortestEdge - 8, 220));
+  const stroke = Math.max(18, Math.round(size * 0.12));
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
 
@@ -417,14 +542,134 @@ function PieDonutChart({ buckets }: { buckets: ApplicationsChartStats["buckets"]
     });
   }, [buckets, circumference, total]);
 
+  const [hoveredBucketId, setHoveredBucketId] = useState<ApplicationsChartBucketId | null>(null);
+  const pieTooltipTimerRef = useRef<number | null>(null);
+  const pieHoverTargetRef = useRef<ApplicationsChartBucketId | null>(null);
+
+  const clearPieTooltipTimer = () => {
+    if (pieTooltipTimerRef.current !== null) {
+      window.clearTimeout(pieTooltipTimerRef.current);
+      pieTooltipTimerRef.current = null;
+    }
+  };
+
+  useLayoutEffect(() => {
+    const element = pieAreaRef.current;
+    if (!element) return;
+
+    const measure = () => {
+      const rect = element.getBoundingClientRect();
+      setPieAreaSize({
+        width: Math.max(0, Math.floor(rect.width)),
+        height: Math.max(0, Math.floor(rect.height)),
+      });
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => () => clearPieTooltipTimer(), []);
+
+  const schedulePieTooltipOpen = (bucketId: ApplicationsChartBucketId) => {
+    clearPieTooltipTimer();
+    pieTooltipTimerRef.current = window.setTimeout(
+      () => setHoveredBucketId(bucketId),
+      BAR_TOOLTIP_SHOW_DELAY_MS,
+    );
+  };
+
+  const schedulePieTooltipClose = () => {
+    clearPieTooltipTimer();
+    pieTooltipTimerRef.current = window.setTimeout(
+      () => setHoveredBucketId(null),
+      BAR_TOOLTIP_HIDE_DELAY_MS,
+    );
+  };
+
+  const updatePieHoverTarget = (bucketId: ApplicationsChartBucketId | null) => {
+    if (pieHoverTargetRef.current === bucketId) return;
+    pieHoverTargetRef.current = bucketId;
+    if (bucketId === null) {
+      schedulePieTooltipClose();
+      return;
+    }
+    schedulePieTooltipOpen(bucketId);
+  };
+
+  const resolvePieBucketAtPointer = (event: {
+    clientX: number;
+    clientY: number;
+    currentTarget: SVGSVGElement;
+  }): ApplicationsChartBucketId | null => {
+    if (total <= 0) return null;
+    const svgRect = event.currentTarget.getBoundingClientRect();
+    if (svgRect.width <= 0 || svgRect.height <= 0) return null;
+
+    const cx = svgRect.left + svgRect.width / 2;
+    const cy = svgRect.top + svgRect.height / 2;
+    const dx = event.clientX - cx;
+    const dy = event.clientY - cy;
+    const distance = Math.hypot(dx, dy);
+    const innerRadiusPx = Math.max(radius - stroke / 2, 0);
+    const outerRadiusPx = radius + stroke / 2;
+    if (distance < innerRadiusPx || distance > outerRadiusPx) return null;
+
+    const angleFromTopDeg = (Math.atan2(dy, dx) * (180 / Math.PI) + 90 + 360) % 360;
+    let cumulativeDeg = 0;
+    for (const bucket of buckets) {
+      const segmentDeg = (bucket.value / total) * 360;
+      if (segmentDeg <= 0) continue;
+      const segmentEndDeg = cumulativeDeg + segmentDeg;
+      if (angleFromTopDeg >= cumulativeDeg && angleFromTopDeg < segmentEndDeg) {
+        return bucket.id;
+      }
+      cumulativeDeg = segmentEndDeg;
+    }
+    return null;
+  };
+
+  const hoveredStyles = hoveredBucketId ? bucketStyle(hoveredBucketId) : null;
+
   return (
     <div
-      ref={ref}
+      ref={pieAreaRef}
       className="flex h-full min-h-0 w-full items-center justify-center"
       aria-hidden
     >
       <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+        {hoveredBucketId ? (
+          <div
+            className={cn(
+              "pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 rounded-md px-2 py-1 text-hf-paragraph-mini-medium whitespace-nowrap",
+              hoveredStyles?.barClass,
+              hoveredStyles?.textClass,
+            )}
+          >
+            {bucketLabel(hoveredBucketId)}
+            <span
+              aria-hidden
+              className={cn(
+                "absolute left-1/2 top-full h-[6px] w-[6px] -translate-x-1/2 -translate-y-1/2 rotate-45",
+                hoveredStyles?.barClass,
+              )}
+            />
+          </div>
+        ) : null}
+        <svg
+          width={size}
+          height={size}
+          viewBox={`0 0 ${size} ${size}`}
+          className="-rotate-90"
+          onPointerMove={(event) => updatePieHoverTarget(resolvePieBucketAtPointer(event))}
+          onPointerLeave={() => updatePieHoverTarget(null)}
+          onClick={(event) => {
+            const bucketId = resolvePieBucketAtPointer(event);
+            if (bucketId) onBucketClick?.(bucketId);
+          }}
+        >
           {total <= 0 ? (
             <circle
               cx={size / 2}
@@ -448,6 +693,7 @@ function PieDonutChart({ buckets }: { buckets: ApplicationsChartStats["buckets"]
                 strokeDashoffset={offset}
                 className={bucketStyle(bucket.id).pieStrokeClass}
                 strokeLinecap="butt"
+                style={{ pointerEvents: "none" }}
               />
             ))
           )}
@@ -504,6 +750,7 @@ export function OpenApplicationsSummaryCard({
   allowedViews,
   onHeaderIconClick,
   headerIconAriaLabel,
+  onBucketClick,
 }: OpenApplicationsSummaryCardProps) {
   const viewOptions = useMemo(
     () =>
@@ -559,12 +806,18 @@ export function OpenApplicationsSummaryCard({
         </div>
 
         <div className="flex h-full min-h-0 min-w-0 flex-1 items-stretch">
-          {resolvedView === "vertical" ? <VerticalBarsChart buckets={displayBuckets} /> : null}
-          {resolvedView === "horizontal" ? (
-            <HorizontalBarsChart buckets={displayBuckets} />
+          {resolvedView === "vertical" ? (
+            <VerticalBarsChart buckets={displayBuckets} onBucketClick={onBucketClick} />
           ) : null}
-          {resolvedView === "combined" ? <CombinedBarsChart buckets={displayBuckets} /> : null}
-          {resolvedView === "pie" ? <PieDonutChart buckets={displayBuckets} /> : null}
+          {resolvedView === "horizontal" ? (
+            <HorizontalBarsChart buckets={displayBuckets} onBucketClick={onBucketClick} />
+          ) : null}
+          {resolvedView === "combined" ? (
+            <CombinedBarsChart buckets={displayBuckets} onBucketClick={onBucketClick} />
+          ) : null}
+          {resolvedView === "pie" ? (
+            <PieDonutChart buckets={displayBuckets} onBucketClick={onBucketClick} />
+          ) : null}
         </div>
       </div>
     </div>

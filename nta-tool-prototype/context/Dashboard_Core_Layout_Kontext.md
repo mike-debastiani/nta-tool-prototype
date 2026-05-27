@@ -279,7 +279,7 @@ Credentials: mit Testpersonen abgestimmt (nicht in Repo). Login **`/staff/login`
 |------------------|--------------|-------------|------------------------|--------------------------------|
 | **`r4.test@example.com`** | **R4** | 2 KPI (`5948:27359`), je 320px | Nur `in_implementation`, `approved`, `rejected` + RLS alle Fakultäten | `in_decision` → **`WorkspaceR4DecisionView`**; sonst Review read-only |
 | **`r4.rf.test@example.com`** | **R4** | wie R4 | wie R4, RLS nur Fakultät **`rwf`** | wie R4 |
-| **`r2and4.combined.test@example.com`** | **R2R4** | 3 KPI (`5949:3172`), Aufgaben-Bucket 319px | Wie R2 (≠ `draft`) + R4-SELECT-Policies | `in_review` / Beratung → **R2-Review**; `in_decision` → **R4-Entscheid** + Label «Entscheid ausstehend» |
+| **`r2and4.combined.test@example.com`** | **R2R4** | 3 KPI (`5949:3172`), Aufgaben-Bucket 319px | Wie R2 (≠ `draft`) + R4-SELECT-Policies | `in_review` / Beratung → **R2-Review**; `in_decision` → **R4-Entscheid** + Label «Entscheid erforderlich» |
 | **R2 / R3** (weitere Staff-Tests) | R2 / R3 | 3 KPI | R2: ≠ `draft`; R3: Worklist-Policy | R2: Review + Forward; **kein** R4-Edit |
 
 **Fachliche Capabilities** (`lib/workspace-role.ts`):
@@ -289,7 +289,7 @@ Credentials: mit Testpersonen abgestimmt (nicht in Repo). Login **`/staff/login`
 | `hasR2WorkspaceCapabilities` | R2, **R2R4** | Empfehlung, Block-Review, Forward, «Beratungen planen» |
 | `hasR4WorkspaceCapabilities` | R4, **R2R4** | R4-Entscheid-UI, persist/complete, APIs |
 | `usesR4OnlyHomeLayout` | nur **R4** | Zwei KPI-Karten (keine «Beratungen diese Woche») |
-| `statusAudienceForWorkspaceApplication` | **R2R4** in `in_decision` → Audience **R4** | Badge «Entscheid ausstehend» statt «In Entscheid» |
+| `statusAudienceForWorkspaceApplication` | **R2R4** in `in_decision` → Audience **R4** | Badge «Entscheid erforderlich» statt «In Entscheid» |
 
 **Antragsdetail — Routing** (`workspace-test-flow.tsx`):
 
@@ -344,6 +344,7 @@ Credentials: mit Testpersonen abgestimmt (nicht in Repo). Login **`/staff/login`
 | **Tabellen-Layout** | Container `@container/applications-table` auf `WorkspaceApplicationsTable`: **`table-auto`**. **&gt; 1150px (Fit):** kein horizontales Scrollen; Name `13%` (einzeilig bis **&gt; 24 Zeichen**, dann Umbruch), Studiengang `35%` (**einzige** Standard-Umbruchspalte), Fakultät/Datum je **`5.5rem`**, Ref `9rem`, Status `15rem`, Zugewiesen an **`max-content`** + `min-w-max` (kein Überlauf in Menü-Spalte). Fakultät, Antrags ID, Datum, Status, Zugewiesen an: **immer `nowrap`**, Mindestbreite = Inhalt. **≤ 1150px:** `min-w-[74.125rem]` + horizontaler Scroll. Menü-Spalte `sticky right-0`, `pl-2` zum Assignee. Tokens: `WORKSPACE_APPLICATIONS_TABLE_*` in `workspace-dashboard.ts`. |
 | **Maximize** | Nur R2/R4: Panel-Header; KPI-Zeile ausgeblendet; Minimize stellt KPI wieder her |
 | **Tabellen-Spalten** | Name, Studiengang, **Fakultät** (Kürzel, Tooltip Vollname), **Antrags ID**, Datum, Status, Zugewiesen an (Avatar) |
+| **KPI-Interaktion** | Klick auf Chart-Bucket (`OpenApplicationsSummaryCard`) setzt Tabellen-Statusfilter direkt auf den passenden Audience-Label-Text (R2: «Review erforderlich», R4/R2R4 bei `in_decision`: «Entscheid erforderlich»); **kein** Auto-Scroll |
 | **R4 Fakultäts-Scope** | DB: `departments`, `study_programs`, `r4_department_scopes`; RLS `r4_application_in_department_scope`; Liste: **nur** Session-Client (`fetchWorkspaceApplicationsList`), kein Service-Role-Fallback |
 | **R4 Test-Accounts** | `r4.test@example.com` = alle Fakultäten; `r4.rf.test@example.com` = nur `rwf` — volle Matrix § **4b** |
 | **Studiengang (R1)** | `lib/uzh-studiengaenge-data.ts` — Fakultäten alphabetisch, gruppierte Combobox |

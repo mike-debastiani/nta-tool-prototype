@@ -185,7 +185,7 @@ Utility-Klassen: `hf-px-page` (Toolbar-Padding), `hf-gap-grid` (Gap = Gutter).
 
 **Anträge-Toolbar (Figma `5948:27470`):** Suche/Filter/Download — `bg-transparent`, Rand `border-border`; Toggle aktiv `bg-primary` / `text-primary-foreground` / `rounded-full`; inaktiv `text-muted-foreground` / `rounded-[10px]`. Kein weisser Fill auf Panel-`stone-50`.
 
-**Status-Badge:** `status-badge-colors.ts` — Beratung & Empfehlung vs. In Review/Review erforderlich (alle Rollen gleich); Callouts via `hfStatusCalloutClasses`. KPI «Offene Antragsverfahren»: Balkenfarben unverändert (`beratung-100` für In-Review-Segment); Total nur In Review + Anpassung + In Entscheid.
+**Status-Badge:** `status-badge-colors.ts` — Beratung & Empfehlung vs. In Review/Review erforderlich (alle Rollen gleich); `in_decision` Audience R4/R2R4 = **Entscheid erforderlich**. Callouts via `hfStatusCalloutClasses`. KPI «Offene Antragsverfahren»: Balkenfarben unverändert (`beratung-100` für In-Review-Segment); Total nur In Review + Anpassung + In Entscheid.
 
 **Nav aktiv:** `bg-primary` / `text-primary-foreground`, `rounded-[7px]` — Tokens `DASHBOARD_NAV_ITEM_ACTIVE_*` (Label ohne `hfTypography`-`foreground-alt`).
 
@@ -295,6 +295,7 @@ Vollständige Mechanik → **`Antrag_Review_Kontext.md`**, R4 → **`Antrag_Bewi
 | 2026-05-20 | Dashboard HF Polish | Nav-Aktiv Primary + Workspace Home `5509:11682`; Inset/Tight-Panel + Hysterese; `application-block.ts` für Antragskarten |
 | 2026-05-20 | Workspace Home table | Anträge-Tabelle: Live-`applications`, Zeilenklick, ein Divider pro Zeile; `workspaceApplicationListNumber` |
 | 2026-05-27 | Workspace applications table layout | `workspace-applications-table.tsx` + `WORKSPACE_APPLICATIONS_TABLE_*`: `table-auto`, Studiengang wrap, Name wrap &gt;24 chars, compact cols nowrap, scroll ≤1150px (`74.125rem`), tighter actions padding |
+| 2026-05-27 | Workspace KPI chart interactions | `open-applications-summary-card.tsx`: role-aware bucket tooltips (vertical/horizontal/combined/pie), robust pie hover hit-testing, responsive donut sizing, bucket click filters table status (no auto-scroll) |
 
 ---
 

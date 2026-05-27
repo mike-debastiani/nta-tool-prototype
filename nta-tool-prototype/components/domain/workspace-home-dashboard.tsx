@@ -5,7 +5,10 @@ import { useCallback, useMemo, useState } from "react";
 import { ArrowUpRight, Maximize2, Minimize2 } from "lucide-react";
 
 import { AssignedTasksSummaryCard } from "@/components/domain/assigned-tasks-summary-card";
-import { OpenApplicationsSummaryCard } from "@/components/domain/open-applications-summary-card";
+import {
+  OpenApplicationsSummaryCard,
+  type ApplicationsChartBucketId,
+} from "@/components/domain/open-applications-summary-card";
 import { useWorkspaceApplicationsTableState } from "@/components/domain/use-workspace-applications-table-state";
 import { WorkspaceApplicationsTable } from "@/components/domain/workspace-applications-table";
 import { WorkspaceApplicationsTableToolbar } from "@/components/domain/workspace-applications-table-toolbar";
@@ -20,6 +23,10 @@ import {
   WORKSPACE_HOME_TABLE_PANEL_TOGGLE_BUTTON_CLASS,
 } from "@/lib/design-tokens/workspace-dashboard";
 import { computeAllApplicationsStats } from "@/lib/workspace-all-applications-stats";
+import {
+  getStatusLabelForAudience,
+  type CanonicalApplicationState,
+} from "@/lib/application-status";
 import { type UserRole } from "@/lib/auth";
 import {
   isCombinedR2R4Role,
@@ -146,6 +153,37 @@ export function WorkspaceHomeDashboard({
     router.push("/workspace?view=terminplaner");
   }, [router]);
 
+  const handleOpenApplicationsBucketClick = useCallback(
+    (bucketId: ApplicationsChartBucketId) => {
+      const stateByBucket: Record<ApplicationsChartBucketId, CanonicalApplicationState> = {
+        in_review: "in_review",
+        adjustment: "needs_adjustment",
+        in_decision: "in_decision",
+        approved: "approved",
+        rejected: "rejected",
+      };
+      const canonicalState = stateByBucket[bucketId];
+      const audience =
+        bucketId === "in_decision" && isCombinedR2R4Role(workspaceRole)
+          ? "R4"
+          : workspaceRole === "R4"
+            ? "R4"
+            : "R2";
+      const statusLabel = getStatusLabelForAudience(canonicalState, audience);
+      if (!statusLabel) return;
+
+      if (bucketId === "approved" || bucketId === "rejected") {
+        tableState.setOpenAllFilter("all");
+      }
+
+      tableState.setColumnFilters((prev) => ({
+        ...prev,
+        statusLabels: [statusLabel],
+      }));
+    },
+    [tableState, workspaceRole],
+  );
+
   const openApplicationsStats = useMemo(
     () => computeOpenApplicationsStats(applications),
     [applications],
@@ -177,6 +215,7 @@ export function WorkspaceHomeDashboard({
               className={WORKSPACE_HOME_R4_OPEN_CARD_CLASS}
               onHeaderIconClick={maximizeApplicationsTable}
               headerIconAriaLabel="Anträge-Tabelle maximieren"
+              onBucketClick={handleOpenApplicationsBucketClick}
             />
             <AssignedTasksSummaryCard
               buckets={assignedTasksStats.buckets}
@@ -194,6 +233,7 @@ export function WorkspaceHomeDashboard({
                 supportsTableExpand ? maximizeApplicationsTable : undefined
               }
               headerIconAriaLabel="Anträge-Tabelle maximieren"
+              onBucketClick={handleOpenApplicationsBucketClick}
             />
             <AssignedTasksSummaryCard
               buckets={assignedTasksStats.buckets}

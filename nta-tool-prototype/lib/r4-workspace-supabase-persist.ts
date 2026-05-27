@@ -70,7 +70,10 @@ export async function persistR4DecisionWithSupabaseClient(
   if (row.status !== "in_implementation") {
     return {
       ok: false,
-      error: { status: 409, message: "Bearbeitung nur im Status «In Entscheid» möglich." },
+      error: {
+        status: 409,
+        message: "Bearbeitung nur im Status «Entscheid erforderlich» möglich.",
+      },
     };
   }
 
@@ -123,7 +126,10 @@ export async function completeR4DecisionWithSupabaseClient(
   if (row.status !== "in_implementation") {
     return {
       ok: false,
-      error: { status: 409, message: "Abschluss nur im Status «In Entscheid» möglich." },
+      error: {
+        status: 409,
+        message: "Abschluss nur im Status «Entscheid erforderlich» möglich.",
+      },
     };
   }
 

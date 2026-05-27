@@ -1,6 +1,6 @@
 # Kontext: Antrag Bewilligung (R4 Entscheidungsinstanz) — NTA Prototyp
 
-> **Zweck:** Referenz für den **R4-Bewilligungsflow** nach R2-Weiterreichung an die Entscheidungsinstanz (`in_implementation` / kanonisch **In Entscheid**). Layout und Block-Struktur entsprechen der **R2-Review-Ansicht**, Funktionen und Sidebar-Inhalt weichen ab.  
+> **Zweck:** Referenz für den **R4-Bewilligungsflow** nach R2-Weiterreichung an die Entscheidungsinstanz (`in_implementation` / kanonisch **In Entscheid**, Audience R4: **Entscheid erforderlich**). Layout und Block-Struktur entsprechen der **R2-Review-Ansicht**, Funktionen und Sidebar-Inhalt weichen ab.  
 > **Verwandt:** `Antrag_Review_Kontext.md` (R2 Block-Review, Forward), `Dashboard_Core_Layout_Kontext.md` (Workspace-Shell), `Antragerstellung_Kontext.md` (RLS § 10, Login § 2), `General_Prototype_Kontext.md`.
 
 ---
@@ -9,19 +9,19 @@
 
 - R2 bestätigt alle Review-Blöcke und reicht mit **„Antrag weiterreichen“** an die Entscheidungsinstanz weiter → technischer Status **`in_implementation`**, kanonisch **`in_decision`** („In Entscheid“ für R1/R2).
 - **R4** nutzt dieselbe **Workspace-Dashboard-Shell** wie R2 (`WorkspaceDashboardShell` via `RoleDashboardLayout`: einklappbare Sidebar 240/68px, **Topbar** mit Suche/Inbox/Avatar-Initialen aus `lib/user-initials.ts` für alle Rollen **R2–R6**). Mechanik → **`Dashboard_Core_Layout_Kontext.md`**. Unterschied ist **nur die Berechtigung je Status**:
-  - Ausserhalb **`in_implementation`** (technisch: Entscheid ausstehend): R4 sieht dieselbe **Block-Review-Ansicht** wie R2 im jeweiligen Nur-Lese-Modus (`WorkspaceApplicationReview`, `workspaceViewerRole="R4"`, `viewMode` je Kanon-Status; kein Empfehlungs-Editor für R4).
+  - Ausserhalb **`in_implementation`** (technisch: Entscheid erforderlich): R4 sieht dieselbe **Block-Review-Ansicht** wie R2 im jeweiligen Nur-Lese-Modus (`WorkspaceApplicationReview`, `workspaceViewerRole="R4"`, `viewMode` je Kanon-Status; kein Empfehlungs-Editor für R4).
   - In **`in_implementation`**: zusätzliche **Bewilligungs-Ansicht** (`WorkspaceR4DecisionView`) mit Schaltern und Block-Bestätigung gemäss Figma (Standard / nach Anpassungen / bestätigter Block).
 - **Inbox-Liste:** dieselben Anträge wie R2 laden (`app/workspace/page.tsx` + `lib/workspace-applications-list.ts`; Client-Refresh in `workspace-test-flow.tsx` per **`GET /api/workspace/applications`**). Detailansicht auch für kanonisch **`approved`** / **`rejected`** im Modus `readonly_decision` (Lesesicht).
-- **Wording Status:** R1 und R2 sehen weiterhin die zentrale Meta-Bezeichnung **In Entscheid** (bzw. kanonisch `in_decision` in `lib/application-status.ts`). **R4** sieht für denselben Zustand **„Entscheid ausstehend“** (`StatusAudience` **R4**).
+- **Wording Status:** R1 und R2 sehen weiterhin die zentrale Meta-Bezeichnung **In Entscheid** (bzw. kanonisch `in_decision` in `lib/application-status.ts`). **R4** und **R2R4** (bei `in_decision`) sehen für denselben Zustand **„Entscheid erforderlich“** (`StatusAudience` **R4**).
 
 ---
 
 ## 2. Rechte & Sichtbarkeit
 
-| Rolle | DB-Status `in_implementation` (kanonisch **In Entscheid** / R4-Label **Entscheid ausstehend**) | Andere Status |
+| Rolle | DB-Status `in_implementation` (kanonisch **In Entscheid** / R4-Label **Entscheid erforderlich**) | Andere Status |
 |--------|------------------------------------------------------------------------------------------------|---------------|
 | **R4** | **`WorkspaceR4DecisionView`** — Schalter, Block-Bestätigung, Freitext-Vorschläge, Abschluss | **`WorkspaceApplicationReview`** read-only (`readonly_decision`); kein Empfehlungs-Editor |
-| **R2R4** | Wie **R4** (Capability `hasR4WorkspaceCapabilities`) | Wie **R2** in Review-Phasen (`hasR2WorkspaceCapabilities`); in `in_decision` zusätzlich Status-Audience **R4** («Entscheid ausstehend») |
+| **R2R4** | Wie **R4** (Capability `hasR4WorkspaceCapabilities`) | Wie **R2** in Review-Phasen (`hasR2WorkspaceCapabilities`); in `in_decision` zusätzlich Status-Audience **R4** («Entscheid erforderlich») |
 | **R2** | Read-only Entscheid-Modus (`readonly_decision`) | Interaktives Block-Review bis Forward |
 
 **Capability-Helfer** (`lib/workspace-role.ts`): `hasR4WorkspaceCapabilities` = **R4** \| **R2R4**; `canEditR4DecisionApplication` (`lib/workspace-application-visibility.ts`) = nur wenn `application.status === in_implementation`.

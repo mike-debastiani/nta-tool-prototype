@@ -73,7 +73,7 @@ export async function POST(request: Request) {
 
   if (!canEditR4DecisionApplication(row)) {
     return NextResponse.json(
-      { error: "Abschluss nur im Status «In Entscheid» möglich." },
+      { error: "Abschluss nur im Status «Entscheid erforderlich» möglich." },
       { status: 409 },
     );
   }
