@@ -49,7 +49,7 @@ function AssignedTaskMetricItem({
   bucket: AssignedTaskBucket;
   onClick?: () => void;
 }) {
-  const itemRef = useRef<HTMLDivElement>(null);
+  const itemRef = useRef<HTMLButtonElement>(null);
   const [metricFontPx, setMetricFontPx] = useState(METRIC_FONT_MAX_PX);
   const [labelFontPx, setLabelFontPx] = useState(LABEL_FONT_MAX_PX);
 
