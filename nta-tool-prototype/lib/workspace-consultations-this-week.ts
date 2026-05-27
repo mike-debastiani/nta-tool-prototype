@@ -3,6 +3,7 @@ import {
   isConsultationPhaseApplication,
 } from "@/lib/application-status";
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
+import { parseConsultationStart } from "@/lib/workspace-consultation-appointment";
 
 export type WorkspaceConsultationRow = {
   applicationId: string;
@@ -12,68 +13,6 @@ export type WorkspaceConsultationRow = {
   locationLabel: string;
   startsAt: Date;
 };
-
-function parseConsultationStart(application: WorkspaceApplication): Date | null {
-  const slot = application.data.consultation?.slot?.trim();
-  const iso = application.data.consultation?.dateIso?.trim();
-  if (iso) {
-    const date = new Date(iso);
-    if (Number.isFinite(date.getTime())) {
-      if (slot) {
-        const [fromRaw] = slot.split("-");
-        const [hoursRaw, minutesRaw] = (fromRaw ?? "").trim().split(":");
-        const hours = Number(hoursRaw);
-        const minutes = Number(minutesRaw);
-        if (Number.isFinite(hours) && Number.isFinite(minutes)) {
-          date.setHours(hours, minutes, 0, 0);
-        }
-      }
-      return date;
-    }
-  }
-
-  const fallback = application.data.consultation?.date?.trim();
-  if (!fallback) return null;
-
-  const match =
-    fallback.match(/(?:^.*?,\s*)?(\d{1,2})\.\s*([A-Za-zÄÖÜäöü]+)\s*(\d{4})?$/u);
-  if (!match) return null;
-
-  const day = Number(match[1]);
-  const monthRaw = match[2]?.toLowerCase();
-  const year = Number(match[3] || new Date().getFullYear());
-  const monthMap: Record<string, number> = {
-    januar: 0,
-    februar: 1,
-    maerz: 2,
-    märz: 2,
-    april: 3,
-    mai: 4,
-    juni: 5,
-    juli: 6,
-    august: 7,
-    september: 8,
-    oktober: 9,
-    november: 10,
-    dezember: 11,
-  };
-  const monthIndex = monthRaw ? monthMap[monthRaw] : undefined;
-  if (monthIndex === undefined || !Number.isFinite(day) || !Number.isFinite(year)) {
-    return null;
-  }
-
-  const date = new Date(year, monthIndex, day);
-  if (slot) {
-    const [fromRaw] = slot.split("-");
-    const [hoursRaw, minutesRaw] = (fromRaw ?? "").trim().split(":");
-    const hours = Number(hoursRaw);
-    const minutes = Number(minutesRaw);
-    if (Number.isFinite(hours) && Number.isFinite(minutes)) {
-      date.setHours(hours, minutes, 0, 0);
-    }
-  }
-  return date;
-}
 
 function resolveApplicantName(application: WorkspaceApplication): string {
   const userName = application.users[0]?.display_name?.trim();

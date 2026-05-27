@@ -89,7 +89,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 | Mode | Kanon-Status | Verhalten |
 |------|--------------|-----------|
 | `interactive` | `in_review` | Volle Review: Footer-Aktionen (Bestätigen / Anpassung anfordern / Zurücksetzen), Sidebar-Composer, Forward-Button. Draft-Autosave aktiv. |
-| `readonly_consultation` | `consultation_recommendation` | Kompaktes Lesefeld: **nur Blöcke mit Inhalt** werden angezeigt (`compactReadOnlyBlocks`). Keine Footer-Aktionen, leere Kommentarliste mit eigenem Empty-Label. Darunter `RecommendationDraftEditor` als `bottomAction`, solange `releasedHtml` leer ist. |
+| `readonly_consultation` | `consultation_recommendation` | Kompaktes Lesefeld: **nur Blöcke mit Inhalt** werden angezeigt (`compactReadOnlyBlocks`). Keine Footer-Aktionen, leere Kommentarliste mit eigenem Empty-Label. Header: Beratungs-**Callout** + optional **Beratungstermin-Karte** (`6081:24572`, `gap-6`, Live `data.consultation` bei `booked`/`done`). Darunter `RecommendationDraftEditor` als `bottomAction`, solange `releasedHtml` leer ist. |
 | `readonly_adjustment_pending` | `needs_adjustment` | Read-only auf R2-Seite, während R1 die angeforderten Anpassungen vornimmt. Statuszeile statt Buttons. |
 | `readonly_decision` | `in_decision` (Quell-Status u. a. **`in_implementation`**, **`in_decision`**) sowie kanonisch **`approved`** / **`rejected`** | Snapshot / Abschluss: keine Editier-Aktionen; für **`approved`**/**`rejected`** weiterhin Vollansicht mit Toolbar-Zurück. |
 
@@ -109,6 +109,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 | Review-Hauptansicht | `components/domain/workspace-application-review.tsx` | Blockliste links, View Modes, State, Dialoge, Sidebar-Props, debounced Draft-Persist, Forward-Aufruf; Prop **`workspaceViewerRole`** (`R2` \| `R4`) |
 | Seiten-Header | `components/domain/application-review-page-header.tsx` | Geteilt: Titel «Antrag auf Nachteilsausgleich», «Eingereicht am» (`paragraphSmall`), Options-Button |
 | Status-Callout | `components/domain/application-status-callout.tsx` | Hinweiszeile unter dem Header (Badge-Farben aus Status-Meta) |
+| Beratungstermin-Karte | `components/domain/workspace-consultation-appointment-card.tsx` | Nur «Beratung & Empfehlung» ohne `releasedHtml`: unter Callout, `bg-consultation-surface`, Datum/Ort/Beratende Person aus `resolveWorkspaceConsultationAppointment`; Org-Zeilen fest («Fachstelle Studium und Behinderung», «Universität Zürich»); Pfeil → Terminplaner |
 | Review-Block-Tokens | `lib/design-tokens/review-block.ts` | Shell-Klassen, Footer 52px, Composer/Adjustment/Locked-Remark-Band |
 | Bemerkungen-Tokens | `lib/design-tokens/review-bemerkungen.ts` | R1 pending/done (`5858:22820`), R2 Chronik (`5866:2021`) |
 | R1-Block-Footer | `lib/design-tokens/r1-review-block.ts` | R1 Anpassungs-Footer («Anpassung vornehmen», Bearbeiten, Speichern, Zurücksetzen) |
@@ -215,7 +216,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 
 - **`edgeToEdge`** in `role-dashboard-layout.tsx` für Adjustment und Workspace-Detail (kein zusätzliches Shell-`p-6`).
 - Scroll + Inset: **`applicationReviewScrollAreaClass`** (`px-12 pt-12 pb-8`, `applicationReviewSectionGapClass` = `gap-8` zwischen Header-Bereich und Block-Stack) in `lib/design-tokens/application-scroll.ts`.
-- Geteilter Kopf: **`ApplicationReviewPageHeader`** + statusabhängige **`ApplicationStatusCallout`**-Zeilen; Block-Stack in `gap-6`-Sektionen (wie R2-Review und R1-`PortalApplicationAdjustment`).
+- Geteilter Kopf: **`ApplicationReviewPageHeader`** + statusabhängige **`ApplicationStatusCallout`**-Zeilen; bei «Beratung & Empfehlung» ohne Release zusätzlich **`WorkspaceConsultationAppointmentCard`** (`gap-6` zum Callout, Figma `6081:24572`). Block-Stack in `gap-6`-Sektionen (wie R2-Review und R1-`PortalApplicationAdjustment`).
 
 ### R1 — Block-Zustände in `PortalApplicationAdjustment`
 

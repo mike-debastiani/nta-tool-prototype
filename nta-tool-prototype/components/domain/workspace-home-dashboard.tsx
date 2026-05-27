@@ -109,7 +109,6 @@ export function WorkspaceHomeDashboard({
     applications,
     reviewerDisplayName,
     workspaceRole,
-    excludeConsultationPhase: true,
   });
 
   const isR4Home = usesR4OnlyHomeLayout(workspaceRole);

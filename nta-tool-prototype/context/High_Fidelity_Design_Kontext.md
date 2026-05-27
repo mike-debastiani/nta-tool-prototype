@@ -300,7 +300,9 @@ Vollständige Mechanik → **`Antrag_Review_Kontext.md`**, R4 → **`Antrag_Bewi
 | 2026-05-27 | Assigned tasks KPI navigation | `assigned-tasks-summary-card.tsx`: Bucket → `?view=aufgaben&tasksBucket=`; Header-Icon → ungefilterte Meine Aufgaben |
 | 2026-05-27 | Workspace nav + filter badges | Meine Aufgaben: `24×24` Badge (stone-200/primary, aktiv weiss/schwarz; collapsed `left-11`); Filter-Button: `size-6` rund `bg-black` bei aktiven Filtern |
 | 2026-05-27 | Upcoming consultations KPI | `consultations-this-week-summary-card.tsx` + `workspace-consultations-this-week.ts`: Live-Termine, stretch mit KPI-Zeile, ohne «Empfehlung verfasst», Zeilenklick → Antrag (Figma `6051:3607`) |
-| 2026-05-27 | Home applications table scope | `excludeConsultationPhase`: Home «Anträge» ohne Beratungsphase; Meine Aufgaben unverändert |
+| 2026-05-27 | Home applications table scope | Home «Anträge» inkl. Beratungsphase; Hook `excludeConsultationPhase` optional (Default aus) |
+| 2026-05-27 | Consultation appointment in review | `workspace-consultation-appointment-card.tsx` + `workspace-consultation-appointment.ts`: unter Beratungs-Callout (`gap-6`, Figma `6081:24572`), Live `data.consultation`, feste Org-Zeilen unter Beratername |
+| 2026-05-27 | Auswerten placeholder | `workspace-evaluate-view.tsx`: `/workspace?view=auswerten` ohne Inhalt (wie Terminplaner) |
 | 2026-05-27 | Status wording R4 | `in_decision` Audience R4/R2R4: **Entscheid erforderlich** (ersetzt «Entscheid ausstehend» / «In Entscheid» in KPI-Labels) |
 
 ---

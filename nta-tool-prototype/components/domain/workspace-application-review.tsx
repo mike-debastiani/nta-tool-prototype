@@ -30,6 +30,7 @@ import {
 } from "@/components/domain/application-review-detail-sidebar";
 import { ApplicationReviewPageHeader } from "@/components/domain/application-review-page-header";
 import { ApplicationStatusCallout } from "@/components/domain/application-status-callout";
+import { WorkspaceConsultationAppointmentCard } from "@/components/domain/workspace-consultation-appointment-card";
 import { useRegisterDashboardDetailPanel } from "@/components/domain/dashboard-detail-panel-context";
 import { useDashboardScrollRoot } from "@/components/domain/dashboard-main-panel-scroll-context";
 import {
@@ -96,6 +97,7 @@ import {
   definitionShowsLectureCustomMeasures,
 } from "@/lib/measure-custom-lines";
 import { broadcastApplicationRowUpdated } from "@/lib/application-realtime-sync";
+import { resolveWorkspaceConsultationAppointment } from "@/lib/workspace-consultation-appointment";
 import { workspaceReviewPostSubmitHydrationKey } from "@/lib/workspace-review-hydration-key";
 
 type ReviewBlockPhase =
@@ -339,6 +341,16 @@ export function WorkspaceApplicationReview({
   const statusAudience: StatusAudience = workspaceViewerRole;
   const statusMeta = getApplicationStatusMeta(application, statusAudience);
   const r4ReadOnlyCopy = workspaceViewerRole === "R4";
+  const showConsultationAppointment =
+    statusMeta.canonicalState === "consultation_recommendation"
+    && !hasText(data.recommendation?.releasedHtml);
+  const consultationAppointment = useMemo(
+    () =>
+      showConsultationAppointment
+        ? resolveWorkspaceConsultationAppointment(application)
+        : null,
+    [application, showConsultationAppointment],
+  );
   const submittedAtLabel = formatReviewSubmittedAt(data);
   const def = data.applicationDefinition;
   const supabase = useMemo(() => createClient(), []);
@@ -803,26 +815,30 @@ export function WorkspaceApplicationReview({
       >
         <div className="flex flex-col gap-6">
           <ApplicationReviewPageHeader submittedAtLabel={submittedAtLabel} />
-          {statusMeta.canonicalState === "consultation_recommendation"
-          && !hasText(data.recommendation?.releasedHtml) ? (
-            <ApplicationStatusCallout
-              badgeClassName={statusMeta.className}
-              muted={r4ReadOnlyCopy}
-              icon={CircleAlert}
-            >
-              {r4ReadOnlyCopy ? (
-                <>
-                  Sie sehen diese Angaben nur zur Information. Beratung und Empfehlungsschreiben
-                  bearbeitet die Fachstelle.
-                </>
-              ) : (
-                <>
-                  Nach einem erfolgreich durchgeführten Beratungsgespräch ist ein Empfehlungsschreiben
-                  zu verfassen. Sobald Sie dieses freigeben, wird der Antrag für die antragstellende
-                  Person freigeschaltet.
-                </>
-              )}
-            </ApplicationStatusCallout>
+          {showConsultationAppointment ? (
+            <div className="flex flex-col gap-6">
+              <ApplicationStatusCallout
+                badgeClassName={statusMeta.className}
+                muted={r4ReadOnlyCopy}
+                icon={CircleAlert}
+              >
+                {r4ReadOnlyCopy ? (
+                  <>
+                    Sie sehen diese Angaben nur zur Information. Beratung und Empfehlungsschreiben
+                    bearbeitet die Fachstelle.
+                  </>
+                ) : (
+                  <>
+                    Nach einem erfolgreich durchgeführten Beratungsgespräch ist ein Empfehlungsschreiben
+                    zu verfassen. Sobald Sie dieses freigeben, wird der Antrag für die antragstellende
+                    Person freigeschaltet.
+                  </>
+                )}
+              </ApplicationStatusCallout>
+              {consultationAppointment ? (
+                <WorkspaceConsultationAppointmentCard appointment={consultationAppointment} />
+              ) : null}
+            </div>
           ) : null}
           {statusMeta.canonicalState === "consultation_recommendation"
           && hasText(data.recommendation?.releasedHtml) ? (

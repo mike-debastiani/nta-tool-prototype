@@ -21,6 +21,7 @@ import {
   type WorkspaceReviewViewMode,
 } from "@/components/domain/workspace-application-review";
 import { WorkspaceConsultationPlannerView } from "@/components/domain/workspace-consultation-planner-view";
+import { WorkspaceEvaluateView } from "@/components/domain/workspace-evaluate-view";
 import { WorkspaceHomeDashboard } from "@/components/domain/workspace-home-dashboard";
 import { WorkspaceMyTasksView } from "@/components/domain/workspace-my-tasks-view";
 import { workspaceShowsConsultationPlannerView } from "@/lib/workspace-nav-access";
@@ -347,6 +348,10 @@ export function WorkspaceTestFlow({
     const showConsultationPlannerView =
       dashboardView === "terminplaner"
       && workspaceShowsConsultationPlannerView(workspaceRole);
+
+    if (dashboardView === "auswerten") {
+      return <WorkspaceEvaluateView />;
+    }
 
     if (showConsultationPlannerView) {
       return (

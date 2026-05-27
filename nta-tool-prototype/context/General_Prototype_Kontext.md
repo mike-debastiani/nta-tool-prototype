@@ -122,15 +122,18 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `lib/uzh-studiengaenge.ts` | Lookup Studiengang → Fakultät, Kürzel, Studienstufe |
 | `lib/application-assignee.ts` | «Zugewiesen an», Avatare, Prototyp-R2/R4-Namen je Viewer |
 | `lib/workspace-applications-table-controls.ts` | Workspace-Tabelle: Facetten, Pills, Sort, Filter |
-| `components/domain/use-workspace-applications-table-state.ts` | Hook: Offen/Alle, Suche, Filter, Sort; Home optional `excludeConsultationPhase` |
+| `components/domain/use-workspace-applications-table-state.ts` | Hook: Offen/Alle, Suche, Filter, Sort; optional `excludeConsultationPhase` (Default aus) |
 | `components/domain/workspace-applications-table-toolbar.tsx` | Toolbar Home + Meine Aufgaben; aktive Filter: runder schwarzer Count-Badge am Filter-Button |
 | `components/domain/workspace-applications-table-filter-popover.tsx` | Facetten-Filter-Popover |
 | `components/domain/workspace-applications-table-filter-pills.tsx` | Aktive Filter-Chips |
 | `lib/user-initials.ts` | Initialen für Workspace-Avatar aus `display_name` / E-Mail |
 | `components/domain/login-card.tsx` | Student/Staff-Login: Supabase Auth + Profil `users.role`, Redirect |
 | `app/workspace/page.tsx` | `requireUserProfile` R2–R6, `fetchWorkspaceApplicationsList`, `workspaceTasksBadgeCount` (Summe KPI-Aufgaben) |
-| `components/domain/workspace-test-flow.tsx` | Routing: Home / `?view=aufgaben` (+ optional `tasksBucket`) / Review; R2–R4 Home + Meine Aufgaben |
-| `components/domain/workspace-home-dashboard.tsx` | KPI: Bucket→Tabellenfilter, Total→Reset, Aufgaben-Bucket→`tasksBucket`; Home-Tabelle `excludeConsultationPhase` |
+| `components/domain/workspace-test-flow.tsx` | Routing: Home / `?view=aufgaben` / `?view=auswerten` / `?view=terminplaner` (+ optional `tasksBucket`) / Review; R2–R4 Home + Meine Aufgaben |
+| `components/domain/workspace-home-dashboard.tsx` | KPI: Bucket→Tabellenfilter, Total→Reset, Aufgaben-Bucket→`tasksBucket`; Home-Tabelle inkl. Beratungsphase |
+| `components/domain/workspace-evaluate-view.tsx` | `/workspace?view=auswerten` — leerer Platzhalter |
+| `components/domain/workspace-consultation-appointment-card.tsx` | Beratungstermin-Karte in R2-Review (Figma `6081:24572`) |
+| `lib/workspace-consultation-appointment.ts` | Termin-Parsing/Formatierung für Review-Karte + KPI |
 | `components/domain/workspace-my-tasks-view.tsx` | Meine Aufgaben; optional `initialBucketFilter` aus URL |
 | `components/domain/workspace-applications-table.tsx` | Sortierbare Anträge-Tabelle (Home + Meine Aufgaben): responsive Spalten, Studiengang-Umbruch, Name-Umbruch ab 24 Zeichen, Assignee-Avatar |
 | `components/domain/open-applications-summary-card.tsx` | KPI Charts, Tooltips, `onBucketClick`, `onTotalClick`, `onHeaderIconClick` |

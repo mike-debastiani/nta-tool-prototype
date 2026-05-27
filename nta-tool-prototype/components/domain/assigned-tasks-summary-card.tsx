@@ -107,7 +107,7 @@ function AssignedTaskMetricItem({
               className={cn(hfTypography.paragraphSmall, bucket.deltaClass)}
               aria-label={`${bucket.addedToday} heute hinzugekommen`}
             >
-              +{bucket.addedToday}
+              +{bucket.addedToday} heute
             </span>
           ) : null}
         </div>
