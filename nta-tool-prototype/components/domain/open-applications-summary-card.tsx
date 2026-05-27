@@ -118,6 +118,7 @@ type OpenApplicationsSummaryCardProps = {
   onHeaderIconClick?: () => void;
   headerIconAriaLabel?: string;
   onBucketClick?: (bucketId: ApplicationsChartBucketId) => void;
+  onTotalClick?: () => void;
 };
 
 type CombinedSegmentLayout = {
@@ -751,6 +752,7 @@ export function OpenApplicationsSummaryCard({
   onHeaderIconClick,
   headerIconAriaLabel,
   onBucketClick,
+  onTotalClick,
 }: OpenApplicationsSummaryCardProps) {
   const viewOptions = useMemo(
     () =>
@@ -797,12 +799,22 @@ export function OpenApplicationsSummaryCard({
             onValueChange={setView}
             options={viewOptions}
           />
-          <p
-            className="text-[128px] font-semibold leading-none tracking-tight text-foreground"
-            aria-label={totalLabel}
+          <button
+            type="button"
+            onClick={onTotalClick}
+            className={cn(
+              "text-left text-[128px] font-semibold leading-none tracking-tight text-foreground",
+              onTotalClick ? "cursor-pointer" : "cursor-default",
+            )}
+            aria-label={
+              onTotalClick
+                ? `${totalLabel}. Klicken zum Zurücksetzen der Tabellenfilter.`
+                : totalLabel
+            }
+            disabled={!onTotalClick}
           >
             {stats.total}
-          </p>
+          </button>
         </div>
 
         <div className="flex h-full min-h-0 min-w-0 flex-1 items-stretch">

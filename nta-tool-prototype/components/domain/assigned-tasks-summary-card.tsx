@@ -3,7 +3,10 @@
 import { ArrowUpRight } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 
-import type { AssignedTaskBucket } from "@/lib/workspace-assigned-tasks-stats";
+import type {
+  AssignedTaskBucket,
+  AssignedTaskBucketId,
+} from "@/lib/workspace-assigned-tasks-stats";
 import { hfTypography } from "@/lib/design-tokens/typography";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +20,7 @@ type AssignedTasksSummaryCardProps = {
   className?: string;
   onHeaderIconClick?: () => void;
   headerIconAriaLabel?: string;
+  onBucketClick?: (bucketId: AssignedTaskBucketId) => void;
 };
 
 function PrimaryIconLinkButton({
@@ -38,7 +42,13 @@ function PrimaryIconLinkButton({
   );
 }
 
-function AssignedTaskMetricItem({ bucket }: { bucket: AssignedTaskBucket }) {
+function AssignedTaskMetricItem({
+  bucket,
+  onClick,
+}: {
+  bucket: AssignedTaskBucket;
+  onClick?: () => void;
+}) {
   const itemRef = useRef<HTMLDivElement>(null);
   const [metricFontPx, setMetricFontPx] = useState(METRIC_FONT_MAX_PX);
   const [labelFontPx, setLabelFontPx] = useState(LABEL_FONT_MAX_PX);
@@ -66,12 +76,17 @@ function AssignedTaskMetricItem({ bucket }: { bucket: AssignedTaskBucket }) {
   }, []);
 
   return (
-    <div
+    <button
+      type="button"
       ref={itemRef}
       className={cn(
-        "flex min-h-0 flex-1 flex-col justify-end rounded-xl p-4",
+        "flex min-h-0 flex-1 flex-col justify-end rounded-xl p-4 text-left",
+        onClick ? "cursor-pointer" : "cursor-default",
         bucket.surfaceClass,
       )}
+      onClick={onClick}
+      disabled={!onClick}
+      aria-label={onClick ? `${bucket.label} filtern` : undefined}
     >
       <div className="flex flex-col items-start gap-3">
         <p
@@ -97,7 +112,7 @@ function AssignedTaskMetricItem({ bucket }: { bucket: AssignedTaskBucket }) {
           ) : null}
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -107,6 +122,7 @@ export function AssignedTasksSummaryCard({
   className,
   onHeaderIconClick,
   headerIconAriaLabel,
+  onBucketClick,
 }: AssignedTasksSummaryCardProps) {
   return (
     <div
@@ -128,7 +144,11 @@ export function AssignedTasksSummaryCard({
 
       <div className="flex min-h-0 flex-1 flex-col gap-4">
         {buckets.map((bucket) => (
-          <AssignedTaskMetricItem key={bucket.id} bucket={bucket} />
+          <AssignedTaskMetricItem
+            key={bucket.id}
+            bucket={bucket}
+            onClick={onBucketClick ? () => onBucketClick(bucket.id) : undefined}
+          />
         ))}
       </div>
     </div>

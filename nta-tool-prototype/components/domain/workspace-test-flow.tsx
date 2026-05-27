@@ -27,6 +27,7 @@ import { workspaceShowsConsultationPlannerView } from "@/lib/workspace-nav-acces
 import { WorkspaceR4DecisionView } from "@/components/domain/workspace-r4-decision-view";
 import { RichTextEditor } from "@/components/domain/rich-text-editor";
 import { type UserRole } from "@/lib/auth";
+import type { AssignedTaskBucketId } from "@/lib/workspace-assigned-tasks-stats";
 import {
   hasR4WorkspaceCapabilities,
   statusAudienceForWorkspaceApplication,
@@ -76,7 +77,14 @@ export function WorkspaceTestFlow({
   }, []);
 
   const dashboardView = searchParams.get("view");
+  const tasksBucketParam = searchParams.get("tasksBucket");
   const selectedApplicationParam = searchParams.get("application");
+  const selectedTasksBucket: AssignedTaskBucketId | null =
+    tasksBucketParam === "beratungen"
+    || tasksBucketParam === "reviews"
+    || tasksBucketParam === "entscheidungen"
+      ? tasksBucketParam
+      : null;
 
   const updateWorkspaceQuery = useCallback(
     (
@@ -353,6 +361,7 @@ export function WorkspaceTestFlow({
           applications={applications}
           workspaceRole={workspaceRole}
           onSelectApplication={handleSelectApplication}
+          initialBucketFilter={selectedTasksBucket}
         />
       );
     }

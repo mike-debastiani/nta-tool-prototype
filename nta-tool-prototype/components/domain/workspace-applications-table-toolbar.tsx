@@ -131,7 +131,7 @@ export function WorkspaceApplicationsTableToolbar({
               <Filter className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
               Filter
               {activeFilterCount > 0 ? (
-                <span className="ml-0.5 flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 py-px text-[10px] font-semibold leading-none text-primary-foreground">
+                <span className="ml-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-black text-[10px] font-semibold leading-none text-white">
                   {activeFilterCount}
                 </span>
               ) : null}

@@ -122,19 +122,21 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `lib/uzh-studiengaenge.ts` | Lookup Studiengang → Fakultät, Kürzel, Studienstufe |
 | `lib/application-assignee.ts` | «Zugewiesen an», Avatare, Prototyp-R2/R4-Namen je Viewer |
 | `lib/workspace-applications-table-controls.ts` | Workspace-Tabelle: Facetten, Pills, Sort, Filter |
-| `components/domain/use-workspace-applications-table-state.ts` | Hook: Offen/Alle, Suche, Filter, Sort → Tabellenzeilen |
-| `components/domain/workspace-applications-table-toolbar.tsx` | Toolbar Home + Meine Aufgaben |
+| `components/domain/use-workspace-applications-table-state.ts` | Hook: Offen/Alle, Suche, Filter, Sort; Home optional `excludeConsultationPhase` |
+| `components/domain/workspace-applications-table-toolbar.tsx` | Toolbar Home + Meine Aufgaben; aktive Filter: runder schwarzer Count-Badge am Filter-Button |
 | `components/domain/workspace-applications-table-filter-popover.tsx` | Facetten-Filter-Popover |
 | `components/domain/workspace-applications-table-filter-pills.tsx` | Aktive Filter-Chips |
 | `lib/user-initials.ts` | Initialen für Workspace-Avatar aus `display_name` / E-Mail |
 | `components/domain/login-card.tsx` | Student/Staff-Login: Supabase Auth + Profil `users.role`, Redirect |
-| `app/workspace/page.tsx` | `requireUserProfile` R2–R6, `fetchWorkspaceApplicationsList`, `initialsFromProfile`, `WorkspaceTestFlow` |
-| `components/domain/workspace-test-flow.tsx` | Routing: Home / `?view=aufgaben` / Review; R2–R4 Home + Meine Aufgaben; R5/R6 Inbox |
-| `components/domain/workspace-home-dashboard.tsx` | Workspace-Home: KPI-Zeile, Anträge-Toolbar, Maximize, KPI-Icon-Navigation |
-| `components/domain/workspace-my-tasks-view.tsx` | `/workspace?view=aufgaben` — gefilterte Aufgaben-Tabelle |
+| `app/workspace/page.tsx` | `requireUserProfile` R2–R6, `fetchWorkspaceApplicationsList`, `workspaceTasksBadgeCount` (Summe KPI-Aufgaben) |
+| `components/domain/workspace-test-flow.tsx` | Routing: Home / `?view=aufgaben` (+ optional `tasksBucket`) / Review; R2–R4 Home + Meine Aufgaben |
+| `components/domain/workspace-home-dashboard.tsx` | KPI: Bucket→Tabellenfilter, Total→Reset, Aufgaben-Bucket→`tasksBucket`; Home-Tabelle `excludeConsultationPhase` |
+| `components/domain/workspace-my-tasks-view.tsx` | Meine Aufgaben; optional `initialBucketFilter` aus URL |
 | `components/domain/workspace-applications-table.tsx` | Sortierbare Anträge-Tabelle (Home + Meine Aufgaben): responsive Spalten, Studiengang-Umbruch, Name-Umbruch ab 24 Zeichen, Assignee-Avatar |
-| `components/domain/open-applications-summary-card.tsx` | KPI Charts; optional `onHeaderIconClick`, `allowedViews` (R4 nur Vertikal/Horizontal) |
-| `components/domain/assigned-tasks-summary-card.tsx` | KPI «Zugewiesene Aufgaben»; optional `onHeaderIconClick` → Meine Aufgaben |
+| `components/domain/open-applications-summary-card.tsx` | KPI Charts, Tooltips, `onBucketClick`, `onTotalClick`, `onHeaderIconClick` |
+| `components/domain/assigned-tasks-summary-card.tsx` | KPI Aufgaben; `onBucketClick` → gefilterte Meine Aufgaben; Header-Icon ungefiltert |
+| `components/domain/consultations-this-week-summary-card.tsx` | KPI «Anstehende Beratungen»; Live-Termine, stretch mit KPI-Zeile, Zeilenklick → Antrag |
+| `lib/workspace-consultations-this-week.ts` | `computeConsultationsThisWeek` — Beratungsphase ohne «Empfehlung verfasst» |
 | `components/domain/student-dashboard.tsx` | R1 Home «Meine Anträge»: Cards/Table-Toggle, Live-Polling, Utility-Spalte |
 | `components/domain/r1-application-card.tsx` | Statuskodierte R1-Antragkarte mit Progress-Stepper (klickbare Karte) |
 | `components/domain/r1-applications-table.tsx` | R1-Tabellenansicht (`table-fixed`, Spaltenverteilung); `r1-application-status-pill.tsx` |
@@ -152,7 +154,7 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `lib/r1-adjustment-release.ts` | Regeln und Builder für Post-Submit nach R1-Freigabe |
 | `lib/workspace-review-hydration-key.ts` | Fingerprint für wiederholtes `in_review` (R2-UI) |
 | `lib/application-realtime-sync.ts` | Broadcast-Helfer nach mutierenden Schritten |
-| `components/domain/workspace-dashboard-shell.tsx` | **Dashboard Core:** `DashboardShell`, Portal/Workspace-Varianten, Sidebar-Collapse, Top-Bar + Antragdetails-Panel (sofort sichtbar; Morph optional → `Dashboard_Core_Layout_Kontext.md`) |
+| `components/domain/workspace-dashboard-shell.tsx` | **Dashboard Core:** Shell, Sidebar-Collapse, Meine-Aufgaben-Badge (24px, collapsed `left-11`), Top-Bar + Antragdetails-Panel |
 | `components/domain/role-dashboard-layout.tsx` | Router: R1 → Portal-Shell; R2–R6 → Workspace-Shell; `showTopBar` auf `/portal/antragserstellung` |
 | `components/domain/portal-dashboard-toolbar-context.tsx` | Portal-Top-Bar-Slots (Zurück, Trailing) |
 | `components/domain/workspace-r2-toolbar-context.tsx` | Workspace-Top-Bar `leadingSlot` (z. B. Zurück zur Liste) |
@@ -187,7 +189,7 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `lib/design-tokens/r1-form.ts` | HF-Formular: Choice-Karten, eingebettetes Input, Select-Trigger |
 | `lib/design-tokens/typography.ts` | `hfTypography.*` für HF-Typo-Bundles |
 | `lib/design-tokens/grid.ts` | Grid-Konstanten + `hfGridCellClass()` |
-| `lib/application-status.ts` | Zentrale Status-Ableitung für Badges |
+| `lib/application-status.ts` | Zentrale Status-Ableitung; `hasReleasedRecommendation`, `isConsultationPhaseApplication` |
 | `lib/test-flow-types.ts` | Typisierung `ApplicationData` / Prototyp-JSON (inkl. `recommendation.draftHtml`/`releasedHtml`/`releasedBy`, `r1AdjustmentResolutions`, `workspaceReview`) |
 | `lib/r2-review-persist.ts` | Helfer für trigger-konforme R2-Saves |
 | `lib/r4-decision-state.ts` | R4 Merge, Freitext-`proposal:*`-Zeilen, `materializeApprovedR4DecisionReview`, Client-Reconcile |

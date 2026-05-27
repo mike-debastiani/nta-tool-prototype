@@ -208,17 +208,60 @@ type ApplicationFormFieldErrors = {
 
 const INITIAL_BOOKING_MONTH = new Date(2026, 4, 1);
 const INITIAL_BOOKING_DATE = new Date(2026, 4, 14);
-const BOOKING_SLOTS = [
-  "09:30 - 10:30",
-  "10:30 - 11:30",
-  "11:30 - 12:30",
-  "12:30 - 13:30",
-  "13:30 - 14:30",
-  "14:30 - 15:30",
-  "15:30 - 16:30",
-];
-const MOCK_LOCATION = "Hauptgebäude, Raum 402, Beispielstrasse 12, 8080 Beispilien";
+type BookingMode = "onsite";
+type BookingSlotOption = {
+  value: string;
+  mode: BookingMode;
+  location: string;
+};
+
+const BOOKING_SLOT_OPTIONS: BookingSlotOption[] = [
+  {
+    value: "09:30 - 10:30",
+    mode: "onsite",
+    location: "UZH Gebäude SBO, Raum E-103, Schönbergstrasse 15, 8001 Zürich",
+  },
+  {
+    value: "10:30 - 11:30",
+    mode: "onsite",
+    location: "UZH Gebäude SBO, Raum E-103, Schönbergstrasse 15, 8001 Zürich",
+  },
+  {
+    value: "11:30 - 12:30",
+    mode: "onsite",
+    location: "UZH Gebäude SBO, Raum E-103, Schönbergstrasse 15, 8001 Zürich",
+  },
+  {
+    value: "12:30 - 13:30",
+    mode: "onsite",
+    location: "UZH Gebäude SBO, Raum E-103, Schönbergstrasse 15, 8001 Zürich",
+  },
+  {
+    value: "13:30 - 14:30",
+    mode: "onsite",
+    location: "UZH Gebäude SBO, Raum E-103, Schönbergstrasse 15, 8001 Zürich",
+  },
+  {
+    value: "14:30 - 15:30",
+    mode: "onsite",
+    location: "UZH Gebäude SBO, Raum E-103, Schönbergstrasse 15, 8001 Zürich",
+  },
+  {
+    value: "15:30 - 16:30",
+    mode: "onsite",
+    location: "UZH Gebäude SBO, Raum E-103, Schönbergstrasse 15, 8001 Zürich",
+  },
+] as const;
+
+const BOOKING_SLOTS = BOOKING_SLOT_OPTIONS.map((option) => option.value);
 const MOCK_ADVISOR = "Frau Dr. Suzanne Beispiel";
+
+function resolveBookingSlotOption(slot: string): BookingSlotOption {
+  return (
+    BOOKING_SLOT_OPTIONS.find((option) => option.value === slot) ??
+    BOOKING_SLOT_OPTIONS[0]
+  );
+}
 
 const SEMESTER_NUMBERS = Array.from({ length: 12 }, (_, i) => i + 1);
 
@@ -1117,6 +1160,8 @@ export function NtaAntragDesktop({
     month: "long",
     year: "numeric",
   });
+  const selectedBookingOption = resolveBookingSlotOption(selectedBookingSlot);
+  const selectedBookingLocationLines = selectedBookingOption.location.split(", ");
   const monthStart = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth(), 1);
   const gridStart = new Date(monthStart);
   gridStart.setDate(1 - monthStart.getDay());
@@ -1177,8 +1222,10 @@ export function NtaAntragDesktop({
           consultation: {
             status: "booked",
             date: bookingDateLabel,
+            dateIso: selectedBookingDate.toISOString(),
             slot: selectedBookingSlot,
-            location: MOCK_LOCATION,
+            location: selectedBookingOption.location,
+            locationType: selectedBookingOption.mode,
             advisor: MOCK_ADVISOR,
           },
           recommendation: {
@@ -1239,8 +1286,11 @@ export function NtaAntragDesktop({
         ...(application?.data?.consultation ?? {}),
         status: "done" as const,
         date: application?.data?.consultation?.date ?? bookingDateLabel,
+        dateIso: application?.data?.consultation?.dateIso ?? selectedBookingDate.toISOString(),
         slot: application?.data?.consultation?.slot ?? selectedBookingSlot,
-        location: application?.data?.consultation?.location ?? MOCK_LOCATION,
+        location: application?.data?.consultation?.location ?? selectedBookingOption.location,
+        locationType:
+          application?.data?.consultation?.locationType ?? selectedBookingOption.mode,
         advisor: application?.data?.consultation?.advisor ?? MOCK_ADVISOR,
       },
       recommendation: {
@@ -1313,7 +1363,7 @@ export function NtaAntragDesktop({
     || "NTA Fachstelle";
   const bookedSlot = application?.data?.consultation?.slot ?? selectedBookingSlot;
   const bookedAdvisor = application?.data?.consultation?.advisor ?? MOCK_ADVISOR;
-  const bookedLocation = application?.data?.consultation?.location ?? MOCK_LOCATION;
+  const bookedLocation = application?.data?.consultation?.location ?? selectedBookingOption.location;
   const bookedLocationLines = bookedLocation.split(", ");
   const bookedAppointmentDateLine = selectedBookingDate.toLocaleDateString("de-CH", {
     weekday: "long",
@@ -2242,7 +2292,7 @@ export function NtaAntragDesktop({
                     calendarDays={calendarDays}
                     bookingDateLabel={bookingDateLabel}
                     bookingTimeLabel={`${selectedBookingSlot.replace(" - ", " – ")} Uhr`}
-                    locationLines={MOCK_LOCATION.split(", ")}
+                    locationLines={selectedBookingLocationLines}
                     markerDate={INITIAL_BOOKING_DATE}
                     error={stepThreeError}
                   />

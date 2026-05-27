@@ -2,9 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
-import { ArrowUpRight, Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2 } from "lucide-react";
 
 import { AssignedTasksSummaryCard } from "@/components/domain/assigned-tasks-summary-card";
+import { ConsultationsThisWeekSummaryCard } from "@/components/domain/consultations-this-week-summary-card";
 import {
   OpenApplicationsSummaryCard,
   type ApplicationsChartBucketId,
@@ -12,7 +13,6 @@ import {
 import { useWorkspaceApplicationsTableState } from "@/components/domain/use-workspace-applications-table-state";
 import { WorkspaceApplicationsTable } from "@/components/domain/workspace-applications-table";
 import { WorkspaceApplicationsTableToolbar } from "@/components/domain/workspace-applications-table-toolbar";
-import { hfConsultationStatusSurfaceClass } from "@/lib/design-tokens/status-badge-colors";
 import { hfTypography } from "@/lib/design-tokens/typography";
 import {
   WORKSPACE_HOME_KPI_CARD_CLASS,
@@ -28,6 +28,7 @@ import {
   type CanonicalApplicationState,
 } from "@/lib/application-status";
 import { type UserRole } from "@/lib/auth";
+import type { AssignedTaskBucketId } from "@/lib/workspace-assigned-tasks-stats";
 import {
   isCombinedR2R4Role,
   usesR4OnlyHomeLayout,
@@ -35,6 +36,7 @@ import {
 import { type WorkspaceApplication } from "@/lib/test-flow-types";
 import { computeAssignedTasksStats } from "@/lib/workspace-assigned-tasks-stats";
 import { computeOpenApplicationsStats } from "@/lib/workspace-open-applications-stats";
+import { EMPTY_WORKSPACE_TABLE_COLUMN_FILTERS } from "@/lib/workspace-applications-table-controls";
 import { cn } from "@/lib/utils";
 
 type WorkspaceHomeDashboardProps = {
@@ -65,32 +67,6 @@ function formatHomeDate(d: Date): string {
     month: "long",
     year: "numeric",
   });
-}
-
-const mockAppointments = [
-  { date: "Dienstag, 11. Juli", time: "08:15", name: "Jaquline Beispielien", room: "Zimmer 404" },
-  { date: "Dienstag, 11. Juli", time: "08:15", name: "Jaquline Beispielien", room: "Zimmer 404" },
-  { date: "Dienstag, 11. Juli", time: "08:15", name: "Jaquline Beispielien", room: "Zimmer 404" },
-  { date: "Dienstag, 11. Juli", time: "08:15", name: "Jaquline Beispielien", room: "Zimmer 404" },
-] as const;
-
-function PrimaryIconLinkButton({
-  onClick,
-  ariaLabel = "Details öffnen",
-}: {
-  onClick?: () => void;
-  ariaLabel?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90"
-      aria-label={ariaLabel}
-    >
-      <ArrowUpRight className="size-4" strokeWidth={1.75} aria-hidden />
-    </button>
-  );
 }
 
 function TablePanelToggleButton({
@@ -133,6 +109,7 @@ export function WorkspaceHomeDashboard({
     applications,
     reviewerDisplayName,
     workspaceRole,
+    excludeConsultationPhase: true,
   });
 
   const isR4Home = usesR4OnlyHomeLayout(workspaceRole);
@@ -148,6 +125,13 @@ export function WorkspaceHomeDashboard({
   const openMyTasks = useCallback(() => {
     router.push("/workspace?view=aufgaben");
   }, [router]);
+
+  const openMyTasksWithBucketFilter = useCallback(
+    (bucketId: AssignedTaskBucketId) => {
+      router.push(`/workspace?view=aufgaben&tasksBucket=${bucketId}`);
+    },
+    [router],
+  );
 
   const openAppointmentPlanner = useCallback(() => {
     router.push("/workspace?view=terminplaner");
@@ -184,6 +168,11 @@ export function WorkspaceHomeDashboard({
     [tableState, workspaceRole],
   );
 
+  const resetApplicationsTableFilters = useCallback(() => {
+    tableState.setColumnFilters(EMPTY_WORKSPACE_TABLE_COLUMN_FILTERS);
+    tableState.setOpenAllFilter(usesR4OnlyHomeLayout(workspaceRole) ? "all" : "open");
+  }, [tableState, workspaceRole]);
+
   const openApplicationsStats = useMemo(
     () => computeOpenApplicationsStats(applications),
     [applications],
@@ -204,7 +193,12 @@ export function WorkspaceHomeDashboard({
   );
 
   const kpiRow = (
-    <div className={cn("flex items-stretch", WORKSPACE_HOME_KPI_ROW_GAP_CLASS)}>
+    <div
+      className={cn(
+        "flex w-full min-w-0 items-stretch",
+        WORKSPACE_HOME_KPI_ROW_GAP_CLASS,
+      )}
+    >
         {isR4Home ? (
           <>
             <OpenApplicationsSummaryCard
@@ -216,12 +210,14 @@ export function WorkspaceHomeDashboard({
               onHeaderIconClick={maximizeApplicationsTable}
               headerIconAriaLabel="Anträge-Tabelle maximieren"
               onBucketClick={handleOpenApplicationsBucketClick}
+              onTotalClick={resetApplicationsTableFilters}
             />
             <AssignedTasksSummaryCard
               buckets={assignedTasksStats.buckets}
               className={WORKSPACE_HOME_R4_TASKS_CARD_CLASS}
               onHeaderIconClick={openMyTasks}
               headerIconAriaLabel="Meine Aufgaben öffnen"
+              onBucketClick={openMyTasksWithBucketFilter}
             />
           </>
         ) : (
@@ -234,6 +230,7 @@ export function WorkspaceHomeDashboard({
               }
               headerIconAriaLabel="Anträge-Tabelle maximieren"
               onBucketClick={handleOpenApplicationsBucketClick}
+              onTotalClick={resetApplicationsTableFilters}
             />
             <AssignedTasksSummaryCard
               buckets={assignedTasksStats.buckets}
@@ -244,60 +241,14 @@ export function WorkspaceHomeDashboard({
               }
               onHeaderIconClick={openMyTasks}
               headerIconAriaLabel="Meine Aufgaben öffnen"
+              onBucketClick={openMyTasksWithBucketFilter}
             />
-            <div
-              className={cn(
-                WORKSPACE_HOME_KPI_CARD_CLASS,
-                cn("flex flex-col gap-4 rounded-xl p-6", hfConsultationStatusSurfaceClass),
-              )}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <p className={cn(hfTypography.paragraphLargeMedium, "text-foreground")}>
-                  Beratungen dieser Woche
-                </p>
-                <PrimaryIconLinkButton
-                  onClick={openAppointmentPlanner}
-                  ariaLabel="Beratungen planen öffnen"
-                />
-              </div>
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-                {mockAppointments.map((row, index) => (
-                  <div
-                    key={`${row.date}-${index}`}
-                    className="flex items-stretch border-b border-stone-300 last:border-b-0"
-                  >
-                    <div className="flex w-[113px] shrink-0 flex-col justify-center gap-0.5 px-2 py-2">
-                      <p className={cn(hfTypography.paragraphMini, "text-muted-foreground")}>
-                        {row.date}
-                      </p>
-                      <p className={cn(hfTypography.paragraphMiniMedium, "text-foreground")}>
-                        {row.time}
-                      </p>
-                    </div>
-                    <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 px-2 py-2">
-                      <p
-                        className={cn(
-                          hfTypography.paragraphMiniMedium,
-                          "truncate text-foreground",
-                        )}
-                      >
-                        {row.name}
-                      </p>
-                      <p className={cn(hfTypography.paragraphMini, "text-muted-foreground")}>
-                        {row.room}
-                      </p>
-                    </div>
-                    <div className="flex w-6 shrink-0 items-center justify-center py-2">
-                      <ArrowUpRight
-                        className="size-4 text-foreground-alt"
-                        strokeWidth={1.75}
-                        aria-hidden
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ConsultationsThisWeekSummaryCard
+              className={WORKSPACE_HOME_KPI_CARD_CLASS}
+              applications={applications}
+              onHeaderIconClick={openAppointmentPlanner}
+              onSelectApplication={onSelectApplication}
+            />
           </>
         )}
     </div>
@@ -334,7 +285,7 @@ export function WorkspaceHomeDashboard({
           )}
           aria-hidden={isTableMaximized}
         >
-          <div className="min-h-0 overflow-hidden">{kpiRow}</div>
+          <div className="flex min-h-0 overflow-hidden">{kpiRow}</div>
         </div>
       ) : (
         kpiRow

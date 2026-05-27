@@ -29,15 +29,17 @@ DashboardShell (intern)
 | `components/domain/dashboard-main-panel-scroll-context.tsx` | Optional: Page registriert eigenes Scroll-Element (`edgeToEdge`-Review), Shell misst `scrollHeight` dort |
 | `components/domain/portal-dashboard-toolbar-context.tsx` | Slots für Portal-Top-Bar (Zurück, optional Trailing z. B. Autosave) |
 | `components/domain/workspace-r2-toolbar-context.tsx` | Slot für Workspace-Top-Bar links (z. B. «Zurück zur Liste») |
-| `components/domain/workspace-home-dashboard.tsx` | Workspace-Home (Figma `5509:11682`); KPI-Zeile live; Anträge-Panel mit Toolbar |
+| `components/domain/workspace-home-dashboard.tsx` | Workspace-Home (Figma `5509:11682`); KPI-Zeile live inkl. «Anstehende Beratungen»; Anträge ohne Beratungsphase |
 | `components/domain/workspace-my-tasks-view.tsx` | `/workspace?view=aufgaben` — vorab gefilterte Aufgaben + gleiche Tabellen-Toolbar |
-| `components/domain/use-workspace-applications-table-state.ts` | Shared State: Offen/Alle (nur Home), Suche, Facetten, Sortierung → `displayedRows` |
+| `components/domain/use-workspace-applications-table-state.ts` | Shared State: Offen/Alle (nur Home), Suche, Facetten, Sortierung; Home optional `excludeConsultationPhase` |
 | `components/domain/workspace-applications-table-toolbar.tsx` | Suche, Offen/Alle-Toggle (Home), Filter-Popover, aktive Pills |
 | `components/domain/workspace-applications-table-filter-popover.tsx` | Facettierte Filter (Status, Studiengang, Fakultät, Zugewiesen an, «Nur mir») |
 | `components/domain/workspace-applications-table-filter-pills.tsx` | Entfernbare Filter-Chips |
 | `components/domain/workspace-applications-table.tsx` | Sortierbare Tabelle inkl. Fakultäts-Kürzel, Assignee-Avatar |
-| `components/domain/open-applications-summary-card.tsx` | KPI «Offene Antragsverfahren» (Chart-Ansichten, Live-Stats) |
-| `components/domain/assigned-tasks-summary-card.tsx` | KPI «Zugewiesene Aufgaben»; `+N` = heute neu (ohne sichtbares «heute») |
+| `components/domain/open-applications-summary-card.tsx` | KPI Charts; Tooltips; `onBucketClick` → Statusfilter Tabelle; `onTotalClick` → Filter zurücksetzen |
+| `components/domain/assigned-tasks-summary-card.tsx` | KPI «Zugewiesene Aufgaben»; `onBucketClick` → `?view=aufgaben&tasksBucket=…`; Header-Icon → ungefilterte Meine Aufgaben |
+| `components/domain/consultations-this-week-summary-card.tsx` | KPI «Anstehende Beratungen» (Figma `6051:3607`); Live-Liste, Zeilenklick → Antrag; Kalender-Icon → Terminplaner |
+| `lib/workspace-consultations-this-week.ts` | `computeConsultationsThisWeek` — Beratungsphase + gebuchter Termin, ohne «Empfehlung verfasst» |
 | `lib/workspace-applications-table-controls.ts` | Facetten, Pills, Sort, Spaltenfilter |
 | `lib/workspace-assigned-tasks-stats.ts` | KPI + `filterMyTasksApplications` / `isApplicationInMyTasksForRole` |
 | `lib/workspace-applications-list.ts` | Server-Liste; R4: Session + RLS + Status-Whitelist (kein Service-Role) |
@@ -135,7 +137,10 @@ Beim **Aufklappen:** `layoutMini` sofort `false`, dann `collapsed` → `false` (
 - Label: `opacity`-Transition 300ms; bei `layoutMini` aus dem Flow genommen.
 - **Aktiv (Portal + Workspace):** `DASHBOARD_NAV_ITEM_ACTIVE_CLASS` — `bg-primary`, `rounded-[7px]`, Icons erben `text-primary-foreground`; Label **`DASHBOARD_NAV_ITEM_ACTIVE_LABEL_CLASS`** (`text-hf-paragraph-small-medium text-primary-foreground`) — **nicht** `hfTypography.paragraphSmallMedium` (enthält `text-foreground-alt` und würde den Kontrast killen). Figma: `5509:11682`.
 - **Inaktiv:** `DASHBOARD_NAV_ITEM_IDLE_CLASS` — `text-foreground-alt`, Hover `stone-150/80`.
-- Badge (nur Workspace «Meine Aufgaben»): bei `collapsed`/`layoutMini` per `opacity-0` ausgeblendet, bleibt im DOM (auch im aktiven Zustand weiter `bg-stone-150`).
+- **Badge «Meine Aufgaben»** (nur Workspace): Summe aller zugewiesenen Aufgaben (ungefiltert), berechnet in `app/workspace/page.tsx` via `computeAssignedTasksStats` → `workspaceTasksBadgeCount` → `RoleDashboardLayout` → `WorkspaceDashboardShell`.
+  - **Aufgeklappt:** `24×24px` rund, `bg-stone-200`, Zahl `text-primary`, rechts im Nav-Item (`ml-auto`).
+  - **Aktiv:** Badge `bg-white`, Zahl `text-black` (Primary-Nav-Hintergrund).
+  - **Eingeklappt:** zweites Badge-Element absolut, rechts neben dem 40×40-Icon-Slot (`left-11`, vertikal zentriert) — besser lesbar als Overlay oben rechts am Icon.
 
 ### Navigation — Inhalte
 
@@ -153,7 +158,7 @@ Beim **Aufklappen:** `layoutMini` sofort `false`, dann `collapsed` → `false` (
 | Eintrag | Route |
 |---------|--------|
 | Home | `/workspace` |
-| Meine Aufgaben | `/workspace?view=aufgaben` (+ optional Badge) |
+| Meine Aufgaben | `/workspace?view=aufgaben` — Badge = Gesamtanzahl Aufgaben (s. oben) |
 | Beratungen planen | `/workspace?view=terminplaner` — **R2, R3, R2R4** (Sidebar via `lib/workspace-nav-access.ts`); **R4** ohne Eintrag; Platzhalter `WorkspaceConsultationPlannerView` (`stone-50`, noch ohne Inhalt) |
 | Auswerten | `/workspace?view=auswerten` |
 | Einstellungen / Hilfe | `?view=einstellungen` / `?view=hilfe` |
@@ -243,9 +248,9 @@ WorkspaceTestFlow(applications, workspaceRole, reviewerDisplayName)
 
 | Ansicht | Vorfilter auf Rohliste | Offen/Alle | Zuweisungs-Filter |
 |---------|------------------------|------------|-------------------|
-| **Home «Anträge»** (R2/R3) | Keiner — alle RLS-sichtbaren Anträge | Ja, Default **Offen** (`≠ approved/rejected`) | Nein (optional Toolbar «Nur mir zugewiesen») |
+| **Home «Anträge»** (R2/R3) | Keiner — alle RLS-sichtbaren Anträge; **ohne Beratungsphase** (`excludeConsultationPhase`: «Beratung & Empfehlung» + «Empfehlung verfasst») | Ja, Default **Offen** (`≠ approved/rejected`) | Nein (optional Toolbar «Nur mir zugewiesen») |
 | **Meine Aufgaben** (R2/R3) | `filterMyTasksApplications` (Status + Name-Match) | Nein | Im Vorfilter fest |
-| **Home** (R4) | RLS Fakultät + Client-Status-Whitelist | Default **Alle** | Wie R2/R3 |
+| **Home** (R4) | RLS Fakultät + Client-Status-Whitelist; **ohne Beratungsphase** | Default **Alle** | Wie R2/R3 |
 
 **R2 Meine Aufgaben:** `consultation_recommendation` (ohne freigegebene Empfehlung) oder `in_review`, Assignee = eingeloggtes R2. **R3 Meine Aufgaben:** nur `in_decision`, Assignee = eingeloggtes R3/R4-Konto.
 
@@ -253,9 +258,20 @@ WorkspaceTestFlow(applications, workspaceRole, reviewerDisplayName)
 
 | Rolle | Layout erste Zeile | KPI-Karten |
 |-------|-------------------|------------|
-| **R2, R3** | 3× `WORKSPACE_HOME_KPI_CARD_CLASS` (`flex-1`, `min-h-[220px]`, `gap-6`) | Offene Antragsverfahren · Zugewiesene Aufgaben · Beratungen diese Woche (Mock) |
+| **R2, R3** | 3× `WORKSPACE_HOME_KPI_CARD_CLASS` (`flex-1`, `min-h-[220px]`, `gap-6`, `items-stretch`) | Offene Antragsverfahren · Zugewiesene Aufgaben · **Anstehende Beratungen** (Live) |
 | **R4** | `WORKSPACE_HOME_R4_OPEN_CARD_CLASS` (7/10) + `WORKSPACE_HOME_R4_TASKS_CARD_CLASS` (3/10), je **`h-[320px]`** | Alle Anträge · Zugewiesene Aufgaben |
-| **R2R4** | Wie R2/R3-Zeile; «Zugewiesene Aufgaben» mit `WORKSPACE_HOME_R2R4_ASSIGNED_TASKS_CARD_CLASS` (`w-[319px]`) | Offene Antragsverfahren · Zugewiesene Aufgaben (3 Buckets) · Beratungen diese Woche (Mock) |
+| **R2R4** | Wie R2/R3-Zeile; «Zugewiesene Aufgaben» mit `WORKSPACE_HOME_R2R4_ASSIGNED_TASKS_CARD_CLASS` (`w-[319px]`) | Offene Antragsverfahren · Zugewiesene Aufgaben (3 Buckets) · **Anstehende Beratungen** (Live) |
+
+**KPI «Anstehende Beratungen»** (nur R2/R3/R2R4) — `lib/workspace-consultations-this-week.ts` + `ConsultationsThisWeekSummaryCard`:
+
+| Aspekt | Regel |
+|--------|--------|
+| **Datenquelle** | `applications[]`; kanonisch `consultation_recommendation`, Beratung `booked`/`done`, parsebares Datum (`dateIso` + Slot oder Fallback `consultation.date`) |
+| **Ausgeschlossen** | «Empfehlung verfasst» (`hasReleasedRecommendation` / `recommendation.releasedHtml`) |
+| **Sortierung** | Terminbeginn aufsteigend (inkl. **vergangene** Termine, solange Status noch Beratungsphase) |
+| **Anzeige** | Zeilenanzahl dynamisch per `ResizeObserver` (56px/Zeile); Karte **streckt** mit KPI-Zeile; letzte Zeile ohne `border-b` |
+| **Ort (Kurzlabel)** | «Gebäude SBO, Raum E-103» |
+| **Interaktion** | Zeilenklick → `onSelectApplication`; Kalender-Icon → `/workspace?view=terminplaner` |
 
 **KPI «Offene Antragsverfahren» (R2/R3)** — `lib/workspace-open-applications-stats.ts`: Total und Balken nur **`in_review`**, **`needs_adjustment`**, **`in_decision`** (kein `consultation_recommendation` im Total).
 
@@ -315,13 +331,19 @@ Credentials: mit Testpersonen abgestimmt (nicht in Repo). Login **`/staff/login`
 
 **KPI-Delta `+N`:** `addedToday` = Anträge im Bucket mit `submittedAt` bzw. `updated_at` auf heutigem Kalendertag (de-CH). UI nur `+N` (kein «heute»-Suffix); Bedeutung per `aria-label`.
 
-**KPI Icon-Buttons (Header):**
+**KPI Interaktionen (Header / Charts / Total):**
 
 | Karte | Aktion |
 |-------|--------|
-| Offene Antragsverfahren / Alle Anträge | `maximizeApplicationsTable`: Filter **Offen**, Tabelle **maximiert** (KPI-Zeile ausgeblendet, Transition 300ms) |
-| Zugewiesene Aufgaben | `router.push("/workspace?view=aufgaben")` |
-| Beratungen diese Woche (nur R2/R3) | `router.push("/workspace?view=terminplaner")` |
+| Offene Antragsverfahren / Alle Anträge — **Pfeil-Icon** | `maximizeApplicationsTable`: Filter **Offen**, Tabelle **maximiert** (KPI-Zeile ausgeblendet, Transition 300ms) |
+| Offene Antragsverfahren / Alle Anträge — **Chart-Bucket** | Setzt Tabellen-**Statusfilter** auf Audience-Label (`getStatusLabelForAudience`); bei `approved`/`rejected` zusätzlich `openAllFilter = all`; **kein** Auto-Scroll |
+| Offene Antragsverfahren / Alle Anträge — **Total-Zahl** | `resetApplicationsTableFilters`: leert `columnFilters`, setzt Offen/Alle auf Rollen-Default (`open` bzw. R4 `all`) |
+| Zugewiesene Aufgaben — **Pfeil-Icon** | `router.push("/workspace?view=aufgaben")` — **ungefilterte** Meine Aufgaben |
+| Zugewiesene Aufgaben — **Bucket-Klick** | `router.push("/workspace?view=aufgaben&tasksBucket=…")` mit `beratungen`, `reviews` oder `entscheidungen` — Statusfilter in Meine Aufgaben (einmalig pro Navigation, danach manuell entfernbar) |
+| Anstehende Beratungen — **Kalender-Icon** | `router.push("/workspace?view=terminplaner")` |
+| Anstehende Beratungen — **Zeilenklick** | `onSelectApplication(applicationId)` — Antrag in Detail-Panel (wie Tabelle) |
+
+**KPI Chart-Tooltips** (`open-applications-summary-card.tsx`): farbcodierte Labels (In Review, Anpassung angefordert, In Entscheid / Entscheid erforderlich, …); Hover-Delay 250ms; kein Schatten; Tick an Bubble; vertikal/horizontal/kombiniert zentriert über Balken, horizontal rechts, Pie per Pointer-Hit-Test auf Donut-Ring.
 
 ### Meine Aufgaben (`?view=aufgaben`)
 
@@ -329,6 +351,8 @@ Credentials: mit Testpersonen abgestimmt (nicht in Repo). Login **`/staff/login`
 |--------|-----|
 | **Komponente** | `workspace-my-tasks-view.tsx` — Panel + **dieselbe** `WorkspaceApplicationsTableToolbar` wie Home (ohne Offen/Alle) |
 | **Vorfilter** | `filterMyTasksApplications` — identisch zu KPI «Zugewiesene Aufgaben» (s. Tabelle oben) |
+| **Query `tasksBucket`** | Optional: `beratungen` \| `reviews` \| `entscheidungen` — von Home-KPI-Bucket-Klick; `workspace-test-flow.tsx` übergibt `initialBucketFilter` |
+| **Initial-Statusfilter** | `useEffect` setzt `statusLabels` einmalig auf passendes Label (Beratung → `consultation_recommendation`/R2-Label; Reviews → `in_review`/«Review erforderlich»; Entscheidungen → `in_decision`/«Entscheid erforderlich»); User kann Filter danach per Pills/Popover **entfernen** (kein Re-Apply-Loop) |
 | **Danach** | `useWorkspaceApplicationsTableState({ prefilteredApplications })` — Suche, Facetten, Sortierung |
 | **Interaktion** | Zeilenklick → `?application=<uuid>` → Review wie von Home |
 
@@ -338,13 +362,14 @@ Credentials: mit Testpersonen abgestimmt (nicht in Repo). Login **`/staff/login`
 |--------|-----|
 | **Toolbar** | `workspace-applications-table-toolbar.tsx`; Tokens `WORKSPACE_HOME_TABLE_*` (Figma `5948:27470`) |
 | **Offen/Alle** | Nur Home; `isOpenApplication` = nicht `approved` / `rejected` (R2/R3 Default **Offen**, R4 Default **Alle**) |
-| **Facettierte Filter** | `workspace-applications-table-controls.ts`: Status, Studiengang, Fakultät (Kürzel), Zugewiesen an, «Nur mir zugewiesen»; Pills zum Entfernen |
+| **Beratungsphase** | Home: `excludeConsultationPhase: true` in `useWorkspaceApplicationsTableState` — filtert `isConsultationPhaseApplication` («Beratung & Empfehlung» und «Empfehlung verfasst»); **Meine Aufgaben** unverändert (Beratungsfälle bleiben sichtbar) |
+| **Facettierte Filter** | `workspace-applications-table-controls.ts`: Status, Studiengang, Fakultät (Kürzel), Zugewiesen an, «Nur mir zugewiesen»; Pills zum Entfernen; **Filter-Button:** bei aktiven Filtern runder schwarzer Badge `24×24` mit weisser Zahl (`size-6`, `bg-black`) |
 | **Suche** | Name, Studiengang, Fakultät (Kürzel + Vollname), **Antrags ID** (`NTA-YYYY-XXXX`), Status-Label, Assignee |
 | **Sortierung** | Spaltenköpfe in `workspace-applications-table.tsx` |
 | **Tabellen-Layout** | Container `@container/applications-table` auf `WorkspaceApplicationsTable`: **`table-auto`**. **&gt; 1150px (Fit):** kein horizontales Scrollen; Name `13%` (einzeilig bis **&gt; 24 Zeichen**, dann Umbruch), Studiengang `35%` (**einzige** Standard-Umbruchspalte), Fakultät/Datum je **`5.5rem`**, Ref `9rem`, Status `15rem`, Zugewiesen an **`max-content`** + `min-w-max` (kein Überlauf in Menü-Spalte). Fakultät, Antrags ID, Datum, Status, Zugewiesen an: **immer `nowrap`**, Mindestbreite = Inhalt. **≤ 1150px:** `min-w-[74.125rem]` + horizontaler Scroll. Menü-Spalte `sticky right-0`, `pl-2` zum Assignee. Tokens: `WORKSPACE_APPLICATIONS_TABLE_*` in `workspace-dashboard.ts`. |
 | **Maximize** | Nur R2/R4: Panel-Header; KPI-Zeile ausgeblendet; Minimize stellt KPI wieder her |
 | **Tabellen-Spalten** | Name, Studiengang, **Fakultät** (Kürzel, Tooltip Vollname), **Antrags ID**, Datum, Status, Zugewiesen an (Avatar) |
-| **KPI-Interaktion** | Klick auf Chart-Bucket (`OpenApplicationsSummaryCard`) setzt Tabellen-Statusfilter direkt auf den passenden Audience-Label-Text (R2: «Review erforderlich», R4/R2R4 bei `in_decision`: «Entscheid erforderlich»); **kein** Auto-Scroll |
+| **KPI → Tabelle** | Siehe § **KPI Interaktionen** oben (Bucket-Filter, Total-Reset, Tooltips) |
 | **R4 Fakultäts-Scope** | DB: `departments`, `study_programs`, `r4_department_scopes`; RLS `r4_application_in_department_scope`; Liste: **nur** Session-Client (`fetchWorkspaceApplicationsList`), kein Service-Role-Fallback |
 | **R4 Test-Accounts** | `r4.test@example.com` = alle Fakultäten; `r4.rf.test@example.com` = nur `rwf` — volle Matrix § **4b** |
 | **Studiengang (R1)** | `lib/uzh-studiengaenge-data.ts` — Fakultäten alphabetisch, gruppierte Combobox |
@@ -498,4 +523,4 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 
 ---
 
-*Letzte Aktualisierung: § **4b** Test-Accounts & Berechtigungs-Matrix (R4 / R2R4 / Routing); Detail-Panel-Persistenz; R4 KPI 320px; Meine Aufgaben; Anträge-Toolbar/Maximize.*
+*Letzte Aktualisierung: KPI «Anstehende Beratungen» (Live, stretch, dynamische Zeilen); Home-Tabelle ohne Beratungsphase; `hasReleasedRecommendation` / `isConsultationPhaseApplication`; KPI-Interaktionen & Nav-Badge.*

@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { deriveCanonicalApplicationState } from "@/lib/application-status";
+import {
+  deriveCanonicalApplicationState,
+  isConsultationPhaseApplication,
+} from "@/lib/application-status";
 import type { UserRole } from "@/lib/auth";
 import { usesR4OnlyHomeLayout } from "@/lib/workspace-role";
 import type { WorkspaceApplication } from "@/lib/test-flow-types";
@@ -33,6 +36,8 @@ type UseWorkspaceApplicationsTableStateOptions = {
   /** Wenn gesetzt: nur diese Anträge (z. B. Meine Aufgaben), kein Offen/Alle auf Rohliste. */
   prefilteredApplications?: WorkspaceApplication[];
   initialOpenAllFilter?: WorkspaceApplicationsOpenAllFilter;
+  /** Home: keine Beratungsphase («Beratung & Empfehlung» / «Empfehlung verfasst»). */
+  excludeConsultationPhase?: boolean;
 };
 
 export function useWorkspaceApplicationsTableState({
@@ -41,6 +46,7 @@ export function useWorkspaceApplicationsTableState({
   workspaceRole,
   prefilteredApplications,
   initialOpenAllFilter,
+  excludeConsultationPhase = false,
 }: UseWorkspaceApplicationsTableStateOptions) {
   const defaultOpenAllFilter =
     initialOpenAllFilter ?? (usesR4OnlyHomeLayout(workspaceRole) ? "all" : "open");
@@ -57,6 +63,9 @@ export function useWorkspaceApplicationsTableState({
       prefilteredApplications != null
         ? prefilteredApplications
         : applications.filter((application) => {
+            if (excludeConsultationPhase && isConsultationPhaseApplication(application)) {
+              return false;
+            }
             if (openAllFilter === "open" && !isOpenApplication(application)) {
               return false;
             }
@@ -69,6 +78,7 @@ export function useWorkspaceApplicationsTableState({
     });
   }, [
     applications,
+    excludeConsultationPhase,
     openAllFilter,
     prefilteredApplications,
     reviewerDisplayName,

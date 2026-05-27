@@ -1,5 +1,6 @@
 import {
   deriveCanonicalApplicationState,
+  hasReleasedRecommendation,
   type CanonicalApplicationState,
 } from "@/lib/application-status";
 import {
@@ -102,7 +103,7 @@ function isR2RecommendationReleased(application: WorkspaceApplication): boolean 
   if (deriveCanonicalApplicationState(application) !== "consultation_recommendation") {
     return false;
   }
-  return Boolean(application.data?.recommendation?.releasedHtml?.trim());
+  return hasReleasedRecommendation(application);
 }
 
 function taskBucketForState(

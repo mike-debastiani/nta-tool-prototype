@@ -296,6 +296,12 @@ Vollständige Mechanik → **`Antrag_Review_Kontext.md`**, R4 → **`Antrag_Bewi
 | 2026-05-20 | Workspace Home table | Anträge-Tabelle: Live-`applications`, Zeilenklick, ein Divider pro Zeile; `workspaceApplicationListNumber` |
 | 2026-05-27 | Workspace applications table layout | `workspace-applications-table.tsx` + `WORKSPACE_APPLICATIONS_TABLE_*`: `table-auto`, Studiengang wrap, Name wrap &gt;24 chars, compact cols nowrap, scroll ≤1150px (`74.125rem`), tighter actions padding |
 | 2026-05-27 | Workspace KPI chart interactions | `open-applications-summary-card.tsx`: role-aware bucket tooltips (vertical/horizontal/combined/pie), robust pie hover hit-testing, responsive donut sizing, bucket click filters table status (no auto-scroll) |
+| 2026-05-27 | Workspace KPI total reset | `onTotalClick` auf Offene/Alle-Anträge-KPI: leert Tabellenfilter, Offen/Alle-Rollendefault |
+| 2026-05-27 | Assigned tasks KPI navigation | `assigned-tasks-summary-card.tsx`: Bucket → `?view=aufgaben&tasksBucket=`; Header-Icon → ungefilterte Meine Aufgaben |
+| 2026-05-27 | Workspace nav + filter badges | Meine Aufgaben: `24×24` Badge (stone-200/primary, aktiv weiss/schwarz; collapsed `left-11`); Filter-Button: `size-6` rund `bg-black` bei aktiven Filtern |
+| 2026-05-27 | Upcoming consultations KPI | `consultations-this-week-summary-card.tsx` + `workspace-consultations-this-week.ts`: Live-Termine, stretch mit KPI-Zeile, ohne «Empfehlung verfasst», Zeilenklick → Antrag (Figma `6051:3607`) |
+| 2026-05-27 | Home applications table scope | `excludeConsultationPhase`: Home «Anträge» ohne Beratungsphase; Meine Aufgaben unverändert |
+| 2026-05-27 | Status wording R4 | `in_decision` Audience R4/R2R4: **Entscheid erforderlich** (ersetzt «Entscheid ausstehend» / «In Entscheid» in KPI-Labels) |
 
 ---
 

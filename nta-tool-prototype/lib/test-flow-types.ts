@@ -130,8 +130,11 @@ export type ApplicationData = {
   consultation?: {
     status?: "booked" | "done";
     date?: string;
+    /** ISO-8601 Datum des gewählten Beratungstermins (lokales Kalenderdatum). */
+    dateIso?: string;
     slot?: string;
     location?: string;
+    locationType?: "zoom" | "onsite";
     advisor?: string;
   };
   recommendation?: {

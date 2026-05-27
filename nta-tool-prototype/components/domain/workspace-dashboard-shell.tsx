@@ -245,7 +245,8 @@ function WorkspaceNavItem({
       onClick={(event) => event.stopPropagation()}
       className={cn(
         NAV_ITEM_BASE,
-        "relative overflow-hidden",
+        "relative",
+        collapsed ? "overflow-visible" : "overflow-hidden",
         workspaceSidebarNavItemWidthTransitionClass,
         "w-full justify-start",
         collapsed ? "max-w-10 gap-0 pr-0" : "max-w-full gap-2 pr-3",
@@ -271,17 +272,37 @@ function WorkspaceNavItem({
         {item.label}
       </span>
       {item.badge != null && item.badge > 0 ? (
-        <span
-          className={cn(
-            "inline-flex min-h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-stone-150 px-2 py-[3px] text-hf-paragraph-mini text-foreground",
-            workspaceSidebarLabelTransitionClass,
-            collapsed
-              ? "pointer-events-none min-w-0 w-0 max-w-0 overflow-hidden p-0 opacity-0"
-              : "opacity-100",
-          )}
-        >
-          {item.badge > 99 ? "99+" : item.badge}
-        </span>
+        <>
+          <span
+            className={cn(
+              "ml-auto inline-flex size-6 min-w-6 shrink-0 items-center justify-center rounded-full",
+              hfTypography.paragraphMiniMedium,
+              active
+                ? "bg-white text-black"
+                : "bg-stone-200 text-primary",
+              workspaceSidebarLabelTransitionClass,
+              collapsed
+                ? "pointer-events-none min-w-0 w-0 max-w-0 overflow-hidden p-0 opacity-0"
+                : "opacity-100",
+            )}
+          >
+            {item.badge > 99 ? "99+" : item.badge}
+          </span>
+          <span
+            className={cn(
+              "pointer-events-none absolute top-1/2 left-8 inline-flex size-6 min-w-6 -translate-y-1/2 items-center justify-center rounded-full",
+              hfTypography.paragraphMiniMedium,
+              active
+                ? "bg-white text-black"
+                : "bg-stone-200 text-primary",
+              workspaceSidebarLabelTransitionClass,
+              collapsed ? "opacity-100" : "opacity-0",
+            )}
+            aria-hidden={!collapsed}
+          >
+            {item.badge > 99 ? "99+" : item.badge}
+          </span>
+        </>
       ) : null}
     </Link>
   );

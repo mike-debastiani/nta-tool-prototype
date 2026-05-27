@@ -79,6 +79,18 @@ export function getHfStatusBadgeClass(
 const R2_RECOMMENDATION_RELEASED_BADGE_CLASS =
   hfRecommendationReleasedBadgeClass;
 
+/** R2-Badge «Empfehlung verfasst» — `releasedHtml` nach Freigabe des Empfehlungsschreibens. */
+export function hasReleasedRecommendation(application: StatusDerivationInput): boolean {
+  return Boolean(application.data?.recommendation?.releasedHtml?.trim());
+}
+
+/** Beratungsphase vor finalem Antrag («Beratung & Empfehlung» / «Empfehlung verfasst»). */
+export function isConsultationPhaseApplication(
+  application: StatusDerivationInput,
+): boolean {
+  return deriveCanonicalApplicationState(application) === "consultation_recommendation";
+}
+
 export function deriveCanonicalApplicationState(
   application: StatusDerivationInput,
 ): CanonicalApplicationState {
@@ -142,13 +154,10 @@ export function getApplicationStatusMeta(
   audience: StatusAudience = "R1",
 ) {
   const canonicalState = deriveCanonicalApplicationState(application);
-  const recommendationReleased =
-    Boolean(application.data?.recommendation?.releasedHtml?.trim());
-
   if (
     audience === "R2"
     && canonicalState === "consultation_recommendation"
-    && recommendationReleased
+    && hasReleasedRecommendation(application)
   ) {
     return {
       canonicalState,

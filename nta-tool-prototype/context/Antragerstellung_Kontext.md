@@ -130,7 +130,7 @@ UI-Substeps in `nta-antrag-desktop.tsx` (ein Sidebar-Step „Beratung und Empfeh
 | `step3_booked` | `R1FlowBookingConfirmation` | `5307:7907` (Karte/Footer `5307:8254`) |
 | `step3_recommendation` | `RecommendationReleasedAccordion` **`variant="r1"`** + optional Checkbox | `5247:5570` |
 
-- **Buchung:** Kalender + Slots; ausgewählter Tag → Marker **weiss** auf schwarzem Kreis. Footer „Termin buchen“ in `R1FlowFormFooter`.
+- **Buchung:** Kalender + Slots (nur **onsite**, UZH Gebäude SBO Raum E-103); ausgewählter Tag → Marker **weiss** auf schwarzem Kreis. Footer „Termin buchen“ in `R1FlowFormFooter`. Persistenz: `consultation.date`, **`dateIso`**, `slot`, **`locationType: "onsite"`**, volle Adresse in `location`.
 - **Nach Buchung:** Terminbestätigung ohne inneren Rahmen um die Karte; **statische** Kartengrafik `public/images/r1-booking/map-example.png` + Link «In Maps öffnen»; Footer-Buttons gemäss Figma (kein `flex-1` auf Primary).
 - **Empfehlung freigegeben (R2):** nur wenn `data.recommendation.releasedHtml` gesetzt (`isRecommendationReleasedToR1`) — **nicht** durch Navigieren zu `step3_recommendation`.
 - **Kenntnisnahme:** Checkbox nur in `step3_recommendation` als `children` des Accordions; Pflicht für **Erst-Freischaltung** Step 4; Persistenz `data.r1RecommendationAcknowledged`; deaktiviert bis `releasedHtml`.
@@ -273,7 +273,7 @@ Ausnahme Step 4/5 ohne Kenntnisnahme: Erst-Freischaltung blockiert; nach Sticky 
 - `title`, `summary`
 - `personalData`
 - `attestFiles`
-- `consultation`: `status` **`booked` | `done`**, date, slot, location, advisor
+- `consultation`: `status` **`booked` | `done`**, date, **`dateIso`**, slot, location, **`locationType`** (`onsite`; Prototyp nur Vor-Ort SBO), advisor
 - `r1PortalFlowStep` — letzter persistierter UI-Step (Draft-Exit); fließt in `highestUnlockedStepIndex` ein.
 - `r1RecommendationAcknowledged` — Kenntnisnahme-Checkbox Step 3.
 - `r1DraftBookingUi` — Kalender/Slot-Entwurf vor finaler Buchung.
