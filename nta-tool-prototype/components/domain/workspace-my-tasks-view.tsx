@@ -115,7 +115,7 @@ export function WorkspaceMyTasksView({
           totalCount={tableState.totalCount}
         />
 
-        <div className="min-h-0 flex-1 overflow-auto overscroll-contain">
+        <div className="min-h-0 flex-1 overflow-visible">
           <WorkspaceApplicationsTable
             rows={tableState.displayedRows}
             onSelectApplication={onSelectApplication}

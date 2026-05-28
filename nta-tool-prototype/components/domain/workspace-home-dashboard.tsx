@@ -336,7 +336,7 @@ export function WorkspaceHomeDashboard({
             "w-full min-h-0",
             supportsTableExpand && isTableMaximized
               ? "min-h-0 flex-1 overflow-auto overscroll-contain"
-              : "overflow-x-auto",
+              : "overflow-visible",
           )}
         >
           <WorkspaceApplicationsTable
