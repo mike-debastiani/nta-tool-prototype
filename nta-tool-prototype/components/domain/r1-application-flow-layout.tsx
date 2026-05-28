@@ -1,9 +1,15 @@
 "use client";
 
-import { ExternalLink, Info } from "lucide-react";
-import { type ComponentPropsWithoutRef, type ReactNode } from "react";
+import { ArrowUpRight, ExternalLink, Info } from "lucide-react";
+import { type ComponentPropsWithoutRef, type ReactNode, type RefObject } from "react";
 
 import { HfPageGrid } from "@/components/layout/hf-grid";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   R1FlowIcon,
   R1FlowProgressTrailingIndicator,
@@ -189,7 +195,7 @@ function R1FlowTopBar({ close, autosave }: R1FlowTopBarProps) {
             type="button"
             disabled={close.disabled}
             onClick={close.onClick}
-            className="inline-flex min-h-9 shrink-0 items-center justify-center gap-2 rounded-lg px-4 py-2 text-foreground-alt transition-colors hover:bg-stone-150/80 disabled:opacity-50"
+            className="inline-flex min-h-9 shrink-0 items-center justify-center gap-2 rounded-full px-4 py-2 text-foreground-alt transition-colors hover:bg-stone-150/80 disabled:opacity-50"
           >
             <span className={hfTypography.paragraphSmallMedium}>{close.label}</span>
             <R1FlowIcon name="close-x" className="text-foreground" />
@@ -227,20 +233,20 @@ export function R1FlowProgressCard({
     >
       <div className="flex shrink-0 flex-col gap-4" data-node-id="5180:7026">
         <p
-          className={cn(hfTypography.paragraphLargeMedium, "text-stone-900")}
+          className={cn(hfTypography.paragraphLargeMedium, "text-foreground")}
           data-node-id="5180:7027"
         >
           Fortschritt
         </p>
         <div className="flex flex-col gap-1" data-node-id="5180:7028">
           <p
-            className={cn(hfTypography.paragraphSmallMedium, "text-stone-500")}
+            className={cn(hfTypography.paragraphMiniMedium, "text-muted-foreground")}
             data-node-id="5180:7029"
           >
             {completed} von {R1_FLOW_PROGRESS_STEP_COUNT} abgeschlossen
           </p>
           <div
-            className="relative h-2 w-full overflow-hidden rounded-xl bg-bewilligt-50"
+            className="relative h-2 w-full overflow-hidden rounded-xl bg-bewilligt-100"
             role="progressbar"
             aria-valuenow={completed}
             aria-valuemin={0}
@@ -248,7 +254,7 @@ export function R1FlowProgressCard({
             data-node-id="5180:7030"
           >
             <div
-              className="absolute top-0 left-0 h-2 rounded-l-md bg-bewilligt-300"
+              className="absolute top-0 left-0 h-2 rounded-l-md bg-bewilligt-400"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -278,7 +284,8 @@ export function R1FlowProgressStep({
   onClick,
   isClickable = false,
 }: R1FlowProgressStepProps) {
-  const contentClass = r1FlowProgressContentClass(visualState);
+  const baseContentClass = r1FlowProgressContentClass(visualState);
+  const contentClass = isActive ? "text-background" : baseContentClass;
   const canHighlight =
     (visualState === "available" ||
       visualState === "complete" ||
@@ -292,8 +299,8 @@ export function R1FlowProgressStep({
       className={cn(
         "flex w-full shrink-0 items-center justify-between rounded-lg p-2 transition-colors",
         isLocked && !isClickable && "cursor-not-allowed",
-        canHighlight && "cursor-pointer hover:bg-stone-100",
-        isActive && canHighlight && "bg-stone-100",
+        canHighlight && !isActive && "cursor-pointer hover:bg-stone-100",
+        isActive ? "bg-primary" : "bg-transparent",
       )}
       onClick={onClick}
       role={isClickable ? "button" : undefined}
@@ -324,7 +331,7 @@ export function R1FlowProgressStep({
         </span>
       </div>
       <span className="flex size-4 shrink-0 items-center justify-center">
-        <R1FlowProgressTrailingIndicator visualState={visualState} />
+        <R1FlowProgressTrailingIndicator visualState={visualState} isActive={isActive} />
       </span>
     </div>
   );
@@ -332,69 +339,136 @@ export function R1FlowProgressStep({
 
 export function R1FlowProgressDivider() {
   return (
-    <div
-      className="my-3 h-px w-full shrink-0 bg-stone-200"
-      aria-hidden
-      data-node-id="5180:7051"
-    />
+    <div className="w-full shrink-0 py-0" aria-hidden data-node-id="5180:7051">
+      <div className="h-px w-full bg-stone-200" />
+    </div>
   );
 }
 
+const R1_FLOW_CONTACT_EMAIL = "fsb@sib.uzh.ch";
+const R1_FLOW_CONTACT_PHONE = "+41 44 634 45 44";
+
+const R1_FLOW_MORE_INFORMATION_LINKS = [
+  {
+    label: "Fachstelle Studium und Behinderung",
+    href: "https://www.sib.uzh.ch/de/studium/behinderung.html",
+  },
+  {
+    label: "Attest-Checkliste im ICF Format",
+    href: "/attest/attest-checkliste-icf.pdf",
+  },
+  {
+    label: "Vorgaben Ärztliches Attest",
+    href: "/attest/attest-mustervorlage.pdf",
+  },
+] as const;
+
+/** Figma `6101:22947` — Kontakt ohne Icon-Badges. */
 export function R1FlowContactCard() {
   return (
     <div
       className={cn(
         APPLICATION_CONTENT_PANEL_CARD_CLASS,
-        "flex shrink-0 flex-col gap-4 p-4",
+        "flex shrink-0 flex-col gap-4 p-6",
       )}
-      data-node-id="5213:1456"
+      data-node-id="6101:22947"
     >
-      <div className="flex flex-col gap-0.5" data-node-id="5213:1457">
+      <div className="flex flex-col gap-0.5" data-node-id="6101:22949">
         <p
-          className={cn(hfTypography.paragraphMedium, "text-stone-900")}
-          data-node-id="5213:1458"
+          className={cn(hfTypography.paragraphMedium, "text-foreground")}
+          data-node-id="6101:22950"
         >
           Fragen und Unklarheiten?
         </p>
         <p
-          className={cn(hfTypography.paragraphSmall, "text-stone-500")}
-          data-node-id="5213:1459"
+          className={cn(hfTypography.paragraphSmall, "text-muted-foreground")}
+          data-node-id="6101:22951"
         >
           Kontaktieren Sie unsere Fachstelle unter:
         </p>
       </div>
-      <div className="flex flex-col gap-2" data-node-id="5213:1460">
+      <div className="flex flex-col gap-1" data-node-id="6101:22952">
         <a
-          href="mailto:kontakt@hochschule.ch"
-          className="flex items-center gap-2 transition-opacity hover:opacity-80"
-          data-node-id="5213:1461"
+          href={`mailto:${R1_FLOW_CONTACT_EMAIL}`}
+          className={cn(
+            hfTypography.paragraphSmallMedium,
+            "text-foreground transition-opacity hover:opacity-80",
+          )}
+          data-node-id="6101:22953"
         >
-          <span
-            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-stone-150 p-2"
-            data-node-id="5213:1462"
-          >
-            <R1FlowIcon name="mail" className="text-stone-900" />
-          </span>
-          <span className={cn(hfTypography.paragraphSmall, "text-stone-900")}>
-            kontakt@hochschule.ch
-          </span>
+          {R1_FLOW_CONTACT_EMAIL}
         </a>
         <a
-          href="tel:+41550000000"
-          className="flex items-center gap-2 transition-opacity hover:opacity-80"
-          data-node-id="5213:1464"
+          href="tel:+41446344544"
+          className={cn(
+            hfTypography.paragraphSmallMedium,
+            "text-foreground transition-opacity hover:opacity-80",
+          )}
+          data-node-id="6101:22955"
         >
-          <span
-            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-stone-150 p-2"
-            data-node-id="5213:1465"
-          >
-            <R1FlowIcon name="phone" className="text-stone-900" />
-          </span>
-          <span className={cn(hfTypography.paragraphSmall, "text-stone-900")}>
-            +41 55 000 00 00
-          </span>
+          {R1_FLOW_CONTACT_PHONE}
         </a>
       </div>
+    </div>
+  );
+}
+
+/** Figma `6101:22956` — Quicklinks als Accordion (zugeklappt per Default). */
+export function R1FlowMoreInformationCard() {
+  return (
+    <div
+      className={cn(APPLICATION_CONTENT_PANEL_CARD_CLASS, "shrink-0 p-6")}
+      data-node-id="6101:22956"
+    >
+      <Accordion type="single" collapsible>
+        <AccordionItem value="more-info" className="border-b-0">
+          <AccordionTrigger
+            className={cn(
+              "py-0 hover:no-underline",
+              "[&>svg]:size-5 [&>svg]:text-foreground",
+            )}
+            data-node-id="6101:22960"
+          >
+            <span className={cn(hfTypography.paragraphMedium, "text-foreground")}>
+              Weitere Informationen
+            </span>
+          </AccordionTrigger>
+          <AccordionContent className="px-0 pt-4 pb-0">
+            <ul className="flex w-full flex-col" data-node-id="6101:22961">
+              {R1_FLOW_MORE_INFORMATION_LINKS.map((link, index) => (
+                <li
+                  key={link.label}
+                  className={cn(
+                    index < R1_FLOW_MORE_INFORMATION_LINKS.length - 1
+                    && "border-b border-border",
+                  )}
+                >
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center px-2 py-3 transition-opacity hover:opacity-80"
+                  >
+                    <span
+                      className={cn(
+                        hfTypography.paragraphSmallMedium,
+                        "min-w-0 flex-1 text-foreground",
+                      )}
+                    >
+                      {link.label}
+                    </span>
+                    <ArrowUpRight
+                      className="size-6 shrink-0 text-foreground"
+                      strokeWidth={1.75}
+                      aria-hidden
+                    />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 }
@@ -412,7 +486,7 @@ export function R1FlowDiscardButton({ disabled, onClick }: R1FlowDiscardButtonPr
       disabled={disabled}
       data-node-id="5180:7111"
       className={cn(
-        "flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-abgelehnt-500 bg-transparent px-4 py-2 transition-colors",
+        "flex min-h-9 w-full items-center justify-center gap-2 rounded-full border border-abgelehnt-500 bg-transparent px-4 py-2 transition-colors",
         "hover:bg-abgelehnt-50",
         "disabled:cursor-not-allowed disabled:opacity-50",
       )}
@@ -437,11 +511,13 @@ export function R1FlowDiscardButton({ disabled, onClick }: R1FlowDiscardButtonPr
 
 type R1FlowMainContentProps = {
   children: ReactNode;
+  scrollRef?: RefObject<HTMLDivElement | null>;
 };
 
-export function R1FlowMainContent({ children }: R1FlowMainContentProps) {
+export function R1FlowMainContent({ children, scrollRef }: R1FlowMainContentProps) {
   return (
     <div
+      ref={scrollRef}
       className={cn(
         whitePanelScrollViewportClass,
         whitePanelScrollContentInsetXClass,

@@ -1,4 +1,5 @@
 import {
+  Check,
   Circle,
   Eye,
   File,
@@ -72,19 +73,18 @@ export function R1FlowIcon({ name, className }: R1FlowIconProps) {
   return <Icon className={merged} strokeWidth={2} aria-hidden />;
 }
 
+/** Icon + Label — nur gesperrte Steps gedimmt; Statusfarbe nur im Kreis rechts. */
 export function r1FlowProgressContentClass(
   visualState: R1ProgressStepVisualState,
 ): string {
   switch (visualState) {
-    case "complete":
-      return "text-bewilligt-500";
-    case "incomplete":
-      return "text-abgelehnt-600";
     case "locked-pre":
       return "text-stone-400";
     case "locked-post":
       return "text-stone-250";
     case "available":
+    case "complete":
+    case "incomplete":
     default:
       return "text-primary";
   }
@@ -93,23 +93,23 @@ export function r1FlowProgressContentClass(
 /** Statuspunkt rechts — bewilligt / abgelehnt bei complete / incomplete. */
 export function R1FlowProgressTrailingIndicator({
   visualState,
+  isActive = false,
 }: {
   visualState: R1ProgressStepVisualState;
+  isActive?: boolean;
 }) {
   switch (visualState) {
     case "complete":
       return (
-        <span
-          className="size-3.5 shrink-0 rounded-full bg-bewilligt-300"
-          aria-hidden
-        />
+        <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-bewilligt-400">
+          <Check className="size-3 text-white" strokeWidth={2.5} aria-hidden />
+        </span>
       );
     case "incomplete":
       return (
-        <span
-          className="size-3.5 shrink-0 rounded-full bg-abgelehnt-400"
-          aria-hidden
-        />
+        <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-abgelehnt-400">
+          <X className="size-3 text-white" strokeWidth={2.5} aria-hidden />
+        </span>
       );
     case "locked-pre":
       return (
@@ -131,7 +131,7 @@ export function R1FlowProgressTrailingIndicator({
     default:
       return (
         <Circle
-          className={cn(ICON_BASE, "text-primary")}
+          className={cn(ICON_BASE, isActive ? "text-background" : "text-primary")}
           strokeWidth={2}
           aria-hidden
         />

@@ -128,7 +128,7 @@ export function R1FlowBookingScheduler({
               <div className="flex items-center gap-4">
                 <button
                   type="button"
-                  className="flex size-8 min-h-8 min-w-8 items-center justify-center rounded-lg p-2 text-stone-900 transition-colors hover:bg-stone-100"
+                  className="flex size-8 min-h-8 min-w-8 items-center justify-center rounded-full p-2 text-stone-900 transition-colors hover:bg-stone-100"
                   onClick={() =>
                     onDisplayedMonthChange(
                       new Date(
@@ -144,7 +144,7 @@ export function R1FlowBookingScheduler({
                 </button>
                 <button
                   type="button"
-                  className="flex size-8 min-h-8 min-w-8 items-center justify-center rounded-lg p-2 text-stone-900 transition-colors hover:bg-stone-100"
+                  className="flex size-8 min-h-8 min-w-8 items-center justify-center rounded-full p-2 text-stone-900 transition-colors hover:bg-stone-100"
                   onClick={() =>
                     onDisplayedMonthChange(
                       new Date(
@@ -193,7 +193,7 @@ export function R1FlowBookingScheduler({
                         }
                       }}
                       className={cn(
-                        "relative flex aspect-square size-full min-h-8 w-full items-center justify-center rounded-sm p-2 text-hf-paragraph-small transition-colors",
+                        "relative flex aspect-square size-full min-h-8 w-full items-center justify-center rounded-full p-2 text-hf-paragraph-small transition-colors",
                         isSelected &&
                           "bg-stone-900 text-stone-50 hover:bg-stone-900",
                         !isSelected && isBookable && "bg-stone-100 text-stone-900 hover:bg-stone-150",
@@ -243,7 +243,7 @@ export function R1FlowBookingScheduler({
                     type="button"
                     onClick={() => onSelectedBookingSlotChange(slot)}
                     className={cn(
-                      "w-full rounded-lg transition-colors",
+                      "w-full rounded-full transition-colors",
                       isSelected
                         ? "border border-stone-250 bg-stone-100 p-0"
                         : "bg-stone-100 hover:bg-stone-150",
@@ -253,7 +253,7 @@ export function R1FlowBookingScheduler({
                       className={cn(
                         "flex w-full items-center justify-center px-2 py-2 text-hf-paragraph-small",
                         isSelected
-                          ? "rounded-lg bg-stone-900 text-stone-50"
+                          ? "rounded-full bg-stone-900 text-stone-50"
                           : "text-stone-900",
                       )}
                     >

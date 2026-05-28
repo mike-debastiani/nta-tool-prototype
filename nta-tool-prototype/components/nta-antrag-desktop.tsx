@@ -49,6 +49,7 @@ import {
   R1ApplicationFlowLayout,
   R1FlowAutosaveIndicator,
   R1FlowContactCard,
+  R1FlowMoreInformationCard,
   R1FlowDiscardButton,
   R1FlowField,
   R1FlowFieldColumn,
@@ -708,9 +709,11 @@ export function NtaAntragDesktop({
   const [isPersistingDraftExit, setIsPersistingDraftExit] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const overviewFileInputRef = useRef<HTMLInputElement>(null);
+  const flowMainScrollRef = useRef<HTMLDivElement>(null);
   const situationDescriptionStep4Ref = useRef<HTMLTextAreaElement>(null);
   const situationDescriptionOverviewRef = useRef<HTMLTextAreaElement>(null);
   const lastSyncedInitialApplicationId = useRef<string | undefined>(undefined);
+  const previousStepRef = useRef<FlowStep | null>(null);
 
   const syncSituationDescriptionTextareaHeights = useCallback(() => {
     for (const ref of [situationDescriptionStep4Ref, situationDescriptionOverviewRef]) {
@@ -737,6 +740,14 @@ export function NtaAntragDesktop({
         ? R1_FLOW_PROGRESS_STEP_COUNT - 1
         : r1FlowProgressStepIndex(currentStep);
     setHighestUnlockedStepIndex((previous) => Math.max(previous, idx));
+  }, [currentStep]);
+
+  useEffect(() => {
+    const previousStep = previousStepRef.current;
+    if (previousStep === "step4_application" && currentStep === "step5_overview") {
+      flowMainScrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
+    }
+    previousStepRef.current = currentStep;
   }, [currentStep]);
 
   useEffect(() => {
@@ -1532,7 +1543,7 @@ export function NtaAntragDesktop({
           type="button"
           variant="ghost"
           size="sm"
-          className="-ml-2 gap-2 px-2 text-muted-foreground hover:text-foreground"
+          className="-ml-2 gap-2 rounded-full px-2 text-muted-foreground hover:text-foreground"
           disabled={isPersistingDraftExit}
           onClick={() => void handleDraftExitToDashboard()}
         >
@@ -1717,6 +1728,7 @@ export function NtaAntragDesktop({
             />
           </R1FlowProgressCard>
           <R1FlowContactCard />
+          <R1FlowMoreInformationCard />
         </>
       }
       sidebarFooter={
@@ -1728,7 +1740,7 @@ export function NtaAntragDesktop({
         ) : null
       }
       main={
-        <R1FlowMainContent>
+        <R1FlowMainContent scrollRef={flowMainScrollRef}>
 <form
             onSubmit={(event) => {
               event.preventDefault();
@@ -2402,7 +2414,7 @@ export function NtaAntragDesktop({
                     </div>
                     <Button
                       type="button"
-                      className="min-h-9 px-4"
+                      className="min-h-9 rounded-full px-4"
                       onClick={() => {
                         window.location.href = "/portal/home";
                       }}
@@ -2715,7 +2727,7 @@ export function NtaAntragDesktop({
                         <Button
                           type="button"
                           variant="secondary"
-                          className="min-h-9 px-4"
+                          className="min-h-9 rounded-full px-4"
                           onClick={() => setCurrentStep("step1")}
                         >
                           Zurück
@@ -2724,7 +2736,7 @@ export function NtaAntragDesktop({
                         <Button
                           type="button"
                           variant="secondary"
-                          className="min-h-9 px-4"
+                          className="min-h-9 rounded-full px-4"
                           onClick={() => setCurrentStep("step2")}
                         >
                           Zurück
@@ -2733,7 +2745,7 @@ export function NtaAntragDesktop({
                         <Button
                           type="button"
                           variant="secondary"
-                          className="min-h-9 px-4"
+                          className="min-h-9 rounded-full px-4"
                           onClick={() => setCurrentStep("step3_booked")}
                         >
                           Zurück
@@ -2742,7 +2754,7 @@ export function NtaAntragDesktop({
                         <Button
                           type="button"
                           variant="secondary"
-                          className="min-h-9 px-4"
+                          className="min-h-9 rounded-full px-4"
                           onClick={() => setCurrentStep("step3_recommendation")}
                         >
                           Zurück
@@ -2751,7 +2763,7 @@ export function NtaAntragDesktop({
                         <Button
                           type="button"
                           variant="secondary"
-                          className="min-h-9 px-4"
+                          className="min-h-9 rounded-full px-4"
                           onClick={() => setCurrentStep("step4_application")}
                         >
                           Zurück
@@ -2762,27 +2774,27 @@ export function NtaAntragDesktop({
                       {currentStep === "step3_booking" ? (
                         <Button
                           type="button"
-                          className="min-h-9 px-4"
+                          className="min-h-9 rounded-full px-4"
                           onClick={handleBookConsultation}
                           disabled={pendingBooking}
                         >
                           {pendingBooking ? "Termin wird gebucht..." : "Termin buchen"}
                         </Button>
                       ) : currentStep === "step4_application" ? (
-                        <Button type="submit" className="min-h-9 px-4">
+                        <Button type="submit" className="min-h-9 rounded-full px-4">
                           Übersicht
                         </Button>
                       ) : currentStep === "step5_overview" ? (
                         <Button
                           type="submit"
-                          className="min-h-9 gap-2 px-4"
+                          className="min-h-9 gap-2 rounded-full px-4"
                           disabled={!canSubmitFromOverview}
                         >
                           <Send className="size-4 shrink-0" aria-hidden />
                           Ausgleich beantragen
                         </Button>
                       ) : (
-                        <Button type="submit" className="min-h-9 px-4">
+                        <Button type="submit" className="min-h-9 rounded-full px-4">
                           Weiter
                         </Button>
                       )}
@@ -2836,6 +2848,7 @@ export function NtaAntragDesktop({
             <Button
               type="button"
               variant="outline"
+              className="rounded-full"
               disabled={isDeletingApplication}
               onClick={() => setDeleteApplicationDialogOpen(false)}
             >
@@ -2844,6 +2857,7 @@ export function NtaAntragDesktop({
             <Button
               type="button"
               variant="destructive"
+              className="rounded-full"
               disabled={isDeletingApplication}
               onClick={() => void performDeleteApplication()}
             >

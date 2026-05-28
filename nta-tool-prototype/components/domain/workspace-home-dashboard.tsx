@@ -24,6 +24,7 @@ import {
 } from "@/lib/design-tokens/workspace-dashboard";
 import { computeAllApplicationsStats } from "@/lib/workspace-all-applications-stats";
 import {
+  deriveCanonicalApplicationState,
   getStatusLabelForAudience,
   type CanonicalApplicationState,
 } from "@/lib/application-status";
@@ -104,9 +105,18 @@ export function WorkspaceHomeDashboard({
   const todayLabel = formatHomeDate(new Date());
   const [isTableMaximized, setIsTableMaximized] = useState(false);
   const router = useRouter();
+  const homeTableApplications = useMemo(
+    () =>
+      isCombinedR2R4Role(workspaceRole)
+        ? applications.filter(
+            (application) => deriveCanonicalApplicationState(application) !== "draft",
+          )
+        : applications,
+    [applications, workspaceRole],
+  );
 
   const tableState = useWorkspaceApplicationsTableState({
-    applications,
+    applications: homeTableApplications,
     reviewerDisplayName,
     workspaceRole,
   });
@@ -336,7 +346,7 @@ export function WorkspaceHomeDashboard({
             onSortChange={tableState.setSort}
             totalRowCount={tableState.baseRows.length}
             emptyMessage={
-              applications.length === 0
+              homeTableApplications.length === 0
                 ? "Keine eingegangenen Anträge sichtbar."
                 : "Keine Anträge für die aktuelle Filterung."
             }

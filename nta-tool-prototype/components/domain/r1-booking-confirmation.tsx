@@ -203,14 +203,14 @@ export function R1FlowBookingConfirmation({
           >
             <button
               type="button"
-              className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg border border-stone-300 bg-background px-4 py-2 text-hf-paragraph-small-medium text-stone-900 transition-colors hover:bg-stone-50"
+              className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border border-stone-300 bg-background px-4 py-2 text-hf-paragraph-small-medium text-stone-900 transition-colors hover:bg-stone-50"
               onClick={onReschedule}
             >
               Termin verschieben
             </button>
             <button
               type="button"
-              className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg bg-stone-900 px-4 py-2 text-hf-paragraph-small-medium text-stone-50 transition-colors hover:bg-stone-800"
+              className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full bg-stone-900 px-4 py-2 text-hf-paragraph-small-medium text-stone-50 transition-colors hover:bg-stone-800"
               onClick={onAddToCalendar}
             >
               Zum Kalender hinzufügen
