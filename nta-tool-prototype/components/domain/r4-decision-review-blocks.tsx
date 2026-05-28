@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCheck, CircleCheckBig, Pencil, Plus, RotateCcw } from "lucide-react";
 import { AutoGrowTextarea } from "@/components/ui/auto-grow-textarea";
 import { ReviewField } from "@/components/domain/application-review-blocks";
@@ -97,9 +97,9 @@ function badgeLabel(badge: R4RowBadge): string {
     case "abgelehnt":
       return "Abgelehnt";
     case "vorschlag":
-      return "Vorschlag";
+      return "Hinzugefügt";
     default:
-      return "Vorschlagen";
+      return "Hinzufügen";
   }
 }
 
@@ -125,7 +125,7 @@ function rowStatusLabel(
   blockConfirmed: boolean,
 ): string {
   if (pristine && !blockConfirmed && !row.studentSelected && !row.r4Approved) {
-    return "Vorschlagen";
+    return "Hinzufügen";
   }
   return badgeLabel(r4RowBadge(row));
 }
@@ -180,41 +180,148 @@ function R4DecisionSwitchGroup({
 
 /** Freitext unter Optionen — Commit per Enter/Blur (`5907:23378`). */
 export function R4DecisionProposalInput({
+  proposalRows,
   disabled,
-  onAddProposal,
+  onUpsertProposal,
+  onRemoveProposal,
 }: {
+  proposalRows: R4DecisionRow[];
   disabled?: boolean;
-  onAddProposal: (text: string) => void;
+  onUpsertProposal: (text: string, existingKey?: string) => string | null;
+  onRemoveProposal: (key: string) => void;
 }) {
-  const [draft, setDraft] = useState("");
+  type ProposalInputRow = { uiId: string; key?: string; value: string };
+  const nextUiIdRef = useRef(0);
+  const createUiId = () => `r4-proposal-${nextUiIdRef.current++}`;
+  const [rows, setRows] = useState<ProposalInputRow[]>(() => [
+    ...proposalRows.map((row) => ({
+      uiId: createUiId(),
+      key: row.key,
+      value: row.title,
+    })),
+    { uiId: createUiId(), value: "" },
+  ]);
 
-  const commit = () => {
-    const trimmed = draft.trim();
-    if (!trimmed || disabled) return;
-    onAddProposal(trimmed);
-    setDraft("");
+  const proposalKeysSignature = useMemo(
+    () => JSON.stringify(proposalRows.map((row) => row.key)),
+    [proposalRows],
+  );
+  const proposalRowsRef = useRef(proposalRows);
+  proposalRowsRef.current = proposalRows;
+
+  useEffect(() => {
+    setRows((previous) => {
+      const idByKey = new Map(
+        previous
+          .filter((row) => row.key)
+          .map((row) => [row.key as string, row.uiId]),
+      );
+      const trailingEmpty = previous.find((row) => !row.key && row.value.trim() === "");
+
+      return [
+        ...proposalRowsRef.current.map((row) => ({
+          uiId: idByKey.get(row.key) ?? createUiId(),
+          key: row.key,
+          value: row.title,
+        })),
+        { uiId: trailingEmpty?.uiId ?? createUiId(), value: "" },
+      ];
+    });
+  }, [proposalKeysSignature]);
+
+  const handleRowChange = (index: number, nextValue: string) => {
+    const nextRows = rows.map((row, i) => (i === index ? { ...row, value: nextValue } : row));
+    const row = nextRows[index];
+    const trimmed = nextValue.trim();
+
+    if (disabled) {
+      setRows(nextRows);
+      return;
+    }
+
+    if (row?.key) {
+      if (!trimmed) {
+        onRemoveProposal(row.key);
+        nextRows[index] = { uiId: row.uiId, value: "" };
+      } else {
+        onUpsertProposal(trimmed, row.key);
+      }
+      setRows(nextRows);
+      return;
+    }
+
+    if (trimmed) {
+      const key = onUpsertProposal(trimmed) ?? undefined;
+      nextRows[index] = { uiId: row.uiId, key, value: nextValue };
+      const hasTrailingEmpty = nextRows[nextRows.length - 1]?.value.trim() === "";
+      if (!hasTrailingEmpty) {
+        nextRows.push({ uiId: createUiId(), value: "" });
+      }
+    }
+    setRows(nextRows);
   };
 
   return (
-    <li className={R4_DECISION_PROPOSAL_INPUT_CLASS}>
-      <div className="flex h-5 shrink-0 items-center">
-        <Plus className="size-5 text-muted-foreground" aria-hidden />
-      </div>
-      <AutoGrowTextarea
-        value={draft}
-        disabled={disabled}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-            e.preventDefault();
-            commit();
-          }
-        }}
-        placeholder="Formulieren Sie einen anderen Vorschlag …"
-        className="min-h-5 flex-1 border-0 bg-transparent px-0 py-0 text-sm leading-5 shadow-none focus-visible:border-0 focus-visible:ring-0"
-      />
-    </li>
+    <>
+      {rows.map((row, index) => {
+        const hasText = row.value.trim().length > 0;
+        return (
+          <li
+            key={row.uiId}
+            className={cn(
+              R4_DECISION_ROW_CLASS,
+              hasText
+                ? R4_DECISION_ROW_SURFACE_CLASS.vorschlag
+                : R4_DECISION_ROW_SURFACE_CLASS.vorschlagen,
+            )}
+          >
+            <div className="flex h-5 shrink-0 items-center">
+              <Plus className="size-5 text-muted-foreground" aria-hidden />
+            </div>
+            <AutoGrowTextarea
+              value={row.value}
+              disabled={disabled}
+              onChange={(e) => handleRowChange(index, e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                }
+              }}
+              placeholder="Formulieren Sie einen anderen Zusatz …"
+              className="min-h-5 flex-1 border-0 bg-transparent px-0 py-0 text-sm leading-5 shadow-none focus-visible:border-0 focus-visible:ring-0"
+            />
+            <div className={R4_DECISION_SWITCH_GROUP_CLASS}>
+              <R4Switch
+                checked={hasText}
+                tone={hasText ? "vorschlag" : "muted"}
+                disabled={disabled}
+                onToggle={() => {
+                  if (disabled || !hasText) return;
+                  if (row.key) onRemoveProposal(row.key);
+                  setRows((prev) => {
+                    const filtered = prev.filter((_, i) => i !== index);
+                    const hasTrailingEmpty =
+                      filtered[filtered.length - 1]?.value.trim() === "";
+                    return hasTrailingEmpty
+                      ? filtered
+                      : [...filtered, { uiId: createUiId(), value: "" }];
+                  });
+                }}
+              />
+              <span
+                className={cn(
+                  hasText
+                    ? R4_DECISION_ROW_LABEL_ACTIVE_CLASS
+                    : R4_DECISION_ROW_LABEL_MUTED_CLASS,
+                )}
+              >
+                {hasText ? "Hinzugefügt" : "Hinzufügen"}
+              </span>
+            </div>
+          </li>
+        );
+      })}
+    </>
   );
 }
 

@@ -315,8 +315,13 @@ export function WorkspaceR4DecisionView({
     scheduleR4Autosave();
   };
 
-  const handleAddProposal = (id: R4DecisionReviewBlockId, text: string) => {
-    if (!canEdit || !supportsR4CustomProposalInput(id)) return;
+  const handleUpsertProposal = (
+    id: R4DecisionReviewBlockId,
+    text: string,
+    existingKey?: string,
+  ): string | null => {
+    if (!canEdit || !supportsR4CustomProposalInput(id)) return null;
+    let proposalKey: string | null = null;
 
     flushSync(() => {
       setReview((prev) => {
@@ -324,13 +329,30 @@ export function WorkspaceR4DecisionView({
         if (!block) return prev;
         if (block.confirmed && !editingRef.current[id]) return prev;
 
-        const newRow = createR4ProposalRow(text);
-        let nextRows = [...block.rows, newRow];
+        const trimmed = text.trim();
+        if (!trimmed) return prev;
+        let nextRows = block.rows;
+
+        if (existingKey) {
+          const exists = block.rows.some((row) => row.key === existingKey);
+          if (exists) {
+            proposalKey = existingKey;
+            nextRows = block.rows.map((row) =>
+              row.key === existingKey ? { ...row, title: trimmed } : row,
+            );
+          }
+        }
+
+        if (proposalKey === null) {
+          const newRow = createR4ProposalRow(trimmed);
+          proposalKey = newRow.key;
+          nextRows = [...block.rows, newRow];
+        }
 
         if (id === "duration") {
           nextRows = nextRows.map((r) => ({
             ...r,
-            r4Approved: r.key === newRow.key,
+            r4Approved: r.key === proposalKey,
           }));
         }
 
@@ -342,6 +364,33 @@ export function WorkspaceR4DecisionView({
               ...block,
               confirmed: block.confirmed ?? false,
               rows: nextRows,
+            },
+          },
+        };
+      });
+    });
+    scheduleR4Autosave();
+    return proposalKey;
+  };
+
+  const handleRemoveProposal = (id: R4DecisionReviewBlockId, key: string) => {
+    if (!canEdit || !supportsR4CustomProposalInput(id)) return;
+
+    flushSync(() => {
+      setReview((prev) => {
+        const block = prev.blocks[id];
+        if (!block) return prev;
+        if (block.confirmed && !editingRef.current[id]) return prev;
+        if (!block.rows.some((row) => row.key === key)) return prev;
+
+        return {
+          ...prev,
+          blocks: {
+            ...prev.blocks,
+            [id]: {
+              ...block,
+              confirmed: block.confirmed ?? false,
+              rows: block.rows.filter((row) => row.key !== key),
             },
           },
         };
@@ -426,6 +475,8 @@ export function WorkspaceR4DecisionView({
 
   function renderDecisionBlock(id: R4DecisionReviewBlockId, title: string) {
     const block = review.blocks[id] ?? baselines[id]!;
+    const proposalRows = block.rows.filter((row) => isR4ProposalRowKey(row.key));
+    const standardRows = block.rows.filter((row) => !isR4ProposalRowKey(row.key));
     const baseline = baselines[id]!;
     const dirty = isR4BlockDirty(block, baseline);
     const pristine = !dirty && !block.confirmed;
@@ -461,7 +512,7 @@ export function WorkspaceR4DecisionView({
         <div className={R4_DECISION_BLOCK_BODY_CLASS}>
           <h2 className={hfBlockTitle}>{title}</h2>
           <ul className={R4_DECISION_ROW_LIST_CLASS}>
-            {block.rows.map((row) => (
+            {standardRows.map((row) => (
               <R4DecisionOptionRow
                 key={row.key}
                 row={row}
@@ -474,8 +525,12 @@ export function WorkspaceR4DecisionView({
             ))}
             {canEdit && !switchesDisabled && supportsR4CustomProposalInput(id) ? (
               <R4DecisionProposalInput
+                proposalRows={proposalRows}
                 disabled={disableInteractions}
-                onAddProposal={(text) => handleAddProposal(id, text)}
+                onUpsertProposal={(text, existingKey) =>
+                  handleUpsertProposal(id, text, existingKey)
+                }
+                onRemoveProposal={(key) => handleRemoveProposal(id, key)}
               />
             ) : null}
           </ul>

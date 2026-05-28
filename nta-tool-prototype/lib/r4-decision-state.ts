@@ -36,10 +36,10 @@ export function supportsR4CustomProposalInput(
   return blockId === "lectureMeasures" || blockId === "assessmentMeasures";
 }
 
-export function createR4ProposalRow(text: string): R4DecisionRow {
+export function createR4ProposalRow(text: string, key?: string): R4DecisionRow {
   const trimmed = text.trim();
   return {
-    key: `${R4_PROPOSAL_ROW_KEY_PREFIX}${Date.now()}`,
+    key: key ?? `${R4_PROPOSAL_ROW_KEY_PREFIX}${Date.now()}`,
     title: trimmed,
     studentSelected: false,
     r4Approved: true,
