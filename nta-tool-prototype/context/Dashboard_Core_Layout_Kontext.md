@@ -367,6 +367,8 @@ Credentials: mit Testpersonen abgestimmt (nicht in Repo). Login **`/staff/login`
 | **Toolbar** | `workspace-applications-table-toolbar.tsx`; Tokens `WORKSPACE_HOME_TABLE_*` (Figma `5948:27470`) |
 | **Offen/Alle** | Nur Home; `isOpenApplication` = nicht `approved` / `rejected` (R2/R3 Default **Offen**, R4 Default **Alle**) |
 | **Beratungsphase** | Home-Tabelle zeigt **alle** RLS-sichtbaren Anträge inkl. `isConsultationPhaseApplication` («Beratung & Empfehlung», «Empfehlung verfasst»). Hook `excludeConsultationPhase` existiert optional (Default `false`). KPI «Anstehende Beratungen» und **Meine Aufgaben** unverändert (KPI ohne «Empfehlung verfasst»; Aufgaben nur persönliche Buckets). |
+| **R2R4 Drafts** | Für `r2and4.combined.test@example.com` filtert Home `draft`-Anträge clientseitig aus (`deriveCanonicalApplicationState !== "draft"` in `workspace-home-dashboard.tsx`). |
+| **Scroll über Tabelle** | Home + Meine Aufgaben: Tabellenwrapper `overflow-visible`; vertikales Wheel-Scrollen über Tabellenzeilen bewegt immer den weissen Panel-Container, horizontales Scrollen bleibt im Tabellencontainer (`WorkspaceApplicationsTable`). |
 | **Facettierte Filter** | `workspace-applications-table-controls.ts`: Status, Studiengang, Fakultät (Kürzel), Zugewiesen an, «Nur mir zugewiesen»; Pills zum Entfernen; **Filter-Button:** bei aktiven Filtern runder schwarzer Badge `24×24` mit weisser Zahl (`size-6`, `bg-black`) |
 | **Suche** | Name, Studiengang, Fakultät (Kürzel + Vollname), **Antrags ID** (`NTA-YYYY-XXXX`), Status-Label, Assignee |
 | **Sortierung** | Spaltenköpfe in `workspace-applications-table.tsx` |

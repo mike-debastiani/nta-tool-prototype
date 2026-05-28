@@ -304,6 +304,11 @@ Vollständige Mechanik → **`Antrag_Review_Kontext.md`**, R4 → **`Antrag_Bewi
 | 2026-05-27 | Consultation appointment in review | `workspace-consultation-appointment-card.tsx` + `workspace-consultation-appointment.ts`: unter Beratungs-Callout (`gap-6`, Figma `6081:24572`), Live `data.consultation`, feste Org-Zeilen unter Beratername |
 | 2026-05-27 | Auswerten placeholder | `workspace-evaluate-view.tsx`: `/workspace?view=auswerten` ohne Inhalt (wie Terminplaner) |
 | 2026-05-27 | Status wording R4 | `in_decision` Audience R4/R2R4: **Entscheid erforderlich** (ersetzt «Entscheid ausstehend» / «In Entscheid» in KPI-Labels) |
+| 2026-05-28 | R1 sidebar + CTA polish | `r1-application-flow-layout.tsx` / `nta-antrag-desktop.tsx`: Sidebar mit zusätzlicher «Weitere Informationen»-Accordion-Card; Flow-CTAs als pill/rounded-full; Step-Wechsel `3→4` und `4→5` mit Scroll-Reset nach oben |
+| 2026-05-28 | R1 booking calendar live behavior | `r1-booking-scheduler.tsx` / `nta-antrag-desktop.tsx`: Tagesmarker = aktueller Tag; buchbare Tage fortlaufend nur MO–FR (keine Vergangenheit); sichtbare Vor-/Folgemonat-Tage klickbar mit direktem Monatssprung |
+| 2026-05-28 | Locked-step helper tooltip | `r1-application-flow-layout.tsx`: Tooltip auf gesperrten Steps 4/5 («Wird nach der Beratung freigeschaltet») vor Recommendation-Release |
+| 2026-05-28 | Workspace table wheel scroll | `workspace-home-dashboard.tsx` + `workspace-my-tasks-view.tsx`: Wrapper `overflow-visible`, sodass vertikales Scrollen über Tabellenzeilen den weissen Container scrollt |
+| 2026-05-28 | R4 free-text proposal UX | `workspace-r4-decision-view.tsx` + `r4-decision-review-blocks.tsx`: Wording «Hinzufügen/Hinzugefügt», inline-Aktivierung beim Tippen (R1-ähnlich), stabile Fokusführung, automatische neue Leerzeile, Abwählen löscht Zeile |
 
 ---
 

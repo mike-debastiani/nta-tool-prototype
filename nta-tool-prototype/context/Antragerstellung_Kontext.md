@@ -56,6 +56,7 @@ Hinweise:
 |-------|--------|
 | `components/nta-antrag-desktop.tsx` | R1 Flow Step 1–6: Validierung, Fortschritts-/Freischaltlogik, Autosave, Realtime, Delete → Portal |
 | `components/domain/r1-application-flow-layout.tsx` | HF-Layout: `h-screen`, Top-Bar (Titel, Autosave-Hinweis, Schliessen), Sidebar, scrollbarer Form-Bereich |
+| `components/domain/r1-application-flow-layout.tsx` (`R1FlowSupportInformationCard`) | Sidebar-Card «Fragen und Unklarheiten / Weitere Informationen» als fusionierte Accordion-Card mit externen Quicklinks |
 | `components/domain/r1-flow-icons.tsx` | Lucide-Icons + Fortschritts-Statuspunkt (Gradient complete/incomplete) |
 | `components/domain/r1-booking-scheduler.tsx` | Step 3 `step3_booking`: Kalender + Slots + Termindetails (Figma `5307:7575`) |
 | `components/domain/r1-booking-confirmation.tsx` | Step 3 `step3_booked`: Terminbestätigung, Karte, Footer (Figma `5307:7907` / `5307:8254`) |
@@ -130,8 +131,8 @@ UI-Substeps in `nta-antrag-desktop.tsx` (ein Sidebar-Step „Beratung und Empfeh
 | `step3_booked` | `R1FlowBookingConfirmation` | `5307:7907` (Karte/Footer `5307:8254`) |
 | `step3_recommendation` | `RecommendationReleasedAccordion` **`variant="r1"`** + optional Checkbox | `5247:5570` |
 
-- **Buchung:** Kalender + Slots (nur **onsite**, UZH Gebäude SBO Raum E-103); ausgewählter Tag → Marker **weiss** auf schwarzem Kreis. Footer „Termin buchen“ in `R1FlowFormFooter`. Persistenz: `consultation.date`, **`dateIso`**, `slot`, **`locationType: "onsite"`**, volle Adresse in `location`.
-- **Nach Buchung:** Terminbestätigung ohne inneren Rahmen um die Karte; **statische** Kartengrafik `public/images/r1-booking/map-example.png` + Link «In Maps öffnen»; Footer-Buttons gemäss Figma (kein `flex-1` auf Primary).
+- **Buchung:** Kalender + Slots (nur **onsite**, UZH Gebäude SBO Raum E-103); **heutiger Tag** wird über `markerDate={new Date()}` mit Punkt markiert. Buchbare Tage sind fortlaufend **MO–FR** (keine Wochenenden, keine Vergangenheitsdaten), inkl. sichtbarer Tage aus Vor-/Folgemonat; Klick auf einen solchen Tag springt direkt in den Zielmonat. Footer „Termin buchen“ in `R1FlowFormFooter`. Persistenz: `consultation.date`, **`dateIso`**, `slot`, **`locationType: "onsite"`**, volle Adresse in `location`.
+- **Nach Buchung:** Terminbestätigung als 2-Spalten-Karte gemäss Figma (`6101:22681`) mit Datum/Ort/Beratende Person links und Karte rechts; **statische** Kartengrafik `public/images/r1-booking/uzh-location-map.png`, CTA «In Maps öffnen» auf der Karte, plus «Zum Kalender hinzufügen» (Google Calendar) im Footer.
 - **Empfehlung freigegeben (R2):** nur wenn `data.recommendation.releasedHtml` gesetzt (`isRecommendationReleasedToR1`) — **nicht** durch Navigieren zu `step3_recommendation`.
 - **Kenntnisnahme:** Checkbox nur in `step3_recommendation` als `children` des Accordions; Pflicht für **Erst-Freischaltung** Step 4; Persistenz `data.r1RecommendationAcknowledged`; deaktiviert bis `releasedHtml`.
 - **Sticky Unlock:** Step 4/5 bleiben klickbar; abgewählte Kenntnisnahme → Step 3 in Sidebar **incomplete** (rot).
@@ -162,6 +163,7 @@ UI-Substeps in `nta-antrag-desktop.tsx` (ein Sidebar-Step „Beratung und Empfeh
 - **Step 2:** gleiche DOM-Struktur wie Step 2 (Attest inkl. Callout, Upload, Dateiliste); weiterhin editierbar.
 - **Step 3:** `RecommendationReleasedAccordion` **`variant="r1"`** **ohne** Kenntnisnahme-Checkbox.
 - **Step 4:** dieselbe `R1ApplicationDefinitionSection` wie Step 4; Overview-Validierung über `errors`-Prop (`overviewSituationInvalid`, …).
+- **Scroll-Reset beim Step-Wechsel:** Beim Übergang **Step 3 → Step 4** sowie **Step 4 → Step 5** setzt `nta-antrag-desktop.tsx` den `R1FlowMainContent`-Scroll explizit auf `top: 0` (kein Mitnehmen des vorherigen Scroll-Offsets).
 - Live-Validierung: fehlende Pflichtinhalte **rot**; Sidebar **incomplete** (`step*InvalidInOverview`).
 - Nutzungsbedingungen-Block am Ende der Karte; **Finales Senden** → `submittedAt`, `finalSubmitted`, `applicationDefinition`; `recommendation` per Spread erhalten, `ready: true`.
 
@@ -182,9 +184,9 @@ UI-Substeps in `nta-antrag-desktop.tsx` (ein Sidebar-Step „Beratung und Empfeh
 |---------|-----------|
 | Seite | `h-screen overflow-hidden` — nur der **rechte Form-Bereich** scrollt (`R1FlowMainContent`); Seitenrand **24px** (`.hf-page-grid--r1-flow`, nicht 48px Dashboard-Grid) |
 | Top-Bar | Titel links; **Autosave-Hinweis** rechts (Save-Icon, `bewilligt-500`) wenn aktiv; optional **Schliessen** → Draft speichern + `/portal/home` |
-| Sidebar | Fortschrittskarte + Kontakt; unten **Antrag verwerfen** (`pb-6`) |
+| Sidebar | Fortschrittskarte + Kontakt + **Weitere Informationen** (Accordion-Quicklinks); unten **Antrag verwerfen** (`pb-6`) |
 | Hauptpanel | Weiss, `rounded-t-xl`, Shadow `APPLICATION_CONTENT_PANEL_SHADOW_CLASS`, rechter Rand **24px** wie Dashboard (`px-6` / Grid-Margin, kein `-mr` mehr) |
-| Formular | Karte `border-stone-250`, Footer **Weiter** innerhalb der Karte |
+| Formular | Karte `border-stone-250`, Footer-Buttons (`Zurück`/`Weiter` etc.) als **pill / rounded-full** innerhalb der Karte |
 | Korrektur-Modus | Optional dritte Spalte: Review-Sidebar; Formular `hf-col-span-6` |
 
 **Icons:** Lucide via `R1FlowIcon` / `r1-flow-icons.tsx` (Referenz-SVGs unter `public/icons/r1-flow/` optional; Runtime = Lucide).
@@ -241,6 +243,7 @@ Ausnahme Step 4/5 ohne Kenntnisnahme: Erst-Freischaltung blockiert; nach Sticky 
 ### Trennlinie
 
 - `R1FlowProgressDivider` nach Step 3, solange `!recommendationReleased` (vor R2-Freigabe).
+- Tooltip auf gesperrten Steps 4/5 vor R2-Freigabe: **„Wird nach der Beratung freigeschaltet“**.
 
 ### Übersicht (Step 5)
 

@@ -68,7 +68,7 @@ Betroffen: **Gültigkeitsdauer**, **Geltungsbereich**, **Massnahmen LV**, **Mass
 |------|--------|
 | `5641:23410` | Fachstelle-bestätigte Blöcke (Antragsteller, Attest, Definition, …) |
 | `5657:17967` | Entscheid-Block **Ausgang:** Studierenden-Wahl = Schalter **an** → **Bewilligt** (`bewilligt-50` / `bewilligt-500`) |
-| `5907:23351` | **Bearbeitung:** Abgelehnt / Vorschlag / **Zurücksetzen** + **Auswahl bestätigen** |
+| `5907:23351` | **Bearbeitung:** Abgelehnt / Hinzugefügt / **Zurücksetzen** + **Auswahl bestätigen** |
 | `5657:18077` | Nach **Auswahl bestätigen:** `border-bewilligt-600`, Footer `bewilligt-200`, **Bearbeiten** + **Auswahl bestätigt** |
 
 **Tokens:** `lib/design-tokens/r4-decision-block.ts` (Zeilen, Footer, Switch-Gruppe **125px** — Schalter linksbündig).
@@ -77,7 +77,7 @@ Betroffen: **Gültigkeitsdauer**, **Geltungsbereich**, **Massnahmen LV**, **Mass
 
 - **Studierende Person hat gewählt** und Schalter **an** → Anzeige **bewilligt** (Figma: positive Kodierung).
 - **Studierende Person hat gewählt**, R4 setzt Schalter **aus** → **abgelehnt** (negative Kodierung laut Figma).
-- **Studierende Person hat nicht gewählt**, Ausgang Schalter **aus**, Text **Vorschlagen** → R4 setzt Schalter **an** → **Vorschlag** (Figma: gelbe Zeile / gelber Switch, nicht Violett).
+- **Studierende Person hat nicht gewählt**, Ausgang Schalter **aus**, Text **Hinzufügen** → R4 setzt Schalter **an** → **Hinzugefügt** (Figma: gelbe Zeile / gelber Switch, nicht Violett).
 
 **Gültigkeitsdauer:** zwei optionale Zeilen (gesamte Studiendauer / ein Semester); logisch **exklusiv** — höchstens eine Zeile kann auf **bewilligt** stehen; Umsetzung im Prototyp als gekoppelte Schalter-Gruppe analog zur Intention „eine Dauer gewählt“.
 
@@ -87,10 +87,10 @@ Nur **`lectureMeasures`** und **`assessmentMeasures`** (`supportsR4CustomProposa
 
 | Aspekt | Ist |
 |--------|-----|
-| **UI** | `R4DecisionProposalInput` unter der Optionenliste (Figma `5907:23378`): Plus-Icon, Platzhalter «Formulieren Sie einen anderen Vorschlag …» |
+| **UI** | `R4DecisionProposalInput` unter der Optionenliste (Figma `5907:23378`): Plus-Icon, Platzhalter «Formulieren Sie einen anderen Zusatz …», Label «Hinzufügen» / «Hinzugefügt» |
 | **Eingabe** | `AutoGrowTextarea` — mehrzeilig, Höhe wächst mit Inhalt; Checkbox/Plus an **erster Textzeile** ausgerichtet (`h-5` / `leading-5`) |
-| **Anlegen** | Text eingeben → **Blur** oder **Strg/Cmd+Enter** → neue Zeile als **Vorschlag** (`studentSelected: false`, `r4Approved: true`, gelbe Kodierung) |
-| **Entfernen** | Schalter auf der Vorschlagszeile **aus** → Zeile wird gelöscht (nicht nur abgewählt) |
+| **Anlegen / Bearbeiten** | Tippen im leeren Feld erzeugt sofort eine aktive Zeile (**Hinzugefügt**) und behält den Fokus im selben Feld; darunter erscheint automatisch ein neues leeres Feld (Mechanik wie R1 `CustomMeasureLinesField`) |
+| **Entfernen** | Schalter auf einer hinzugefügten Freitextzeile **aus** → Zeile wird gelöscht (nicht nur abgewählt) |
 | **Persistenz-Zwischenstand** | `data.r4DecisionReview.blocks[id].rows` mit Schlüssel-Präfix **`proposal:<timestamp>`**; Merge in `mergeR4DecisionReview` erhält solche Zeilen neben Baseline-Optionen |
 | **Zurücksetzen** | «Zurücksetzen» im Block entfernt Vorschläge (nur Studierenden-Baseline) |
 
@@ -99,7 +99,7 @@ Nur **`lectureMeasures`** und **`assessmentMeasures`** (`supportsR4CustomProposa
 - Nach erster Änderung der Auswahl: Button **„Zurücksetzen“** links unten (stellt die **Arbeitskopie** dieser Zeilen auf den Ausgangszustand aus den Antragsdaten zurück).
 - **„Auswahl bestätigen“** rechts (primary pill, `CircleCheckBig`): persistiert den Block; bestätigter Block zeigt Zeilen weiter mit Schaltern (read-only), Footer wie Figma `5657:18077`. **„Bearbeiten“** hebt `confirmed` auf und öffnet die bearbeitbare Ansicht erneut.
 - **Switch-Gruppe:** feste Breite **125px**, Schalter **linksbündig** in jeder Zeile (`R4_DECISION_SWITCH_GROUP_CLASS`).
-- **„Entscheid abschliessen“** unten rechts: solange **deaktiviert**, bis **alle sichtbaren** R4-Entscheid-Blöcke bestätigt sind; dann aktiv. Setzt **`status = approved`**, merged `r4DecisionReview`, ruft **`materializeApprovedR4DecisionReview`** auf und broadcastet. *(Ablehnung gesamten Antrags: später.)*
+- **„Entscheid abschliessen“** unten rechts: solange **deaktiviert**, bis **alle sichtbaren** R4-Entscheid-Blöcke bestätigt sind; dann aktiv. CTA ist als **pill** (`rounded-full`) umgesetzt. Setzt **`status = approved`**, merged `r4DecisionReview`, ruft **`materializeApprovedR4DecisionReview`** auf und broadcastet. *(Ablehnung gesamten Antrags: später.)*
 
 ---
 

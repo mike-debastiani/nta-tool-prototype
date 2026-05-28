@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, ExternalLink, Info } from "lucide-react";
+import { ExternalLink, Info } from "lucide-react";
 import { type ComponentPropsWithoutRef, type ReactNode, type RefObject } from "react";
 
 import { HfPageGrid } from "@/components/layout/hf-grid";
@@ -274,6 +274,7 @@ type R1FlowProgressStepProps = {
   isActive?: boolean;
   onClick?: () => void;
   isClickable?: boolean;
+  lockedTooltip?: string;
 };
 
 export function R1FlowProgressStep({
@@ -283,6 +284,7 @@ export function R1FlowProgressStep({
   isActive = false,
   onClick,
   isClickable = false,
+  lockedTooltip,
 }: R1FlowProgressStepProps) {
   const baseContentClass = r1FlowProgressContentClass(visualState);
   const contentClass = isActive ? "text-background" : baseContentClass;
@@ -295,44 +297,57 @@ export function R1FlowProgressStep({
     visualState === "locked-pre" || visualState === "locked-post";
 
   return (
-    <div
-      className={cn(
-        "flex w-full shrink-0 items-center justify-between rounded-lg p-2 transition-colors",
-        isLocked && !isClickable && "cursor-not-allowed",
-        canHighlight && !isActive && "cursor-pointer hover:bg-stone-100",
-        isActive ? "bg-primary" : "bg-transparent",
-      )}
-      onClick={onClick}
-      role={isClickable ? "button" : undefined}
-      tabIndex={isClickable ? 0 : undefined}
-      onKeyDown={
-        isClickable
-          ? (event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onClick?.();
+    <div className="group/step relative">
+      <div
+        className={cn(
+          "flex w-full shrink-0 items-center justify-between rounded-lg p-2 transition-colors",
+          isLocked && !isClickable && "cursor-not-allowed",
+          canHighlight && !isActive && "cursor-pointer hover:bg-stone-100",
+          isActive ? "bg-primary" : "bg-transparent",
+        )}
+        onClick={onClick}
+        role={isClickable ? "button" : undefined}
+        tabIndex={isClickable ? 0 : undefined}
+        onKeyDown={
+          isClickable
+            ? (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onClick?.();
+                }
               }
-            }
-          : undefined
-      }
-    >
-      <div className="flex min-w-0 items-center gap-4">
+            : undefined
+        }
+      >
+        <div className="flex min-w-0 items-center gap-4">
+          <span className="flex size-4 shrink-0 items-center justify-center">
+            <R1FlowIcon name={iconName} className={contentClass} />
+          </span>
+          <span
+            className={cn(
+              "truncate whitespace-nowrap",
+              hfTypography.paragraphSmall,
+              contentClass,
+            )}
+          >
+            {label}
+          </span>
+        </div>
         <span className="flex size-4 shrink-0 items-center justify-center">
-          <R1FlowIcon name={iconName} className={contentClass} />
-        </span>
-        <span
-          className={cn(
-            "truncate whitespace-nowrap",
-            hfTypography.paragraphSmall,
-            contentClass,
-          )}
-        >
-          {label}
+          <R1FlowProgressTrailingIndicator visualState={visualState} isActive={isActive} />
         </span>
       </div>
-      <span className="flex size-4 shrink-0 items-center justify-center">
-        <R1FlowProgressTrailingIndicator visualState={visualState} isActive={isActive} />
-      </span>
+      {isLocked && !isClickable && lockedTooltip ? (
+        <span
+          className={cn(
+            "pointer-events-none absolute top-1/2 left-full z-20 ml-2 hidden -translate-y-1/2 rounded-md bg-stone-900 px-2 py-1 text-hf-paragraph-mini text-stone-50 shadow-sm",
+            "group-hover/step:block",
+          )}
+          role="tooltip"
+        >
+          {lockedTooltip}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -363,103 +378,91 @@ const R1_FLOW_MORE_INFORMATION_LINKS = [
   },
 ] as const;
 
-/** Figma `6101:22947` — Kontakt ohne Icon-Badges. */
-export function R1FlowContactCard() {
+/** Figma `6173:21808`/`6173:21825` — fusionierte Kontakt- und Info-Card. */
+export function R1FlowSupportInformationCard() {
   return (
     <div
       className={cn(
         APPLICATION_CONTENT_PANEL_CARD_CLASS,
-        "flex shrink-0 flex-col gap-4 p-6",
+        "flex shrink-0 flex-col gap-5 p-6",
       )}
-      data-node-id="6101:22947"
+      data-node-id="6173:21808"
     >
-      <div className="flex flex-col gap-0.5" data-node-id="6101:22949">
-        <p
-          className={cn(hfTypography.paragraphMedium, "text-foreground")}
-          data-node-id="6101:22950"
-        >
-          Fragen und Unklarheiten?
-        </p>
-        <p
-          className={cn(hfTypography.paragraphSmall, "text-muted-foreground")}
-          data-node-id="6101:22951"
-        >
-          Kontaktieren Sie unsere Fachstelle unter:
-        </p>
+      <div className="flex flex-col gap-4" data-node-id="6173:21810">
+        <div className="flex flex-col gap-0.5" data-node-id="6173:21811">
+          <p
+            className={cn(hfTypography.paragraphMedium, "text-foreground")}
+            data-node-id="6173:21812"
+          >
+            Fragen und Unklarheiten?
+          </p>
+          <p
+            className={cn(hfTypography.paragraphSmall, "text-muted-foreground")}
+            data-node-id="6173:21813"
+          >
+            Kontaktieren Sie unsere Fachstelle unter:
+          </p>
+        </div>
+        <div className="flex flex-col gap-1" data-node-id="6173:21814">
+          <a
+            href={`mailto:${R1_FLOW_CONTACT_EMAIL}`}
+            className={cn(
+              hfTypography.paragraphSmallMedium,
+              "text-foreground transition-opacity hover:opacity-80",
+            )}
+            data-node-id="6173:21815"
+          >
+            {R1_FLOW_CONTACT_EMAIL}
+          </a>
+          <a
+            href="tel:+41446344544"
+            className={cn(
+              hfTypography.paragraphSmallMedium,
+              "text-foreground transition-opacity hover:opacity-80",
+            )}
+            data-node-id="6173:21817"
+          >
+            {R1_FLOW_CONTACT_PHONE}
+          </a>
+        </div>
       </div>
-      <div className="flex flex-col gap-1" data-node-id="6101:22952">
-        <a
-          href={`mailto:${R1_FLOW_CONTACT_EMAIL}`}
-          className={cn(
-            hfTypography.paragraphSmallMedium,
-            "text-foreground transition-opacity hover:opacity-80",
-          )}
-          data-node-id="6101:22953"
-        >
-          {R1_FLOW_CONTACT_EMAIL}
-        </a>
-        <a
-          href="tel:+41446344544"
-          className={cn(
-            hfTypography.paragraphSmallMedium,
-            "text-foreground transition-opacity hover:opacity-80",
-          )}
-          data-node-id="6101:22955"
-        >
-          {R1_FLOW_CONTACT_PHONE}
-        </a>
-      </div>
-    </div>
-  );
-}
 
-/** Figma `6101:22956` — Quicklinks als Accordion (zugeklappt per Default). */
-export function R1FlowMoreInformationCard() {
-  return (
-    <div
-      className={cn(APPLICATION_CONTENT_PANEL_CARD_CLASS, "shrink-0 p-6")}
-      data-node-id="6101:22956"
-    >
-      <Accordion type="single" collapsible>
+      <div className="h-px w-full bg-stone-200" data-node-id="6173:21819" />
+
+      <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="more-info" className="border-b-0">
           <AccordionTrigger
             className={cn(
               "py-0 hover:no-underline",
-              "[&>svg]:size-5 [&>svg]:text-foreground",
+              "[&>svg]:size-6 [&>svg]:text-foreground",
             )}
-            data-node-id="6101:22960"
+            data-node-id="6173:21820"
           >
             <span className={cn(hfTypography.paragraphMedium, "text-foreground")}>
               Weitere Informationen
             </span>
           </AccordionTrigger>
           <AccordionContent className="px-0 pt-4 pb-0">
-            <ul className="flex w-full flex-col" data-node-id="6101:22961">
-              {R1_FLOW_MORE_INFORMATION_LINKS.map((link, index) => (
-                <li
-                  key={link.label}
-                  className={cn(
-                    index < R1_FLOW_MORE_INFORMATION_LINKS.length - 1
-                    && "border-b border-border",
-                  )}
-                >
+            <ul className="flex w-full flex-col gap-0" data-node-id="6180:3915">
+              {R1_FLOW_MORE_INFORMATION_LINKS.map((link) => (
+                <li key={link.label}>
                   <a
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center px-2 py-3 transition-opacity hover:opacity-80"
+                    className="inline-flex min-h-9 items-center justify-center gap-2 bg-transparent px-0.5 py-2 text-foreground transition-opacity hover:opacity-80"
                   >
                     <span
                       className={cn(
                         hfTypography.paragraphSmallMedium,
-                        "min-w-0 flex-1 text-foreground",
+                        "whitespace-nowrap underline underline-offset-2",
                       )}
                     >
                       {link.label}
                     </span>
-                    <ArrowUpRight
-                      className="size-6 shrink-0 text-foreground"
-                      strokeWidth={1.75}
+                    <ExternalLink
+                      className="size-4 shrink-0 text-foreground"
+                      strokeWidth={2}
                       aria-hidden
                     />
                   </a>

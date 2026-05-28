@@ -1215,7 +1215,7 @@ export function PortalApplicationAdjustment({
             {canEditBlocks ? (
               <Button
                 type="button"
-                className="h-10 shrink-0 gap-2 bg-zinc-900 px-5 text-white hover:bg-zinc-800 disabled:opacity-60"
+                className="h-10 shrink-0 gap-2 rounded-full bg-zinc-900 px-5 text-white hover:bg-zinc-800 disabled:opacity-60"
                 disabled={
                   !r1AllRequestedAdjustmentsSaved(data)
                   || releaseSubmitting

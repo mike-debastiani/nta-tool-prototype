@@ -48,8 +48,7 @@ import {
 import {
   R1ApplicationFlowLayout,
   R1FlowAutosaveIndicator,
-  R1FlowContactCard,
-  R1FlowMoreInformationCard,
+  R1FlowSupportInformationCard,
   R1FlowDiscardButton,
   R1FlowField,
   R1FlowFieldColumn,
@@ -207,8 +206,6 @@ type ApplicationFormFieldErrors = {
   assessmentMeasures?: string;
 };
 
-const INITIAL_BOOKING_MONTH = new Date(2026, 4, 1);
-const INITIAL_BOOKING_DATE = new Date(2026, 4, 14);
 type BookingMode = "onsite";
 type BookingSlotOption = {
   value: string;
@@ -256,6 +253,91 @@ const BOOKING_SLOT_OPTIONS: BookingSlotOption[] = [
 
 const BOOKING_SLOTS = BOOKING_SLOT_OPTIONS.map((option) => option.value);
 const MOCK_ADVISOR = "Frau Dr. Suzanne Beispiel";
+
+function startOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function isWeekday(date: Date): boolean {
+  const day = date.getDay();
+  return day >= 1 && day <= 5;
+}
+
+function nextBookableWeekday(from: Date): Date {
+  const candidate = startOfDay(from);
+  while (!isWeekday(candidate)) {
+    candidate.setDate(candidate.getDate() + 1);
+  }
+  return candidate;
+}
+
+function resolveInitialBookingDate(): Date {
+  return nextBookableWeekday(new Date());
+}
+
+function resolveInitialBookingState(): {
+  displayedMonth: Date;
+  selectedBookingDate: Date;
+  selectedBookingSlot: string;
+} {
+  const selectedBookingDate = resolveInitialBookingDate();
+  return {
+    displayedMonth: new Date(
+      selectedBookingDate.getFullYear(),
+      selectedBookingDate.getMonth(),
+      1,
+    ),
+    selectedBookingDate,
+    selectedBookingSlot: BOOKING_SLOTS[0],
+  };
+}
+
+function normalizeBookingDate(candidate: Date): Date {
+  if (!Number.isFinite(candidate.getTime())) return resolveInitialBookingDate();
+  const today = startOfDay(new Date());
+  const notPast = candidate < today ? today : candidate;
+  return nextBookableWeekday(notPast);
+}
+
+function formatGoogleCalendarDate(date: Date, slot: string): {
+  start: string;
+  end: string;
+} {
+  const [startRaw, endRaw] = slot.split(" - ").map((part) => part.trim());
+  const parseTime = (value: string): { hours: number; minutes: number } => {
+    const [hoursPart, minutesPart] = value.split(":");
+    const hours = Number.parseInt(hoursPart ?? "0", 10);
+    const minutes = Number.parseInt(minutesPart ?? "0", 10);
+    return {
+      hours: Number.isFinite(hours) ? hours : 0,
+      minutes: Number.isFinite(minutes) ? minutes : 0,
+    };
+  };
+  const startTime = parseTime(startRaw ?? "09:00");
+  const endTime = parseTime(endRaw ?? "10:00");
+  const startDate = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    startTime.hours,
+    startTime.minutes,
+    0,
+  );
+  const endDate = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    endTime.hours,
+    endTime.minutes,
+    0,
+  );
+  const toGoogleFormat = (value: Date) =>
+    `${value.getFullYear()}${String(value.getMonth() + 1).padStart(2, "0")}${String(value.getDate()).padStart(2, "0")}T${String(value.getHours()).padStart(2, "0")}${String(value.getMinutes()).padStart(2, "0")}00`;
+  return {
+    start: toGoogleFormat(startDate),
+    end: toGoogleFormat(endDate),
+  };
+}
 
 function resolveBookingSlotOption(slot: string): BookingSlotOption {
   return (
@@ -531,20 +613,21 @@ function readBookingUiFromApplication(
   row: ApplicationRow | undefined,
   forceNew: boolean,
 ): { displayedMonth: Date; selectedBookingDate: Date; selectedBookingSlot: string } {
+  const initial = resolveInitialBookingState();
   if (forceNew || !row?.data?.r1DraftBookingUi) {
-    return {
-      displayedMonth: INITIAL_BOOKING_MONTH,
-      selectedBookingDate: INITIAL_BOOKING_DATE,
-      selectedBookingSlot: BOOKING_SLOTS[4],
-    };
+    return initial;
   }
   const ui = row.data.r1DraftBookingUi;
   const dm = new Date(ui.displayedMonthIso);
   const sd = new Date(ui.selectedBookingDateIso);
+  const selectedBookingDate = normalizeBookingDate(sd);
+  const displayedMonth = Number.isFinite(dm.getTime())
+    ? new Date(dm.getFullYear(), dm.getMonth(), 1)
+    : new Date(selectedBookingDate.getFullYear(), selectedBookingDate.getMonth(), 1);
   return {
-    displayedMonth: Number.isFinite(dm.getTime()) ? dm : INITIAL_BOOKING_MONTH,
-    selectedBookingDate: Number.isFinite(sd.getTime()) ? sd : INITIAL_BOOKING_DATE,
-    selectedBookingSlot: ui.selectedBookingSlot || BOOKING_SLOTS[4],
+    displayedMonth,
+    selectedBookingDate,
+    selectedBookingSlot: ui.selectedBookingSlot || initial.selectedBookingSlot,
   };
 }
 
@@ -1044,9 +1127,10 @@ export function NtaAntragDesktop({
       setStepFourErrors({});
       setStepFiveError(null);
       setIsRecommendationAcknowledged(false);
-      setSelectedBookingDate(INITIAL_BOOKING_DATE);
-      setDisplayedMonth(INITIAL_BOOKING_MONTH);
-      setSelectedBookingSlot(BOOKING_SLOTS[4]);
+      const initialBookingState = resolveInitialBookingState();
+      setSelectedBookingDate(initialBookingState.selectedBookingDate);
+      setDisplayedMonth(initialBookingState.displayedMonth);
+      setSelectedBookingSlot(initialBookingState.selectedBookingSlot);
       setHighestUnlockedStepIndex(0);
       setCurrentStep("step1");
       window.localStorage.removeItem(autosaveKey);
@@ -1183,8 +1267,9 @@ export function NtaAntragDesktop({
   const selectedBookingLocationLines = selectedBookingOption.location.split(", ");
   const monthStart = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth(), 1);
   const gridStart = new Date(monthStart);
-  gridStart.setDate(1 - monthStart.getDay());
-  const calendarDays = Array.from({ length: 42 }, (_, index) => {
+  const mondayFirstOffset = (monthStart.getDay() + 6) % 7;
+  gridStart.setDate(1 - mondayFirstOffset);
+  const calendarDays = Array.from({ length: 35 }, (_, index) => {
     const date = new Date(gridStart);
     date.setDate(gridStart.getDate() + index);
     return {
@@ -1384,14 +1469,22 @@ export function NtaAntragDesktop({
   const bookedAdvisor = application?.data?.consultation?.advisor ?? MOCK_ADVISOR;
   const bookedLocation = application?.data?.consultation?.location ?? selectedBookingOption.location;
   const bookedLocationLines = bookedLocation.split(", ");
-  const bookedAppointmentDateLine = selectedBookingDate.toLocaleDateString("de-CH", {
+  const bookedDateIso = application?.data?.consultation?.dateIso;
+  const bookedDate =
+    bookedDateIso && Number.isFinite(new Date(bookedDateIso).getTime())
+      ? new Date(bookedDateIso)
+      : selectedBookingDate;
+  const bookedAppointmentWeekdayLine = bookedDate.toLocaleDateString("de-CH", {
     weekday: "long",
+  });
+  const bookedAppointmentDayLine = bookedDate.toLocaleDateString("de-CH", {
     day: "numeric",
     month: "long",
-    year: "numeric",
   });
   const bookedAppointmentTimeLine = `${bookedSlot.replace(" - ", " – ")} Uhr`;
   const bookedMapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(bookedLocation)}`;
+  const bookedCalendarDateRange = formatGoogleCalendarDate(bookedDate, bookedSlot);
+  const bookedCalendarHref = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("Beratungsgespräch NTA")}&dates=${bookedCalendarDateRange.start}/${bookedCalendarDateRange.end}&location=${encodeURIComponent(bookedLocation)}&details=${encodeURIComponent("Beratungstermin mit der Fachstelle Studium und Behinderung.")}`;
   const recommendationReleased = isRecommendationReleasedToR1(application?.data);
   const stepOneLockedAfterConsultation =
     application?.data?.consultation?.status === "booked" ||
@@ -1697,6 +1790,11 @@ export function NtaAntragDesktop({
               })}
               isActive={currentStep === "step4_application"}
               isClickable={canOpenStep4}
+              lockedTooltip={
+                !recommendationReleased
+                  ? "Wird nach der Beratung freigeschaltet"
+                  : undefined
+              }
               onClick={
                 canOpenStep4
                   ? () => setCurrentStep("step4_application")
@@ -1732,11 +1830,15 @@ export function NtaAntragDesktop({
               })}
               isActive={currentStep === "step5_overview"}
               isClickable={canOpenStep5}
+              lockedTooltip={
+                !recommendationReleased
+                  ? "Wird nach der Beratung freigeschaltet"
+                  : undefined
+              }
               onClick={canOpenStep5 ? () => setCurrentStep("step5_overview") : undefined}
             />
           </R1FlowProgressCard>
-          <R1FlowContactCard />
-          <R1FlowMoreInformationCard />
+          <R1FlowSupportInformationCard />
         </>
       }
       sidebarFooter={
@@ -2310,20 +2412,23 @@ export function NtaAntragDesktop({
                     onSelectedBookingSlotChange={setSelectedBookingSlot}
                     slots={BOOKING_SLOTS}
                     calendarDays={calendarDays}
-                    bookingDateLabel={bookingDateLabel}
                     bookingTimeLabel={`${selectedBookingSlot.replace(" - ", " – ")} Uhr`}
                     locationLines={selectedBookingLocationLines}
-                    markerDate={INITIAL_BOOKING_DATE}
+                    markerDate={new Date()}
                     error={stepThreeError}
                   />
                 ) : currentStep === "step3_booked" ? (
                   <R1FlowBookingConfirmation
                     advisorName={bookedAdvisor}
-                    appointmentDateLine={bookedAppointmentDateLine}
+                    appointmentWeekdayLine={bookedAppointmentWeekdayLine}
+                    appointmentDayLine={bookedAppointmentDayLine}
                     appointmentTimeLine={bookedAppointmentTimeLine}
                     locationLines={bookedLocationLines}
                     mapsHref={bookedMapsHref}
                     onReschedule={() => setCurrentStep("step3_booking")}
+                    onAddToCalendar={() => {
+                      window.open(bookedCalendarHref, "_blank", "noopener,noreferrer");
+                    }}
                   />
                 ) : currentStep === "step3_recommendation" ? (
                   <div className="w-full">

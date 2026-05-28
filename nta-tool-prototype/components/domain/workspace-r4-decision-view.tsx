@@ -704,7 +704,7 @@ export function WorkspaceR4DecisionView({
           <div className="flex w-full flex-col items-end gap-2 pt-2">
             <Button
               type="button"
-              className="h-11 w-fit gap-2 bg-zinc-900 px-5 text-white hover:bg-zinc-800 disabled:opacity-40"
+              className="h-11 w-fit gap-2 rounded-full bg-zinc-900 px-5 text-white hover:bg-zinc-800 disabled:opacity-40"
               disabled={!canEdit || !allConfirmed || completing}
               onClick={() => void handleComplete()}
             >
