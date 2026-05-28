@@ -43,20 +43,26 @@ import {
   LECTURE_MEASURE_OPTIONS,
   MeasureChecklist,
   ReviewBlockAdjustmentActiveFooter,
+  ReviewBlockAdjustmentHistoryToggle,
   ReviewBlockAdjustmentSentFooter,
+  type ReviewBlockAdjustmentHistoryView,
   ReviewBlockCard,
   ReviewBlockComposerFooter,
   ReviewBlockConfirmedFooter,
   ReviewBlockFieldGrid,
-  ReviewBlockLockedRemarkCallout,
   ReviewBlockPendingFooter,
+  ReviewBlockRequestedAdjustmentBand,
   ReviewField,
   ReviewFileRow,
   ScopeChecklist,
   formatReviewFileSize,
   sanitizeAttestFilesForDatabase,
 } from "@/components/domain/application-review-blocks";
-import { readR1AdjustmentBlockBaselines } from "@/lib/r1-adjustment-baseline";
+import {
+  applyBaselineToData,
+  readR1AdjustmentBlockBaselines,
+  type R1AdjustmentBlockBaseline,
+} from "@/lib/r1-adjustment-baseline";
 import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
 import {
   REVIEW_WORKSPACE_APPLICANT_BLOCK_TITLE,
@@ -79,7 +85,6 @@ import {
   applicationReviewSectionGapClass,
 } from "@/lib/design-tokens/application-scroll";
 import { REVIEW_BLOCK_READONLY_STATUS_FOOTER_CLASS } from "@/lib/design-tokens/review-block";
-import { hfTypography } from "@/lib/design-tokens/typography";
 import { formatReviewSubmittedAt } from "@/lib/application-review-labels";
 import { cn } from "@/lib/utils";
 import {
@@ -106,15 +111,6 @@ type ReviewBlockPhase =
   | { phase: "confirmed" }
   | { phase: "adjustment"; remark: string }
   | { phase: "pending_after_adjustment"; displayRemark: string };
-
-type AdjustmentDiffKind = "changed" | "added" | "removed" | "unchanged";
-
-type AdjustmentDiffEntry = {
-  label: string;
-  kind: AdjustmentDiffKind;
-  before?: string;
-  after?: string;
-};
 
 const INITIAL_REVIEW_BLOCK_PHASES: Record<
   ReviewWorkspaceBlockId,
@@ -309,209 +305,128 @@ function hasAnyValue(values: unknown[]): boolean {
   );
 }
 
-function normalizedText(value: string | undefined): string {
-  return (value ?? "").trim();
-}
-
-function sameText(a: string | undefined, b: string | undefined): boolean {
-  return normalizedText(a) === normalizedText(b);
-}
-
 function normalizeList(values: string[] | undefined): string[] {
   return [...new Set((values ?? []).map((v) => v.trim()).filter(Boolean))].sort();
 }
 
-function sameList(a: string[] | undefined, b: string[] | undefined): boolean {
-  const aa = normalizeList(a);
-  const bb = normalizeList(b);
-  if (aa.length !== bb.length) return false;
-  return aa.every((v, i) => v === bb[i]);
+function blockHasReReviewBaseline(
+  blockId: ReviewWorkspaceBlockId,
+  baselines: Partial<Record<ReviewWorkspaceBlockId, R1AdjustmentBlockBaseline>>,
+): boolean {
+  return Boolean(baselines[blockId]);
 }
 
-function attestSignature(file: { name?: string; size?: number }): string {
-  return `${file.name ?? ""}|${String(file.size ?? 0)}`;
-}
-
-function humanDuration(value: "full_study" | "one_semester" | undefined): string {
-  if (value === "full_study") return "Gesamte Studiendauer";
-  if (value === "one_semester") return "Ein Semester";
-  return "Keine Auswahl";
-}
-
-function compactText(value: string | undefined): string {
-  const normalized = normalizedText(value).replace(/\s+/g, " ");
-  if (!normalized) return "Keine Angabe";
-  return normalized.length > 140 ? `${normalized.slice(0, 140).trimEnd()} ...` : normalized;
-}
-
-function diffTextField(
-  label: string,
-  before: string | undefined,
-  after: string | undefined,
-): AdjustmentDiffEntry {
-  if (sameText(before, after)) {
-    return { label, kind: "unchanged" };
+function computeReReviewAdjustedScopeOptions(
+  baseline: string[] | undefined,
+  current: string[] | undefined,
+): Set<string> {
+  const base = new Set(normalizeList(baseline));
+  const adjusted = new Set<string>();
+  for (const option of normalizeList(current)) {
+    if (!base.has(option)) adjusted.add(option);
   }
-  return {
-    label,
-    kind: "changed",
-    before: compactText(before),
-    after: compactText(after),
-  };
+  return adjusted;
 }
 
-function diffSetField(
-  label: string,
-  before: string[] | undefined,
-  after: string[] | undefined,
-): AdjustmentDiffEntry {
-  const beforeList = normalizeList(before);
-  const afterList = normalizeList(after);
-  if (sameList(beforeList, afterList)) {
-    return { label, kind: "unchanged" };
+function computeReReviewAdjustedMeasureKeys(
+  baseline: string[] | undefined,
+  current: string[] | undefined,
+): Set<string> {
+  const base = new Set(baseline ?? []);
+  const adjusted = new Set<string>();
+  for (const key of current ?? []) {
+    if (!base.has(key)) adjusted.add(key);
   }
-  return {
-    label,
-    kind: "changed",
-    before: beforeList.length > 0 ? beforeList.join(", ") : "Keine Auswahl",
-    after: afterList.length > 0 ? afterList.join(", ") : "Keine Auswahl",
-  };
+  return adjusted;
 }
 
-function summarizeFileDiff(
-  label: string,
-  beforeFiles: { name?: string; size?: number }[] | undefined,
-  afterFiles: { name?: string; size?: number }[] | undefined,
-): AdjustmentDiffEntry {
-  const before = new Map(
-    (beforeFiles ?? []).map((file) => [attestSignature(file), file.name?.trim() || "Datei"]),
-  );
-  const after = new Map(
-    (afterFiles ?? []).map((file) => [attestSignature(file), file.name?.trim() || "Datei"]),
-  );
-
-  const added = [...after.keys()]
-    .filter((signature) => !before.has(signature))
-    .map((signature) => after.get(signature) ?? "Datei");
-  const removed = [...before.keys()]
-    .filter((signature) => !after.has(signature))
-    .map((signature) => before.get(signature) ?? "Datei");
-
-  if (added.length === 0 && removed.length === 0) {
-    return { label, kind: "unchanged" };
-  }
-  return {
-    label,
-    kind: "changed",
-    before: removed.length > 0 ? `Entfernt: ${removed.join(", ")}` : "Keine entfernten Dateien",
-    after: added.length > 0 ? `Hinzugefügt: ${added.join(", ")}` : "Keine neuen Dateien",
-  };
+function computeReReviewAdjustedOtherIndices(
+  baselineLines: string[] | undefined,
+  currentLines: string[] | undefined,
+): Set<number> {
+  const base = normalizeList(baselineLines);
+  const current = (currentLines ?? []).map((t) => t.trim());
+  const adjusted = new Set<number>();
+  current.forEach((line, idx) => {
+    if (line && !base.includes(line)) adjusted.add(idx);
+  });
+  return adjusted;
 }
 
-function summaryKindFromEntries(entries: AdjustmentDiffEntry[]): AdjustmentDiffKind {
-  if (entries.some((entry) => entry.kind === "changed")) return "changed";
-  if (entries.some((entry) => entry.kind === "added")) return "added";
-  if (entries.some((entry) => entry.kind === "removed")) return "removed";
-  return "unchanged";
-}
+type ReReviewBlockPresentation = {
+  durationAdjusted: boolean;
+  scopeAdjusted: Set<string>;
+  lectureMeasureKeysAdjusted: Set<string>;
+  lectureOtherIndicesAdjusted: Set<number>;
+  assessmentMeasureKeysAdjusted: Set<string>;
+  assessmentOtherIndicesAdjusted: Set<number>;
+};
 
-function compareBlockAdjustments(
+function computeReReviewPresentation(
+  blockId: ReviewWorkspaceBlockId,
   application: WorkspaceApplication,
-): Partial<Record<ReviewWorkspaceBlockId, AdjustmentDiffEntry[]>> {
+): ReReviewBlockPresentation | null {
   const baselines = readR1AdjustmentBlockBaselines(application.data);
-  const data = application.data;
-  const def = data.applicationDefinition;
-  const out: Partial<Record<ReviewWorkspaceBlockId, AdjustmentDiffEntry[]>> = {};
+  const baseline = baselines[blockId];
+  if (!baseline) return null;
 
-  const applicantBase = baselines.applicant?.personalData;
-  if (applicantBase) {
-    const current = data.personalData;
-    out.applicant = [
-      diffTextField("Vorname", applicantBase.vorname, current?.vorname),
-      diffTextField("Nachname", applicantBase.name, current?.name),
-      diffTextField("E-Mail", applicantBase.email, current?.email),
-      diffTextField("Telefonnummer", applicantBase.phone, current?.phone),
-      diffTextField("Matrikelnummer", applicantBase.matrikel, current?.matrikel),
-      diffTextField("Studiengang", applicantBase.studiengang, current?.studiengang),
-      diffTextField("Semester", applicantBase.semester, current?.semester),
-    ];
+  const def = application.data.applicationDefinition;
+  const baseDef = baseline.applicationDefinition;
+  const empty: ReReviewBlockPresentation = {
+    durationAdjusted: false,
+    scopeAdjusted: new Set(),
+    lectureMeasureKeysAdjusted: new Set(),
+    lectureOtherIndicesAdjusted: new Set(),
+    assessmentMeasureKeysAdjusted: new Set(),
+    assessmentOtherIndicesAdjusted: new Set(),
+  };
+
+  if (blockId === "duration" && baseDef) {
+    return {
+      ...empty,
+      durationAdjusted: baseDef.duration !== def?.duration,
+    };
   }
 
-  const attestBase = baselines.attest?.attestFiles;
-  if (attestBase) {
-    out.attest = [
-      summarizeFileDiff("Atteste", attestBase, data.attestFiles),
-    ];
-  }
-
-  const defBase = baselines.definition?.applicationDefinition;
-  if (defBase) {
-    out.definition = [
-      diffTextField(
-        "Beschreibung",
-        defBase.situationDescription,
-        def?.situationDescription,
+  if (blockId === "scope" && baseDef) {
+    return {
+      ...empty,
+      scopeAdjusted: computeReReviewAdjustedScopeOptions(
+        baseDef.scopeSelections,
+        def?.scopeSelections,
       ),
-    ];
+    };
   }
 
-  const durationBase = baselines.duration?.applicationDefinition;
-  if (durationBase) {
-    out.duration = durationBase.duration === def?.duration
-      ? [{ label: "Gültigkeitsdauer", kind: "unchanged" }]
-      : [{
-          label: "Gültigkeitsdauer",
-          kind: "changed",
-          before: humanDuration(durationBase.duration),
-          after: humanDuration(def?.duration),
-        }];
+  if (blockId === "lectureMeasures" && baseDef) {
+    return {
+      ...empty,
+      lectureMeasureKeysAdjusted: computeReReviewAdjustedMeasureKeys(
+        baseDef.lectureMeasures,
+        def?.lectureMeasures,
+      ),
+      lectureOtherIndicesAdjusted: computeReReviewAdjustedOtherIndices(
+        baseDef.lectureOtherLines,
+        def?.lectureOtherLines,
+      ),
+    };
   }
 
-  const scopeBase = baselines.scope?.applicationDefinition;
-  if (scopeBase) {
-    out.scope = [
-      diffSetField("Auswahl", scopeBase.scopeSelections, def?.scopeSelections),
-    ];
-  }
-
-  const lectureBase = baselines.lectureMeasures?.applicationDefinition;
-  if (lectureBase) {
-    out.lectureMeasures = [
-      diffSetField("Standardoptionen", lectureBase.lectureMeasures, def?.lectureMeasures),
-      Boolean(lectureBase.lectureMeasuresKeine) === Boolean(def?.lectureMeasuresKeine)
-        ? { label: "Option \"Keine\"", kind: "unchanged" }
-        : {
-            label: "Option \"Keine\"",
-            kind: "changed",
-            before: Boolean(lectureBase.lectureMeasuresKeine) ? "gewählt" : "nicht gewählt",
-            after: Boolean(def?.lectureMeasuresKeine) ? "gewählt" : "nicht gewählt",
-          },
-      diffSetField("Sonstige Massnahmen", lectureBase.lectureOtherLines, def?.lectureOtherLines),
-    ];
-  }
-
-  const assessmentBase = baselines.assessmentMeasures?.applicationDefinition;
-  if (assessmentBase) {
-    out.assessmentMeasures = [
-      diffSetField("Standardoptionen", assessmentBase.assessmentMeasures, def?.assessmentMeasures),
-      Boolean(assessmentBase.assessmentMeasuresKeine)
-        === Boolean(def?.assessmentMeasuresKeine)
-        ? { label: "Option \"Keine\"", kind: "unchanged" }
-        : {
-            label: "Option \"Keine\"",
-            kind: "changed",
-            before: Boolean(assessmentBase.assessmentMeasuresKeine) ? "gewählt" : "nicht gewählt",
-            after: Boolean(def?.assessmentMeasuresKeine) ? "gewählt" : "nicht gewählt",
-          },
-      diffSetField(
-        "Sonstige Massnahmen",
-        assessmentBase.assessmentOtherLines,
+  if (blockId === "assessmentMeasures" && baseDef) {
+    return {
+      ...empty,
+      assessmentMeasureKeysAdjusted: computeReReviewAdjustedMeasureKeys(
+        baseDef.assessmentMeasures,
+        def?.assessmentMeasures,
+      ),
+      assessmentOtherIndicesAdjusted: computeReReviewAdjustedOtherIndices(
+        baseDef.assessmentOtherLines,
         def?.assessmentOtherLines,
       ),
-    ];
+    };
   }
 
-  return out;
+  return empty;
 }
 
 export type WorkspaceReviewViewMode =
@@ -629,10 +544,27 @@ export function WorkspaceApplicationReview({
   const [forwardError, setForwardError] = useState<string | null>(null);
   const [isForwarding, setIsForwarding] = useState(false);
   const [draftPersistError, setDraftPersistError] = useState<string | null>(null);
-  const adjustmentChangesByBlock = useMemo(
-    () => compareBlockAdjustments(application),
+  const r1AdjustmentBaselines = useMemo(
+    () => readR1AdjustmentBlockBaselines(application.data),
+    [application.data],
+  );
+  const reReviewPresentationByBlock = useMemo(
+    () =>
+      Object.fromEntries(
+        REVIEW_WORKSPACE_BLOCK_IDS.map((id) => [
+          id,
+          computeReReviewPresentation(id, application),
+        ]),
+      ) as Record<ReviewWorkspaceBlockId, ReReviewBlockPresentation | null>,
     [application],
   );
+
+  const reReviewRemarksRef = useRef<Partial<Record<ReviewWorkspaceBlockId, string>>>(
+    {},
+  );
+  const [adjustmentHistoryViewByBlock, setAdjustmentHistoryViewByBlock] = useState<
+    Partial<Record<ReviewWorkspaceBlockId, ReviewBlockAdjustmentHistoryView>>
+  >({});
 
   const applicationRef = useRef(application);
   const blockPhasesRef = useRef(blockPhases);
@@ -704,10 +636,27 @@ export function WorkspaceApplicationReview({
       return;
     }
     prevPostSubmitHydrationKeyRef.current = postSubmitHydrationKey;
-    setBlockPhases(hydrateBlockPhasesFromApplication(application));
+    const hydratedPhases = hydrateBlockPhasesFromApplication(application);
+    setBlockPhases(hydratedPhases);
     setSavedReviewComments(hydrateSavedCommentsFromApplication(application));
+    setAdjustmentHistoryViewByBlock({});
+    for (const id of REVIEW_WORKSPACE_BLOCK_IDS) {
+      const p = hydratedPhases[id];
+      if (p.phase === "pending_after_adjustment") {
+        reReviewRemarksRef.current[id] = p.displayRemark;
+      }
+    }
     suppressDraftSaveRef.current = false;
   }, [application, postSubmitHydrationKey]);
+
+  useEffect(() => {
+    for (const id of REVIEW_WORKSPACE_BLOCK_IDS) {
+      const p = blockPhases[id];
+      if (p.phase === "pending_after_adjustment") {
+        reReviewRemarksRef.current[id] = p.displayRemark;
+      }
+    }
+  }, [blockPhases]);
 
   const persistReviewDraft = useCallback(async () => {
     const app = applicationRef.current;
@@ -811,6 +760,11 @@ export function WorkspaceApplicationReview({
         ...prev,
         [composer.blockId]: { phase: "adjustment", remark: trimmed },
       }));
+      setAdjustmentHistoryViewByBlock((prev) => {
+        const next = { ...prev };
+        delete next[composer.blockId];
+        return next;
+      });
       setSavedReviewComments((prev) => [
         {
           id: crypto.randomUUID(),
@@ -845,12 +799,38 @@ export function WorkspaceApplicationReview({
   /** Nach Weiterleitung an R1 (`readonly_adjustment_pending` / andere read-only Modi). */
   const adjustmentSentReadOnly = readOnly;
 
-  const confirmBlock = (id: ReviewWorkspaceBlockId) => {
-    setBlockPhases((prev) => ({ ...prev, [id]: { phase: "confirmed" } }));
-  };
+  const canRestoreReReviewBlock = useCallback((id: ReviewWorkspaceBlockId) => {
+    return Boolean(reReviewRemarksRef.current[id]?.trim());
+  }, []);
+
+  const restoreReReviewBlock = useCallback((id: ReviewWorkspaceBlockId) => {
+    const remark = reReviewRemarksRef.current[id]?.trim() ?? "";
+    setBlockPhases((prev) => ({
+      ...prev,
+      [id]: { phase: "pending_after_adjustment", displayRemark: remark },
+    }));
+    setAdjustmentHistoryViewByBlock((prev) => ({ ...prev, [id]: "current" }));
+    setSavedReviewComments((prev) => prev.filter((c) => c.blockId !== id));
+    setPendingComposer((prev) => (prev?.blockId === id ? null : prev));
+    setAdjustmentRemarkSaveError(false);
+  }, []);
 
   const resetBlock = (id: ReviewWorkspaceBlockId) => {
     setBlockPhases((prev) => ({ ...prev, [id]: { phase: "pending" } }));
+    setAdjustmentHistoryViewByBlock((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const confirmBlock = (id: ReviewWorkspaceBlockId) => {
+    setBlockPhases((prev) => ({ ...prev, [id]: { phase: "confirmed" } }));
+    setAdjustmentHistoryViewByBlock((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   };
 
   const handleResetRequest = (id: ReviewWorkspaceBlockId) => {
@@ -859,18 +839,177 @@ export function WorkspaceApplicationReview({
       setAdjustmentResetDialogBlockId(id);
       return;
     }
+    if (phase.phase === "confirmed" && canRestoreReReviewBlock(id)) {
+      restoreReReviewBlock(id);
+      return;
+    }
     resetBlock(id);
   };
 
   const confirmWithdrawAdjustment = () => {
     const id = adjustmentResetDialogBlockId;
     if (!id) return;
-    resetBlock(id);
-    setSavedReviewComments((prev) => prev.filter((c) => c.blockId !== id));
+    if (canRestoreReReviewBlock(id)) {
+      restoreReReviewBlock(id);
+    } else {
+      resetBlock(id);
+      setSavedReviewComments((prev) => prev.filter((c) => c.blockId !== id));
+    }
     setPendingComposer((prev) => (prev?.blockId === id ? null : prev));
     setAdjustmentRemarkSaveError(false);
     setAdjustmentResetDialogBlockId(null);
   };
+
+  const reviewBlockBaselineContent = useMemo(() => {
+    const out: Partial<Record<ReviewWorkspaceBlockId, ReactNode>> = {};
+    for (const id of REVIEW_WORKSPACE_BLOCK_IDS) {
+      const baseline = r1AdjustmentBaselines[id];
+      if (!baseline) continue;
+      const slice = applyBaselineToData(application.data, id, baseline);
+      const sliceDef = slice.applicationDefinition;
+
+      switch (id) {
+        case "applicant": {
+          const personal = slice.personalData;
+          out[id] = personal ? (
+            <ReviewBlockFieldGrid>
+              <ReviewField
+                label="Name"
+                value={`${personal.vorname ?? ""} ${personal.name ?? ""}`.trim() || "—"}
+              />
+              <ReviewField
+                label="Matrikelnummer"
+                value={personal.matrikel ?? "—"}
+              />
+              <ReviewField
+                label="Studiengang"
+                value={personal.studiengang ?? "—"}
+              />
+              <ReviewField
+                label="Semester"
+                value={personal.semester ?? "—"}
+              />
+              <ReviewField label="E-Mail" value={personal.email ?? "—"} />
+              <ReviewField
+                label="Telefonnummer"
+                value={personal.phone ?? "—"}
+              />
+            </ReviewBlockFieldGrid>
+          ) : (
+            <p className="text-sm text-muted-foreground">Keine Daten erfasst.</p>
+          );
+          break;
+        }
+        case "attest":
+          out[id] = slice.attestFiles?.length ? (
+            <ul className="space-y-3">
+              {slice.attestFiles.map((file) => {
+                const [f] = sanitizeAttestFilesForDatabase([file]);
+                return (
+                  <li key={file.id ?? file.name}>
+                    <ReviewFileRow
+                      title={f.name ?? "Datei"}
+                      subtitle={formatReviewFileSize(f.size ?? 0)}
+                      file={f}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">Keine Dateien hochgeladen.</p>
+          );
+          break;
+        case "definition":
+          out[id] = (
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+              {sliceDef?.situationDescription?.trim()
+                ? sliceDef.situationDescription
+                : "Keine Beschreibung hinterlegt."}
+            </p>
+          );
+          break;
+        case "duration":
+          out[id] = (
+            <DurationChoiceCompare
+              selected={sliceDef?.duration}
+              readonlyMode="reReviewHistory"
+            />
+          );
+          break;
+        case "scope":
+          out[id] = (
+            <ScopeChecklist
+              selected={sliceDef?.scopeSelections ?? []}
+              readonlyMode="reReviewHistory"
+            />
+          );
+          break;
+        case "lectureMeasures":
+          out[id] = (
+            <MeasureChecklist
+              options={LECTURE_MEASURE_OPTIONS}
+              selectedKeys={sliceDef?.lectureMeasures ?? []}
+              otherLines={sliceDef?.lectureOtherLines}
+              otherEnabled={sliceDef?.lectureOtherEnabled}
+              otherText={sliceDef?.lectureOtherText}
+              measuresKeine={Boolean(sliceDef?.lectureMeasuresKeine)}
+              keineDescription={LECTURE_MEASURES_KEINE_DESCRIPTION}
+              readonlyMode="reReviewHistory"
+            />
+          );
+          break;
+        case "assessmentMeasures":
+          out[id] = (
+            <MeasureChecklist
+              options={ASSESSMENT_MEASURE_OPTIONS}
+              selectedKeys={sliceDef?.assessmentMeasures ?? []}
+              otherLines={sliceDef?.assessmentOtherLines}
+              otherEnabled={sliceDef?.assessmentOtherEnabled}
+              otherText={sliceDef?.assessmentOtherText}
+              measuresKeine={Boolean(sliceDef?.assessmentMeasuresKeine)}
+              keineDescription={ASSESSMENT_MEASURES_KEINE_DESCRIPTION}
+              readonlyMode="reReviewHistory"
+            />
+          );
+          break;
+        default:
+          break;
+      }
+    }
+    return out;
+  }, [application.data, r1AdjustmentBaselines]);
+
+  const reReviewHistoryForBlock = useCallback(
+    (blockId: ReviewWorkspaceBlockId) => {
+      const phase = blockPhases[blockId];
+      if (phase.phase !== "pending_after_adjustment") return undefined;
+
+      const baselineContent = reviewBlockBaselineContent[blockId];
+      const hasBaseline = blockHasReReviewBaseline(blockId, r1AdjustmentBaselines);
+      if (!hasBaseline && !phase.displayRemark.trim()) return undefined;
+
+      return {
+        lockedRemark: phase.displayRemark,
+        baselineContent:
+          baselineContent ?? (
+            <p className="text-sm text-muted-foreground">
+              Die ursprüngliche Einreichung ist für diesen Block nicht verfügbar.
+            </p>
+          ),
+        view: adjustmentHistoryViewByBlock[blockId] ?? "current",
+        onViewChange: (view: ReviewBlockAdjustmentHistoryView) => {
+          setAdjustmentHistoryViewByBlock((prev) => ({ ...prev, [blockId]: view }));
+        },
+      };
+    },
+    [
+      blockPhases,
+      r1AdjustmentBaselines,
+      reviewBlockBaselineContent,
+      adjustmentHistoryViewByBlock,
+    ],
+  );
 
   /**
    * Klick auf einen gespeicherten Kommentar in der Sidebar springt zum
@@ -1171,7 +1310,11 @@ export function WorkspaceApplicationReview({
               REVIEW_WORKSPACE_APPLICANT_BLOCK_TITLE,
             )}
           onReset={() => handleResetRequest("applicant")}
-          adjustmentChangeSummary={adjustmentChangesByBlock.applicant}
+          reReviewHistory={
+            pendingComposer?.blockId === "applicant"
+              ? undefined
+              : reReviewHistoryForBlock("applicant")
+          }
         >
           {data.personalData ? (
             <ReviewBlockFieldGrid>
@@ -1224,7 +1367,11 @@ export function WorkspaceApplicationReview({
           onRequestAdjustment={() =>
             requestAdjustmentForBlock("attest", "Fachärztliches Attest")}
           onReset={() => handleResetRequest("attest")}
-          adjustmentChangeSummary={adjustmentChangesByBlock.attest}
+          reReviewHistory={
+            pendingComposer?.blockId === "attest"
+              ? undefined
+              : reReviewHistoryForBlock("attest")
+          }
         >
           {data.attestFiles?.length ? (
             <ul className="space-y-3">
@@ -1279,7 +1426,11 @@ export function WorkspaceApplicationReview({
           onRequestAdjustment={() =>
             requestAdjustmentForBlock("definition", "Antragsdefinition")}
           onReset={() => handleResetRequest("definition")}
-          adjustmentChangeSummary={adjustmentChangesByBlock.definition}
+          reReviewHistory={
+            pendingComposer?.blockId === "definition"
+              ? undefined
+              : reReviewHistoryForBlock("definition")
+          }
         >
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
             {def?.situationDescription?.trim()
@@ -1310,9 +1461,18 @@ export function WorkspaceApplicationReview({
               "Gültigkeitsdauer des Nachteilsausgleiches",
             )}
           onReset={() => handleResetRequest("duration")}
-          adjustmentChangeSummary={adjustmentChangesByBlock.duration}
+          reReviewHistory={
+            pendingComposer?.blockId === "duration"
+              ? undefined
+              : reReviewHistoryForBlock("duration")
+          }
         >
-          <DurationChoiceCompare selected={def?.duration} />
+          <DurationChoiceCompare
+            selected={def?.duration}
+            reReviewAdjustedSelection={Boolean(
+              reReviewPresentationByBlock.duration?.durationAdjusted,
+            )}
+          />
           </InteractiveReviewBlock>
         ) : null}
 
@@ -1337,9 +1497,18 @@ export function WorkspaceApplicationReview({
               "Geltungsbereich des beantragten Nachteilsausgleiches",
             )}
           onReset={() => handleResetRequest("scope")}
-          adjustmentChangeSummary={adjustmentChangesByBlock.scope}
+          reReviewHistory={
+            pendingComposer?.blockId === "scope"
+              ? undefined
+              : reReviewHistoryForBlock("scope")
+          }
         >
-          <ScopeChecklist selected={def?.scopeSelections ?? []} />
+          <ScopeChecklist
+            selected={def?.scopeSelections ?? []}
+            reReviewAdjustedOptions={
+              reReviewPresentationByBlock.scope?.scopeAdjusted
+            }
+          />
           </InteractiveReviewBlock>
         ) : null}
 
@@ -1364,7 +1533,11 @@ export function WorkspaceApplicationReview({
               "Ausgleichsmassnahmen für Lehrveranstaltungen",
             )}
           onReset={() => handleResetRequest("lectureMeasures")}
-          adjustmentChangeSummary={adjustmentChangesByBlock.lectureMeasures}
+          reReviewHistory={
+            pendingComposer?.blockId === "lectureMeasures"
+              ? undefined
+              : reReviewHistoryForBlock("lectureMeasures")
+          }
         >
           <MeasureChecklist
             options={LECTURE_MEASURE_OPTIONS}
@@ -1374,6 +1547,12 @@ export function WorkspaceApplicationReview({
             otherText={def?.lectureOtherText}
             measuresKeine={Boolean(def?.lectureMeasuresKeine)}
             keineDescription={LECTURE_MEASURES_KEINE_DESCRIPTION}
+            reReviewAdjustedKeys={
+              reReviewPresentationByBlock.lectureMeasures?.lectureMeasureKeysAdjusted
+            }
+            reReviewAdjustedOtherIndices={
+              reReviewPresentationByBlock.lectureMeasures?.lectureOtherIndicesAdjusted
+            }
           />
           </InteractiveReviewBlock>
         ) : null}
@@ -1399,7 +1578,11 @@ export function WorkspaceApplicationReview({
               "Ausgleichsmassnahmen für Leistungsnachweise",
             )}
           onReset={() => handleResetRequest("assessmentMeasures")}
-          adjustmentChangeSummary={adjustmentChangesByBlock.assessmentMeasures}
+          reReviewHistory={
+            pendingComposer?.blockId === "assessmentMeasures"
+              ? undefined
+              : reReviewHistoryForBlock("assessmentMeasures")
+          }
         >
           <MeasureChecklist
             options={ASSESSMENT_MEASURE_OPTIONS}
@@ -1409,6 +1592,14 @@ export function WorkspaceApplicationReview({
             otherText={def?.assessmentOtherText}
             measuresKeine={Boolean(def?.assessmentMeasuresKeine)}
             keineDescription={ASSESSMENT_MEASURES_KEINE_DESCRIPTION}
+            reReviewAdjustedKeys={
+              reReviewPresentationByBlock.assessmentMeasures
+                ?.assessmentMeasureKeysAdjusted
+            }
+            reReviewAdjustedOtherIndices={
+              reReviewPresentationByBlock.assessmentMeasures
+                ?.assessmentOtherIndicesAdjusted
+            }
           />
           </InteractiveReviewBlock>
         ) : null}
@@ -1495,6 +1686,13 @@ type ReviewBlockComposerProps = {
   saveError?: boolean;
 };
 
+type ReReviewHistoryConfig = {
+  lockedRemark: string;
+  baselineContent: ReactNode;
+  view: ReviewBlockAdjustmentHistoryView;
+  onViewChange: (view: ReviewBlockAdjustmentHistoryView) => void;
+};
+
 function InteractiveReviewBlock({
   blockId,
   title,
@@ -1507,7 +1705,7 @@ function InteractiveReviewBlock({
   adjustmentSentReadOnly = false,
   composer = null,
   children,
-  adjustmentChangeSummary,
+  reReviewHistory = undefined,
 }: {
   blockId: ReviewWorkspaceBlockId;
   title: string;
@@ -1522,9 +1720,16 @@ function InteractiveReviewBlock({
   /** Bemerkung im Block-Footer (`5641:22599`), nicht in der Sidebar. */
   composer?: ReviewBlockComposerProps | null;
   children: ReactNode;
-  adjustmentChangeSummary?: AdjustmentDiffEntry[];
+  /** Re-Review nach R1-Freigabe: Toggle Aktuell/Verlauf (`6192:3831`, `6193:22249`). */
+  reReviewHistory?: ReReviewHistoryConfig;
 }) {
   const anchorId = reviewWorkspaceAnchorId(blockId);
+  const historyToggle = reReviewHistory ? (
+    <ReviewBlockAdjustmentHistoryToggle
+      view={reReviewHistory.view}
+      onViewChange={reReviewHistory.onViewChange}
+    />
+  ) : null;
 
   if (composer) {
     return (
@@ -1532,6 +1737,7 @@ function InteractiveReviewBlock({
         anchorId={anchorId}
         title={title}
         variant="composer"
+        headerAction={historyToggle}
         footer={
           <ReviewBlockComposerFooter
             draft={composer.draft}
@@ -1553,6 +1759,7 @@ function InteractiveReviewBlock({
         anchorId={anchorId}
         title={title}
         variant="confirmed"
+        headerAction={historyToggle}
         footer={
           <ReviewBlockConfirmedFooter onReset={onReset} readOnly={readOnly} />
         }
@@ -1608,22 +1815,30 @@ function InteractiveReviewBlock({
               />
             );
 
+    const showHistoryContent = reReviewHistory?.view === "history";
+    const bodyContent =
+      showHistoryContent && reReviewHistory
+        ? reReviewHistory.baselineContent
+        : children;
+
     return (
       <ReviewBlockCard
         anchorId={anchorId}
         title={title}
         variant="pending"
+        headerAction={historyToggle}
         footer={
           <>
-            <ReviewBlockLockedRemarkCallout remark={phase.displayRemark} />
-            {!readOnly && adjustmentChangeSummary && adjustmentChangeSummary.length > 0 ? (
-              <ReviewBlockAdjustmentChangeSummary entries={adjustmentChangeSummary} />
+            {showHistoryContent
+            && reReviewHistory
+            && reReviewHistory.lockedRemark.trim() ? (
+              <ReviewBlockRequestedAdjustmentBand remark={reReviewHistory.lockedRemark} />
             ) : null}
             {actionFooter}
           </>
         }
       >
-        {children}
+        {bodyContent}
       </ReviewBlockCard>
     );
   }
@@ -1633,6 +1848,7 @@ function InteractiveReviewBlock({
       anchorId={anchorId}
       title={title}
       variant="pending"
+      headerAction={historyToggle}
       footer={
         readOnly && compactReadOnly ? null : readOnly ? (
           <p className={REVIEW_BLOCK_READONLY_STATUS_FOOTER_CLASS}>Nur Ansicht.</p>
@@ -1646,50 +1862,6 @@ function InteractiveReviewBlock({
     >
       {children}
     </ReviewBlockCard>
-  );
-}
-
-function ReviewBlockAdjustmentChangeSummary({ entries }: { entries: AdjustmentDiffEntry[] }) {
-  const summaryKind = summaryKindFromEntries(entries);
-  const summaryLabel =
-    summaryKind === "changed"
-      ? "Anpassungen erkannt"
-      : summaryKind === "added"
-        ? "Ergänzungen erkannt"
-        : summaryKind === "removed"
-          ? "Entfernungen erkannt"
-          : "Keine Änderungen erkannt";
-
-  return (
-    <div className="border-b border-border bg-stone-50 px-6 py-4">
-      <div className="flex items-center justify-between gap-3">
-        <p className={cn(hfTypography.paragraphSmallMedium, "text-stone-700")}>
-        Änderungen seit letzter Anforderung
-        </p>
-        <span className={cn(
-          hfTypography.paragraphSmall,
-          "rounded-full px-2 py-0.5",
-          summaryKind === "changed"
-            ? "bg-adjustment-100 text-adjustment-700"
-            : "bg-stone-200 text-stone-700",
-        )}
-        >
-          {summaryLabel}
-        </span>
-      </div>
-      <ul className="mt-1.5 space-y-1">
-        {entries.map((entry) => (
-          <li key={`${entry.label}-${entry.kind}`} className={cn(hfTypography.paragraphSmall, "text-stone-700")}>
-            <span className="font-medium">{entry.label}:</span>{" "}
-            {entry.kind === "unchanged"
-              ? "unverändert"
-              : entry.before || entry.after
-                ? `${entry.before ?? "Keine Angabe"} -> ${entry.after ?? "Keine Angabe"}`
-                : "angepasst"}
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
 

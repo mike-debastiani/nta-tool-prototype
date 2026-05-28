@@ -8,9 +8,11 @@ import {
   ExternalLink,
   FilePenLine,
   FileText,
+  History,
   MessageSquare,
   Pencil,
   RotateCcw,
+  SquarePen,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +39,18 @@ import {
   REVIEW_BLOCK_LOCKED_REMARK_BAND_CLASS,
   REVIEW_BLOCK_LOCKED_REMARK_BODY_CLASS,
   REVIEW_BLOCK_LOCKED_REMARK_TITLE_CLASS,
+  REVIEW_BLOCK_HISTORY_TOGGLE_SHELL_CLASS,
+  REVIEW_BLOCK_HISTORY_TOGGLE_TAB_BASE_CLASS,
+  REVIEW_BLOCK_HISTORY_TOGGLE_TAB_ICON_CLASS,
+  REVIEW_BLOCK_HISTORY_TOGGLE_TAB_CURRENT_ACTIVE_CLASS,
+  REVIEW_BLOCK_HISTORY_TOGGLE_TAB_CURRENT_INACTIVE_CLASS,
+  REVIEW_BLOCK_HISTORY_TOGGLE_TAB_HISTORY_ACTIVE_CLASS,
+  REVIEW_BLOCK_HISTORY_TOGGLE_TAB_HISTORY_INACTIVE_CLASS,
+  REVIEW_BLOCK_REQUESTED_ADJUSTMENT_BAND_CLASS,
+  REVIEW_BLOCK_REQUESTED_ADJUSTMENT_TITLE_CLASS,
+  REVIEW_BLOCK_REQUESTED_ADJUSTMENT_BODY_CLASS,
+  REVIEW_BLOCK_RE_REVIEW_HISTORY_OPTION_SELECTED_SHELL_CLASS,
+  REVIEW_BLOCK_RE_REVIEW_HISTORY_OPTION_SELECTED_TEXT_CLASS,
 } from "@/lib/design-tokens/review-block";
 import {
   R1_REVIEW_BLOCK_ACTION_FOOTER_CLASS,
@@ -250,12 +264,80 @@ const REVIEW_BLOCK_SHELL_CLASS: Record<ReviewBlockVariant, string> = {
   adjustment_sent: REVIEW_BLOCK_ADJUSTMENT_SENT_CLASS,
 };
 
+export type ReviewBlockAdjustmentHistoryView = "current" | "history";
+
+export function ReviewBlockAdjustmentHistoryToggle({
+  view,
+  onViewChange,
+}: {
+  view: ReviewBlockAdjustmentHistoryView;
+  onViewChange: (view: ReviewBlockAdjustmentHistoryView) => void;
+}) {
+  return (
+    <div
+      className={REVIEW_BLOCK_HISTORY_TOGGLE_SHELL_CLASS}
+      role="group"
+      aria-label="Anpassungsansicht umschalten"
+    >
+      <button
+        type="button"
+        className={cn(
+          REVIEW_BLOCK_HISTORY_TOGGLE_TAB_BASE_CLASS,
+          view === "current"
+            ? REVIEW_BLOCK_HISTORY_TOGGLE_TAB_CURRENT_ACTIVE_CLASS
+            : REVIEW_BLOCK_HISTORY_TOGGLE_TAB_CURRENT_INACTIVE_CLASS,
+        )}
+        aria-pressed={view === "current"}
+        aria-label="Aktuelle Anpassung anzeigen"
+        onClick={() => onViewChange("current")}
+      >
+        <SquarePen
+          className={REVIEW_BLOCK_HISTORY_TOGGLE_TAB_ICON_CLASS}
+          strokeWidth={1.75}
+          aria-hidden
+        />
+      </button>
+      <button
+        type="button"
+        className={cn(
+          REVIEW_BLOCK_HISTORY_TOGGLE_TAB_BASE_CLASS,
+          view === "history"
+            ? REVIEW_BLOCK_HISTORY_TOGGLE_TAB_HISTORY_ACTIVE_CLASS
+            : REVIEW_BLOCK_HISTORY_TOGGLE_TAB_HISTORY_INACTIVE_CLASS,
+        )}
+        aria-pressed={view === "history"}
+        aria-label="Ursprüngliche Einreichung und angeforderte Anpassung anzeigen"
+        onClick={() => onViewChange("history")}
+      >
+        <History
+          className={REVIEW_BLOCK_HISTORY_TOGGLE_TAB_ICON_CLASS}
+          strokeWidth={1.75}
+          aria-hidden
+        />
+      </button>
+    </div>
+  );
+}
+
+/** Verlaufsansicht — ursprüngliche Fachstellen-Anforderung (`6193:22256`). */
+export function ReviewBlockRequestedAdjustmentBand({ remark }: { remark: string }) {
+  return (
+    <div className={REVIEW_BLOCK_REQUESTED_ADJUSTMENT_BAND_CLASS}>
+      <p className={REVIEW_BLOCK_REQUESTED_ADJUSTMENT_TITLE_CLASS}>
+        Angeforderte Anpassung
+      </p>
+      <p className={REVIEW_BLOCK_REQUESTED_ADJUSTMENT_BODY_CLASS}>{remark}</p>
+    </div>
+  );
+}
+
 export function ReviewBlockCard({
   title,
   children,
   footer,
   variant = "default",
   anchorId,
+  headerAction,
   /** Legacy Portal-Adjustment — mapped to `variant` when gesetzt. */
   footerTone,
   cardBorderTone,
@@ -265,6 +347,8 @@ export function ReviewBlockCard({
   footer?: ReactNode | null;
   variant?: ReviewBlockVariant;
   anchorId?: string;
+  /** Optional rechts neben dem Titel (z. B. Re-Review-Verlauf-Toggle). */
+  headerAction?: ReactNode;
   footerTone?: ReviewBlockFooterTone;
   cardBorderTone?: ReviewBlockFooterTone;
 }) {
@@ -283,7 +367,10 @@ export function ReviewBlockCard({
       id={anchorId}
     >
       <div className={REVIEW_BLOCK_BODY_CLASS}>
-        <h2 className={hfBlockTitle}>{title}</h2>
+        <div className="flex w-full items-center justify-between gap-3">
+          <h2 className={hfBlockTitle}>{title}</h2>
+          {headerAction}
+        </div>
         {children}
       </div>
       {footer}
@@ -858,25 +945,46 @@ export function ReviewFileRow({
   );
 }
 
-/** Visual markers — neutral zinc/black per Figma Review Block (not teal „success“). */
-function ReviewBlockCheckboxMarker({ checked }: { checked: boolean }) {
+type ReviewBlockChoiceMarkerTone = "default" | "adjustmentHistory";
+
+/** Visual markers — neutral zinc/black; `adjustmentHistory` = Verlaufsansicht (erforderlich-700). */
+function ReviewBlockCheckboxMarker({
+  checked,
+  tone = "default",
+}: {
+  checked: boolean;
+  tone?: ReviewBlockChoiceMarkerTone;
+}) {
   return (
     <span
       className="relative mt-0.5 flex size-4 shrink-0 items-center justify-center"
       aria-hidden
     >
       {checked ? (
-        <span className="flex size-4 items-center justify-center rounded-sm border border-zinc-900 bg-zinc-900 text-white">
+        <span
+          className={cn(
+            "flex size-4 items-center justify-center rounded-sm border text-white",
+            tone === "adjustmentHistory"
+              ? "border-adjustment-700 bg-adjustment-700"
+              : "border-zinc-900 bg-zinc-900",
+          )}
+        >
           <Check className="size-3 stroke-[3]" />
         </span>
       ) : (
-        <span className="box-border flex size-3.5 items-center justify-center rounded-sm border border-zinc-300 bg-background shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]" />
+        <span className="box-border flex size-3.5 items-center justify-center rounded-sm border border-zinc-300 bg-stone-50" />
       )}
     </span>
   );
 }
 
-function ReviewBlockRadioMarker({ checked }: { checked: boolean }) {
+function ReviewBlockRadioMarker({
+  checked,
+  tone = "default",
+}: {
+  checked: boolean;
+  tone?: ReviewBlockChoiceMarkerTone;
+}) {
   return (
     <span
       className="relative mt-0.5 flex size-4 shrink-0 items-center justify-center"
@@ -884,19 +992,120 @@ function ReviewBlockRadioMarker({ checked }: { checked: boolean }) {
     >
       <span
         className={cn(
-          "flex size-4 items-center justify-center rounded-full border-2 bg-background",
-          checked
-            ? "border-zinc-900"
-            : "border-zinc-300 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]",
+          "flex size-4 items-center justify-center rounded-full border-2",
+          checked && tone === "adjustmentHistory"
+            ? "border-adjustment-700 bg-background"
+            : checked
+              ? "border-zinc-900 bg-background"
+              : "border-zinc-300 bg-stone-50",
         )}
       >
-        {checked ? <span className="size-2 rounded-full bg-zinc-900" /> : null}
+        {checked ? (
+          <span
+            className={cn(
+              "size-2 rounded-full",
+              tone === "adjustmentHistory" ? "bg-adjustment-700" : "bg-zinc-900",
+            )}
+          />
+        ) : null}
       </span>
     </span>
   );
 }
 
-export type R1ReadonlyChoiceMode = "legacy" | "r1";
+export type ReviewReadonlyChoiceMode = "r1" | "r2" | "reReviewHistory";
+
+/** @deprecated Alias — `legacy` → `r2`. */
+export type R1ReadonlyChoiceMode = ReviewReadonlyChoiceMode;
+
+function choiceOptionShellClass(
+  isSelected: boolean,
+  mode: ReviewReadonlyChoiceMode,
+): string {
+  if (mode === "reReviewHistory" && isSelected) {
+    return REVIEW_BLOCK_RE_REVIEW_HISTORY_OPTION_SELECTED_SHELL_CLASS;
+  }
+  return isSelected
+    ? R1_RICH_OPTION_SELECTED_LOCKED_CLASS
+    : R1_RICH_OPTION_UNSELECTED_LOCKED_CLASS;
+}
+
+function choiceMarkerTone(
+  isSelected: boolean,
+  mode: ReviewReadonlyChoiceMode,
+): ReviewBlockChoiceMarkerTone {
+  return mode === "reReviewHistory" && isSelected ? "adjustmentHistory" : "default";
+}
+
+function choiceOptionTitleClass(
+  isSelected: boolean,
+  mode: ReviewReadonlyChoiceMode,
+): string {
+  if (mode === "reReviewHistory" && isSelected) {
+    return cn("text-sm leading-5", REVIEW_BLOCK_RE_REVIEW_HISTORY_OPTION_SELECTED_TEXT_CLASS);
+  }
+  return cn("text-sm leading-5", isSelected ? "text-foreground" : "text-inherit");
+}
+
+function choiceOptionStatusClass(
+  isSelected: boolean,
+  mode: ReviewReadonlyChoiceMode,
+): string {
+  if (mode === "reReviewHistory" && isSelected) {
+    return cn(
+      "shrink-0 text-hf-paragraph-mini",
+      REVIEW_BLOCK_RE_REVIEW_HISTORY_OPTION_SELECTED_TEXT_CLASS,
+    );
+  }
+  return isSelected
+    ? R1_RICH_OPTION_STATUS_SELECTED_CLASS
+    : R1_RICH_OPTION_STATUS_UNSELECTED_CLASS;
+}
+
+function choiceSelectedStatusLabel(
+  mode: ReviewReadonlyChoiceMode,
+  reReviewAdjusted?: boolean,
+): string {
+  if (mode === "r1") return "gewählt";
+  if (reReviewAdjusted) return "Angepasst";
+  return "wurde gewählt";
+}
+
+function choiceUnselectedStatusLabel(mode: ReviewReadonlyChoiceMode): string {
+  return mode === "r1" ? "nicht gewählt" : "wurde nicht gewählt";
+}
+
+function choiceOptionHintClass(
+  isSelected: boolean,
+  mode: ReviewReadonlyChoiceMode,
+): string {
+  if (mode === "reReviewHistory" && isSelected) {
+    return cn(
+      "mt-1.5 text-xs leading-4",
+      REVIEW_BLOCK_RE_REVIEW_HISTORY_OPTION_SELECTED_TEXT_CLASS,
+    );
+  }
+  return cn(
+    "mt-1.5 text-xs leading-4",
+    isSelected ? "text-muted-foreground" : "text-inherit",
+  );
+}
+
+function choiceOptionDescriptionClass(
+  isSelected: boolean,
+  mode: ReviewReadonlyChoiceMode,
+): string {
+  if (mode === "reReviewHistory" && isSelected) {
+    return cn(
+      "text-xs leading-relaxed",
+      REVIEW_BLOCK_RE_REVIEW_HISTORY_OPTION_SELECTED_TEXT_CLASS,
+    );
+  }
+  return cn(
+    "text-xs leading-relaxed",
+    isSelected ? "text-muted-foreground" : "text-inherit",
+  );
+}
 
 const DURATION_OPTION_HINTS_R1 = {
   full_study: "Für dauerhafte oder chronische Beeinträchtigungen",
@@ -906,14 +1115,16 @@ const DURATION_OPTION_HINTS_R1 = {
 
 /**
  * Read-only Vergleichsdarstellung „Gesamte Studiendauer“ vs. «Einmalig …».
- * `readonlyMode="r1"`: Figma gesperrter Zustand (`5641:23217`, `5657:18445`).
+ * `r1`: «gewählt» / «nicht gewählt» · `r2`: «wurde gewählt» / «wurde nicht gewählt».
  */
 export function DurationChoiceCompare({
   selected,
-  readonlyMode = "legacy",
+  readonlyMode = "r2",
+  reReviewAdjustedSelection = false,
 }: {
   selected?: "full_study" | "one_semester";
-  readonlyMode?: R1ReadonlyChoiceMode;
+  readonlyMode?: ReviewReadonlyChoiceMode;
+  reReviewAdjustedSelection?: boolean;
 }) {
   const options: {
     id: "full_study" | "one_semester";
@@ -944,96 +1155,31 @@ export function DurationChoiceCompare({
     );
   }
 
-  if (readonlyMode === "r1") {
-    return (
-      <div className={R1_RICH_OPTION_GROUP_CLASS}>
-        {options.map((opt) => {
-          const isSelected = selected === opt.id;
-          return (
-            <div
-              key={opt.id}
-              className={
-                isSelected
-                  ? R1_RICH_OPTION_SELECTED_LOCKED_CLASS
-                  : R1_RICH_OPTION_UNSELECTED_LOCKED_CLASS
-              }
-            >
-              <ReviewBlockRadioMarker checked={isSelected} />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-3">
-                  <p
-                    className={cn(
-                      "text-sm leading-5",
-                      isSelected ? "text-foreground" : "text-inherit",
-                    )}
-                  >
-                    {opt.title}
-                  </p>
-                  <p
-                    className={
-                      isSelected
-                        ? R1_RICH_OPTION_STATUS_SELECTED_CLASS
-                        : R1_RICH_OPTION_STATUS_UNSELECTED_CLASS
-                    }
-                  >
-                    {isSelected ? "gewählt" : "nicht gewählt"}
-                  </p>
-                </div>
-                <p
-                  className={cn(
-                    "mt-1.5 text-xs leading-4",
-                    isSelected ? "text-muted-foreground" : "text-inherit",
-                  )}
-                >
-                  {opt.hint}
-                </p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-1.5">
+    <div className={R1_RICH_OPTION_GROUP_CLASS}>
       {options.map((opt) => {
         const isSelected = selected === opt.id;
         return (
-          <div
-            key={opt.id}
-            className={cn(
-              "flex gap-3 rounded-lg border px-3 py-3 transition-colors",
-              isSelected
-                ? "border-border border-solid bg-card"
-                : "border-border border-dashed bg-muted/50 opacity-70",
-            )}
-          >
-            <ReviewBlockRadioMarker checked={isSelected} />
+          <div key={opt.id} className={choiceOptionShellClass(isSelected, readonlyMode)}>
+            <ReviewBlockRadioMarker
+              checked={isSelected}
+              tone={choiceMarkerTone(isSelected, readonlyMode)}
+            />
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-3">
-                <p
-                  className={cn(
-                    "text-sm leading-5",
-                    isSelected
-                      ? "text-foreground"
-                      : "text-muted-foreground line-through decoration-solid",
-                  )}
-                >
+                <p className={choiceOptionTitleClass(isSelected, readonlyMode)}>
                   {opt.title}
                 </p>
-                <p
-                  className={cn(
-                    "shrink-0 text-right text-xs font-medium leading-4",
-                    isSelected ? "text-foreground" : "text-muted-foreground",
-                  )}
-                >
-                  {isSelected ? "wurde gewählt" : "wurde nicht gewählt"}
+                <p className={choiceOptionStatusClass(isSelected, readonlyMode)}>
+                  {isSelected
+                    ? choiceSelectedStatusLabel(
+                        readonlyMode,
+                        reReviewAdjustedSelection && readonlyMode === "r2",
+                      )
+                    : choiceUnselectedStatusLabel(readonlyMode)}
                 </p>
               </div>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                {opt.hint}
-              </p>
+              <p className={choiceOptionHintClass(isSelected, readonlyMode)}>{opt.hint}</p>
             </div>
           </div>
         );
@@ -1044,79 +1190,36 @@ export function DurationChoiceCompare({
 
 export function ScopeChecklist({
   selected,
-  readonlyMode = "legacy",
+  readonlyMode = "r2",
+  reReviewAdjustedOptions,
 }: {
   selected: string[];
-  readonlyMode?: R1ReadonlyChoiceMode;
+  readonlyMode?: ReviewReadonlyChoiceMode;
+  reReviewAdjustedOptions?: ReadonlySet<string>;
 }) {
   const set = new Set(selected);
   return (
-    <ul className={readonlyMode === "r1" ? R1_RICH_OPTION_GROUP_CLASS : "space-y-1.5"}>
+    <ul className={R1_RICH_OPTION_GROUP_CLASS}>
       {APPLICATION_SCOPE_OPTIONS.map((option) => {
         const isOn = set.has(option);
-        if (readonlyMode === "r1") {
-          return (
-            <li key={option}>
-              <div
-                className={
-                  isOn
-                    ? R1_RICH_OPTION_SELECTED_LOCKED_CLASS
-                    : R1_RICH_OPTION_UNSELECTED_LOCKED_CLASS
-                }
-              >
-                <ReviewBlockCheckboxMarker checked={isOn} />
-                <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
-                  <span
-                    className={cn(
-                      "text-sm leading-5",
-                      isOn ? "text-foreground" : "text-inherit",
-                    )}
-                  >
-                    {option}
-                  </span>
-                  <span
-                    className={
-                      isOn
-                        ? R1_RICH_OPTION_STATUS_SELECTED_CLASS
-                        : R1_RICH_OPTION_STATUS_UNSELECTED_CLASS
-                    }
-                  >
-                    {isOn ? "gewählt" : "nicht gewählt"}
-                  </span>
-                </div>
-              </div>
-            </li>
-          );
-        }
         return (
           <li key={option}>
-            <div
-              className={cn(
-                "flex items-start gap-3 rounded-lg border px-3 py-3",
-                isOn
-                  ? "border-border border-solid bg-card"
-                  : "border-border border-dashed bg-muted/50 opacity-70",
-              )}
-            >
-              <ReviewBlockCheckboxMarker checked={isOn} />
+            <div className={choiceOptionShellClass(isOn, readonlyMode)}>
+              <ReviewBlockCheckboxMarker
+                checked={isOn}
+                tone={choiceMarkerTone(isOn, readonlyMode)}
+              />
               <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
-                <span
-                  className={cn(
-                    "text-sm leading-5",
-                    isOn
-                      ? "text-foreground"
-                      : "text-muted-foreground line-through decoration-solid",
-                  )}
-                >
+                <span className={choiceOptionTitleClass(isOn, readonlyMode)}>
                   {option}
                 </span>
-                <span
-                  className={cn(
-                    "shrink-0 text-right text-xs font-medium leading-4",
-                    isOn ? "text-foreground" : "text-muted-foreground",
-                  )}
-                >
-                  {isOn ? "wurde gewählt" : "wurde nicht gewählt"}
+                <span className={choiceOptionStatusClass(isOn, readonlyMode)}>
+                  {isOn
+                    ? choiceSelectedStatusLabel(
+                        readonlyMode,
+                        reReviewAdjustedOptions?.has(option) && readonlyMode === "r2",
+                      )
+                    : choiceUnselectedStatusLabel(readonlyMode)}
                 </span>
               </div>
             </div>
@@ -1136,20 +1239,21 @@ export function MeasureChecklist({
   measuresKeine,
   keineTitle = "Keine",
   keineDescription,
-  readonlyMode = "legacy",
+  readonlyMode = "r2",
+  reReviewAdjustedKeys,
+  reReviewAdjustedOtherIndices,
 }: {
   options: readonly ApplicationMeasureOption[];
   selectedKeys: string[];
-  /** Bevorzugt — mehrere «Sonstige»-Zeilen. */
   otherLines?: string[];
-  /** Legacy-Einzelfeld */
   otherEnabled?: boolean;
   otherText?: string;
-  /** Antrag: explizit «Keine Massnahme» gewählt. */
   measuresKeine?: boolean;
   keineTitle?: string;
   keineDescription?: string;
-  readonlyMode?: R1ReadonlyChoiceMode;
+  readonlyMode?: ReviewReadonlyChoiceMode;
+  reReviewAdjustedKeys?: ReadonlySet<string>;
+  reReviewAdjustedOtherIndices?: ReadonlySet<number>;
 }) {
   const set = new Set(selectedKeys);
   const resolvedOthers = (() => {
@@ -1162,23 +1266,21 @@ export function MeasureChecklist({
 
   return (
     <div className="space-y-4">
-      <ul className="space-y-1.5">
+      <ul className={R1_RICH_OPTION_GROUP_CLASS}>
         {measuresKeine ? (
           <li key="__keine__">
-            <div
-              className={cn(
-                "flex items-start gap-3 rounded-lg border bg-card px-3 py-3",
-                "border-foreground",
-              )}
-            >
-              <ReviewBlockCheckboxMarker checked />
+            <div className={choiceOptionShellClass(true, readonlyMode)}>
+              <ReviewBlockCheckboxMarker
+                checked
+                tone={choiceMarkerTone(true, readonlyMode)}
+              />
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <div className="flex items-start justify-between gap-3">
-                  <span className="text-sm font-medium leading-5 text-foreground">
+                  <span className={choiceOptionTitleClass(true, readonlyMode)}>
                     {keineTitle}
                   </span>
-                  <span className="shrink-0 text-right text-xs font-medium leading-4 text-foreground">
-                    wurde gewählt
+                  <span className={choiceOptionStatusClass(true, readonlyMode)}>
+                    {choiceSelectedStatusLabel(readonlyMode)}
                   </span>
                 </div>
                 {keineDescription ? (
@@ -1194,40 +1296,26 @@ export function MeasureChecklist({
           const isOn = set.has(option.key);
           return (
             <li key={option.key}>
-              <div
-                className={cn(
-                  "flex items-start gap-3 rounded-lg border bg-card px-3 py-3",
-                  isOn ? "border-foreground" : "border-border",
-                )}
-              >
-                <ReviewBlockCheckboxMarker checked={isOn} />
+              <div className={choiceOptionShellClass(isOn, readonlyMode)}>
+                <ReviewBlockCheckboxMarker
+                  checked={isOn}
+                  tone={choiceMarkerTone(isOn, readonlyMode)}
+                />
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <div className="flex items-start justify-between gap-3">
-                    <span
-                      className={cn(
-                        "text-sm font-medium leading-5",
-                        isOn
-                          ? "text-foreground"
-                          : "text-muted-foreground line-through decoration-solid",
-                      )}
-                    >
+                    <span className={choiceOptionTitleClass(isOn, readonlyMode)}>
                       {option.title}
                     </span>
-                    <span
-                      className={cn(
-                        "shrink-0 text-right text-xs font-medium leading-4",
-                        isOn ? "text-foreground" : "text-muted-foreground",
-                      )}
-                    >
-                      {isOn ? "wurde gewählt" : "wurde nicht gewählt"}
+                    <span className={choiceOptionStatusClass(isOn, readonlyMode)}>
+                      {isOn
+                        ? choiceSelectedStatusLabel(
+                            readonlyMode,
+                            reReviewAdjustedKeys?.has(option.key) && readonlyMode === "r2",
+                          )
+                        : choiceUnselectedStatusLabel(readonlyMode)}
                     </span>
                   </div>
-                  <p
-                    className={cn(
-                      "text-xs leading-relaxed text-muted-foreground",
-                      !isOn && "line-through decoration-solid",
-                    )}
-                  >
+                  <p className={choiceOptionDescriptionClass(isOn, readonlyMode)}>
                     {option.description}
                   </p>
                 </div>
@@ -1236,42 +1324,51 @@ export function MeasureChecklist({
           );
         })}
       </ul>
-      {resolvedOthers.map((line, idx) => (
-        <div
-          key={`other-${idx}`}
-          className={cn(
-            "flex items-start gap-3 rounded-lg border bg-card px-3 py-3",
-            line ? "border-foreground" : "border-border",
-          )}
-        >
-          <ReviewBlockCheckboxMarker checked={Boolean(line)} />
-          <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-xs font-medium leading-4 text-muted-foreground">
-                Sonstige Massnahme
-              </p>
-              <span
-                className={cn(
-                  "shrink-0 text-right text-xs font-medium leading-4",
-                  line ? "text-foreground" : "text-muted-foreground",
-                )}
-              >
-                {line ? "wurde ergänzt" : "wurde nicht gewählt"}
-              </span>
-            </div>
-            <p
-              className={cn(
-                "mt-1 text-sm leading-5",
-                line
-                  ? "text-foreground"
-                  : "text-muted-foreground line-through decoration-solid",
-              )}
-            >
-              {line || "Keine Angabe"}
-            </p>
-          </div>
-        </div>
-      ))}
+      {resolvedOthers.length > 0 ? (
+        <ul className={R1_RICH_OPTION_GROUP_CLASS}>
+          {resolvedOthers.map((line, idx) => {
+            const hasLine = Boolean(line);
+            return (
+              <li key={`other-${idx}`}>
+                <div className={choiceOptionShellClass(hasLine, readonlyMode)}>
+                  <ReviewBlockCheckboxMarker
+                    checked={hasLine}
+                    tone={choiceMarkerTone(hasLine, readonlyMode)}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <p
+                        className={cn(
+                          "text-xs font-medium leading-4",
+                          !hasLine
+                            ? "text-inherit"
+                            : readonlyMode === "reReviewHistory"
+                              ? REVIEW_BLOCK_RE_REVIEW_HISTORY_OPTION_SELECTED_TEXT_CLASS
+                              : "text-muted-foreground",
+                        )}
+                      >
+                        Sonstige Massnahme
+                      </p>
+                      <span className={choiceOptionStatusClass(hasLine, readonlyMode)}>
+                        {hasLine
+                          ? choiceSelectedStatusLabel(
+                              readonlyMode,
+                              reReviewAdjustedOtherIndices?.has(idx)
+                                && readonlyMode === "r2",
+                            )
+                          : choiceUnselectedStatusLabel(readonlyMode)}
+                      </span>
+                    </div>
+                    <p className={cn("mt-1", choiceOptionTitleClass(hasLine, readonlyMode))}>
+                      {line || "Keine Angabe"}
+                    </p>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
     </div>
   );
 }

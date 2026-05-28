@@ -1147,6 +1147,7 @@ export function PortalApplicationAdjustment({
                 otherText={def?.lectureOtherText}
                 measuresKeine={Boolean(def?.lectureMeasuresKeine)}
                 keineDescription={LECTURE_MEASURES_KEINE_DESCRIPTION}
+                readonlyMode="r1"
               />
             )}
           </R1BlockShell>
@@ -1194,6 +1195,7 @@ export function PortalApplicationAdjustment({
                 otherText={def?.assessmentOtherText}
                 measuresKeine={Boolean(def?.assessmentMeasuresKeine)}
                 keineDescription={ASSESSMENT_MEASURES_KEINE_DESCRIPTION}
+                readonlyMode="r1"
               />
             )}
           </R1BlockShell>

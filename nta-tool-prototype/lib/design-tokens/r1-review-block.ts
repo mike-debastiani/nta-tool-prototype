@@ -10,11 +10,13 @@ export const R1_REVIEW_BLOCK_REMARK_SECTION_CLASS =
 export const R1_REVIEW_BLOCK_ACTION_FOOTER_CLASS =
   "flex h-[52px] w-full shrink-0 items-center border-t border-border bg-stone-50 px-5";
 
-/** Rich-Option gewählt, gesperrt (`5792:23243`). */
+/**
+ * Read-only Auswahloptionen — R1/R2 Review & Anpassung (Figma Geltungsdauer / Gültigkeitsdauer).
+ * Gewählt: leichter Stroke, weiss. Nicht gewählt: `stone-50`, ohne Border.
+ */
 export const R1_RICH_OPTION_SELECTED_LOCKED_CLASS =
   "flex gap-3 rounded-[10px] border border-border bg-background px-3 py-3";
 
-/** Rich-Option nicht gewählt, gesperrt (`5792:23253`). */
 export const R1_RICH_OPTION_UNSELECTED_LOCKED_CLASS =
   "flex gap-3 rounded-[10px] bg-stone-50 px-3 py-3 text-neutral-400";
 

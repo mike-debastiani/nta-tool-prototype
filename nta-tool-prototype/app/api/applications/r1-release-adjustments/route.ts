@@ -73,15 +73,20 @@ export async function POST(request: Request) {
   }
 
   const base = dataWithoutLegacyReviewRoots(data);
-  const { r1AdjustmentBlockBaselines: _dropBaselines, ...recommendationRest } =
-    data.recommendation ?? {};
+  /** Für R2 Re-Review (Toggle Aktuell/Verlauf) müssen Baselines erhalten bleiben. */
+  const preservedBaselines =
+    data.recommendation?.r1AdjustmentBlockBaselines
+    ?? data.r1AdjustmentBlockBaselines;
 
   const nextData: ApplicationData = {
     ...base,
     r1AdjustmentResolutions: {},
     recommendation: {
-      ...recommendationRest,
+      ...(data.recommendation ?? {}),
       workspaceReview: built.workspaceReview,
+      ...(preservedBaselines
+        ? { r1AdjustmentBlockBaselines: preservedBaselines }
+        : {}),
     },
   };
 

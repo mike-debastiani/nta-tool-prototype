@@ -63,14 +63,14 @@
   - `workspaceReview` — siehe nächster Unterpunkt.
 - **Persistenz Block-Review (Prototyp, jetzt):** Phasen, Bemerkungen und Chronik liegen unter **`data.recommendation.workspaceReview`** (innerhalb des erlaubten Trigger-Pfads). Schemas in `lib/test-flow-types.ts`:
   - `data.recommendation.workspaceReview.draft`: laufender R2-Entwurf (`R2ReviewDraft` — `updatedAt`, `blocks`, `reviewComments`); wird debounced gespeichert (`persistReviewDraft` in `workspace-application-review.tsx`, ~500 ms).
-  - `data.recommendation.workspaceReview.postSubmit`: Snapshot beim **Weiterreichen** (`R2PostSubmitReview` — `forwardedAt`, `blocks`). Block-`phase` inkl. **`pending_after_adjustment`** (`lockedRemark`) nach R1-Freigabe einer Korrekturrunde — R2 sieht die Fachstellen-Bemerkung gesperrt, bis er erneut „Anpassung anfordert“ (dann neuer Kommentar / neues `adjustment`).
+  - `data.recommendation.workspaceReview.postSubmit`: Snapshot beim **Weiterreichen** (`R2PostSubmitReview` — `forwardedAt`, `blocks`). Block-`phase` inkl. **`pending_after_adjustment`** (`lockedRemark`) nach R1-Freigabe einer Korrekturrunde. In dieser Phase nutzt R2 pro Block den Toggle **Aktuell/Verlauf**: Aktuell zeigt R1s überarbeiteten Stand, Verlauf zeigt den Baseline-Snapshot (ursprüngliche Auswahl zur Zeit der Anforderung) plus gesperrtes Remark-Band.
   - `data.recommendation.workspaceReview.forwardedComments`: persistierte Kommentar-Chronik beim Weiterreichen.
 - **Legacy-Wurzelfelder** (`reviewComments`, `r2PostSubmitReview`, `r2ReviewDraft` direkt in `data`) werden vor jedem Save mit **`dataWithoutLegacyReviewRoots`** (`lib/r2-review-persist.ts`) entfernt — sonst feuert der Trigger.
 - **Forward-Aktion** geht über **`app/api/applications/review-forward/route.ts`** (Session-Client, RLS-konform — kein `SUPABASE_SERVICE_ROLE_KEY` nötig). Rollen: **R2, R3, R2R4** (`hasR2WorkspaceCapabilities` bzw. R3). Payload: `applicationId`, `nextStatus` (`in_implementation` \| `needs_correction`), `workspaceReview` inkl. `postSubmit` + `forwardedComments`. Setzt `applications.status` entsprechend und schreibt `recommendation.workspaceReview` final.  
   **Trigger-Pitfall:** Root-Felder in `data` außerhalb `consultation` / `recommendation` dürfen von R2 **nicht** verändert werden. Insbesondere darf **`r1AdjustmentResolutions`** beim Forward **nicht** aus dem Merge entfernt werden (sonst `R2 may not change data except recommendation/consultation`); Zurücksetzen erfolgt bei R1 über **`r1-release-adjustments`**.  
   **R1-Baseline für R2-Anpassungsmodus:** Beim Forward mit `needs_correction` werden Studierenden-Snapshots pro Block unter **`data.recommendation.r1AdjustmentBlockBaselines`** persistiert (Lesen: `lib/r1-adjustment-baseline.ts` — **nicht** an der JSON-Wurzel, sonst Trigger-Fehler).
 - **R4-Bewilligung (separater JSON-Pfad):** **`data.r4DecisionReview`** — Schalter, Block-`confirmed`, Freitextzeilen **Hinzufügen/Hinzugefügt** (`proposal:*` nur Massnahmen-Blöcke). Abschluss: **`materializeApprovedR4DecisionReview`** → `applicationDefinition` (sichtbar in Review-Lesesicht). **R2R4:** Trigger erlaubt `applicationDefinition` nur beim Statuswechsel auf `approved`. Details → `Antrag_Bewilligung_Kontext.md` § 5–6.
-- **R1-Freigabe-API:** **`app/api/applications/r1-release-adjustments/route.ts`** — setzt Status `in_review`, merged `buildWorkspaceReviewAfterR1AdjustmentRelease`, leert `r1AdjustmentResolutions`, broadcastet Zeilen-Update.
+- **R1-Freigabe-API:** **`app/api/applications/r1-release-adjustments/route.ts`** — setzt Status `in_review`, merged `buildWorkspaceReviewAfterR1AdjustmentRelease`, leert `r1AdjustmentResolutions`, broadcastet Zeilen-Update. Wichtig: `recommendation.r1AdjustmentBlockBaselines` werden bei der Freigabe explizit erhalten, damit der Re-Review-Verlauf (Toggle) im nächsten R2-Zyklus verfügbar bleibt.
 - **RLS-Anker:** `applications_select_r2_worklist` umfasst seit Migration `extend_workspace_select_to_decision_states` auch **`in_implementation` / `approved` / `rejected`**, damit R2 den weitergereichten Antrag nach dem Statuswechsel im Workspace im Modus `readonly_decision` weiter sehen kann (Details siehe `Antragerstellung_Kontext.md` § 10). Parallel: **`applications_select_r4_workspace`** + **`users_select_r4_workspace_applicants`** für **R4** (immer mit **`current_user_role()`**, siehe `Antrag_Bewilligung_Kontext.md` § 6 / `Antragerstellung_Kontext.md` § 10).
 
 ---
@@ -110,7 +110,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 | Seiten-Header | `components/domain/application-review-page-header.tsx` | Geteilt: Titel «Antrag auf Nachteilsausgleich», «Eingereicht am» (`paragraphSmall`), Options-Button |
 | Status-Callout | `components/domain/application-status-callout.tsx` | Hinweiszeile unter dem Header (Badge-Farben aus Status-Meta) |
 | Beratungstermin-Karte | `components/domain/workspace-consultation-appointment-card.tsx` | Nur «Beratung & Empfehlung» ohne `releasedHtml`: unter Callout, `bg-consultation-surface`, Datum/Ort/Beratende Person aus `resolveWorkspaceConsultationAppointment`; Org-Zeilen fest («Fachstelle Studium und Behinderung», «Universität Zürich»); Pfeil → Terminplaner |
-| Review-Block-Tokens | `lib/design-tokens/review-block.ts` | Shell-Klassen, Footer 52px, Composer/Adjustment/Locked-Remark-Band |
+| Review-Block-Tokens | `lib/design-tokens/review-block.ts` | Shell-Klassen, Footer 52px, Composer/Adjustment, Re-Review-History-Toggle, Verlauf-Band |
 | Bemerkungen-Tokens | `lib/design-tokens/review-bemerkungen.ts` | R1 pending/done (`5858:22820`), R2 Chronik (`5866:2021`) |
 | R1-Block-Footer | `lib/design-tokens/r1-review-block.ts` | R1 Anpassungs-Footer («Anpassung vornehmen», Bearbeiten, Speichern, Zurücksetzen) |
 | R1-Baseline | `lib/r1-adjustment-baseline.ts` | `readR1AdjustmentBlockBaselines`, Merge mit `recommendation.r1AdjustmentBlockBaselines` |
@@ -171,13 +171,24 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 | (composer offen) | `composer` | `pendingComposer` für diesen Block; Bemerkung **im Block-Footer**, Sidebar bleibt bei Antragdetails + Chronik. |
 | `confirmed` | `confirmed` | R2 kann zurücksetzen → `pending`. |
 | `adjustment` | `adjustment_active` (interaktiv) / `adjustment_sent` (read-only) | Bemerkung im Footer; **Bearbeiten** öffnet `composer` mit vorausgefülltem Text. |
-| `pending_after_adjustment` | `pending` + `ReviewBlockLockedRemarkCallout` **im Footer** (vor Pending-Leiste) | Gesperrte frühere Bemerkung (`5905:23340`); darunter erneut **Anpassung anfordern** / **Bestätigen**. |
+| `pending_after_adjustment` | `pending` + Header-Toggle `ReviewBlockAdjustmentHistoryToggle` | R2 kann zwischen **Aktuell** (überarbeiteter R1-Stand) und **Verlauf** (Baseline + gesperrtes `Angeforderte Anpassung`-Band) wechseln; Aktionen bleiben **Anpassung anfordern** / **Bestätigen**. |
 
 - **Bestätigen:** `confirmed`.
 - **Anpassung anfordern:** `composer` (leerer Entwurf); **Kommentieren** nur mit nicht-leerer Bemerkung → `adjustment`.
 - **Abbrechen** (composer): zurück zu `pending` (zwei Buttons).
 - **Zurücksetzen:** `confirmed` → sofort `pending`; `adjustment` → Dialog, dann `pending` + Kommentar aus Liste entfernen.
 - **Bearbeiten:** `adjustment` → `composer` mit bestehender Bemerkung.
+
+### Re-Review-Verlauf (R2 Adjustment History Feature)
+
+- **Aktivierung:** nur für Blöcke in `pending_after_adjustment` mit vorhandener Baseline in `recommendation.r1AdjustmentBlockBaselines`.
+- **Default-Ansicht:** `current` (SquarePen aktiv) zeigt den aktuellen, von R1 angepassten Stand.
+- **Verlaufsansicht:** `history` (History aktiv) zeigt den ursprünglichen Baseline-Inhalt und im Footer das gesperrte Band **„Angeforderte Anpassung“** mit dem ursprünglichen R2-Remark.
+- **Interaktionsregel:** Sobald R2 in diesem Block erneut in den Composer geht (neue Anpassung) oder bestätigt, verschwindet die Verlaufssicht für diese Interaktion; nach **Zurücksetzen** ist der Toggle wieder verfügbar.
+- **Darstellungsregel bei Auswahloptionen (Duration/Scope/Measures):**
+  - Verlauf **gewählt**: `bg-adjustment-100`, Foreground (Text/Icons/Status) `adjustment-700`, gleiches Layout wie normale Read-only-Optionen.
+  - Verlauf **nicht gewählt**: unverändert wie Read-only-unselected (`stone-50`, muted).
+  - R2-Default (`current`) kennzeichnet neu angepasste Werte mit Label **„Angepasst“**.
 
 ### Sidebar «Antragdetails» + Bemerkungen / Kontakte
 
@@ -258,4 +269,4 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 
 ---
 
-*Letzte Aktualisierung: R2R4 Forward; Routing R4/R2R4 → `WorkspaceR4DecisionView`; R4 ohne Bemerkungs-Panel; Test-Matrix `Dashboard_Core_Layout_Kontext.md` § 4b; Bewilligung → `Antrag_Bewilligung_Kontext.md`.*
+*Letzte Aktualisierung: R2 Adjustment History Feature (Aktuell/Verlauf in `pending_after_adjustment`), Baseline-Persistenz bei `r1-release-adjustments`, R2R4 Forward; Routing R4/R2R4 → `WorkspaceR4DecisionView`; R4 ohne Bemerkungs-Panel; Test-Matrix `Dashboard_Core_Layout_Kontext.md` § 4b; Bewilligung → `Antrag_Bewilligung_Kontext.md`.*

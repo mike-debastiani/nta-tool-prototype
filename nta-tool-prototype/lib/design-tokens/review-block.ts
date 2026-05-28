@@ -86,3 +86,54 @@ export const REVIEW_BLOCK_LOCKED_REMARK_TITLE_CLASS =
 
 export const REVIEW_BLOCK_LOCKED_REMARK_BODY_CLASS =
   "whitespace-pre-wrap text-hf-paragraph-small text-adjustment-700";
+
+/**
+ * R2 Re-Review — Umschalter Aktuell/Verlauf im Block-Header.
+ * Figma `6192:3836` (aktuell aktiv) · `6193:22254` (Verlauf aktiv).
+ * Shell: border, `p-3xs` (2px), `rounded-full`.
+ */
+export const REVIEW_BLOCK_HISTORY_TOGGLE_SHELL_CLASS =
+  "flex shrink-0 items-center rounded-full border border-border p-0.5";
+
+/** Gemeinsame Tab-Basis: `min-h/w-20px`, Icon `16px`, `gap-2xs` (4px). */
+export const REVIEW_BLOCK_HISTORY_TOGGLE_TAB_BASE_CLASS =
+  "flex min-h-5 min-w-5 shrink-0 items-center justify-center gap-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+
+export const REVIEW_BLOCK_HISTORY_TOGGLE_TAB_ICON_CLASS = "size-4 shrink-0";
+
+/** Aktuell aktiv — `graustufen/stone/150`, `p-6px`, `rounded-full`. */
+export const REVIEW_BLOCK_HISTORY_TOGGLE_TAB_CURRENT_ACTIVE_CLASS =
+  "rounded-full bg-stone-150 p-1.5 text-foreground";
+
+/** Aktuell inaktiv (Verlauf aktiv) — kein Fill, `p-6px`, `rounded-full`. */
+export const REVIEW_BLOCK_HISTORY_TOGGLE_TAB_CURRENT_INACTIVE_CLASS =
+  "rounded-full p-1.5 text-muted-foreground";
+
+/** Verlauf aktiv — `a-und-r-erforderlich/100`, Icon/Text `erforderlich-700`. */
+export const REVIEW_BLOCK_HISTORY_TOGGLE_TAB_HISTORY_ACTIVE_CLASS =
+  "rounded-full bg-adjustment-100 p-1.5 text-adjustment-700";
+
+/** Verlauf inaktiv (aktuell aktiv) — kein Fill, `px-6px` `py-1px`, `rounded-md`. */
+export const REVIEW_BLOCK_HISTORY_TOGGLE_TAB_HISTORY_INACTIVE_CLASS =
+  "rounded-md px-1.5 py-px text-muted-foreground";
+
+/** «Angeforderte Anpassung» vor Pending-Footer in Verlaufsansicht (`6193:22256`). */
+export const REVIEW_BLOCK_REQUESTED_ADJUSTMENT_BAND_CLASS =
+  "flex flex-col gap-1 border-t border-border bg-adjustment-100 px-5 py-4";
+
+export const REVIEW_BLOCK_REQUESTED_ADJUSTMENT_TITLE_CLASS =
+  "text-sm font-medium leading-5 text-adjustment-700";
+
+export const REVIEW_BLOCK_REQUESTED_ADJUSTMENT_BODY_CLASS =
+  "whitespace-pre-wrap text-sm font-normal leading-5 text-adjustment-700";
+
+/** «Angepasst»-Marker an geänderten Auswahloptionen (`6195:22506`). */
+export const REVIEW_BLOCK_RE_REVIEW_ADJUSTED_MARKER_CLASS =
+  "shrink-0 text-hf-paragraph-mini font-medium text-muted-foreground";
+
+/** Re-Review Verlauf — gewählte Option (gleiches Layout wie R1 gewählt, ohne Border). */
+export const REVIEW_BLOCK_RE_REVIEW_HISTORY_OPTION_SELECTED_SHELL_CLASS =
+  "flex gap-3 rounded-[10px] bg-adjustment-100 px-3 py-3";
+
+export const REVIEW_BLOCK_RE_REVIEW_HISTORY_OPTION_SELECTED_TEXT_CLASS =
+  "text-adjustment-700";

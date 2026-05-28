@@ -154,7 +154,7 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 
 ### F6 — Annotations-System (R2/R3 → R1 Korrektur-Loop)
 
-**Ist im Prototyp (Abweichung von Feld-Annotationen):** **Block-Review** im Workspace (`WorkspaceApplicationReview`, HF `ReviewBlockVariant` in `application-review-blocks.tsx`): sieben Blöcke, **Bestätigen** / **Anpassung** (Composer im Block-Footer, Chronik in Sidebar); Persistenz `data.recommendation.workspaceReview`; Forward `review-forward` (Baselines `recommendation.r1AdjustmentBlockBaselines` bei Anpassung); R1 in `PortalApplicationAdjustment` (HF `R1BlockShell`); Rückkehr `r1-release-adjustments` + **`pending_after_adjustment`** (gesperrte Bemerkung im Block-Footer). R4: `WorkspaceR4DecisionView` / Lesesicht — **`Antrag_Review_Kontext.md`**, **`Antrag_Bewilligung_Kontext.md`**.
+**Ist im Prototyp (Abweichung von Feld-Annotationen):** **Block-Review** im Workspace (`WorkspaceApplicationReview`, HF `ReviewBlockVariant` in `application-review-blocks.tsx`): sieben Blöcke, **Bestätigen** / **Anpassung** (Composer im Block-Footer, Chronik in Sidebar); Persistenz `data.recommendation.workspaceReview`; Forward `review-forward` (Baselines `recommendation.r1AdjustmentBlockBaselines` bei Anpassung); R1 in `PortalApplicationAdjustment` (HF `R1BlockShell`); Rückkehr `r1-release-adjustments` + **`pending_after_adjustment`** mit **R2 Adjustment History Feature** (Toggle Aktuell/Verlauf, Baseline-Ansicht + gesperrtes „Angeforderte Anpassung“-Band im Verlauf). Baselines bleiben bei R1-Release erhalten, damit Re-Review-Historie im nächsten R2-Zyklus verfügbar ist. R4: `WorkspaceR4DecisionView` / Lesesicht — **`Antrag_Review_Kontext.md`**, **`Antrag_Bewilligung_Kontext.md`**.
 
 **Vision / Zielbild (Feld-Ebene):**
 
