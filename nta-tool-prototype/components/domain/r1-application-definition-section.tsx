@@ -26,6 +26,7 @@ const APPLICATION_SCOPE_OPTIONS = [
   "Mündliche Prüfungen",
   "Schriftliche Arbeiten",
   "Während Lehrveranstaltungen",
+  "Praktika",
 ] as const;
 
 type ApplicationDuration = "full_study" | "one_semester";

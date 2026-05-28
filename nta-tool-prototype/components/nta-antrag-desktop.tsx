@@ -744,7 +744,15 @@ export function NtaAntragDesktop({
 
   useEffect(() => {
     const previousStep = previousStepRef.current;
-    if (previousStep === "step4_application" && currentStep === "step5_overview") {
+    const movedFromStep3ToStep4 =
+      (previousStep === "step3_booking"
+        || previousStep === "step3_booked"
+        || previousStep === "step3_recommendation")
+      && currentStep === "step4_application";
+    const movedFromStep4ToStep5 =
+      previousStep === "step4_application" && currentStep === "step5_overview";
+
+    if (movedFromStep3ToStep4 || movedFromStep4ToStep5) {
       flowMainScrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
     }
     previousStepRef.current = currentStep;
