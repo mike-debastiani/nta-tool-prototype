@@ -601,9 +601,7 @@ export function WorkspaceR4DecisionView({
           <ApplicationReviewPageHeader submittedAtLabel={submittedAtLabel} />
           {canEdit ? (
             <ApplicationStatusCallout badgeClassName={statusMeta.className} icon={Info}>
-              Vom Studierenden gewählte Optionen sind mit «Bewilligt» vorgemerkt. Passen Sie die
-              Schalter bei Bedarf an, und bestätigen Sie die Auswahl pro Block. Anschliessend können
-              Sie den Entscheid abschliessen.
+              Entscheiden Sie über den von der Fachstelle bestätigten Antrag. Vom Studierenden gewählte Optionen sind mit «Bewilligt» vorgemerkt. Passen Sie die Schalter bei Bedarf an, und bestätigen Sie die Auswahl pro Block. Anschliessend können Sie den Entscheid abschliessen.
             </ApplicationStatusCallout>
           ) : null}
         </div>
@@ -669,7 +667,7 @@ export function WorkspaceR4DecisionView({
           {showDefinitionBlock ? (
             <R4FacultyConfirmedBlock
               anchorId={reviewWorkspaceAnchorId("definition")}
-              title="Antragsdefinition"
+              title="Persönliche Situationsbeschreibung"
             >
               <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
                 {def?.situationDescription?.trim()

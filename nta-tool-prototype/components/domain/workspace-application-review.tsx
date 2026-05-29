@@ -1408,7 +1408,7 @@ export function WorkspaceApplicationReview({
           />
         ) : null}
 
-        {/* Antragsdefinition (Freitext) */}
+        {/* Persönliche Situationsbeschreibung (Freitext) */}
         {showDefinitionBlock ? (
           <InteractiveReviewBlock
           blockId="definition"
@@ -1420,11 +1420,11 @@ export function WorkspaceApplicationReview({
           adjustmentSentReadOnly={adjustmentSentReadOnly}
           readOnly={readOnly}
           compactReadOnly={compactReadOnlyBlocks}
-          title="Antragsdefinition"
+          title="Persönliche Situationsbeschreibung"
           phase={blockPhases.definition}
           onConfirm={() => confirmBlock("definition")}
           onRequestAdjustment={() =>
-            requestAdjustmentForBlock("definition", "Antragsdefinition")}
+            requestAdjustmentForBlock("definition", "Persönliche Situationsbeschreibung")}
           onReset={() => handleResetRequest("definition")}
           reReviewHistory={
             pendingComposer?.blockId === "definition"

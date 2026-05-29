@@ -122,7 +122,7 @@ const SEMESTER_NUMBERS = Array.from({ length: 12 }, (_, i) => i + 1);
 const BLOCK_TITLES: Record<ReviewWorkspaceBlockId, string> = {
   applicant: REVIEW_WORKSPACE_APPLICANT_BLOCK_TITLE,
   attest: "Fachärztliches Attest",
-  definition: "Antragsdefinition",
+  definition: "Persönliche Situationsbeschreibung",
   duration: "Gültigkeitsdauer des Nachteilsausgleiches",
   scope: "Geltungsbereich des beantragten Nachteilsausgleiches",
   lectureMeasures: "Ausgleichsmassnahmen für Lehrveranstaltungen",
