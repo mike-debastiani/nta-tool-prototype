@@ -485,6 +485,10 @@ export function WorkspaceR4DecisionView({
     const disableInteractions = !canEdit;
     const switchesDisabled =
       disableInteractions || (block.confirmed && !editing[id]);
+    /** Nach Bestätigen ist `R4DecisionProposalInput` ausgeblendet — Vorschläge als Optionenzeilen. */
+    const showProposalsAsOptionRows = switchesDisabled && proposalRows.length > 0;
+    const showProposalInput =
+      canEdit && !switchesDisabled && supportsR4CustomProposalInput(id);
 
     const shellClass = confirmedClosed
       ? R4_DECISION_BLOCK_CONFIRMED_CLASS
@@ -523,7 +527,20 @@ export function WorkspaceR4DecisionView({
                 onToggle={() => handleToggleRow(id, row.key)}
               />
             ))}
-            {canEdit && !switchesDisabled && supportsR4CustomProposalInput(id) ? (
+            {showProposalsAsOptionRows
+              ? proposalRows.map((row) => (
+                  <R4DecisionOptionRow
+                    key={row.key}
+                    row={row}
+                    pristine={pristine}
+                    blockConfirmed={block.confirmed}
+                    confirmedReadonly={confirmedClosed}
+                    disabled={switchesDisabled}
+                    onToggle={() => handleToggleRow(id, row.key)}
+                  />
+                ))
+              : null}
+            {showProposalInput ? (
               <R4DecisionProposalInput
                 proposalRows={proposalRows}
                 disabled={disableInteractions}

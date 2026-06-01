@@ -32,10 +32,17 @@ const R2_ASSIGNEE_STATES: ReadonlySet<CanonicalApplicationState> = new Set([
   "draft",
 ]);
 
-/** Vor- und Nachname aus Step 1, sonst Profil. */
+/** Vorname und Nachname aus Step 1 (Listen: «Vorname Nachname»). */
+export function formatApplicantNameFromPersonalData(
+  personalData: { vorname?: string; name?: string } | undefined,
+): string {
+  if (!personalData) return "";
+  return `${personalData.vorname ?? ""} ${personalData.name ?? ""}`.trim();
+}
+
+/** Vorname und Nachname aus Step 1, sonst Profil. */
 export function resolveApplicantDisplayName(application: WorkspaceApplication): string {
-  const pd = application.data.personalData;
-  const fromForm = pd ? `${pd.vorname ?? ""} ${pd.name ?? ""}`.trim() : "";
+  const fromForm = formatApplicantNameFromPersonalData(application.data.personalData);
   if (fromForm) return fromForm;
   const u = application.users[0];
   if (u?.display_name?.trim()) return u.display_name.trim();

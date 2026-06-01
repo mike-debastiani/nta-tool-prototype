@@ -1,3 +1,4 @@
+import { formatApplicantNameFromPersonalData } from "@/lib/application-assignee";
 import {
   hasReleasedRecommendation,
   isConsultationPhaseApplication,
@@ -17,9 +18,7 @@ export type WorkspaceConsultationRow = {
 function resolveApplicantName(application: WorkspaceApplication): string {
   const userName = application.users[0]?.display_name?.trim();
   if (userName) return userName;
-  const first = application.data.personalData?.vorname?.trim() ?? "";
-  const last = application.data.personalData?.name?.trim() ?? "";
-  const full = `${first} ${last}`.trim();
+  const full = formatApplicantNameFromPersonalData(application.data.personalData);
   return full || "Antragstellende Person";
 }
 

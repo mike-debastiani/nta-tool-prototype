@@ -6,7 +6,10 @@ import { ApplicationDetailsCard } from "@/components/domain/application-details-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import type { ApplicationAssignee } from "@/lib/application-assignee";
+import {
+  resolveApplicantDisplayName,
+  type ApplicationAssignee,
+} from "@/lib/application-assignee";
 import { type ApplicationStatusMeta } from "@/lib/application-status";
 import {
   detailPanelContentInsetXClass,
@@ -48,11 +51,12 @@ export type SavedReviewComment = {
 
 const BEMERKUNG_ITEM_BODY_MAX_HEIGHT_PX = 250;
 
-/** Figma `5866:2028` — Monat + Jahr in der Bemerkungsliste. */
+/** Vollständiges Datum in der Bemerkungsliste (z. B. 21.05.26). */
 function formatBemerkungDate(ts: number): string {
   return new Date(ts).toLocaleDateString("de-CH", {
-    month: "long",
-    year: "numeric",
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
   });
 }
 
@@ -98,10 +102,7 @@ function formatCommentTimestamp(ts: number): string {
   if (sameDay) {
     return `Heute, ${d.toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" })}`;
   }
-  return d.toLocaleDateString("de-CH", {
-    day: "numeric",
-    month: "long",
-  });
+  return formatBemerkungDate(ts);
 }
 
 export function ApplicationReviewDetailSidebar({
@@ -520,19 +521,6 @@ function ReviewBemerkungItemR2({
   );
 }
 
-/** Aligns with Antragsteller block: Formularname zuerst, dann Profil, dann Fallback. */
-function resolveApplicantDisplayName(application: WorkspaceApplication): string {
-  const pd = application.data.personalData;
-  const fromForm = pd
-    ? `${pd.vorname ?? ""} ${pd.name ?? ""}`.trim()
-    : "";
-  if (fromForm) return fromForm;
-  const u = application.users[0];
-  if (u?.display_name?.trim()) return u.display_name.trim();
-  if (u?.email?.trim()) return u.email.trim();
-  return "Antragsteller";
-}
-
 function R4ContactsSection({ application }: { application: WorkspaceApplication }) {
   const pd = application.data.personalData;
   const applicantName = resolveApplicantDisplayName(application);
@@ -547,10 +535,14 @@ function R4ContactsSection({ application }: { application: WorkspaceApplication 
       className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-background px-6 pb-4 pt-4"
       aria-labelledby="r4-contacts-heading"
     >
-      <h3 id="r4-contacts-heading" className="mb-4 text-lg font-medium leading-[27px] text-foreground">
+      <h3
+        id="r4-contacts-heading"
+        className="mb-4 shrink-0 text-lg font-medium leading-[27px] text-foreground"
+      >
         Kontakte
       </h3>
-      <div className="space-y-4">
+      <div className={cn(detailPanelScrollAreaClass, "min-h-0 flex-1")}>
+        <div className="space-y-4">
         <Card className="rounded-lg border border-border shadow-none ring-0">
           <CardHeader className="space-y-1 pb-2">
             <CardTitle className="text-sm font-semibold text-foreground">Antragstellende Person</CardTitle>
@@ -572,6 +564,7 @@ function R4ContactsSection({ application }: { application: WorkspaceApplication 
             <p className="text-muted-foreground">fachstelle@hochschule.example</p>
           </CardContent>
         </Card>
+        </div>
       </div>
     </section>
   );

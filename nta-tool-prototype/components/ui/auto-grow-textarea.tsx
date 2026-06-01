@@ -24,8 +24,9 @@ export function AutoGrowTextarea({
   const syncHeight = useCallback(() => {
     const el = ref.current;
     if (!el) return;
+    const minPx = parseFloat(getComputedStyle(el).minHeight) || 20;
     el.style.height = "0px";
-    el.style.height = `${Math.max(el.scrollHeight, 20)}px`;
+    el.style.height = `${Math.max(el.scrollHeight, minPx)}px`;
   }, []);
 
   useLayoutEffect(() => {

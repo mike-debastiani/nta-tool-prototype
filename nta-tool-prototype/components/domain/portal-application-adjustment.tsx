@@ -21,6 +21,7 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
+import { AutoGrowTextarea } from "@/components/ui/auto-grow-textarea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1025,7 +1026,7 @@ export function PortalApplicationAdjustment({
                 <Label htmlFor="r1-situation">
                   Beschreibung der gesundheitlichen Situation und Nachteile
                 </Label>
-                <textarea
+                <AutoGrowTextarea
                   id="r1-situation"
                   value={editing.definition.situationDescription}
                   onChange={(e) =>
