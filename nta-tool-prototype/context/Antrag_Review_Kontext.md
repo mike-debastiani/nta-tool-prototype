@@ -114,7 +114,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 | Bemerkungen-Tokens | `lib/design-tokens/review-bemerkungen.ts` | R1 pending/done (`5858:22820`), R2 Chronik (`5866:2021`) |
 | R1-Block-Footer | `lib/design-tokens/r1-review-block.ts` | R1 Anpassungs-Footer («Anpassung vornehmen», Bearbeiten, Speichern, Zurücksetzen) |
 | R1-Baseline | `lib/r1-adjustment-baseline.ts` | `readR1AdjustmentBlockBaselines`, Merge mit `recommendation.r1AdjustmentBlockBaselines` |
-| Detail-Sidebar | `components/domain/application-review-detail-sidebar.tsx` | Antragdetails; Chronik **`bemerkungenVariant`** `r1` \| `r2`; **R4:** `secondarySection="r4_contacts"` ohne Bemerkungs-Panel |
+| Detail-Sidebar | `components/domain/application-review-detail-sidebar.tsx` | Antragdetails; Chronik **`bemerkungenVariant`** `r1` \| `r2` (Datum **TT.MM.JJ**, z. B. `21.05.26`; R1 heute: «Heute, HH:mm»); **R4:** `secondarySection="r4_contacts"` ohne Bemerkungs-Panel |
 | Persistenz-Helfer | `lib/r2-review-persist.ts` | `dataWithoutLegacyReviewRoots`, Pfade unter `recommendation.workspaceReview` |
 | Forward-API | `app/api/applications/review-forward/route.ts` | Session-Client-Update auf `in_implementation` / `needs_correction`, schreibt finale Review-Snapshots |
 | R1-Release API | `app/api/applications/r1-release-adjustments/route.ts` | Antragsteller: `needs_correction` \| `needs_adjustment` → `in_review`, merged `workspaceReview`, Broadcast |
@@ -139,7 +139,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 1. **Antragstellende Person** — Persönliche Angaben ohne Antragsart.
 2. **Fachärztliches Attest** — Dateizeilen (Placeholder wenn keine URL).
 3. **Empfehlungsschreiben** — **`RecommendationReleasedAccordion`** (HF 5247:5570, einheitlich mit R1), wird ab dem Moment gerendert, in dem `data.recommendation.releasedHtml` existiert — **unabhängig vom View-Mode**, also in `interactive`, `readonly_consultation`, `readonly_adjustment_pending`, `readonly_decision`. Der frühere Legacy-Block über `recommendation.url` (Datei-Kachel mit `ReviewFileRow` + `fileNameFromUrl`) ist vollständig entfernt; vor dem Release wird in dieser Position nichts angezeigt.
-4. **Antragsdefinition** — `situationDescription`.
+4. **Persönliche Situationsbeschreibung** (`definition`) — `situationDescription`.
 5. **Gültigkeitsdauer** — Vergleich der beiden Optionen.
 6. **Geltungsbereich** — `APPLICATION_SCOPE_OPTIONS`.
 7. **Ausgleichsmassnahmen LV / Leistungsnachweise** — wie Antragsformular inkl. Sonstige.
@@ -195,7 +195,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 - **R2 Review:** Antragdetails oben; unten Chronik (`SavedReviewComment`, **`bemerkungenVariant="r2"`**) — kein Vollbild-Composer (`adjustmentComposer={null}`). **Eingabe** für neue Anpassungen im **Block-Footer** (`ReviewBlockComposerFooter`).
 - **R1 Anpassung:** Chronik mit **`bemerkungenVariant="r1"`** — pending (`adjustment-50`) vs. done (weiss + «Angepasst»); `detailPanelSignature` enthält `r1AdjustmentResolutions`, damit Sidebar nach Speichern/Zurücksetzen aktualisiert.
 - **Chronik — Textlänge:** Bemerkungstext in R1/R2-Items max. **250px** Höhe, danach Ellipsis (`application-review-detail-sidebar.tsx`).
-- **R4:** `showCommentsSection={false}` bzw. bei Lesesicht **`workspaceViewerRole="R4"`** ohne Bemerkungs-Panel; stattdessen **`secondarySection="r4_contacts"`** (Kontakt-Cards) — siehe `Antrag_Bewilligung_Kontext.md`.
+- **R4:** `showCommentsSection={false}` bzw. bei Lesesicht **`workspaceViewerRole="R4"`** ohne Bemerkungs-Panel; stattdessen **`secondarySection="r4_contacts"`** (Kontakt-Cards, **scrollbar** im verbleibenden Sidebar-Platz) — siehe `Antrag_Bewilligung_Kontext.md`.
 
 ### Gesamtbutton unter den Blöcken (R2, `interactive` / `in_review`)
 
@@ -241,6 +241,8 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 | Bearbeiten | `5858:22821` | R2-Bemerkung + Formular; Footer Speichern / Zurücksetzen |
 | Gespeichert (done) | `5858:22820` done | Grüner Rand; Footer «Bearbeiten»; Sidebar «Angepasst» |
 
+**Block `definition` (Bearbeiten):** Freitext «Beschreibung der gesundheitlichen Situation …» als **`AutoGrowTextarea`** (`min-h-[120px]`), Höhe wächst mit Inhalt.
+
 **Layout:** Gleiche Breite/Abstände wie R2-Review (kein `max-w-4xl`); volle Panelbreite mit `applicationReviewScrollAreaClass`.
 
 ### Block-Card-Styling (`ReviewBlockCard`)
@@ -269,4 +271,4 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 
 ---
 
-*Letzte Aktualisierung: R2 Adjustment History Feature (Aktuell/Verlauf in `pending_after_adjustment`), Baseline-Persistenz bei `r1-release-adjustments`, R2R4 Forward; Routing R4/R2R4 → `WorkspaceR4DecisionView`; R4 ohne Bemerkungs-Panel; Test-Matrix `Dashboard_Core_Layout_Kontext.md` § 4b; Bewilligung → `Antrag_Bewilligung_Kontext.md`.*
+*Letzte Aktualisierung: Review-Bemerkungsdatum TT.MM.JJ; R1-Situationsbeschreibung `AutoGrowTextarea`; R4-Kontakte scrollbar; R2 Adjustment History Feature; Baseline-Persistenz bei `r1-release-adjustments`; Blocktitel «Persönliche Situationsbeschreibung»; Test-Matrix `Dashboard_Core_Layout_Kontext.md` § 4b; Bewilligung → `Antrag_Bewilligung_Kontext.md`.*

@@ -39,8 +39,9 @@ Login: **`/staff/login`** — R2–R6 inkl. **R4** / **R2R4**; Redirect **`/work
 - **Scroll/Inset:** `applicationReviewScrollAreaClass` + `applicationReviewSectionGapClass` (`lib/design-tokens/application-scroll.ts`) — **kein** `max-w-4xl`, volle Panelbreite wie `WorkspaceApplicationReview`.
 - **Sidebar «Antragdetails»:** oben Metadaten (`ApplicationDetailsCard`); **kein Bemerkungs-Panel** (`showCommentsSection={false}` in `WorkspaceR4DecisionView`).
 - **Statt Kommentar-Chronik:** **`secondarySection="r4_contacts"`** — Kontakt-Cards (`R4ContactsSection` in `application-review-detail-sidebar.tsx`):
-  - **Antragstellende Person** (Name, E-Mail).
+  - **Antragstellende Person** (Name, E-Mail) — Name via `resolveApplicantDisplayName` (**Vorname Nachname**).
   - **Kontaktperson Fachstelle** (`consultation.advisor` / `recommendation.releasedBy` / Platzhalter).
+  - **Scroll:** Überschrift «Kontakte» fix; Card-Liste in `detailPanelScrollAreaClass` (`min-h-0 flex-1`), damit bei kurzem Viewport gescrollt werden kann.
 - **R4 Lesesicht** (andere Status): `WorkspaceApplicationReview` mit `workspaceViewerRole="R4"` — ebenfalls **ohne** Bemerkungen, nur Kontakte + read-only Callouts (`muted`).
 
 ---
@@ -52,7 +53,7 @@ Folgende Blöcke sind **nicht** bewillig-/ablehnbar und **ohne** grüne R2-„Be
 - Antragstellende Person (Review-Block-Titel; Konstante `REVIEW_WORKSPACE_APPLICANT_BLOCK_TITLE`)  
 - Fachärztliches Attest  
 - Empfehlungsschreiben der Fachstelle (`RecommendationReleasedAccordion` wie R2)  
-- Antragsdefinition  
+- Persönliche Situationsbeschreibung (`definition`)  
 
 Darstellung: **`R4FacultyConfirmedBlock`** (`components/domain/r4-decision-review-blocks.tsx`) — neutraler Rahmen (`R4_FACULTY_CONFIRMED_BLOCK_CLASS` = Review-`default`). Footer **`bg-stone-100`**, rechts **«Von Fachstelle bestätigt»** + `CheckCheck` (Figma `5641:23410`).
 
@@ -92,12 +93,13 @@ Nur **`lectureMeasures`** und **`assessmentMeasures`** (`supportsR4CustomProposa
 | **Anlegen / Bearbeiten** | Tippen im leeren Feld erzeugt sofort eine aktive Zeile (**Hinzugefügt**) und behält den Fokus im selben Feld; darunter erscheint automatisch ein neues leeres Feld (Mechanik wie R1 `CustomMeasureLinesField`) |
 | **Entfernen** | Schalter auf einer hinzugefügten Freitextzeile **aus** → Zeile wird gelöscht (nicht nur abgewählt) |
 | **Persistenz-Zwischenstand** | `data.r4DecisionReview.blocks[id].rows` mit Schlüssel-Präfix **`proposal:<timestamp>`**; Merge in `mergeR4DecisionReview` erhält solche Zeilen neben Baseline-Optionen |
+| **Nach «Auswahl bestätigen»** | `R4DecisionProposalInput` ausgeblendet; gespeicherte Vorschläge bleiben als **`R4DecisionOptionRow`** in der Liste sichtbar (read-only Schalter) |
 | **Zurücksetzen** | «Zurücksetzen» im Block entfernt Vorschläge (nur Studierenden-Baseline) |
 
 ### Aktionen im Block
 
 - Nach erster Änderung der Auswahl: Button **„Zurücksetzen“** links unten (stellt die **Arbeitskopie** dieser Zeilen auf den Ausgangszustand aus den Antragsdaten zurück).
-- **„Auswahl bestätigen“** rechts (primary pill, `CircleCheckBig`): persistiert den Block; bestätigter Block zeigt Zeilen weiter mit Schaltern (read-only), Footer wie Figma `5657:18077`. **„Bearbeiten“** hebt `confirmed` auf und öffnet die bearbeitbare Ansicht erneut.
+- **„Auswahl bestätigen“** rechts (primary pill, `CircleCheckBig`): persistiert den Block; bestätigter Block zeigt Standard- **und** Freitext-Zeilen mit Schaltern (read-only), Footer wie Figma `5657:18077`. **„Bearbeiten“** hebt `confirmed` auf und öffnet die bearbeitbare Ansicht inkl. `R4DecisionProposalInput` erneut.
 - **Switch-Gruppe:** feste Breite **125px**, Schalter **linksbündig** in jeder Zeile (`R4_DECISION_SWITCH_GROUP_CLASS`).
 - **„Entscheid abschliessen“** unten rechts: solange **deaktiviert**, bis **alle sichtbaren** R4-Entscheid-Blöcke bestätigt sind; dann aktiv. CTA ist als **pill** (`rounded-full`) umgesetzt. Setzt **`status = approved`**, merged `r4DecisionReview`, ruft **`materializeApprovedR4DecisionReview`** auf und broadcastet. *(Ablehnung gesamten Antrags: später.)*
 
@@ -191,4 +193,4 @@ Ziel: kein „Kreuzschalten“ (ein Klick ändert scheinbar eine andere Zeile) u
 
 ---
 
-*Letzte Aktualisierung: Freitext-Vorschläge (nur Massnahmen-Blöcke); Materialisierung bei `approved`; R2R4-Trigger für `applicationDefinition`; `AutoGrowTextarea`; Test-Matrix → `Dashboard_Core_Layout_Kontext.md` § 4b.*
+*Letzte Aktualisierung: Freitext-Vorschläge nach Block-Bestätigung sichtbar; scrollbare R4-Kontakte; Materialisierung bei `approved`; R2R4-Trigger für `applicationDefinition`; `AutoGrowTextarea`; Test-Matrix → `Dashboard_Core_Layout_Kontext.md` § 4b.*

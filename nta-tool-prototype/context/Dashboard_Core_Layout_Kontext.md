@@ -248,7 +248,7 @@ WorkspaceTestFlow(applications, workspaceRole, reviewerDisplayName)
     └─ useWorkspaceApplicationsTableState(prefilteredApplications=…) ──► gleiche Tabelle/Toolbar
 ```
 
-**Gemeinsame Tabellen-Pipeline:** `fetchWorkspaceApplicationsList` → (optional Vorfilter) → `useWorkspaceApplicationsTableState` → `buildWorkspaceApplicationTableRows` → `WorkspaceApplicationsTable`.
+**Gemeinsame Tabellen-Pipeline:** `fetchWorkspaceApplicationsList` → (optional Vorfilter) → `useWorkspaceApplicationsTableState` → `buildWorkspaceApplicationTableRows` → `WorkspaceApplicationsTable`. Spalte **Name:** `resolveApplicantDisplayName` / `formatApplicantNameFromPersonalData` (**Vorname Nachname** aus Step 1, sonst Profil).
 
 | Ansicht | Vorfilter auf Rohliste | Offen/Alle | Zuweisungs-Filter |
 |---------|------------------------|------------|-------------------|
@@ -270,7 +270,7 @@ WorkspaceTestFlow(applications, workspaceRole, reviewerDisplayName)
 
 | Aspekt | Regel |
 |--------|--------|
-| **Datenquelle** | `applications[]`; kanonisch `consultation_recommendation`, Beratung `booked`/`done`, parsebares Datum (`dateIso` + Slot oder Fallback `consultation.date`) |
+| **Datenquelle** | `applications[]`; kanonisch `consultation_recommendation`, Beratung `booked`/`done`, parsebares Datum (`dateIso` + Slot oder Fallback `consultation.date`); Antragsteller-Name wie Tabellen (**Vorname Nachname**) |
 | **Ausgeschlossen** | «Empfehlung verfasst» (`hasReleasedRecommendation` / `recommendation.releasedHtml`) |
 | **Sortierung** | Terminbeginn aufsteigend (inkl. **vergangene** Termine, solange Status noch Beratungsphase) |
 | **Anzeige** | Zeilenanzahl dynamisch per `ResizeObserver` (56px/Zeile); Karte **streckt** mit KPI-Zeile; letzte Zeile ohne `border-b` |

@@ -66,7 +66,7 @@ Hinweise:
 | `components/studiengang-combobox.tsx` | Studiengang Step 1 (HF-Select-Trigger aus `r1-form.ts`) |
 | `lib/design-tokens/r1-form.ts` | Feld-Gaps + Choice-Karten + Select-Trigger (SSOT für `R1FlowField*`) |
 | `app/portal/antragserstellung/page.tsx` | Steuert Initial-Load: `?new` ⇒ leer; `?applicationId` ⇒ `PortalApplicationAdjustment`; sonst nur **resumable** Anträge auto-laden |
-| `components/domain/portal-application-adjustment.tsx` | R1 Block-Detail (HF wie R2: `ApplicationReviewPageHeader`, `applicationReviewScrollAreaClass`, `R1BlockShell` / `r1-review-block.ts`). Edit nur bei `needs_adjustment`; Sidebar `bemerkungenVariant="r1"`; Freigabe → `r1-release-adjustments` |
+| `components/domain/portal-application-adjustment.tsx` | R1 Block-Detail (HF wie R2: `ApplicationReviewPageHeader`, `applicationReviewScrollAreaClass`, `R1BlockShell` / `r1-review-block.ts`). Edit nur bei `needs_adjustment`; Block **`definition`**: Titel «Persönliche Situationsbeschreibung», Freitext **`AutoGrowTextarea`** (`min-h-[120px]`); Sidebar `bemerkungenVariant="r1"`; Freigabe → `r1-release-adjustments` |
 | `components/domain/student-dashboard.tsx` | R1 Dashboard (Liste; Klick → `?applicationId=<uuid>`); **Polling** der Anträge des eingeloggten Antragstellers für aktuelle `status`/Badges |
 | `app/portal/home/page.tsx` | Serverpage R1 Dashboard; `RoleDashboardLayout` mit **`edgeToEdge`** (kein doppeltes Shell-`p-6`) |
 | `components/domain/application-review-page-header.tsx` | Geteilter Review-Seitenkopf (Portal-Adjustment + Workspace) |

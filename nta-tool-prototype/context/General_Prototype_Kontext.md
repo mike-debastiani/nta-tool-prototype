@@ -120,7 +120,7 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `lib/r4-department-access.ts` | R4-Scope-Lookup (Hilfe/Debug; Liste nicht davon abhängig) |
 | `lib/uzh-studiengaenge-data.ts` | UZH-Fakultäten & Studiengänge (Seed-Quelle für DB + Combobox) |
 | `lib/uzh-studiengaenge.ts` | Lookup Studiengang → Fakultät, Kürzel, Studienstufe |
-| `lib/application-assignee.ts` | «Zugewiesen an», Avatare, Prototyp-R2/R4-Namen je Viewer |
+| `lib/application-assignee.ts` | «Zugewiesen an», Avatare, Prototyp-R2/R4-Namen je Viewer; `resolveApplicantDisplayName` / `formatApplicantNameFromPersonalData` (**Vorname Nachname** in Workspace-Listen) |
 | `lib/workspace-applications-table-controls.ts` | Workspace-Tabelle: Facetten, Pills, Sort, Filter |
 | `components/domain/use-workspace-applications-table-state.ts` | Hook: Offen/Alle, Suche, Filter, Sort; optional `excludeConsultationPhase` (Default aus) |
 | `components/domain/workspace-applications-table-toolbar.tsx` | Toolbar Home + Meine Aufgaben; aktive Filter: runder schwarzer Count-Badge am Filter-Button |

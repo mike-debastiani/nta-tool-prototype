@@ -1028,6 +1028,7 @@ export function PortalApplicationAdjustment({
                 </Label>
                 <AutoGrowTextarea
                   id="r1-situation"
+                  placeholder="Auswirkungen auf das Studium..."
                   value={editing.definition.situationDescription}
                   onChange={(e) =>
                     setEditing((prev) =>
@@ -1428,24 +1429,49 @@ function PersonalEditForm({
   if (layout === "r1") {
     return (
       <div className={REVIEW_BLOCK_FIELD_GRID_CLASS}>
-        <FieldGroup label="Name" error={errors.name ?? errors.vorname}>
+        <FieldGroup label="Vorname" error={errors.vorname}>
           <Input
-            value={`${value.vorname} ${value.name}`.trim()}
-            onChange={(e) => {
-              const parts = e.target.value.trim().split(/\s+/).filter(Boolean);
-              onChange({
-                vorname: parts[0] ?? "",
-                name: parts.slice(1).join(" "),
-              });
-            }}
-            aria-invalid={Boolean(errors.name || errors.vorname)}
-            className={cn((errors.name || errors.vorname) && "border-destructive")}
+            value={value.vorname}
+            placeholder="Vorname"
+            onChange={(e) => onChange({ vorname: e.target.value })}
+            aria-invalid={Boolean(errors.vorname)}
+            className={cn(errors.vorname && "border-destructive")}
+          />
+        </FieldGroup>
+        <FieldGroup label="Name" error={errors.name}>
+          <Input
+            value={value.name}
+            placeholder="Name"
+            onChange={(e) => onChange({ name: e.target.value })}
+            aria-invalid={Boolean(errors.name)}
+            className={cn(errors.name && "border-destructive")}
+          />
+        </FieldGroup>
+        <FieldGroup label="E-Mail" error={errors.email}>
+          <Input
+            type="email"
+            value={value.email}
+            placeholder="@hochschule.ch"
+            onChange={(e) => onChange({ email: e.target.value })}
+            aria-invalid={Boolean(errors.email)}
+            className={cn(errors.email && "border-destructive")}
+          />
+        </FieldGroup>
+        <FieldGroup label="Telefonnummer" error={errors.phone}>
+          <Input
+            type="tel"
+            value={value.phone}
+            placeholder="+41"
+            onChange={(e) => onChange({ phone: e.target.value })}
+            aria-invalid={Boolean(errors.phone)}
+            className={cn(errors.phone && "border-destructive")}
           />
         </FieldGroup>
         <FieldGroup label="Martikelnummer" error={errors.matrikel}>
           <Input
             value={value.matrikel}
             inputMode="numeric"
+            placeholder="00-000-000"
             onChange={(e) =>
               onChange({ matrikel: formatMatrikelInput(e.target.value) })
             }
@@ -1457,6 +1483,7 @@ function PersonalEditForm({
           <StudiengangCombobox
             value={value.studiengang}
             onValueChange={(v) => onChange({ studiengang: v })}
+            placeholder="Studiengang wählen"
           />
         </FieldGroup>
         <FieldGroup label="Semester" error={errors.semester}>
@@ -1479,24 +1506,6 @@ function PersonalEditForm({
             </SelectContent>
           </Select>
         </FieldGroup>
-        <FieldGroup label="E-Mail" error={errors.email}>
-          <Input
-            type="email"
-            value={value.email}
-            onChange={(e) => onChange({ email: e.target.value })}
-            aria-invalid={Boolean(errors.email)}
-            className={cn(errors.email && "border-destructive")}
-          />
-        </FieldGroup>
-        <FieldGroup label="Telefonnummer" error={errors.phone}>
-          <Input
-            type="tel"
-            value={value.phone}
-            onChange={(e) => onChange({ phone: e.target.value })}
-            aria-invalid={Boolean(errors.phone)}
-            className={cn(errors.phone && "border-destructive")}
-          />
-        </FieldGroup>
       </div>
     );
   }
@@ -1507,6 +1516,7 @@ function PersonalEditForm({
         <FieldGroup label="Vorname" error={errors.vorname}>
           <Input
             value={value.vorname}
+            placeholder="Vorname"
             onChange={(e) => onChange({ vorname: e.target.value })}
             aria-invalid={Boolean(errors.vorname)}
             className={cn(errors.vorname && "border-destructive")}
@@ -1515,6 +1525,7 @@ function PersonalEditForm({
         <FieldGroup label="Name" error={errors.name}>
           <Input
             value={value.name}
+            placeholder="Name"
             onChange={(e) => onChange({ name: e.target.value })}
             aria-invalid={Boolean(errors.name)}
             className={cn(errors.name && "border-destructive")}
@@ -1524,6 +1535,7 @@ function PersonalEditForm({
           <Input
             type="email"
             value={value.email}
+            placeholder="@hochschule.ch"
             onChange={(e) => onChange({ email: e.target.value })}
             aria-invalid={Boolean(errors.email)}
             className={cn(errors.email && "border-destructive")}
@@ -1533,6 +1545,7 @@ function PersonalEditForm({
           <Input
             type="tel"
             value={value.phone}
+            placeholder="+41"
             onChange={(e) => onChange({ phone: e.target.value })}
             aria-invalid={Boolean(errors.phone)}
             className={cn(errors.phone && "border-destructive")}
@@ -1544,6 +1557,7 @@ function PersonalEditForm({
           <Input
             value={value.matrikel}
             inputMode="numeric"
+            placeholder="00-000-000"
             onChange={(e) =>
               onChange({ matrikel: formatMatrikelInput(e.target.value) })
             }
@@ -1555,6 +1569,7 @@ function PersonalEditForm({
           <StudiengangCombobox
             value={value.studiengang}
             onValueChange={(v) => onChange({ studiengang: v })}
+            placeholder="Studiengang wählen"
           />
         </FieldGroup>
         <FieldGroup label="Welches Semester besuchen Sie" error={errors.semester}>
