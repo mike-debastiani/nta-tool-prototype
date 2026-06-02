@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { Check, CircleCheckBig, Info, Loader2 } from "lucide-react";
+import { Check, CircleCheckBig, FileText, Info, Loader2, PenLine } from "lucide-react";
 import { ApplicationReviewDetailSidebar } from "@/components/domain/application-review-detail-sidebar";
 import { ApplicationReviewPageHeader } from "@/components/domain/application-review-page-header";
 import { ApplicationStatusCallout } from "@/components/domain/application-status-callout";
@@ -36,6 +36,7 @@ import {
   type R4ConcretizeItem,
 } from "@/components/domain/r4-decision-review-blocks";
 import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
+import { R4VerfuegungDocument } from "@/components/domain/r4-verfuegung-document";
 import {
   REVIEW_WORKSPACE_APPLICANT_BLOCK_TITLE,
   reviewWorkspaceAnchorId,
@@ -165,6 +166,8 @@ export function WorkspaceR4DecisionView({
 
   const statusMeta = getApplicationStatusMeta(application, "R4");
   const submittedAtLabel = formatReviewSubmittedAt(data);
+  /** Antrag bewilligt → ausgestellte Verfügung statt Entscheid-Blöcke anzeigen. */
+  const isApproved = statusMeta.canonicalState === "approved";
 
   const [review, setReview] = useState<R4DecisionReview>(() =>
     mergeR4DecisionReview(data),
@@ -193,6 +196,9 @@ export function WorkspaceR4DecisionView({
   const [persisting, setPersisting] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /** Vorschau der generierten Verfügung statt der Entscheid-Blöcke (transient, nicht persistiert). */
+  const [verfuegungMode, setVerfuegungMode] = useState(false);
 
   const autosaveDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const persistSeqRef = useRef(0);
@@ -226,6 +232,7 @@ export function WorkspaceR4DecisionView({
       setConcretizing({});
       setRejecting({});
       setRejectionDraft({});
+      setVerfuegungMode(false);
     }
     setError(null);
   }, [application.id, serverR4ReviewUpdatedAt]);
@@ -1066,6 +1073,79 @@ export function WorkspaceR4DecisionView({
     ),
   );
 
+  const applicantBlock = showApplicantBlock ? (
+    <R4FacultyConfirmedBlock
+      anchorId={reviewWorkspaceAnchorId("applicant")}
+      title={REVIEW_WORKSPACE_APPLICANT_BLOCK_TITLE}
+    >
+      {data.personalData ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <ReviewField
+            label="Name"
+            value={`${data.personalData.vorname ?? ""} ${data.personalData.name ?? ""}`.trim() || "—"}
+          />
+          <ReviewField label="Matrikelnummer" value={data.personalData.matrikel ?? "—"} />
+          <ReviewField label="Studiengang" value={data.personalData.studiengang ?? "—"} />
+          <ReviewField label="Semester" value={data.personalData.semester ?? "—"} />
+          <ReviewField label="E-Mail" value={data.personalData.email ?? "—"} />
+          <ReviewField label="Telefonnummer" value={data.personalData.phone ?? "—"} />
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">Keine Daten erfasst.</p>
+      )}
+    </R4FacultyConfirmedBlock>
+  ) : null;
+
+  const renderAttestBlock = (showFacultyFooter: boolean) => (showAttestBlock ? (
+    <R4FacultyConfirmedBlock
+      anchorId={reviewWorkspaceAnchorId("attest")}
+      title="Fachärztliches Attest"
+      showFacultyFooter={showFacultyFooter}
+    >
+      {data.attestFiles?.length ? (
+        <ul className="space-y-3">
+          {data.attestFiles.map((file) => {
+            const [f] = sanitizeAttestFilesForDatabase([file]);
+            return (
+              <li key={file.id ?? file.name}>
+                <ReviewFileRow
+                  title={f.name ?? "Datei"}
+                  subtitle={formatReviewFileSize(f.size ?? 0)}
+                  file={f}
+                />
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="text-sm text-muted-foreground">Keine Dateien hochgeladen.</p>
+      )}
+    </R4FacultyConfirmedBlock>
+  ) : null);
+
+  const recommendationBlock = showReleasedRecommendationBlock ? (
+    <RecommendationReleasedAccordion
+      html={data.recommendation?.releasedHtml ?? ""}
+      releasedAt={data.recommendation?.releasedAt}
+      authorDisplayName={data.recommendation?.releasedBy?.trim() || "NTA Fachstelle"}
+      applicationId={application.id}
+    />
+  ) : null;
+
+  const renderDefinitionBlock = (showFacultyFooter: boolean) => (showDefinitionBlock ? (
+    <R4FacultyConfirmedBlock
+      anchorId={reviewWorkspaceAnchorId("definition")}
+      title="Persönliche Situationsbeschreibung"
+      showFacultyFooter={showFacultyFooter}
+    >
+      <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+        {def?.situationDescription?.trim()
+          ? def.situationDescription
+          : "Keine Beschreibung hinterlegt."}
+      </p>
+    </R4FacultyConfirmedBlock>
+  ) : null);
+
   return (
     <div className="flex min-h-0 flex-1 w-full min-w-0 flex-col overflow-hidden">
       <div
@@ -1078,84 +1158,75 @@ export function WorkspaceR4DecisionView({
       >
         <div className="flex flex-col gap-6">
           <ApplicationReviewPageHeader submittedAtLabel={submittedAtLabel} />
-          {canEdit ? (
+          {canEdit && !verfuegungMode ? (
             <ApplicationStatusCallout badgeClassName={statusMeta.className} icon={Info}>
-              Entscheiden Sie über den von der Fachstelle bestätigten Antrag. Vom Studierenden gewählte Optionen sind mit «Bewilligt» vorgemerkt. Passen Sie die Schalter bei Bedarf an, und bestätigen Sie die Auswahl pro Block. Anschliessend können Sie den Entscheid abschliessen.
+              Entscheiden Sie über den von der Fachstelle bestätigten Antrag. Vom Studierenden gewählte Optionen sind mit «Bewilligt» vorgemerkt. Passen Sie die Schalter bei Bedarf an, und bestätigen Sie die Auswahl pro Block. Anschliessend können Sie die Verfügung generieren.
+            </ApplicationStatusCallout>
+          ) : null}
+          {canEdit && verfuegungMode ? (
+            <ApplicationStatusCallout badgeClassName={statusMeta.className} icon={FileText}>
+              Vorschau der generierten Verfügung. Prüfen Sie die Angaben. Über «Entscheidung bearbeiten» kehren Sie zum Entscheid zurück; mit «Entscheid fällen» wird die Verfügung an die antragstellende Person übermittelt und der Antrag bewilligt.
+            </ApplicationStatusCallout>
+          ) : null}
+          {isApproved ? (
+            <ApplicationStatusCallout badgeClassName={statusMeta.className} icon={FileText}>
+              Der Antrag wurde bewilligt. Die folgende Verfügung wurde der antragstellenden Person übermittelt. Die bewilligten Angaben sind in der Verfügung festgehalten.
             </ApplicationStatusCallout>
           ) : null}
         </div>
 
-        <div className="flex flex-col gap-6">
-          {showApplicantBlock ? (
-            <R4FacultyConfirmedBlock
-              anchorId={reviewWorkspaceAnchorId("applicant")}
-              title={REVIEW_WORKSPACE_APPLICANT_BLOCK_TITLE}
-            >
-              {data.personalData ? (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <ReviewField
-                    label="Name"
-                    value={`${data.personalData.vorname ?? ""} ${data.personalData.name ?? ""}`.trim() || "—"}
-                  />
-                  <ReviewField label="Matrikelnummer" value={data.personalData.matrikel ?? "—"} />
-                  <ReviewField label="Studiengang" value={data.personalData.studiengang ?? "—"} />
-                  <ReviewField label="Semester" value={data.personalData.semester ?? "—"} />
-                  <ReviewField label="E-Mail" value={data.personalData.email ?? "—"} />
-                  <ReviewField label="Telefonnummer" value={data.personalData.phone ?? "—"} />
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">Keine Daten erfasst.</p>
-              )}
-            </R4FacultyConfirmedBlock>
-          ) : null}
-
-          {showAttestBlock ? (
-            <R4FacultyConfirmedBlock
-              anchorId={reviewWorkspaceAnchorId("attest")}
-              title="Fachärztliches Attest"
-            >
-              {data.attestFiles?.length ? (
-                <ul className="space-y-3">
-                  {data.attestFiles.map((file) => {
-                    const [f] = sanitizeAttestFilesForDatabase([file]);
-                    return (
-                      <li key={file.id ?? file.name}>
-                        <ReviewFileRow
-                          title={f.name ?? "Datei"}
-                          subtitle={formatReviewFileSize(f.size ?? 0)}
-                          file={f}
-                        />
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">Keine Dateien hochgeladen.</p>
-              )}
-            </R4FacultyConfirmedBlock>
-          ) : null}
-
-          {showReleasedRecommendationBlock ? (
-            <RecommendationReleasedAccordion
-              html={data.recommendation?.releasedHtml ?? ""}
-              releasedAt={data.recommendation?.releasedAt}
-              authorDisplayName={data.recommendation?.releasedBy?.trim() || "NTA Fachstelle"}
-              applicationId={application.id}
-            />
-          ) : null}
-
-          {showDefinitionBlock ? (
-            <R4FacultyConfirmedBlock
-              anchorId={reviewWorkspaceAnchorId("definition")}
-              title="Persönliche Situationsbeschreibung"
-            >
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-                {def?.situationDescription?.trim()
-                  ? def.situationDescription
-                  : "Keine Beschreibung hinterlegt."}
+        {isApproved ? (
+          <div className="flex flex-col gap-6">
+            <R4VerfuegungDocument application={application} review={review} />
+            {renderAttestBlock(false)}
+            {recommendationBlock}
+            {renderDefinitionBlock(false)}
+          </div>
+        ) : verfuegungMode ? (
+          <div className="flex flex-col gap-6">
+            <R4VerfuegungDocument application={application} review={review} />
+            <div className="flex w-full items-center justify-between gap-3 pt-2">
+              <Button
+                type="button"
+                variant="secondary"
+                className="h-11 w-fit gap-2 rounded-full px-5"
+                disabled={completing}
+                onClick={() => setVerfuegungMode(false)}
+              >
+                <PenLine className="size-4 shrink-0" aria-hidden />
+                Entscheidung bearbeiten
+              </Button>
+              <Button
+                type="button"
+                className="h-11 w-fit gap-2 rounded-full bg-zinc-900 px-5 text-white hover:bg-zinc-800 disabled:opacity-40"
+                disabled={!canEdit || !allConfirmed || completing}
+                onClick={() => void handleComplete()}
+              >
+                {completing ? (
+                  <>
+                    <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
+                    Wird übermittelt …
+                  </>
+                ) : (
+                  <>
+                    <CircleCheckBig className="size-4 shrink-0" aria-hidden />
+                    Entscheid fällen
+                  </>
+                )}
+              </Button>
+            </div>
+            {error ? (
+              <p className="text-sm text-destructive" role="alert">
+                {error}
               </p>
-            </R4FacultyConfirmedBlock>
-          ) : null}
+            ) : null}
+          </div>
+        ) : (
+        <div className="flex flex-col gap-6">
+          {applicantBlock}
+          {renderAttestBlock(true)}
+          {recommendationBlock}
+          {renderDefinitionBlock(true)}
 
           {showDurationBlock
             ? renderDecisionBlock("duration", "Gültigkeitsdauer des Nachteilsausgleiches")
@@ -1183,17 +1254,11 @@ export function WorkspaceR4DecisionView({
             <Button
               type="button"
               className="h-11 w-fit gap-2 rounded-full bg-zinc-900 px-5 text-white hover:bg-zinc-800 disabled:opacity-40"
-              disabled={!canEdit || !allConfirmed || completing}
-              onClick={() => void handleComplete()}
+              disabled={!canEdit || !allConfirmed}
+              onClick={() => setVerfuegungMode(true)}
             >
-              {completing ? (
-                <>
-                  <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
-                  Wird abgeschlossen …
-                </>
-              ) : (
-                "Entscheid abschliessen"
-              )}
+              <FileText className="size-4 shrink-0" aria-hidden />
+              Verfügung generieren
             </Button>
             {error ? (
               <p className="text-sm text-destructive" role="alert">
@@ -1202,6 +1267,7 @@ export function WorkspaceR4DecisionView({
             ) : null}
           </div>
         </div>
+        )}
       </div>
     </div>
   );

@@ -454,7 +454,8 @@ export function WorkspaceTestFlow({
   ) {
     const showR4DecisionView =
       hasR4WorkspaceCapabilities(workspaceRole)
-      && selectedCanonicalState === "in_decision";
+      && (selectedCanonicalState === "in_decision"
+        || selectedCanonicalState === "approved");
 
     if (showR4DecisionView) {
       return (

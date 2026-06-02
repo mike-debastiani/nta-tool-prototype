@@ -447,10 +447,13 @@ export function R4FacultyConfirmedBlock({
   anchorId,
   title,
   children,
+  showFacultyFooter = true,
 }: {
   anchorId: string;
   title: string;
   children: React.ReactNode;
+  /** «Von Fachstelle bestätigt»-Footer ausblenden (z. B. in der bewilligten Verfügungs-Ansicht). */
+  showFacultyFooter?: boolean;
 }) {
   return (
     <section id={anchorId} className={cn("scroll-mt-6", R4_FACULTY_CONFIRMED_BLOCK_CLASS)}>
@@ -458,7 +461,7 @@ export function R4FacultyConfirmedBlock({
         <h2 className={hfBlockTitle}>{title}</h2>
         {children}
       </div>
-      <R4FacultyConfirmedFooter />
+      {showFacultyFooter ? <R4FacultyConfirmedFooter /> : null}
     </section>
   );
 }
