@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ExternalLink } from "lucide-react";
 
 import {
   Accordion,
@@ -22,6 +22,8 @@ type RecommendationReleasedAccordionProps = {
   className?: string;
   /** Nur `variant="r1"`: z. B. Kenntnisnahme-Checkbox (Figma 5247:5575). */
   children?: ReactNode;
+  /** Workspace Review/R4: öffnet Empfehlung im Dokument-Tab (Core-Layout). */
+  applicationId?: string;
 };
 
 function getAuthorInitials(name: string) {
@@ -42,18 +44,44 @@ function formatReleasedAt(iso?: string) {
   });
 }
 
+function OpenInDocumentTabButton({
+  className,
+}: {
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      title="Empfehlungsschreiben in neuem Tab öffnen"
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+        className,
+      )}
+      aria-disabled="true"
+    >
+      <ExternalLink className="size-4" aria-hidden />
+      <span className="sr-only">In neuem Tab öffnen</span>
+    </button>
+  );
+}
+
 /** Freigabe-Meta (HF 5247:5570) — R1, R2, R4 einheitlich. */
 function ReleasedMeta({
   releasedAtLabel,
   authorDisplayName,
   initials,
+  applicationId,
 }: {
   releasedAtLabel: string | null;
   authorDisplayName: string;
   initials: string;
+  applicationId?: string;
 }) {
   return (
-    <div className="flex shrink-0 items-center gap-3" data-node-id="5253:5665">
+    <div className="flex shrink-0 items-center gap-2" data-node-id="5253:5665">
+      {applicationId ? (
+        <OpenInDocumentTabButton />
+      ) : null}
       <p className="shrink-0 whitespace-nowrap text-hf-paragraph-mini-medium text-muted-foreground">
         {releasedAtLabel
           ? `Freigegeben am ${releasedAtLabel} durch`
@@ -89,6 +117,7 @@ export function RecommendationReleasedAccordion({
   anchorId,
   className,
   children,
+  applicationId,
 }: RecommendationReleasedAccordionProps) {
   const releasedAtLabel = formatReleasedAt(releasedAt);
   const initials = getAuthorInitials(authorDisplayName);
@@ -117,6 +146,7 @@ export function RecommendationReleasedAccordion({
                 releasedAtLabel={releasedAtLabel}
                 authorDisplayName={authorDisplayName}
                 initials={initials}
+                applicationId={applicationId}
               />
             </AccordionTrigger>
             <AccordionContent className="px-0 pt-4 pb-0">
@@ -155,6 +185,7 @@ export function RecommendationReleasedAccordion({
               releasedAtLabel={releasedAtLabel}
               authorDisplayName={authorDisplayName}
               initials={initials}
+              applicationId={applicationId}
             />
           </div>
         </AccordionTrigger>

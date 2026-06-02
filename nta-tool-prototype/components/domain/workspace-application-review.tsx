@@ -1405,6 +1405,7 @@ export function WorkspaceApplicationReview({
               data.recommendation?.releasedBy?.trim()
               || "NTA Fachstelle"
             }
+            applicationId={application.id}
           />
         ) : null}
 

@@ -29,3 +29,4 @@ export async function fetchWorkspaceApplicationsList(
   const rows = (data ?? []) as WorkspaceApplication[];
   return filterWorkspaceApplicationsForRole(rows, role);
 }
+

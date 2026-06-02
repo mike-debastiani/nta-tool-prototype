@@ -297,7 +297,7 @@ export function R1FlowProgressStep({
     visualState === "locked-pre" || visualState === "locked-post";
 
   return (
-    <div className="group/step relative">
+    <div className="relative">
       <div
         className={cn(
           "flex w-full shrink-0 items-center justify-between rounded-lg p-2 transition-colors",
@@ -305,6 +305,7 @@ export function R1FlowProgressStep({
           canHighlight && !isActive && "cursor-pointer hover:bg-stone-100",
           isActive ? "bg-primary" : "bg-transparent",
         )}
+        title={isLocked && !isClickable ? lockedTooltip : undefined}
         onClick={onClick}
         role={isClickable ? "button" : undefined}
         tabIndex={isClickable ? 0 : undefined}
@@ -337,17 +338,6 @@ export function R1FlowProgressStep({
           <R1FlowProgressTrailingIndicator visualState={visualState} isActive={isActive} />
         </span>
       </div>
-      {isLocked && !isClickable && lockedTooltip ? (
-        <span
-          className={cn(
-            "pointer-events-none absolute top-1/2 left-full z-20 ml-2 hidden -translate-y-1/2 rounded-md bg-stone-900 px-2 py-1 text-hf-paragraph-mini text-stone-50 shadow-sm",
-            "group-hover/step:block",
-          )}
-          role="tooltip"
-        >
-          {lockedTooltip}
-        </span>
-      ) : null}
     </div>
   );
 }

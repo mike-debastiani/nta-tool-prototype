@@ -678,6 +678,7 @@ export function WorkspaceR4DecisionView({
               html={data.recommendation?.releasedHtml ?? ""}
               releasedAt={data.recommendation?.releasedAt}
               authorDisplayName={data.recommendation?.releasedBy?.trim() || "NTA Fachstelle"}
+              applicationId={application.id}
             />
           ) : null}
 

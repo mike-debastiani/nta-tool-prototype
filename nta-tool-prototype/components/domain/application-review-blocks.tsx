@@ -789,6 +789,7 @@ function attestFileHrefIsOpenable(href: string): boolean {
     || href.startsWith("https:")
     || href.startsWith("blob:")
     || href.startsWith("data:")
+    || href.startsWith("/")
   );
 }
 
@@ -803,6 +804,18 @@ export function resolveAttestFileOpenHref(file: {
     if (attestFileHrefIsOpenable(c)) return c;
   }
   return "";
+}
+
+/** Stabile Datei-ID für Workspace-Attest-Dokument-URL (`file` Query). */
+export function attestFileDocumentId(file: {
+  id?: string;
+  name?: string;
+  url?: string;
+}): string {
+  if (file.id?.trim()) return file.id.trim();
+  if (file.name?.trim()) return file.name.trim();
+  if (file.url?.trim()) return file.url.trim();
+  return "attest";
 }
 
 /** `data:` → Blob → Object-URL (Chromium öffnet `data:` in neuem Tab oft nicht zuverlässig). */
