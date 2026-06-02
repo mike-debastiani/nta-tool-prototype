@@ -162,7 +162,7 @@ Beim **Aufklappen:** `layoutMini` sofort `false`, dann `collapsed` → `false` (
 |---------|--------|
 | Home | `/workspace` |
 | Meine Aufgaben | `/workspace?view=aufgaben` — Badge = Gesamtanzahl Aufgaben (s. oben) |
-| Beratungen planen | `/workspace?view=terminplaner` — **R2, R3, R2R4** (Sidebar via `lib/workspace-nav-access.ts`); **R4** ohne Eintrag; Platzhalter `WorkspaceConsultationPlannerView` (`stone-50`, noch ohne Inhalt) |
+| Beratungen planen | `/workspace?view=terminplaner` — **R2, R3, R2R4** (Sidebar via `lib/workspace-nav-access.ts`); **R4** ohne Eintrag; `WorkspaceConsultationPlannerView` (Figma `6297:23890`): zwei `stone-50`-Karten — **Beratungstermine** (Monatskalender + Tagesliste) und **Beratungen & Empfehlungen Liste** |
 | Auswerten | `/workspace?view=auswerten` — `WorkspaceEvaluateView` (leerer Platzhalter) |
 | Einstellungen / Hilfe | `?view=einstellungen` / `?view=hilfe` |
 
@@ -225,7 +225,7 @@ Default-Zurück: `portalDefaultBackButton` in `workspace-dashboard-shell.tsx`.
 |-----------------|------------|--------|
 | `/workspace` ohne `?view=` | `WorkspaceHomeDashboard` | R2, R3, R4, **R2R4** |
 | `/workspace?view=aufgaben` | `WorkspaceMyTasksView` | R2, R3, R4, **R2R4** |
-| `/workspace?view=terminplaner` | `WorkspaceConsultationPlannerView` (R2/R3/**R2R4**, leer) | R4 → Redirect `/workspace` |
+| `/workspace?view=terminplaner` | `WorkspaceConsultationPlannerView` (R2/R3/**R2R4**) — Monatskalender + Tagestermine + Empfehlungsliste (Live aus `data.consultation`) | R4 → Redirect `/workspace` |
 | `/workspace?view=auswerten` | `WorkspaceEvaluateView` (leer) | alle Workspace-Rollen |
 | kein Antrag selektiert, sonstige `?view=` (z. B. Einstellungen, Hilfe) | Inbox-Card-Liste | R5/R6 bzw. Platzhalter |
 | `?application=<uuid>` gesetzt | Review / R4-Entscheid | je Status/Rolle |
@@ -529,4 +529,4 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 
 ---
 
-*Letzte Aktualisierung: Home-Tabelle inkl. Beratungsphase; Beratungstermin-Karte in R2-Review (Figma `6081:24572`); Auswerten-Platzhalter; KPI «Anstehende Beratungen»; KPI-Interaktionen & Nav-Badge.*
+*Letzte Aktualisierung: «Beratungen planen» implementiert (Figma `6297:23890`) — Monatskalender + Tagestermine + Empfehlungsliste; Home-Tabelle inkl. Beratungsphase; Beratungstermin-Karte in R2-Review (Figma `6081:24572`); Auswerten-Platzhalter; KPI «Anstehende Beratungen»; KPI-Interaktionen & Nav-Badge.*

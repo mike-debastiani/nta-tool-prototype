@@ -132,6 +132,7 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `components/domain/workspace-test-flow.tsx` | Routing: Home / `?view=aufgaben` / `?view=auswerten` / `?view=terminplaner` (+ optional `tasksBucket`) / Review; R2–R4 Home + Meine Aufgaben |
 | `components/domain/workspace-home-dashboard.tsx` | KPI: Bucket→Tabellenfilter, Total→Reset, Aufgaben-Bucket→`tasksBucket`; Home-Tabelle inkl. Beratungsphase |
 | `components/domain/workspace-evaluate-view.tsx` | `/workspace?view=auswerten` — leerer Platzhalter |
+| `components/domain/workspace-consultation-planner-view.tsx` | `/workspace?view=terminplaner` (R2/R3/R2R4) — Monatskalender + Tagestermine + «Beratungen & Empfehlungen Liste» (Figma `6297:23890`) |
 | `components/domain/workspace-consultation-appointment-card.tsx` | Beratungstermin-Karte in R2-Review (Figma `6081:24572`) |
 | `lib/workspace-consultation-appointment.ts` | Termin-Parsing/Formatierung für Review-Karte + KPI |
 | `components/domain/workspace-my-tasks-view.tsx` | Meine Aufgaben; optional `initialBucketFilter` aus URL |

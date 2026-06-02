@@ -355,7 +355,12 @@ export function WorkspaceTestFlow({
 
     if (showConsultationPlannerView) {
       return (
-        <WorkspaceConsultationPlannerView workspaceRole={workspaceRole} />
+        <WorkspaceConsultationPlannerView
+          reviewerDisplayName={reviewerDisplayName}
+          workspaceRole={workspaceRole}
+          applications={applications}
+          onSelectApplication={handleSelectApplication}
+        />
       );
     }
 
