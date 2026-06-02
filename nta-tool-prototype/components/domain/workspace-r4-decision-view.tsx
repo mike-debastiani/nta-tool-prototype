@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { Info, Loader2 } from "lucide-react";
+import { Check, CircleCheckBig, Info, Loader2 } from "lucide-react";
 import { ApplicationReviewDetailSidebar } from "@/components/domain/application-review-detail-sidebar";
 import { ApplicationReviewPageHeader } from "@/components/domain/application-review-page-header";
 import { ApplicationStatusCallout } from "@/components/domain/application-status-callout";
@@ -18,13 +18,22 @@ import {
   sanitizeAttestFilesForDatabase,
 } from "@/components/domain/application-review-blocks";
 import {
+  R4DecisionConcretizeFooter,
+  R4DecisionConcretizeList,
   R4DecisionConfirmedFooter,
+  R4DecisionDefinedFooter,
+  R4DecisionDefinedList,
+  R4DecisionDefinedReadonlyFooter,
   R4DecisionEditingFooter,
   R4DecisionOptionRow,
   R4DecisionProposalInput,
   R4DecisionReadonlyConfirmedFooter,
+  R4DecisionRejectedReasonFooter,
+  R4DecisionRejectedReasonReadonlyFooter,
+  R4DecisionRejectReasonFooter,
   R4FacultyConfirmedBlock,
   ReviewField,
+  type R4ConcretizeItem,
 } from "@/components/domain/r4-decision-review-blocks";
 import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
 import {
@@ -54,6 +63,7 @@ import {
   type R4DecisionBlockSnapshot,
   type R4DecisionReview,
   type R4DecisionReviewBlockId,
+  type R4DecisionRow,
   type WorkspaceApplication,
 } from "@/lib/test-flow-types";
 import { createClient } from "@/utils/supabase/client";
@@ -64,7 +74,10 @@ import {
 import {
   R4_DECISION_BLOCK_BODY_CLASS,
   R4_DECISION_BLOCK_CONFIRMED_CLASS,
+  R4_DECISION_BLOCK_DEFINED_CLASS,
   R4_DECISION_BLOCK_EDITING_CLASS,
+  R4_DECISION_BLOCK_REJECTED_CLASS,
+  R4_DECISION_REJECTED_BODY_TEXT_CLASS,
   R4_DECISION_ROW_LIST_CLASS,
 } from "@/lib/design-tokens/r4-decision-block";
 import { hfBlockTitle } from "@/lib/design-tokens/typography";
@@ -94,6 +107,49 @@ function hasText(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
 
+/** Hinweistext im abgelehnten Massnahmen-Block (`6344:25597` / Lehrveranstaltungen). */
+function rejectedMeasuresText(id: R4DecisionReviewBlockId): string {
+  return id === "lectureMeasures"
+    ? "Der antragstellenden Person wurden keine Ausgleichsmassnahmen im Bezug auf Lehrveranstaltungen gewährt."
+    : "Der antragstellenden Person wurden keine Ausgleichsmassnahmen im Bezug auf Leistungsnachweise gewährt.";
+}
+
+/** Neutraler Hinweistext im abgelehnten Auswahl-Block (die Begründung folgt im Footer). */
+function emptyChoiceText(id: R4DecisionReviewBlockId): string {
+  return id === "duration"
+    ? "Der antragstellenden Person wurde keine Gültigkeitsdauer des Nachteilsausgleiches zugesprochen."
+    : "Der antragstellenden Person wurde kein Geltungsbereich des Nachteilsausgleiches zugesprochen.";
+}
+
+/** Status-Label unten rechts im bestätigten Auswahl-Block ohne zugesprochene Auswahl. */
+function emptyChoiceStatusLabel(id: R4DecisionReviewBlockId): string {
+  return id === "duration"
+    ? "Keine Gültigkeit zugesprochen"
+    : "Kein Geltungsbereich zugesprochen";
+}
+
+/**
+ * Bewilligte (angeschaltete) Massnahmen-Zeilen für die Konkretisieren-/Definiert-Liste.
+ * Freitextmassnahmen erhalten den Titel «Sonstige Massnahme»; die Beschreibung ist die
+ * R4-Konkretisierung oder per Default die ursprüngliche Massnahmenbeschreibung/-eingabe.
+ */
+function approvedMeasureRows(block: R4DecisionBlockSnapshot): R4DecisionRow[] {
+  return block.rows.filter((r) => r.r4Approved && r.key !== "__keine__");
+}
+
+function buildConcretizeItems(rows: R4DecisionRow[]): R4ConcretizeItem[] {
+  return rows.map((row) => {
+    const isProposal = isR4ProposalRowKey(row.key);
+    const defaultTitle = isProposal ? "Sonstige Massnahme" : row.title;
+    const fallbackDescription = isProposal ? row.title : row.description ?? "";
+    return {
+      key: row.key,
+      title: row.concretizedTitle ?? defaultTitle,
+      value: row.concretizedDescription ?? fallbackDescription,
+    };
+  });
+}
+
 export function WorkspaceR4DecisionView({
   application,
   reviewerDisplayName,
@@ -120,6 +176,20 @@ export function WorkspaceR4DecisionView({
   const editingRef = useRef(editing);
   editingRef.current = editing;
 
+  /** Massnahmen-Blöcke: aktiver «Massnahmen konkretisieren»-Zustand (transient, nicht persistiert). */
+  const [concretizing, setConcretizing] = useState<
+    Partial<Record<R4DecisionReviewBlockId, boolean>>
+  >({});
+
+  /** Massnahmen-Blöcke: aktiver «Begründung erfassen»-Zustand (transient, nicht persistiert). */
+  const [rejecting, setRejecting] = useState<
+    Partial<Record<R4DecisionReviewBlockId, boolean>>
+  >({});
+  /** Entwurf der Ablehnungs-Begründung je Block (lokal, bis «Bestätigen»). */
+  const [rejectionDraft, setRejectionDraft] = useState<
+    Partial<Record<R4DecisionReviewBlockId, string>>
+  >({});
+
   const [persisting, setPersisting] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -132,7 +202,7 @@ export function WorkspaceR4DecisionView({
 
   const visibility = useMemo(() => getR4BlockVisibility(data), [data]);
 
-  const baselines = useMemo(
+  const baselines = useMemo<Record<R4DecisionReviewBlockId, R4DecisionBlockSnapshot>>(
     () => ({
       duration: { confirmed: false, rows: buildDurationRows(def) },
       scope: { confirmed: false, rows: buildScopeRows(def) },
@@ -142,9 +212,21 @@ export function WorkspaceR4DecisionView({
     [def],
   );
 
+  const lastSyncedApplicationIdRef = useRef(application.id);
+
   useEffect(() => {
     setReview((prev) => mergeR4DecisionReviewRespectingLocalDirty(application.data, prev));
-    setEditing({});
+    // UI-Modi (Auswahl/Konkretisieren/Bearbeiten) nur bei echtem Antragswechsel zurücksetzen.
+    // Bei einem durch eigenes Autosave ausgelösten Refetch (gleiche `application.id`,
+    // neuer `updatedAt`) darf der aktuelle Bearbeitungs-/Konkretisieren-Zustand NICHT
+    // verworfen werden — sonst springt der Block während der Eingabe zurück zur Auswahl.
+    if (lastSyncedApplicationIdRef.current !== application.id) {
+      lastSyncedApplicationIdRef.current = application.id;
+      setEditing({});
+      setConcretizing({});
+      setRejecting({});
+      setRejectionDraft({});
+    }
     setError(null);
   }, [application.id, serverR4ReviewUpdatedAt]);
 
@@ -321,53 +403,37 @@ export function WorkspaceR4DecisionView({
     existingKey?: string,
   ): string | null => {
     if (!canEdit || !supportsR4CustomProposalInput(id)) return null;
-    let proposalKey: string | null = null;
+    const trimmed = text.trim();
+    if (!trimmed) return null;
 
-    flushSync(() => {
-      setReview((prev) => {
-        const block = prev.blocks[id];
-        if (!block) return prev;
-        if (block.confirmed && !editingRef.current[id]) return prev;
+    // Stabiler Key (vom Eingabefeld vergeben). Idempotenter Upsert: vorhandene Zeile
+    // aktualisieren, sonst genau einmal anlegen — KEIN flushSync (sonst triggert der
+    // synchrone Re-Render den Reconcile mitten im Tastendruck und erzeugt Duplikate).
+    const proposalKey = existingKey ?? `proposal:${Date.now()}`;
 
-        const trimmed = text.trim();
-        if (!trimmed) return prev;
-        let nextRows = block.rows;
+    setReview((prev) => {
+      const block = prev.blocks[id];
+      if (!block) return prev;
+      if (block.confirmed && !editingRef.current[id]) return prev;
 
-        if (existingKey) {
-          const exists = block.rows.some((row) => row.key === existingKey);
-          if (exists) {
-            proposalKey = existingKey;
-            nextRows = block.rows.map((row) =>
-              row.key === existingKey ? { ...row, title: trimmed } : row,
-            );
-          }
-        }
+      const exists = block.rows.some((row) => row.key === proposalKey);
+      const nextRows = exists
+        ? block.rows.map((row) =>
+            row.key === proposalKey ? { ...row, title: trimmed } : row,
+          )
+        : [...block.rows, createR4ProposalRow(trimmed, proposalKey)];
 
-        if (proposalKey === null) {
-          const newRow = createR4ProposalRow(trimmed);
-          proposalKey = newRow.key;
-          nextRows = [...block.rows, newRow];
-        }
-
-        if (id === "duration") {
-          nextRows = nextRows.map((r) => ({
-            ...r,
-            r4Approved: r.key === proposalKey,
-          }));
-        }
-
-        return {
-          ...prev,
-          blocks: {
-            ...prev.blocks,
-            [id]: {
-              ...block,
-              confirmed: block.confirmed ?? false,
-              rows: nextRows,
-            },
+      return {
+        ...prev,
+        blocks: {
+          ...prev.blocks,
+          [id]: {
+            ...block,
+            confirmed: block.confirmed ?? false,
+            rows: nextRows,
           },
-        };
-      });
+        },
+      };
     });
     scheduleR4Autosave();
     return proposalKey;
@@ -423,6 +489,7 @@ export function WorkspaceR4DecisionView({
     };
     setReview(next);
     setEditing((e) => ({ ...e, [id]: false }));
+    setConcretizing((c) => ({ ...c, [id]: false }));
     const ok = await persist(next);
     if (!ok) {
       setReview(prior);
@@ -432,6 +499,7 @@ export function WorkspaceR4DecisionView({
   const handleEditBlock = async (id: R4DecisionReviewBlockId) => {
     cancelR4AutosaveSchedule();
     setEditing((e) => ({ ...e, [id]: true }));
+    setConcretizing((c) => ({ ...c, [id]: false }));
     const prev = reviewRef.current;
     const cur = prev.blocks[id] ?? baselines[id]!;
     const next: R4DecisionReview = {
@@ -446,6 +514,175 @@ export function WorkspaceR4DecisionView({
     };
     setReview(next);
     await persist(next);
+  };
+
+  /** «Massnahmen konkretisieren» — in den Konkretisieren-Zustand wechseln (kein Persist nötig). */
+  const handleStartConcretize = (id: R4DecisionReviewBlockId) => {
+    if (!canEdit) return;
+    cancelR4AutosaveSchedule();
+    setConcretizing((c) => ({ ...c, [id]: true }));
+  };
+
+  /**
+   * «Bearbeiten» auf definierten (konkretisierten) Massnahmen → zurück in den
+   * Konkretisieren-Zustand, damit die Konkretisierungen angepasst werden können.
+   */
+  const handleEditConcretization = async (id: R4DecisionReviewBlockId) => {
+    if (!canEdit) return;
+    cancelR4AutosaveSchedule();
+    setEditing((e) => ({ ...e, [id]: true }));
+    setConcretizing((c) => ({ ...c, [id]: true }));
+    const prev = reviewRef.current;
+    const cur = prev.blocks[id] ?? baselines[id]!;
+    const next: R4DecisionReview = {
+      ...prev,
+      blocks: {
+        ...prev.blocks,
+        [id]: { ...cur, confirmed: false },
+      },
+    };
+    setReview(next);
+    await persist(next);
+  };
+
+  /**
+   * «Zurück zur Auswahl» — zurück in den Auswahl-Zustand. Verworfene Konkretisierungen
+   * (Titel/Beschreibung) werden zurückgesetzt, damit ein erneuter Konkretisieren-Schritt
+   * wieder mit den Default-Werten startet.
+   */
+  const handleBackToSelection = (id: R4DecisionReviewBlockId) => {
+    setConcretizing((c) => ({ ...c, [id]: false }));
+    setReview((prev) => {
+      const block = prev.blocks[id];
+      if (!block) return prev;
+      const rows = block.rows.map((r) =>
+        r.concretizedTitle === undefined && r.concretizedDescription === undefined
+          ? r
+          : { ...r, concretizedTitle: undefined, concretizedDescription: undefined },
+      );
+      return {
+        ...prev,
+        blocks: { ...prev.blocks, [id]: { ...block, rows } },
+      };
+    });
+    scheduleR4Autosave();
+  };
+
+  const handleConcretizeDescription = (
+    id: R4DecisionReviewBlockId,
+    key: string,
+    text: string,
+  ) => {
+    if (!canEdit) return;
+    setReview((prev) => {
+      const block = prev.blocks[id];
+      if (!block) return prev;
+      return {
+        ...prev,
+        blocks: {
+          ...prev.blocks,
+          [id]: {
+            ...block,
+            confirmed: block.confirmed ?? false,
+            rows: block.rows.map((r) =>
+              r.key === key ? { ...r, concretizedDescription: text } : r,
+            ),
+          },
+        },
+      };
+    });
+    scheduleR4Autosave();
+  };
+
+  const handleConcretizeTitle = (
+    id: R4DecisionReviewBlockId,
+    key: string,
+    text: string,
+  ) => {
+    if (!canEdit) return;
+    setReview((prev) => {
+      const block = prev.blocks[id];
+      if (!block) return prev;
+      return {
+        ...prev,
+        blocks: {
+          ...prev.blocks,
+          [id]: {
+            ...block,
+            confirmed: block.confirmed ?? false,
+            rows: block.rows.map((r) =>
+              r.key === key ? { ...r, concretizedTitle: text } : r,
+            ),
+          },
+        },
+      };
+    });
+    scheduleR4Autosave();
+  };
+
+  /**
+   * «Auswahl bestätigen» ohne bewilligte Massnahme → Begründungs-Zwischenschritt öffnen
+   * (Mechanik wie R2-Anpassungsanforderung). Bestehende Begründung wird als Entwurf geladen.
+   */
+  const handleStartReject = (id: R4DecisionReviewBlockId) => {
+    if (!canEdit) return;
+    cancelR4AutosaveSchedule();
+    const block = reviewRef.current.blocks[id];
+    setRejectionDraft((d) => ({ ...d, [id]: block?.decisionReason ?? "" }));
+    setRejecting((r) => ({ ...r, [id]: true }));
+  };
+
+  const handleRejectDraftChange = (id: R4DecisionReviewBlockId, text: string) => {
+    setRejectionDraft((d) => ({ ...d, [id]: text }));
+  };
+
+  /**
+   * «Zurück zur Auswahl» aus dem Begründungs-Schritt: Block nicht bestätigt, zurück zur
+   * Auswahl. Die (verworfene) Begründung wird zurückgesetzt, damit ein erneuter
+   * Ablehnungs-Schritt wieder mit leerem Feld startet.
+   */
+  const handleBackFromReject = async (id: R4DecisionReviewBlockId) => {
+    cancelR4AutosaveSchedule();
+    setRejecting((r) => ({ ...r, [id]: false }));
+    setRejectionDraft((d) => ({ ...d, [id]: "" }));
+    const cur = reviewRef.current;
+    const block = cur.blocks[id];
+    if (!block) return;
+    if (!block.confirmed && !block.decisionReason) return;
+    const prior = cur;
+    const next: R4DecisionReview = {
+      ...cur,
+      blocks: {
+        ...cur.blocks,
+        [id]: { ...block, confirmed: false, decisionReason: undefined },
+      },
+    };
+    setReview(next);
+    const ok = await persist(next);
+    if (!ok) setReview(prior);
+  };
+
+  /** «Bestätigen» im Begründungs-Schritt: Begründung speichern und Block ablehnen. */
+  const handleConfirmRejection = async (id: R4DecisionReviewBlockId) => {
+    const reason = (rejectionDraft[id] ?? "").trim();
+    if (!reason) return;
+    cancelR4AutosaveSchedule();
+    const cur = reviewRef.current;
+    const block = cur.blocks[id];
+    if (!block) return;
+    const prior = cur;
+    const next: R4DecisionReview = {
+      ...cur,
+      blocks: {
+        ...cur.blocks,
+        [id]: { ...block, confirmed: true, decisionReason: reason },
+      },
+    };
+    setReview(next);
+    setRejecting((r) => ({ ...r, [id]: false }));
+    setEditing((e) => ({ ...e, [id]: false }));
+    const ok = await persist(next);
+    if (!ok) setReview(prior);
   };
 
   const handleComplete = async () => {
@@ -474,21 +711,81 @@ export function WorkspaceR4DecisionView({
   const allConfirmed = allVisibleR4BlocksConfirmed(review, visibility);
 
   function renderDecisionBlock(id: R4DecisionReviewBlockId, title: string) {
+    if (supportsR4CustomProposalInput(id)) {
+      return renderMeasureBlock(id, title);
+    }
+    return renderChoiceBlock(id, title);
+  }
+
+  /** Gültigkeitsdauer / Geltungsbereich — Auswahl + «Auswahl bestätigen». */
+  function renderChoiceBlock(id: R4DecisionReviewBlockId, title: string) {
     const block = review.blocks[id] ?? baselines[id]!;
-    const proposalRows = block.rows.filter((row) => isR4ProposalRowKey(row.key));
     const standardRows = block.rows.filter((row) => !isR4ProposalRowKey(row.key));
     const baseline = baselines[id]!;
     const dirty = isR4BlockDirty(block, baseline);
     const pristine = !dirty && !block.confirmed;
     const anchorId = reviewWorkspaceAnchorId(id as ReviewWorkspaceBlockId);
-    const confirmedClosed = block.confirmed && !editing[id];
     const disableInteractions = !canEdit;
+    const hasApproved = approvedMeasureRows(block).length > 0;
+    const isRejecting = Boolean(rejecting[id]);
+    const decisionReason = block.decisionReason ?? "";
+
+    // Begründungs-Schritt (keine Auswahl zugesprochen): Grund erfassen (Mechanik wie R2).
+    if (isRejecting) {
+      return (
+        <section
+          key={id}
+          id={anchorId}
+          className={cn("scroll-mt-6", R4_DECISION_BLOCK_REJECTED_CLASS)}
+        >
+          <div className={R4_DECISION_BLOCK_BODY_CLASS}>
+            <h2 className={hfBlockTitle}>{title}</h2>
+            <p className={R4_DECISION_REJECTED_BODY_TEXT_CLASS}>{emptyChoiceText(id)}</p>
+          </div>
+          <R4DecisionRejectReasonFooter
+            draft={rejectionDraft[id] ?? ""}
+            disableInteractions={disableInteractions}
+            persisting={persisting}
+            onDraftChange={(text) => handleRejectDraftChange(id, text)}
+            onBack={() => void handleBackFromReject(id)}
+            onConfirm={() => void handleConfirmRejection(id)}
+          />
+        </section>
+      );
+    }
+
+    // Bestätigt ohne zugesprochene Auswahl → «abgelehnt»-Optik mit eingebetteter Begründung.
+    if (block.confirmed && !editing[id] && !hasApproved) {
+      return (
+        <section
+          key={id}
+          id={anchorId}
+          className={cn("scroll-mt-6", R4_DECISION_BLOCK_REJECTED_CLASS)}
+        >
+          <div className={R4_DECISION_BLOCK_BODY_CLASS}>
+            <h2 className={hfBlockTitle}>{title}</h2>
+            <p className={R4_DECISION_REJECTED_BODY_TEXT_CLASS}>{emptyChoiceText(id)}</p>
+          </div>
+          {canEdit ? (
+            <R4DecisionRejectedReasonFooter
+              reason={decisionReason}
+              disableInteractions={disableInteractions}
+              onEdit={() => handleStartReject(id)}
+              statusLabel={emptyChoiceStatusLabel(id)}
+            />
+          ) : (
+            <R4DecisionRejectedReasonReadonlyFooter
+              reason={decisionReason}
+              statusLabel={emptyChoiceStatusLabel(id)}
+            />
+          )}
+        </section>
+      );
+    }
+
+    const confirmedClosed = block.confirmed && !editing[id];
     const switchesDisabled =
       disableInteractions || (block.confirmed && !editing[id]);
-    /** Nach Bestätigen ist `R4DecisionProposalInput` ausgeblendet — Vorschläge als Optionenzeilen. */
-    const showProposalsAsOptionRows = switchesDisabled && proposalRows.length > 0;
-    const showProposalInput =
-      canEdit && !switchesDisabled && supportsR4CustomProposalInput(id);
 
     const shellClass = confirmedClosed
       ? R4_DECISION_BLOCK_CONFIRMED_CLASS
@@ -507,7 +804,9 @@ export function WorkspaceR4DecisionView({
         disableInteractions={disableInteractions}
         persisting={persisting}
         onReset={() => handleResetBlock(id)}
-        onConfirm={() => void handleConfirmBlock(id)}
+        onConfirm={() =>
+          hasApproved ? void handleConfirmBlock(id) : handleStartReject(id)
+        }
       />
     );
 
@@ -527,20 +826,161 @@ export function WorkspaceR4DecisionView({
                 onToggle={() => handleToggleRow(id, row.key)}
               />
             ))}
-            {showProposalsAsOptionRows
-              ? proposalRows.map((row) => (
-                  <R4DecisionOptionRow
-                    key={row.key}
-                    row={row}
-                    pristine={pristine}
-                    blockConfirmed={block.confirmed}
-                    confirmedReadonly={confirmedClosed}
-                    disabled={switchesDisabled}
-                    onToggle={() => handleToggleRow(id, row.key)}
-                  />
-                ))
-              : null}
-            {showProposalInput ? (
+          </ul>
+        </div>
+        {footer}
+      </section>
+    );
+  }
+
+  /**
+   * Massnahmen-Blöcke (Lehrveranstaltungen / Leistungsnachweise): Auswahl → Konkretisieren →
+   * Definiert bzw. Abgelehnt (Figma `6344:25136`, `6344:25081`, `6344:25421`).
+   */
+  function renderMeasureBlock(id: R4DecisionReviewBlockId, title: string) {
+    const block = review.blocks[id] ?? baselines[id]!;
+    const baseline = baselines[id]!;
+    const dirty = isR4BlockDirty(block, baseline);
+    const pristine = !dirty && !block.confirmed;
+    const anchorId = reviewWorkspaceAnchorId(id as ReviewWorkspaceBlockId);
+    const disableInteractions = !canEdit;
+
+    const proposalRows = block.rows.filter((row) => isR4ProposalRowKey(row.key));
+    const standardRows = block.rows.filter((row) => !isR4ProposalRowKey(row.key));
+    const approvedRows = approvedMeasureRows(block);
+    const hasApproved = approvedRows.length > 0;
+    const concretizeItems = buildConcretizeItems(approvedRows);
+    const isConcretizing = Boolean(concretizing[id]);
+    const isRejecting = Boolean(rejecting[id]);
+    const decisionReason = block.decisionReason ?? "";
+
+    // Begründungs-Schritt (keine Massnahme bewilligt): Grund erfassen (Mechanik wie R2).
+    if (isRejecting) {
+      return (
+        <section
+          key={id}
+          id={anchorId}
+          className={cn("scroll-mt-6", R4_DECISION_BLOCK_REJECTED_CLASS)}
+        >
+          <div className={R4_DECISION_BLOCK_BODY_CLASS}>
+            <h2 className={hfBlockTitle}>{title}</h2>
+            <p className={R4_DECISION_REJECTED_BODY_TEXT_CLASS}>
+              {rejectedMeasuresText(id)}
+            </p>
+          </div>
+          <R4DecisionRejectReasonFooter
+            draft={rejectionDraft[id] ?? ""}
+            disableInteractions={disableInteractions}
+            persisting={persisting}
+            onDraftChange={(text) => handleRejectDraftChange(id, text)}
+            onBack={() => void handleBackFromReject(id)}
+            onConfirm={() => void handleConfirmRejection(id)}
+          />
+        </section>
+      );
+    }
+
+    // Entschieden: «Massnahmen definiert» (grün) oder «Massnahmen abgelehnt» (rot).
+    if (block.confirmed) {
+      if (hasApproved) {
+        return (
+          <section
+            key={id}
+            id={anchorId}
+            className={cn("scroll-mt-6", R4_DECISION_BLOCK_DEFINED_CLASS)}
+          >
+            <div className={R4_DECISION_BLOCK_BODY_CLASS}>
+              <h2 className={hfBlockTitle}>{title}</h2>
+              <R4DecisionDefinedList items={concretizeItems} />
+            </div>
+            {canEdit ? (
+              <R4DecisionDefinedFooter
+                disableInteractions={disableInteractions}
+                onEdit={() => void handleEditConcretization(id)}
+              />
+            ) : (
+              <R4DecisionDefinedReadonlyFooter />
+            )}
+          </section>
+        );
+      }
+
+      return (
+        <section
+          key={id}
+          id={anchorId}
+          className={cn("scroll-mt-6", R4_DECISION_BLOCK_REJECTED_CLASS)}
+        >
+          <div className={R4_DECISION_BLOCK_BODY_CLASS}>
+            <h2 className={hfBlockTitle}>{title}</h2>
+            <p className={R4_DECISION_REJECTED_BODY_TEXT_CLASS}>
+              {rejectedMeasuresText(id)}
+            </p>
+          </div>
+          {canEdit ? (
+            <R4DecisionRejectedReasonFooter
+              reason={decisionReason}
+              disableInteractions={disableInteractions}
+              onEdit={() => handleStartReject(id)}
+            />
+          ) : (
+            <R4DecisionRejectedReasonReadonlyFooter reason={decisionReason} />
+          )}
+        </section>
+      );
+    }
+
+    // «Massnahmen konkretisieren»-Zustand: Karten mit editierbarem Titel + Beschreibung.
+    if (isConcretizing) {
+      return (
+        <section
+          key={id}
+          id={anchorId}
+          className={cn("scroll-mt-6", R4_DECISION_BLOCK_EDITING_CLASS)}
+        >
+          <div className={R4_DECISION_BLOCK_BODY_CLASS}>
+            <h2 className={hfBlockTitle}>{title}</h2>
+            <R4DecisionConcretizeList
+              items={concretizeItems}
+              disabled={disableInteractions}
+              onChangeTitle={(key, text) => handleConcretizeTitle(id, key, text)}
+              onChangeDescription={(key, text) =>
+                handleConcretizeDescription(id, key, text)
+              }
+            />
+          </div>
+          <R4DecisionConcretizeFooter
+            disableInteractions={disableInteractions}
+            persisting={persisting}
+            onBack={() => handleBackToSelection(id)}
+            onComplete={() => void handleConfirmBlock(id)}
+          />
+        </section>
+      );
+    }
+
+    // Auswahl-Zustand: Schalter pro Option + Freitext-Vorschlag.
+    return (
+      <section
+        key={id}
+        id={anchorId}
+        className={cn("scroll-mt-6", R4_DECISION_BLOCK_EDITING_CLASS)}
+      >
+        <div className={R4_DECISION_BLOCK_BODY_CLASS}>
+          <h2 className={hfBlockTitle}>{title}</h2>
+          <ul className={R4_DECISION_ROW_LIST_CLASS}>
+            {standardRows.map((row) => (
+              <R4DecisionOptionRow
+                key={row.key}
+                row={row}
+                pristine={pristine}
+                blockConfirmed={block.confirmed}
+                confirmedReadonly={false}
+                disabled={disableInteractions}
+                onToggle={() => handleToggleRow(id, row.key)}
+              />
+            ))}
+            {canEdit ? (
               <R4DecisionProposalInput
                 proposalRows={proposalRows}
                 disabled={disableInteractions}
@@ -549,10 +989,32 @@ export function WorkspaceR4DecisionView({
                 }
                 onRemoveProposal={(key) => handleRemoveProposal(id, key)}
               />
-            ) : null}
+            ) : (
+              proposalRows.map((row) => (
+                <R4DecisionOptionRow
+                  key={row.key}
+                  row={row}
+                  pristine={pristine}
+                  blockConfirmed={block.confirmed}
+                  confirmedReadonly={false}
+                  disabled
+                  onToggle={() => handleToggleRow(id, row.key)}
+                />
+              ))
+            )}
           </ul>
         </div>
-        {footer}
+        <R4DecisionEditingFooter
+          dirty={dirty}
+          disableInteractions={disableInteractions}
+          persisting={persisting}
+          onReset={() => handleResetBlock(id)}
+          confirmLabel={hasApproved ? "Massnahmen konkretisieren" : "Auswahl bestätigen"}
+          confirmIcon={hasApproved ? Check : CircleCheckBig}
+          onConfirm={() =>
+            hasApproved ? handleStartConcretize(id) : handleStartReject(id)
+          }
+        />
       </section>
     );
   }

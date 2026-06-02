@@ -20,6 +20,13 @@ export const R4_DECISION_BLOCK_EDITING_CLASS = REVIEW_BLOCK_DEFAULT_CLASS;
 /** Nach «Auswahl bestätigen» (`5657:18077`). */
 export const R4_DECISION_BLOCK_CONFIRMED_CLASS = REVIEW_BLOCK_CONFIRMED_CLASS;
 
+/** Massnahmen-Block nach «Konkretisierung abschliessen» — grüner Rahmen (`6344:25081`). */
+export const R4_DECISION_BLOCK_DEFINED_CLASS = REVIEW_BLOCK_CONFIRMED_CLASS;
+
+/** Massnahmen-Block ohne bewilligte Massnahme — roter Rahmen (`6344:25421`). */
+export const R4_DECISION_BLOCK_REJECTED_CLASS =
+  "overflow-hidden rounded-xl border border-abgelehnt-600 bg-background";
+
 export const R4_DECISION_BLOCK_BODY_CLASS = REVIEW_BLOCK_BODY_CLASS;
 
 /** Zeilenliste — `gap-8` zwischen Optionen (`xs`). */
@@ -76,6 +83,99 @@ export const R4_DECISION_EDIT_BLOCK_BUTTON_CLASS =
 
 export const R4_DECISION_CONFIRMED_STATUS_CLASS =
   "inline-flex items-center gap-2 text-sm font-medium text-bewilligt-600";
+
+/** Footer «Massnahmen definiert» (`6344:25108`) — wie Bestätigt-Footer (bewilligt-200). */
+export const R4_DECISION_DEFINED_FOOTER_CLASS = REVIEW_BLOCK_CONFIRMED_FOOTER_CLASS;
+
+export const R4_DECISION_DEFINED_STATUS_CLASS =
+  "inline-flex items-center gap-2 text-sm font-medium text-bewilligt-600";
+
+/** Footer «Massnahmen abgelehnt» (`6344:25439`) — abgelehnt-100. */
+export const R4_DECISION_REJECTED_FOOTER_CLASS =
+  `${REVIEW_BLOCK_ACTION_FOOTER_BAR_CLASS} justify-between gap-3 bg-abgelehnt-100 px-5`;
+
+export const R4_DECISION_REJECTED_STATUS_CLASS =
+  "inline-flex items-center gap-2 text-sm font-medium text-abgelehnt-600";
+
+/** Hinweistext im abgelehnten Massnahmen-Block (`6344:25597`). */
+export const R4_DECISION_REJECTED_BODY_TEXT_CLASS =
+  "text-sm font-normal leading-5 text-foreground";
+
+/**
+ * «Massnahmen konkretisieren» — Liste der bewilligten Massnahmen, je Massnahme eine
+ * Karte mit editierbarem Titel + Beschreibung (`6358:26353`) bzw. fixierter
+ * Darstellung im «definiert»-Zustand (`6344:25081`).
+ */
+export const R4_DECISION_CONCRETIZE_LIST_CLASS = "flex w-full flex-col gap-3";
+
+export const R4_DECISION_CONCRETIZE_ITEM_CLASS = "flex w-full flex-col gap-2";
+
+export const R4_DECISION_CONCRETIZE_TITLE_CLASS =
+  "flex w-full gap-2 text-base font-medium leading-6 text-foreground";
+
+/** Inhaltsblock je Massnahme — Einrückung unter der Nummerierung. */
+export const R4_DECISION_CONCRETIZE_BODY_CLASS = "flex w-full flex-col pl-5";
+
+/** Konkretisieren-Karte je Massnahme (`6358:26359`) — stone-50, rounded-10, px-12 py-16. */
+export const R4_DECISION_CONCRETIZE_CARD_CLASS =
+  "flex w-full flex-col gap-2 rounded-[10px] bg-stone-50 px-3 py-4";
+
+/** Nummerierte Überschrift in der Karte (paragraph regular/medium) (`6358:26360`). */
+export const R4_DECISION_CONCRETIZE_CARD_HEADER_CLASS =
+  "flex w-full gap-2 text-base font-medium leading-6 text-foreground";
+
+/** Felder-Container in der Karte — Einrückung unter der Nummerierung (`6358:26361`). */
+export const R4_DECISION_CONCRETIZE_FIELDS_CLASS = "flex w-full flex-col gap-4 pl-6";
+
+/** Vertikales Feld: Label + Input (`6358:26362`). */
+export const R4_DECISION_CONCRETIZE_FIELD_CLASS = "flex w-full flex-col gap-1";
+
+/** Feld-Label (paragraph small/medium, muted-foreground) (`120:13759`). */
+export const R4_DECISION_CONCRETIZE_FIELD_LABEL_CLASS =
+  "text-sm font-medium leading-5 text-muted-foreground";
+
+/** Einzeiliges Titel-Input (`120:13760`). */
+export const R4_DECISION_CONCRETIZE_TITLE_INPUT_CLASS =
+  "h-9 w-full rounded-lg border border-border bg-background px-3 text-sm leading-5 text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60";
+
+export const R4_DECISION_CONCRETIZE_TEXTAREA_CLASS =
+  "block w-full resize-none rounded-lg border border-border bg-background px-2 py-2 text-sm leading-5 text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60";
+
+/** Fixierte (read-only) Beschreibung im «definiert»-Zustand (`6344:25407`). */
+export const R4_DECISION_CONCRETIZE_DESCRIPTION_CLASS =
+  "whitespace-pre-wrap text-sm font-normal leading-5 text-foreground";
+
+/**
+ * Ablehnungs-Begründung erfassen (`6358:26387`) — Footer stone-50, mehrzeilig:
+ * Freitext-Composer + «Zurück zur Auswahl» / «Bestätigen».
+ */
+export const R4_DECISION_REASON_FOOTER_CLASS =
+  "flex flex-col gap-4 border-t border-border bg-stone-50 px-5 py-4";
+
+export const R4_DECISION_REASON_INPUT_CLASS =
+  "block w-full min-h-5 resize-none overflow-hidden border-0 bg-transparent p-0 text-sm leading-5 text-foreground shadow-none placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0";
+
+/**
+ * «Massnahmen abgelehnt» mit eingebetteter Begründung (`6358:26343`) — Footer abgelehnt-50,
+ * mehrzeilig: Begründung + «Bearbeiten» / Status.
+ */
+export const R4_DECISION_REJECTED_REASON_FOOTER_CLASS =
+  "flex flex-col gap-4 border-t border-border bg-abgelehnt-50 px-5 py-4";
+
+export const R4_DECISION_REJECTED_REASON_BLOCK_CLASS = "flex w-full flex-col gap-1";
+
+export const R4_DECISION_REJECTED_REASON_TITLE_CLASS =
+  "text-sm font-medium leading-5 text-abgelehnt-600";
+
+export const R4_DECISION_REJECTED_REASON_TEXT_CLASS =
+  "whitespace-pre-wrap text-sm font-normal leading-5 text-abgelehnt-600";
+
+export const R4_DECISION_REJECTED_REASON_ROW_CLASS =
+  "flex w-full items-start justify-between gap-3";
+
+/** «Zurück zur Auswahl» Textbutton im Konkretisieren-Footer (`6344:25168`). */
+export const R4_DECISION_BACK_BUTTON_CLASS =
+  "inline-flex h-9 shrink-0 items-center gap-2 text-sm font-medium text-foreground hover:text-foreground/80 disabled:opacity-40";
 
 /** Zeilen-Hintergrund je Badge (Figma Rich Radio Group). */
 export const R4_DECISION_ROW_SURFACE_CLASS = {

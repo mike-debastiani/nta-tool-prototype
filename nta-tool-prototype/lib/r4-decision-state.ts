@@ -207,6 +207,8 @@ export function mergeR4DecisionReview(data: ApplicationData): R4DecisionReview {
       return {
         ...fr,
         r4Approved: p.r4Approved,
+        concretizedDescription: p.concretizedDescription,
+        concretizedTitle: p.concretizedTitle,
       };
     });
     const proposalRows = prev.rows
@@ -214,6 +216,7 @@ export function mergeR4DecisionReview(data: ApplicationData): R4DecisionReview {
       .map((r) => ({ ...r }));
     blocks[id] = {
       confirmed: prev.confirmed,
+      decisionReason: prev.decisionReason,
       rows: [...mergedRows, ...proposalRows],
     };
   }
@@ -248,10 +251,19 @@ export function localR4BlockDiffersFromServerMerge(
 ): boolean {
   if (!localBlock || !serverBlock) return false;
   if (localBlock.confirmed !== serverBlock.confirmed) return true;
+  if ((localBlock.decisionReason ?? "") !== (serverBlock.decisionReason ?? "")) return true;
   const localByKey = new Map(localBlock.rows.map((r) => [r.key, r]));
   for (const sr of serverBlock.rows) {
     const lr = localByKey.get(sr.key);
     if (lr && lr.r4Approved !== sr.r4Approved) return true;
+    if (lr && (lr.concretizedDescription ?? "") !== (sr.concretizedDescription ?? "")) {
+      return true;
+    }
+    if (lr && (lr.concretizedTitle ?? "") !== (sr.concretizedTitle ?? "")) {
+      return true;
+    }
+    // Freitext-Titel (Sonstige Massnahme) lokal noch nicht persistiert → lokalen Stand schützen.
+    if (lr && isR4ProposalRowKey(sr.key) && lr.title !== sr.title) return true;
   }
   for (const lr of localBlock.rows) {
     if (!serverBlock.rows.some((sr) => sr.key === lr.key)) {
@@ -286,7 +298,14 @@ export function mergeR4DecisionReviewRespectingLocalDirty(
     const mergedServerRows = sBlock.rows.map((sr) => {
       const lr = localByKey.get(sr.key);
       if (!lr) return sr;
-      return { ...sr, r4Approved: lr.r4Approved };
+      return {
+        ...sr,
+        r4Approved: lr.r4Approved,
+        concretizedDescription: lr.concretizedDescription,
+        concretizedTitle: lr.concretizedTitle,
+        // Freitext-Zeilen: lokalen (ggf. noch nicht persistierten) Titel behalten.
+        title: isR4ProposalRowKey(sr.key) ? lr.title : sr.title,
+      };
     });
     const localProposalRows = localBlock.rows.filter(
       (r) => isR4ProposalRowKey(r.key) && !serverKeys.has(r.key),
@@ -294,6 +313,7 @@ export function mergeR4DecisionReviewRespectingLocalDirty(
     outBlocks[id] = {
       ...sBlock,
       confirmed: localBlock.confirmed,
+      decisionReason: localBlock.decisionReason,
       rows: [...mergedServerRows, ...localProposalRows],
     };
   }

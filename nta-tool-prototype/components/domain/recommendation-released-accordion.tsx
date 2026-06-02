@@ -44,24 +44,27 @@ function formatReleasedAt(iso?: string) {
   });
 }
 
+/**
+ * Visueller «In neuem Tab öffnen»-Indikator. Bewusst KEIN `<button>`, da diese Meta-Zeile
+ * im `AccordionTrigger` (selbst ein `<button>`) liegt — verschachtelte Buttons sind ungültiges
+ * HTML und lösen Hydration-Fehler aus.
+ */
 function OpenInDocumentTabButton({
   className,
 }: {
   className?: string;
 }) {
   return (
-    <button
-      type="button"
+    <span
       title="Empfehlungsschreiben in neuem Tab öffnen"
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground",
         className,
       )}
-      aria-disabled="true"
+      aria-hidden
     >
       <ExternalLink className="size-4" aria-hidden />
-      <span className="sr-only">In neuem Tab öffnen</span>
-    </button>
+    </span>
   );
 }
 

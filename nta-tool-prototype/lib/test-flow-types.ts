@@ -73,11 +73,17 @@ export type R4DecisionRow = {
   description?: string;
   studentSelected: boolean;
   r4Approved: boolean;
+  /** R4-konkretisierte Massnahmenbeschreibung (Entscheid-Step, Massnahmen-Blöcke). */
+  concretizedDescription?: string;
+  /** R4-konkretisierter Massnahmentitel (Entscheid-Step, Massnahmen-Blöcke). */
+  concretizedTitle?: string;
 };
 
 export type R4DecisionBlockSnapshot = {
   confirmed: boolean;
   rows: R4DecisionRow[];
+  /** Begründung bei abgelehnten Massnahmen-Blöcken (keine Massnahme bewilligt). */
+  decisionReason?: string;
 };
 
 export type R4DecisionReview = {

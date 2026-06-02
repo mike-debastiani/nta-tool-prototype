@@ -69,10 +69,14 @@ Betroffen: **Gültigkeitsdauer**, **Geltungsbereich**, **Massnahmen LV**, **Mass
 |------|--------|
 | `5641:23410` | Fachstelle-bestätigte Blöcke (Antragsteller, Attest, Definition, …) |
 | `5657:17967` | Entscheid-Block **Ausgang:** Studierenden-Wahl = Schalter **an** → **Bewilligt** (`bewilligt-50` / `bewilligt-500`) |
-| `5907:23351` | **Bearbeitung:** Abgelehnt / Hinzugefügt / **Zurücksetzen** + **Auswahl bestätigen** |
-| `5657:18077` | Nach **Auswahl bestätigen:** `border-bewilligt-600`, Footer `bewilligt-200`, **Bearbeiten** + **Auswahl bestätigt** |
+| `5907:23351` | **Bearbeitung:** Abgelehnt / Hinzugefügt / **Zurücksetzen** + **Auswahl bestätigen** / **Massnahmen konkretisieren** |
+| `5657:18077` | Nach **Auswahl bestätigen** (Choice-Blöcke): `border-bewilligt-600`, Footer `bewilligt-200`, **Bearbeiten** + **Auswahl bestätigt** |
+| `6358:26353` | **Massnahmen konkretisieren** (Karten je Massnahme: Titel- + Beschreibungs-Input) |
+| `6344:25081` | **Massnahmen definiert** (grüner Rahmen, fixierte Titel/Beschreibung, **Bearbeiten**) |
+| `6358:26387` | **Begründung erfassen** (roter Rahmen, Freitext-Composer + **Zurück zur Auswahl** / **Bestätigen**) |
+| `6358:26337` | **Massnahmen abgelehnt** mit eingebetteter Begründung (Footer `abgelehnt-50`, **Bearbeiten** + Status) |
 
-**Tokens:** `lib/design-tokens/r4-decision-block.ts` (Zeilen, Footer, Switch-Gruppe **125px** — Schalter linksbündig).
+**Tokens:** `lib/design-tokens/r4-decision-block.ts` (Zeilen, Footer, Switch-Gruppe **125px** — Schalter linksbündig; Konkretisieren-Karten, Begründungs-Footer).
 
 ### Regeln pro Zeile (Massnahmen / Geltungsbereich)
 
@@ -90,18 +94,46 @@ Nur **`lectureMeasures`** und **`assessmentMeasures`** (`supportsR4CustomProposa
 |--------|-----|
 | **UI** | `R4DecisionProposalInput` unter der Optionenliste (Figma `5907:23378`): Plus-Icon, Platzhalter «Formulieren Sie einen anderen Zusatz …», Label «Hinzufügen» / «Hinzugefügt» |
 | **Eingabe** | `AutoGrowTextarea` — mehrzeilig, Höhe wächst mit Inhalt; Checkbox/Plus an **erster Textzeile** ausgerichtet (`h-5` / `leading-5`) |
-| **Anlegen / Bearbeiten** | Tippen im leeren Feld erzeugt sofort eine aktive Zeile (**Hinzugefügt**) und behält den Fokus im selben Feld; darunter erscheint automatisch ein neues leeres Feld (Mechanik wie R1 `CustomMeasureLinesField`) |
+| **Anlegen / Bearbeiten** | Tippen im leeren Feld erzeugt **genau eine** aktive Zeile (**Hinzugefügt**) und behält den Fokus im selben Feld; darunter erscheint automatisch ein neues leeres Feld (Mechanik wie R1 `CustomMeasureLinesField`) |
+| **Stabiler Key (Bugfix)** | Das Eingabefeld vergibt pro Zeile **einmalig** einen stabilen `proposal:`-Key und übergibt ihn bei jedem Tastendruck als `existingKey`. `handleUpsertProposal` ist ein **idempotenter Upsert-by-Key** **ohne** `flushSync` — verhindert das frühere Verhalten, bei dem pro Zeichen eine neue «Sonstige Massnahme» entstand bzw. die Konkretisierung absprang |
 | **Entfernen** | Schalter auf einer hinzugefügten Freitextzeile **aus** → Zeile wird gelöscht (nicht nur abgewählt) |
 | **Persistenz-Zwischenstand** | `data.r4DecisionReview.blocks[id].rows` mit Schlüssel-Präfix **`proposal:<timestamp>`**; Merge in `mergeR4DecisionReview` erhält solche Zeilen neben Baseline-Optionen |
 | **Nach «Auswahl bestätigen»** | `R4DecisionProposalInput` ausgeblendet; gespeicherte Vorschläge bleiben als **`R4DecisionOptionRow`** in der Liste sichtbar (read-only Schalter) |
 | **Zurücksetzen** | «Zurücksetzen» im Block entfernt Vorschläge (nur Studierenden-Baseline) |
 
-### Aktionen im Block
+### Aktionen im Block (Auswahl-Zustand)
 
 - Nach erster Änderung der Auswahl: Button **„Zurücksetzen“** links unten (stellt die **Arbeitskopie** dieser Zeilen auf den Ausgangszustand aus den Antragsdaten zurück).
-- **„Auswahl bestätigen“** rechts (primary pill, `CircleCheckBig`): persistiert den Block; bestätigter Block zeigt Standard- **und** Freitext-Zeilen mit Schaltern (read-only), Footer wie Figma `5657:18077`. **„Bearbeiten“** hebt `confirmed` auf und öffnet die bearbeitbare Ansicht inkl. `R4DecisionProposalInput` erneut.
+- **Primärer CTA rechts** (pill) hängt vom Blocktyp und davon ab, ob mindestens eine Zeile **bewilligt** ist (`approvedMeasureRows(block).length > 0`):
+  - **Choice-Blöcke** (Gültigkeitsdauer / Geltungsbereich): immer **„Auswahl bestätigen“** (`CircleCheckBig`). Mit Bewilligung → direkt bestätigter Block (Figma `5657:18077`); **ohne** Bewilligung → **Begründungs-Schritt** (siehe unten).
+  - **Massnahmen-Blöcke** (LV / Leistungsnachweise): mit Bewilligung → **„Massnahmen konkretisieren“** (`Check`) → Konkretisieren-Zustand; **ohne** Bewilligung → **„Auswahl bestätigen“** (`CircleCheckBig`) → **Begründungs-Schritt**.
 - **Switch-Gruppe:** feste Breite **125px**, Schalter **linksbündig** in jeder Zeile (`R4_DECISION_SWITCH_GROUP_CLASS`).
 - **„Entscheid abschliessen“** unten rechts: solange **deaktiviert**, bis **alle sichtbaren** R4-Entscheid-Blöcke bestätigt sind; dann aktiv. CTA ist als **pill** (`rounded-full`) umgesetzt. Setzt **`status = approved`**, merged `r4DecisionReview`, ruft **`materializeApprovedR4DecisionReview`** auf und broadcastet. *(Ablehnung gesamten Antrags: später.)*
+
+### Massnahmen konkretisieren → definiert (nur Massnahmen-Blöcke)
+
+Zweck: R4 konkretisiert die bewilligten Massnahmen für die spätere **Verfügung**, statt sie separat zu verfassen. Zustands­maschine (transient, nicht persistierte UI-Flags `concretizing[id]`):
+
+1. **Konkretisieren-Zustand** (`R4DecisionConcretizeList`, Figma `6358:26353`): je bewilligte Massnahme **eine Karte** (`bg-stone-50`, `rounded-[10px]`, `px-3`/`py-4`) mit nummeriertem Header «N. Massnahme» und zwei Feldern:
+   - **Titel** — einzeiliges Input. Default = Massnahmentitel; bei Freitext-Massnahmen **„Sonstige Massnahme“**. Editierbar → `concretizedTitle`.
+   - **Beschreibung der Massnahme** — `AutoGrowTextarea`. Default = ursprüngliche Beschreibung bzw. (bei Freitext) der eingegebene Text. Editierbar → `concretizedDescription`.
+   - Feld-Labels: paragraph small/medium in `text-muted-foreground` (Figma 1:1).
+   - Footer (`R4DecisionConcretizeFooter`): **„Zurück zur Auswahl“** (`Undo2`) + **„Konkretisierung abschliessen“** (`CircleCheckBig`, pill).
+2. **„Konkretisierung abschliessen“** → `confirmed = true` → **Definiert-Zustand** (`R4DecisionDefinedList`, Figma `6344:25081`): grüner Rahmen, fixierte Liste; **Titel + Nummerierung entsprechen den Inputfeldern** (`concretizedTitle ?? Default`). Footer **„Bearbeiten“** (`handleEditConcretization`) → zurück in den Konkretisieren-Zustand **unter Beibehaltung** der bisherigen Konkretisierungen.
+3. **„Zurück zur Auswahl“** (`handleBackToSelection`): zurück in den Auswahl-Zustand und **Reset der Konkretisierungen** (`concretizedTitle`/`concretizedDescription` werden geleert) — ein erneuter Konkretisieren-Schritt startet damit wieder mit den Default-Werten.
+
+Defaults werden in **`buildConcretizeItems`** aufgelöst (`title = concretizedTitle ?? Default`, `value = concretizedDescription ?? Default`).
+
+### Ablehnung mit Begründung (alle Entscheid-Blöcke)
+
+Wird **keine** Option bewilligt, tritt **nicht** direkt der Abgelehnt-Zustand ein, sondern ein **Begründungs-Zwischenschritt** (Mechanik analog zur R2-Anpassungsanforderung; transientes Flag `rejecting[id]`, lokaler Entwurf `rejectionDraft[id]`):
+
+1. **Begründung erfassen** (Figma `6358:26387`): roter Rahmen (`R4_DECISION_BLOCK_REJECTED_CLASS`), neutraler Body-Hinweistext, Footer `R4DecisionRejectReasonFooter` (`bg-stone-50`) mit auto-wachsendem Freitext-Composer, **„Zurück zur Auswahl“** (`Undo2`) und **„Bestätigen“** (`CircleCheckBig`, deaktiviert solange leer).
+2. **„Bestätigen“** (`handleConfirmRejection`): speichert `decisionReason` und setzt `confirmed = true` → **Abgelehnt-Zustand mit Begründung** (Figma `6358:26337`): Footer `R4DecisionRejectedReasonFooter` (`bg-abgelehnt-50`) mit «Begründung für diesen Entscheid» + Text, **„Bearbeiten“** (`Pencil`) und Status (`SquareX`).
+   - **Massnahmen-Blöcke:** Status «Massnahmen abgelehnt».
+   - **Choice-Blöcke:** Status «Keine Gültigkeit zugesprochen» / «Kein Geltungsbereich zugesprochen» (`statusLabel`-Prop); Body-Text via `emptyChoiceText(id)`.
+3. **„Bearbeiten“** (`handleStartReject`) lädt die bestehende Begründung als Entwurf und öffnet Schritt 1 erneut.
+4. **„Zurück zur Auswahl“** (`handleBackFromReject`): zurück in den Auswahl-Zustand, **hebt `confirmed` auf und löscht `decisionReason`** — eine erneute Ablehnung startet mit leerem Begründungsfeld.
 
 ---
 
@@ -110,7 +142,10 @@ Nur **`lectureMeasures`** und **`assessmentMeasures`** (`supportsR4CustomProposa
 ### 6.1 `r4DecisionReview` (Arbeits- und Audit-Snapshot)
 
 - Persistenz unter **`data.r4DecisionReview`** (`lib/test-flow-types.ts`), getrennt von **`data.recommendation`** / **`data.consultation`** (R2-Trigger).
-- Pro Block (`duration` \| `scope` \| `lectureMeasures` \| `assessmentMeasures`): **Zeilen** (`key`, `title`, `description?`, `studentSelected`, `r4Approved`) + **`confirmed`** nach «Auswahl bestätigen».
+- Pro Block (`duration` \| `scope` \| `lectureMeasures` \| `assessmentMeasures`):
+  - **Zeilen** (`R4DecisionRow`): `key`, `title`, `description?`, `studentSelected`, `r4Approved` sowie die R4-Konkretisierungen **`concretizedTitle?`** und **`concretizedDescription?`** (Entscheid-Step, nur Massnahmen-Blöcke).
+  - **`confirmed`** nach «Auswahl bestätigen» / «Konkretisierung abschliessen» / «Begründung bestätigen».
+  - **`decisionReason?`** (`R4DecisionBlockSnapshot`): Begründung bei abgelehntem Block (keine Option bewilligt).
 - Zwischenstand: debounced Autosave (`WorkspaceR4DecisionView` → `persistR4DecisionWithSupabaseClient`).
 
 ### 6.2 Materialisierung bei Bewilligung (`applicationDefinition`)
@@ -154,9 +189,11 @@ Ziel: kein „Kreuzschalten“ (ein Klick ändert scheinbar eine andere Zeile) u
 - **Toggle:** `R4Switch` ruft `onToggle()` ohne Wert; der neue Zustand entsteht in **`setReview(prev => …)`** durch Invertieren von **`prev.blocks[id].rows`** (`!row.r4Approved`), nicht durch `!checked` aus den React-Props — vermeidet veraltete Prop-Lesungen bei schnellen Klicks.
 - **`editingRef`:** spiegelt `editing[id]`, damit die Guard „Block bestätigt, aber nicht im Bearbeitungsmodus“ innerhalb funktionaler Updates aktuell bleibt.
 - **Debounced Autosave:** `scheduleR4Autosave` schreibt über **`reviewRef.current`** nach der Debounce-Zeit; Ref wird jedes Render aktualisiert.
+- **Transiente UI-Flags** (nicht persistiert, nur Client-State): `editing[id]`, **`concretizing[id]`**, **`rejecting[id]`** sowie der lokale **`rejectionDraft[id]`** (Begründungs-Entwurf vor «Bestätigen»). Sie werden **nur bei Wechsel von `application.id`** zurückgesetzt — **nicht** bei reinem `updatedAt`-Refresh, damit Autosave den Konkretisieren-/Begründungs-Zustand nicht abbricht (war Ursache des „springt zurück zu Schritt 1“-Bugs).
 - **Einspielen neuer Server-Daten:** `useEffect` auf **`application.id`** + **`data.r4DecisionReview?.updatedAt`** ruft  
   **`mergeR4DecisionReviewRespectingLocalDirty(application.data, prev)`** auf.  
   - **`localR4BlockDiffersFromServerMerge`:** pro Block wird geprüft, ob **`confirmed`** oder irgendein **`r4Approved`** vom Ergebnis von **`mergeR4DecisionReview(serverData)`** abweicht — **nicht** mehr nur „dirty gegenüber Studierenden-Baseline“. Damit bleibt der Schutz aktiv, wenn R4 z. B. eine Studierenden-Zeile wieder auf Bewilligt dreht (Baseline = wieder „clean“), die DB aber noch einen älteren Stand hat.
+  - **Konkretisierung / Begründung im Dirty-Check:** `localR4BlockDiffersFromServerMerge` vergleicht zusätzlich **`concretizedTitle`/`concretizedDescription`** (inkl. Proposal-Titel) und **`decisionReason`**; `mergeR4DecisionReview` / `…RespectingLocalDirty` **erhalten** diese Felder.
   - **`application.data` nicht als Effect-Dependency:** sonst würde jede neue Objekt-Referenz vom Parent unnötig remergen und **`setEditing({})`** auslösen.
   - Beim Merge wird **kein** pending Autosave-Timer am Anfang des Effects gekillt (sonst verlorene Saves bei schnellem Toggle).
 
@@ -167,7 +204,7 @@ Ziel: kein „Kreuzschalten“ (ein Klick ändert scheinbar eine andere Zeile) u
 | Bereich | Pfad |
 |---------|------|
 | R4 Vollansicht | `components/domain/workspace-r4-decision-view.tsx` |
-| R4 UI-Bausteine | `components/domain/r4-decision-review-blocks.tsx` (`R4Switch`, `R4DecisionOptionRow`, `R4FacultyConfirmedBlock`, Footer) |
+| R4 UI-Bausteine | `components/domain/r4-decision-review-blocks.tsx` (`R4Switch`, `R4DecisionOptionRow`, `R4DecisionProposalInput`, `R4FacultyConfirmedBlock`, `R4DecisionConcretizeList`/`-Footer`, `R4DecisionDefinedList`, `R4DecisionRejectReasonFooter`, `R4DecisionRejectedReasonFooter`/`-Readonly`, Footer) |
 | R4 Design-Tokens | `lib/design-tokens/r4-decision-block.ts` |
 | Review-Header / Callout | `application-review-page-header.tsx`, `application-status-callout.tsx` |
 | Sidebar Kontakte | `application-review-detail-sidebar.tsx` (`secondarySection="r4_contacts"`) |
@@ -188,9 +225,9 @@ Ziel: kein „Kreuzschalten“ (ein Klick ändert scheinbar eine andere Zeile) u
 ## 9. Abgrenzung / später
 
 - Kein separates Feld-Annotation-Modell (weiterhin F6-Ist: Block-Ebene).
-- **Ablehnung gesamten Antrags** oder Aufteilung bewilligt/teilweise abgelehnt auf Antragsebene: aktuell nicht — nur **Entscheid abschliessen → bewilligt** als Prototyp-Endpunkt.
+- **Ablehnung gesamten Antrags** oder Aufteilung bewilligt/teilweise abgelehnt auf Antragsebene: aktuell nicht — nur **Entscheid abschliessen → bewilligt** als Prototyp-Endpunkt. Begründungen (`decisionReason`) und Konkretisierungen (`concretizedTitle`/`-Description`) werden gespeichert, aber noch **nicht** in `applicationDefinition` / eine generierte Verfügung materialisiert.
 - R3/R5/R6: unverändert; Fachrolle **R4** ist in diesem Flow die genannte Entscheidungsinstanz (Produktsprache; im Gesamtkonzept teils als R3 beschrieben — im Code-Rollenenum **R4**).
 
 ---
 
-*Letzte Aktualisierung: Freitext-Vorschläge nach Block-Bestätigung sichtbar; scrollbare R4-Kontakte; Materialisierung bei `approved`; R2R4-Trigger für `applicationDefinition`; `AutoGrowTextarea`; Test-Matrix → `Dashboard_Core_Layout_Kontext.md` § 4b.*
+*Letzte Aktualisierung: Massnahmen-Konkretisierung (Karten mit Titel-/Beschreibungs-Input → definiert) und Begründungs-Schritt bei abgelehnten Blöcken (Massnahmen + Choice-Blöcke); stabiler Proposal-Key/idempotenter Upsert (Freitext-Duplikat-Bugfix); transiente UI-Flags `concretizing`/`rejecting`/`rejectionDraft`; neue Felder `concretizedTitle`/`concretizedDescription`/`decisionReason`. Zuvor: Freitext-Vorschläge nach Block-Bestätigung sichtbar; scrollbare R4-Kontakte; Materialisierung bei `approved`; R2R4-Trigger für `applicationDefinition`; `AutoGrowTextarea`; Test-Matrix → `Dashboard_Core_Layout_Kontext.md` § 4b.*
