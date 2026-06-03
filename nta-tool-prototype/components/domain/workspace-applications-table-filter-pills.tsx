@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 
 import { hfTypography } from "@/lib/design-tokens/typography";
 import {
+  WORKSPACE_HOME_TABLE_CLEAR_ALL_FILTERS_BUTTON_CLASS,
   WORKSPACE_HOME_TABLE_FILTER_PILL_CLASS,
   WORKSPACE_HOME_TABLE_FILTER_PILL_REMOVE_CLASS,
   WORKSPACE_HOME_TABLE_FILTER_PILLS_ROW_CLASS,
@@ -97,7 +98,7 @@ export function WorkspaceApplicationsTableFilterPills({
             onClick={onResetColumnFilters}
             className={cn(
               hfTypography.paragraphMiniMedium,
-              "shrink-0 px-1 text-muted-foreground underline-offset-2 hover:text-foreground hover:underline",
+              WORKSPACE_HOME_TABLE_CLEAR_ALL_FILTERS_BUTTON_CLASS,
             )}
           >
             Alle Filter entfernen

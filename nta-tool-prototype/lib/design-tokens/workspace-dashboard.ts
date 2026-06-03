@@ -167,7 +167,7 @@ export const WORKSPACE_HOME_TABLE_FILTER_TAB_INACTIVE_CLASS =
 
 /** Filter + Liste herunterladen `5948:27481` / `5948:27482`. */
 export const WORKSPACE_HOME_TABLE_OUTLINE_BUTTON_CLASS =
-  "inline-flex h-9 min-h-9 shrink-0 items-center justify-center gap-2 rounded-full border border-border bg-transparent px-4 py-2 shadow-none transition-opacity hover:opacity-80";
+  "inline-flex h-9 min-h-9 shrink-0 items-center justify-center gap-2 rounded-full border border-border bg-transparent px-4 py-2 shadow-none transition-colors hover:bg-stone-150";
 
 export const WORKSPACE_HOME_TABLE_DOWNLOAD_BUTTON_CLASS =
   WORKSPACE_HOME_TABLE_OUTLINE_BUTTON_CLASS;
@@ -177,9 +177,13 @@ export const WORKSPACE_HOME_TABLE_FILTER_PILLS_ROW_CLASS =
   "flex w-full min-w-0 flex-wrap items-center gap-2";
 
 export const WORKSPACE_HOME_TABLE_FILTER_PILL_CLASS = [
-  "inline-flex h-8 max-w-full items-center gap-1 rounded-full border border-border bg-stone-100/90 py-1 pl-3 pr-1",
+  "inline-flex h-8 max-w-full items-center gap-1 rounded-full bg-stone-200 py-1 pl-3 pr-1",
   "text-hf-paragraph-mini-medium text-foreground",
 ].join(" ");
+
+/** «Alle Filter entfernen» unter aktiven Pills. */
+export const WORKSPACE_HOME_TABLE_CLEAR_ALL_FILTERS_BUTTON_CLASS =
+  "shrink-0 px-1 text-muted-foreground transition-colors hover:text-abgelehnt-500";
 
 /**
  * Anträge-Tabelle (Home / Meine Aufgaben), Container-Query auf dem Scroll-Wrapper.
