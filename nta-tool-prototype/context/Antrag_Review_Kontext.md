@@ -172,7 +172,7 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 | (composer offen) | `composer` | `pendingComposer` für diesen Block; Bemerkung **im Block-Footer**, Sidebar bleibt bei Antragdetails + Chronik. |
 | `confirmed` | `confirmed` | R2 kann zurücksetzen → `pending`. |
 | `adjustment` | `adjustment_active` (interaktiv) / `adjustment_sent` (read-only) | Bemerkung im Footer; **Bearbeiten** öffnet `composer` mit vorausgefülltem Text. |
-| `pending_after_adjustment` | `pending` + Header-Toggle `ReviewBlockAdjustmentHistoryToggle` | R2 kann zwischen **Aktuell** (überarbeiteter R1-Stand) und **Verlauf** (Baseline + gesperrtes `Angeforderte Anpassung`-Band) wechseln; Aktionen bleiben **Anpassung anfordern** / **Bestätigen**. |
+| `pending_after_adjustment` | `pending` + Header-Toggle `ReviewBlockAdjustmentHistoryToggle` | R2 wechselt **Aktuelle Version** (`FileCheck`) / **Alte Version** (`FileClock`); gesperrtes Band **«Angeforderte Anpassung»** immer sichtbar; Aktionen **Anpassung anfordern** / **Bestätigen**. |
 
 - **Bestätigen:** `confirmed`.
 - **Anpassung anfordern:** `composer` (leerer Entwurf); **Kommentieren** nur mit nicht-leerer Bemerkung → `adjustment`.
@@ -183,13 +183,13 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 ### Re-Review-Verlauf (R2 Adjustment History Feature)
 
 - **Aktivierung:** nur für Blöcke in `pending_after_adjustment` mit vorhandener Baseline in `recommendation.r1AdjustmentBlockBaselines`.
-- **Default-Ansicht:** `current` (SquarePen aktiv) zeigt den aktuellen, von R1 angepassten Stand.
-- **Verlaufsansicht:** `history` (History aktiv) zeigt den ursprünglichen Baseline-Inhalt und im Footer das gesperrte Band **„Angeforderte Anpassung“** mit dem ursprünglichen R2-Remark.
-- **Interaktionsregel:** Sobald R2 in diesem Block erneut in den Composer geht (neue Anpassung) oder bestätigt, verschwindet die Verlaufssicht für diese Interaktion; nach **Zurücksetzen** ist der Toggle wieder verfügbar.
+- **Default-Ansicht (`current`, Figma `6424:26518` / `6424:26677`):** R1-Stand mit Label **«Angepasst»** an geänderten Freitext-/Select-Werten; Band **«Angeforderte Anpassung»** unter dem Inhalt (Freitext inkl. Meta-Zeile Autor/Datum).
+- **Alte Version (`history`, Figma `6424:26621` / `6424:26646`):** Baseline-Inhalt in `adjustment-700`, Label **«Vorgängig»**; gewählte Select-Optionen mit `bg-adjustment-100` + `border-adjustment-700`; dasselbe Bemerkungsband.
+- **Interaktionsregel:** Toggle nur in `pending_after_adjustment`. **Bestätigen** oder neue **Anpassung anfordern** (Composer) entfernen Toggle und Bemerkungsband; nach **Zurücksetzen** aus `confirmed` wieder verfügbar.
 - **Darstellungsregel bei Auswahloptionen (Duration/Scope/Measures):**
-  - Verlauf **gewählt**: `bg-adjustment-100`, Foreground (Text/Icons/Status) `adjustment-700`, gleiches Layout wie normale Read-only-Optionen.
-  - Verlauf **nicht gewählt**: unverändert wie Read-only-unselected (`stone-50`, muted).
-  - R2-Default (`current`) kennzeichnet neu angepasste Werte mit Label **„Angepasst“**.
+  - Alte Version **gewählt**: `bg-adjustment-100`, `border-adjustment-700`, Text/Icons **«Vorgängig»** in `adjustment-700`.
+  - Alte Version **nicht gewählt**: Read-only-unselected (`stone-50`, muted).
+  - Aktuelle Version: neu angepasste Werte mit **«Angepasst»** (muted); Gültigkeitsdauer mit kompakten R1-Untertiteln.
 
 ### Sidebar «Antragdetails» + Bemerkungen / Kontakte
 

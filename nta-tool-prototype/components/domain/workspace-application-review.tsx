@@ -52,6 +52,8 @@ import {
   ReviewBlockFieldGrid,
   ReviewBlockPendingFooter,
   ReviewBlockRequestedAdjustmentBand,
+  ReviewReReviewFreetext,
+  type ReviewReReviewFreetextVariant,
   ReviewField,
   ReviewFileRow,
   ScopeChecklist,
@@ -354,6 +356,7 @@ function computeReReviewAdjustedOtherIndices(
 }
 
 type ReReviewBlockPresentation = {
+  definitionTextAdjusted: boolean;
   durationAdjusted: boolean;
   scopeAdjusted: Set<string>;
   lectureMeasureKeysAdjusted: Set<string>;
@@ -361,6 +364,21 @@ type ReReviewBlockPresentation = {
   assessmentMeasureKeysAdjusted: Set<string>;
   assessmentOtherIndicesAdjusted: Set<number>;
 };
+
+function formatReReviewRemarkMetaLine(
+  authorDisplayName: string | undefined,
+  createdAt: number,
+  fallbackAuthor: string,
+): string {
+  const author =
+    authorDisplayName?.trim() || fallbackAuthor.trim() || "NTA Fachstelle";
+  const dateLabel = new Date(createdAt).toLocaleDateString("de-CH", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  return `${author}, ${dateLabel}`;
+}
 
 function computeReReviewPresentation(
   blockId: ReviewWorkspaceBlockId,
@@ -373,6 +391,7 @@ function computeReReviewPresentation(
   const def = application.data.applicationDefinition;
   const baseDef = baseline.applicationDefinition;
   const empty: ReReviewBlockPresentation = {
+    definitionTextAdjusted: false,
     durationAdjusted: false,
     scopeAdjusted: new Set(),
     lectureMeasureKeysAdjusted: new Set(),
@@ -380,6 +399,15 @@ function computeReReviewPresentation(
     assessmentMeasureKeysAdjusted: new Set(),
     assessmentOtherIndicesAdjusted: new Set(),
   };
+
+  if (blockId === "definition" && baseDef) {
+    const currentText = (def?.situationDescription ?? "").trim();
+    const baselineText = (baseDef.situationDescription ?? "").trim();
+    return {
+      ...empty,
+      definitionTextAdjusted: currentText !== baselineText,
+    };
+  }
 
   if (blockId === "duration" && baseDef) {
     return {
@@ -732,6 +760,11 @@ export function WorkspaceApplicationReview({
     initialDraft = "",
   ) => {
     setAdjustmentRemarkSaveError(false);
+    setAdjustmentHistoryViewByBlock((prev) => {
+      const next = { ...prev };
+      delete next[blockId];
+      return next;
+    });
     setPendingComposer({ blockId, blockTitle, draft: initialDraft });
   };
 
@@ -922,11 +955,11 @@ export function WorkspaceApplicationReview({
           break;
         case "definition":
           out[id] = (
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+            <ReviewReReviewFreetext variant="history">
               {sliceDef?.situationDescription?.trim()
                 ? sliceDef.situationDescription
                 : "Keine Beschreibung hinterlegt."}
-            </p>
+            </ReviewReReviewFreetext>
           );
           break;
         case "duration":
@@ -989,8 +1022,19 @@ export function WorkspaceApplicationReview({
       const hasBaseline = blockHasReReviewBaseline(blockId, r1AdjustmentBaselines);
       if (!hasBaseline && !phase.displayRemark.trim()) return undefined;
 
+      const chronikEntry = savedReviewComments.find((c) => c.blockId === blockId);
+      const remarkMetaLine =
+        blockId === "definition" && chronikEntry
+          ? formatReReviewRemarkMetaLine(
+              chronikEntry.authorDisplayName,
+              chronikEntry.createdAt,
+              reviewerDisplayName,
+            )
+          : undefined;
+
       return {
         lockedRemark: phase.displayRemark,
+        remarkMetaLine,
         baselineContent:
           baselineContent ?? (
             <p className="text-sm text-muted-foreground">
@@ -1008,8 +1052,28 @@ export function WorkspaceApplicationReview({
       r1AdjustmentBaselines,
       reviewBlockBaselineContent,
       adjustmentHistoryViewByBlock,
+      savedReviewComments,
+      reviewerDisplayName,
     ],
   );
+
+  const reReviewContentViewForBlock = useCallback(
+    (blockId: ReviewWorkspaceBlockId): ReviewBlockAdjustmentHistoryView | undefined => {
+      if (pendingComposer?.blockId === blockId) return undefined;
+      if (blockPhases[blockId].phase !== "pending_after_adjustment") return undefined;
+      return adjustmentHistoryViewByBlock[blockId] ?? "current";
+    },
+    [adjustmentHistoryViewByBlock, blockPhases, pendingComposer?.blockId],
+  );
+
+  const definitionReReviewFreetextVariant = useMemo((): ReviewReReviewFreetextVariant => {
+    const view = reReviewContentViewForBlock("definition");
+    if (!view) return "plain";
+    if (view === "history") return "history";
+    return reReviewPresentationByBlock.definition?.definitionTextAdjusted
+      ? "currentAdjusted"
+      : "plain";
+  }, [reReviewContentViewForBlock, reReviewPresentationByBlock.definition]);
 
   /**
    * Klick auf einen gespeicherten Kommentar in der Sidebar springt zum
@@ -1435,11 +1499,11 @@ export function WorkspaceApplicationReview({
               : reReviewHistoryForBlock("definition")
           }
         >
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+          <ReviewReReviewFreetext variant={definitionReReviewFreetextVariant}>
             {def?.situationDescription?.trim()
               ? def.situationDescription
               : "Keine Beschreibung hinterlegt."}
-          </p>
+          </ReviewReReviewFreetext>
           </InteractiveReviewBlock>
         ) : null}
 
@@ -1472,6 +1536,12 @@ export function WorkspaceApplicationReview({
         >
           <DurationChoiceCompare
             selected={def?.duration}
+            readonlyMode={
+              reReviewContentViewForBlock("duration") === "history"
+                ? "reReviewHistory"
+                : "r2"
+            }
+            useR1OptionHints={Boolean(reReviewContentViewForBlock("duration"))}
             reReviewAdjustedSelection={Boolean(
               reReviewPresentationByBlock.duration?.durationAdjusted,
             )}
@@ -1508,6 +1578,11 @@ export function WorkspaceApplicationReview({
         >
           <ScopeChecklist
             selected={def?.scopeSelections ?? []}
+            readonlyMode={
+              reReviewContentViewForBlock("scope") === "history"
+                ? "reReviewHistory"
+                : "r2"
+            }
             reReviewAdjustedOptions={
               reReviewPresentationByBlock.scope?.scopeAdjusted
             }
@@ -1550,6 +1625,11 @@ export function WorkspaceApplicationReview({
             otherText={def?.lectureOtherText}
             measuresKeine={Boolean(def?.lectureMeasuresKeine)}
             keineDescription={LECTURE_MEASURES_KEINE_DESCRIPTION}
+            readonlyMode={
+              reReviewContentViewForBlock("lectureMeasures") === "history"
+                ? "reReviewHistory"
+                : "r2"
+            }
             reReviewAdjustedKeys={
               reReviewPresentationByBlock.lectureMeasures?.lectureMeasureKeysAdjusted
             }
@@ -1595,6 +1675,11 @@ export function WorkspaceApplicationReview({
             otherText={def?.assessmentOtherText}
             measuresKeine={Boolean(def?.assessmentMeasuresKeine)}
             keineDescription={ASSESSMENT_MEASURES_KEINE_DESCRIPTION}
+            readonlyMode={
+              reReviewContentViewForBlock("assessmentMeasures") === "history"
+                ? "reReviewHistory"
+                : "r2"
+            }
             reReviewAdjustedKeys={
               reReviewPresentationByBlock.assessmentMeasures
                 ?.assessmentMeasureKeysAdjusted
@@ -1691,6 +1776,7 @@ type ReviewBlockComposerProps = {
 
 type ReReviewHistoryConfig = {
   lockedRemark: string;
+  remarkMetaLine?: string;
   baselineContent: ReactNode;
   view: ReviewBlockAdjustmentHistoryView;
   onViewChange: (view: ReviewBlockAdjustmentHistoryView) => void;
@@ -1727,12 +1813,13 @@ function InteractiveReviewBlock({
   reReviewHistory?: ReReviewHistoryConfig;
 }) {
   const anchorId = reviewWorkspaceAnchorId(blockId);
-  const historyToggle = reReviewHistory ? (
-    <ReviewBlockAdjustmentHistoryToggle
-      view={reReviewHistory.view}
-      onViewChange={reReviewHistory.onViewChange}
-    />
-  ) : null;
+  const historyToggle =
+    phase.phase === "pending_after_adjustment" && reReviewHistory ? (
+      <ReviewBlockAdjustmentHistoryToggle
+        view={reReviewHistory.view}
+        onViewChange={reReviewHistory.onViewChange}
+      />
+    ) : null;
 
   if (composer) {
     return (
@@ -1832,10 +1919,11 @@ function InteractiveReviewBlock({
         headerAction={historyToggle}
         footer={
           <>
-            {showHistoryContent
-            && reReviewHistory
-            && reReviewHistory.lockedRemark.trim() ? (
-              <ReviewBlockRequestedAdjustmentBand remark={reReviewHistory.lockedRemark} />
+            {reReviewHistory?.lockedRemark.trim() ? (
+              <ReviewBlockRequestedAdjustmentBand
+                remark={reReviewHistory.lockedRemark}
+                metaLine={reReviewHistory.remarkMetaLine}
+              />
             ) : null}
             {actionFooter}
           </>

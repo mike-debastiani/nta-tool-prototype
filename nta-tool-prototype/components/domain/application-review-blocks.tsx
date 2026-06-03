@@ -6,13 +6,13 @@ import {
   CheckCheck,
   CircleCheckBig,
   ExternalLink,
+  FileCheck,
+  FileClock,
   FilePenLine,
   FileText,
-  History,
   MessageSquare,
   Pencil,
   RotateCcw,
-  SquarePen,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -47,8 +47,13 @@ import {
   REVIEW_BLOCK_HISTORY_TOGGLE_TAB_HISTORY_ACTIVE_CLASS,
   REVIEW_BLOCK_HISTORY_TOGGLE_TAB_HISTORY_INACTIVE_CLASS,
   REVIEW_BLOCK_REQUESTED_ADJUSTMENT_BAND_CLASS,
-  REVIEW_BLOCK_REQUESTED_ADJUSTMENT_TITLE_CLASS,
   REVIEW_BLOCK_REQUESTED_ADJUSTMENT_BODY_CLASS,
+  REVIEW_BLOCK_REQUESTED_ADJUSTMENT_META_CLASS,
+  REVIEW_BLOCK_REQUESTED_ADJUSTMENT_TITLE_CLASS,
+  REVIEW_BLOCK_RE_REVIEW_ADJUSTED_MARKER_CLASS,
+  REVIEW_BLOCK_RE_REVIEW_FREETEXT_CURRENT_CLASS,
+  REVIEW_BLOCK_RE_REVIEW_FREETEXT_HISTORY_CLASS,
+  REVIEW_BLOCK_RE_REVIEW_PREVIOUS_MARKER_CLASS,
   REVIEW_BLOCK_RE_REVIEW_HISTORY_OPTION_SELECTED_SHELL_CLASS,
   REVIEW_BLOCK_RE_REVIEW_HISTORY_OPTION_SELECTED_TEXT_CLASS,
 } from "@/lib/design-tokens/review-block";
@@ -288,10 +293,10 @@ export function ReviewBlockAdjustmentHistoryToggle({
             : REVIEW_BLOCK_HISTORY_TOGGLE_TAB_CURRENT_INACTIVE_CLASS,
         )}
         aria-pressed={view === "current"}
-        aria-label="Aktuelle Anpassung anzeigen"
+        aria-label="Aktuelle Version anzeigen"
         onClick={() => onViewChange("current")}
       >
-        <SquarePen
+        <FileCheck
           className={REVIEW_BLOCK_HISTORY_TOGGLE_TAB_ICON_CLASS}
           strokeWidth={1.75}
           aria-hidden
@@ -306,10 +311,10 @@ export function ReviewBlockAdjustmentHistoryToggle({
             : REVIEW_BLOCK_HISTORY_TOGGLE_TAB_HISTORY_INACTIVE_CLASS,
         )}
         aria-pressed={view === "history"}
-        aria-label="Ursprüngliche Einreichung und angeforderte Anpassung anzeigen"
+        aria-label="Alte Version anzeigen"
         onClick={() => onViewChange("history")}
       >
-        <History
+        <FileClock
           className={REVIEW_BLOCK_HISTORY_TOGGLE_TAB_ICON_CLASS}
           strokeWidth={1.75}
           aria-hidden
@@ -319,14 +324,67 @@ export function ReviewBlockAdjustmentHistoryToggle({
   );
 }
 
-/** Verlaufsansicht — ursprüngliche Fachstellen-Anforderung (`6193:22256`). */
-export function ReviewBlockRequestedAdjustmentBand({ remark }: { remark: string }) {
+/** Gesperrte Fachstellen-Bemerkung — Re-Review Default & Verlauf (`6424:26528`, `6424:26695`). */
+export function ReviewBlockRequestedAdjustmentBand({
+  remark,
+  metaLine,
+}: {
+  remark: string;
+  /** Nur Freitext-Blöcke (Figma `6424:26530`); Select-Varianten ohne Meta-Zeile. */
+  metaLine?: string | null;
+}) {
   return (
     <div className={REVIEW_BLOCK_REQUESTED_ADJUSTMENT_BAND_CLASS}>
-      <p className={REVIEW_BLOCK_REQUESTED_ADJUSTMENT_TITLE_CLASS}>
-        Angeforderte Anpassung
+      {metaLine?.trim() ? (
+        <p className={REVIEW_BLOCK_REQUESTED_ADJUSTMENT_META_CLASS}>{metaLine}</p>
+      ) : null}
+      <div className="flex flex-col gap-1">
+        <p className={REVIEW_BLOCK_REQUESTED_ADJUSTMENT_TITLE_CLASS}>
+          Angeforderte Anpassung
+        </p>
+        <p className={REVIEW_BLOCK_REQUESTED_ADJUSTMENT_BODY_CLASS}>{remark}</p>
+      </div>
+    </div>
+  );
+}
+
+export type ReviewReReviewFreetextVariant = "plain" | "currentAdjusted" | "history";
+
+/** Freitext-Inhalt in R2 Re-Review — «Angepasst» / «Vorgängig» (`6424:26518`, `6424:26621`). */
+export function ReviewReReviewFreetext({
+  children,
+  variant,
+}: {
+  children: ReactNode;
+  variant: ReviewReReviewFreetextVariant;
+}) {
+  if (variant === "plain") {
+    return (
+      <p className={REVIEW_BLOCK_RE_REVIEW_FREETEXT_CURRENT_CLASS}>{children}</p>
+    );
+  }
+
+  const isHistory = variant === "history";
+  return (
+    <div className="flex flex-col items-end gap-2">
+      <p
+        className={
+          isHistory
+            ? REVIEW_BLOCK_RE_REVIEW_FREETEXT_HISTORY_CLASS
+            : REVIEW_BLOCK_RE_REVIEW_FREETEXT_CURRENT_CLASS
+        }
+      >
+        {children}
       </p>
-      <p className={REVIEW_BLOCK_REQUESTED_ADJUSTMENT_BODY_CLASS}>{remark}</p>
+      <p
+        className={
+          isHistory
+            ? REVIEW_BLOCK_RE_REVIEW_PREVIOUS_MARKER_CLASS
+            : REVIEW_BLOCK_RE_REVIEW_ADJUSTED_MARKER_CLASS
+        }
+      >
+        {isHistory ? "Vorgängig" : "Angepasst"}
+      </p>
     </div>
   );
 }
@@ -1079,6 +1137,7 @@ function choiceSelectedStatusLabel(
   mode: ReviewReadonlyChoiceMode,
   reReviewAdjusted?: boolean,
 ): string {
+  if (mode === "reReviewHistory") return "Vorgängig";
   if (mode === "r1") return "gewählt";
   if (reReviewAdjusted) return "Angepasst";
   return "wurde gewählt";
@@ -1134,10 +1193,13 @@ export function DurationChoiceCompare({
   selected,
   readonlyMode = "r2",
   reReviewAdjustedSelection = false,
+  useR1OptionHints = false,
 }: {
   selected?: "full_study" | "one_semester";
   readonlyMode?: ReviewReadonlyChoiceMode;
   reReviewAdjustedSelection?: boolean;
+  /** Re-Review-Runde 2 — Figma `6424:26683` (kompakte R1-Untertitel). */
+  useR1OptionHints?: boolean;
 }) {
   const options: {
     id: "full_study" | "one_semester";
@@ -1148,7 +1210,7 @@ export function DurationChoiceCompare({
       id: "full_study",
       title: "Gesamte Studiendauer",
       hint:
-        readonlyMode === "r1"
+        readonlyMode === "r1" || useR1OptionHints
           ? DURATION_OPTION_HINTS_R1.full_study
           : "Der Ausgleich gilt für die gesamte Dauer des Studiums.",
     },
@@ -1156,7 +1218,7 @@ export function DurationChoiceCompare({
       id: "one_semester",
       title: "Einmalig für ein Semester",
       hint:
-        readonlyMode === "r1"
+        readonlyMode === "r1" || useR1OptionHints
           ? DURATION_OPTION_HINTS_R1.one_semester
           : "Der Ausgleich gilt für ein Semester; eine Verlängerung ist separat zu beantragen.",
     },

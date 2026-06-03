@@ -89,7 +89,7 @@ export const REVIEW_BLOCK_LOCKED_REMARK_BODY_CLASS =
 
 /**
  * R2 Re-Review — Umschalter Aktuell/Verlauf im Block-Header.
- * Figma `6192:3836` (aktuell aktiv) · `6193:22254` (Verlauf aktiv).
+ * Figma `6424:26523` (aktuell = FileCheck) · `6424:26626` (Verlauf = FileClock).
  * Shell: border, `p-3xs` (2px), `rounded-full`.
  */
 export const REVIEW_BLOCK_HISTORY_TOGGLE_SHELL_CLASS =
@@ -117,9 +117,12 @@ export const REVIEW_BLOCK_HISTORY_TOGGLE_TAB_HISTORY_ACTIVE_CLASS =
 export const REVIEW_BLOCK_HISTORY_TOGGLE_TAB_HISTORY_INACTIVE_CLASS =
   "rounded-md px-1.5 py-px text-muted-foreground";
 
-/** «Angeforderte Anpassung» vor Pending-Footer in Verlaufsansicht (`6193:22256`). */
+/** «Angeforderte Anpassung» vor Pending-Footer — Default & Verlauf (`6424:26528`, `6424:26695`). */
 export const REVIEW_BLOCK_REQUESTED_ADJUSTMENT_BAND_CLASS =
-  "flex flex-col gap-1 border-t border-border bg-adjustment-100 px-5 py-4";
+  "flex flex-col gap-2 border-t border-border bg-adjustment-100 px-5 py-4";
+
+export const REVIEW_BLOCK_REQUESTED_ADJUSTMENT_META_CLASS =
+  "text-xs font-normal leading-4 text-adjustment-700";
 
 export const REVIEW_BLOCK_REQUESTED_ADJUSTMENT_TITLE_CLASS =
   "text-sm font-medium leading-5 text-adjustment-700";
@@ -127,13 +130,25 @@ export const REVIEW_BLOCK_REQUESTED_ADJUSTMENT_TITLE_CLASS =
 export const REVIEW_BLOCK_REQUESTED_ADJUSTMENT_BODY_CLASS =
   "whitespace-pre-wrap text-sm font-normal leading-5 text-adjustment-700";
 
-/** «Angepasst»-Marker an geänderten Auswahloptionen (`6195:22506`). */
+/** «Angepasst»-Marker — aktuelle R1-Version (`6424:26527`, `6424:26693`). */
 export const REVIEW_BLOCK_RE_REVIEW_ADJUSTED_MARKER_CLASS =
   "shrink-0 text-hf-paragraph-mini font-medium text-muted-foreground";
 
-/** Re-Review Verlauf — gewählte Option (gleiches Layout wie R1 gewählt, ohne Border). */
+/** «Vorgängig»-Marker — Baseline/Alte Version (`6424:26631`, `6424:26661`). */
+export const REVIEW_BLOCK_RE_REVIEW_PREVIOUS_MARKER_CLASS =
+  "shrink-0 text-hf-paragraph-mini font-medium text-adjustment-700";
+
+/** Re-Review Freitext — Alte Version (`6424:26628`). */
+export const REVIEW_BLOCK_RE_REVIEW_FREETEXT_HISTORY_CLASS =
+  "w-full whitespace-pre-wrap text-sm leading-relaxed text-adjustment-700";
+
+/** Re-Review Freitext — aktuelle angepasste Version (`6424:26525`). */
+export const REVIEW_BLOCK_RE_REVIEW_FREETEXT_CURRENT_CLASS =
+  "w-full whitespace-pre-wrap text-sm leading-relaxed text-foreground";
+
+/** Re-Review Verlauf — gewählte Option (`6424:26653`). */
 export const REVIEW_BLOCK_RE_REVIEW_HISTORY_OPTION_SELECTED_SHELL_CLASS =
-  "flex gap-3 rounded-[10px] bg-adjustment-100 px-3 py-3";
+  "flex gap-3 rounded-[10px] border border-adjustment-700 bg-adjustment-100 px-3 py-3";
 
 export const REVIEW_BLOCK_RE_REVIEW_HISTORY_OPTION_SELECTED_TEXT_CLASS =
   "text-adjustment-700";
