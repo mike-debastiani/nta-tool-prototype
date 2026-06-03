@@ -3,9 +3,9 @@
 import { Check, EllipsisVertical, MessageSquare, MoreHorizontal, X } from "lucide-react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { ApplicationDetailsCard } from "@/components/domain/application-details-card";
+import { R4ContactsSidebar } from "@/components/domain/r4-contacts-sidebar";
 import { R4RelatedDocumentsSidebar } from "@/components/domain/r4-related-documents-sidebar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
   resolveApplicantDisplayName,
@@ -89,7 +89,7 @@ type ApplicationReviewDetailSidebarProps = {
   showCommentsSection?: boolean;
   /**
    * R4: `r4_related_documents` = «Zugehörige Dokumente» (Verfügungs-Screens);
-   * `r4_contacts` = «Kontakte» (Entscheid-Schritt / Review ohne Verfügung).
+   * `r4_contacts` = «Kontakt» (Entscheid-Schritt / Review ohne Verfügung, Figma `6605:26547`).
    * `r4_decision` = beides (Legacy-Kombi, falls benötigt).
    */
   secondarySection?: "comments" | "r4_contacts" | "r4_related_documents" | "r4_decision";
@@ -192,11 +192,11 @@ export function ApplicationReviewDetailSidebar({
       {secondarySection === "r4_decision" ? (
         <>
           <R4RelatedDocumentsSidebar application={application} />
-          <R4ContactsSection application={application} />
+          <R4ContactsSidebar application={application} />
         </>
       ) : null}
       {secondarySection === "r4_contacts" ? (
-        <R4ContactsSection application={application} />
+        <R4ContactsSidebar application={application} />
       ) : null}
       {secondarySection === "r4_related_documents" ? (
         <R4RelatedDocumentsSidebar application={application} />
@@ -532,55 +532,6 @@ function ReviewBemerkungItemR2({
         </p>
       </div>
     </article>
-  );
-}
-
-function R4ContactsSection({ application }: { application: WorkspaceApplication }) {
-  const pd = application.data.personalData;
-  const applicantName = resolveApplicantDisplayName(application);
-  const applicantEmail = pd?.email?.trim() || application.users[0]?.email || "—";
-  const fachstelleName =
-    application.data.consultation?.advisor?.trim()
-    || application.data.recommendation?.releasedBy?.trim()
-    || "NTA Fachstelle";
-
-  return (
-    <section
-      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-background px-6 pb-4 pt-4"
-      aria-labelledby="r4-contacts-heading"
-    >
-      <h3
-        id="r4-contacts-heading"
-        className="mb-4 shrink-0 text-lg font-medium leading-[27px] text-foreground"
-      >
-        Kontakte
-      </h3>
-      <div className={cn(detailPanelScrollAreaClass, "min-h-0 flex-1")}>
-        <div className="space-y-4">
-        <Card className="rounded-lg border border-border shadow-none ring-0">
-          <CardHeader className="space-y-1 pb-2">
-            <CardTitle className="text-sm font-semibold text-foreground">Antragstellende Person</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            <p className="font-medium text-foreground">{applicantName}</p>
-            <p className="text-muted-foreground">{applicantEmail}</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-lg border border-border shadow-none ring-0">
-          <CardHeader className="space-y-1 pb-2">
-            <CardTitle className="text-sm font-semibold text-foreground">Kontaktperson Fachstelle</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p className="font-medium text-foreground">{fachstelleName}</p>
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              Bei inhaltlichen Rückfragen während der Bewilligung können Sie diese Person konsultieren.
-            </p>
-            <p className="text-muted-foreground">fachstelle@hochschule.example</p>
-          </CardContent>
-        </Card>
-        </div>
-      </div>
-    </section>
   );
 }
 
