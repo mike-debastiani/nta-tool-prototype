@@ -45,9 +45,12 @@ function PrimaryIconLinkButton({
 function AssignedTaskMetricItem({
   bucket,
   onClick,
+  singleBucketLayout = false,
 }: {
   bucket: AssignedTaskBucket;
   onClick?: () => void;
+  /** Figma `6582:27901` — ein Bucket (z. B. R4): Label oben, Zahl unten. */
+  singleBucketLayout?: boolean;
 }) {
   const itemRef = useRef<HTMLButtonElement>(null);
   const [metricFontPx, setMetricFontPx] = useState(METRIC_FONT_MAX_PX);
@@ -75,12 +78,45 @@ function AssignedTaskMetricItem({
     return () => observer.disconnect();
   }, []);
 
+  const labelNode = (
+    <p
+      className={cn("font-medium leading-none", bucket.labelClass)}
+      style={{ fontSize: labelFontPx }}
+    >
+      {bucket.label}
+    </p>
+  );
+
+  const metricNode = (
+    <div className={cn("flex items-start gap-0.5", bucket.metricClass)}>
+      <span
+        className={cn("font-semibold leading-none", bucket.metricClass)}
+        style={{ fontSize: metricFontPx }}
+      >
+        {bucket.count}
+      </span>
+      {bucket.addedToday > 0 ? (
+        <span
+          className={cn(
+            hfTypography.paragraphSmall,
+            "pt-[4px] pl-[2px]",
+            bucket.deltaClass,
+          )}
+          aria-label={`${bucket.addedToday} heute hinzugekommen`}
+        >
+          +{bucket.addedToday} heute
+        </span>
+      ) : null}
+    </div>
+  );
+
   return (
     <button
       type="button"
       ref={itemRef}
       className={cn(
-        "flex min-h-0 flex-1 flex-col justify-end rounded-xl p-4 text-left",
+        "flex min-h-0 flex-1 flex-col rounded-xl p-4 text-left",
+        singleBucketLayout ? "justify-between" : "justify-end",
         onClick ? "cursor-pointer" : "cursor-default",
         bucket.surfaceClass,
       )}
@@ -88,30 +124,17 @@ function AssignedTaskMetricItem({
       disabled={!onClick}
       aria-label={onClick ? `${bucket.label} filtern` : undefined}
     >
-      <div className="flex flex-col items-start gap-3">
-        <p
-          className={cn("font-medium leading-none", bucket.labelClass)}
-          style={{ fontSize: labelFontPx }}
-        >
-          {bucket.label}
-        </p>
-        <div className={cn("flex items-start gap-0.5", bucket.metricClass)}>
-          <span
-            className="font-semibold leading-none"
-            style={{ fontSize: metricFontPx }}
-          >
-            {bucket.count}
-          </span>
-          {bucket.addedToday > 0 ? (
-            <span
-              className={cn(hfTypography.paragraphSmall, bucket.deltaClass)}
-              aria-label={`${bucket.addedToday} heute hinzugekommen`}
-            >
-              +{bucket.addedToday} heute
-            </span>
-          ) : null}
+      {singleBucketLayout ? (
+        <>
+          {labelNode}
+          {metricNode}
+        </>
+      ) : (
+        <div className="flex flex-col items-start gap-3">
+          {labelNode}
+          {metricNode}
         </div>
-      </div>
+      )}
     </button>
   );
 }
@@ -124,6 +147,8 @@ export function AssignedTasksSummaryCard({
   headerIconAriaLabel,
   onBucketClick,
 }: AssignedTasksSummaryCardProps) {
+  const singleBucketLayout = buckets.length === 1;
+
   return (
     <div
       className={cn(
@@ -147,6 +172,7 @@ export function AssignedTasksSummaryCard({
           <AssignedTaskMetricItem
             key={bucket.id}
             bucket={bucket}
+            singleBucketLayout={singleBucketLayout}
             onClick={onBucketClick ? () => onBucketClick(bucket.id) : undefined}
           />
         ))}

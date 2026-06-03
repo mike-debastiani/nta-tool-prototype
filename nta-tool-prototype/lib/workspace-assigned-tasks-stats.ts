@@ -6,7 +6,6 @@ import {
 import {
   hfConsultationStatusForegroundClass,
   hfConsultationStatusSurfaceClass,
-  hfInDecisionStatusForegroundClass,
   hfInDecisionStatusSurfaceClass,
   hfInReviewStatusForegroundClass,
   hfInReviewStatusSurfaceClass,
@@ -66,9 +65,9 @@ const BUCKET_META: Record<
   entscheidungen: {
     label: "Entscheidungen",
     surfaceClass: hfInDecisionStatusSurfaceClass,
-    labelClass: hfInDecisionStatusForegroundClass,
-    metricClass: hfInDecisionStatusForegroundClass,
-    deltaClass: hfInDecisionStatusForegroundClass,
+    labelClass: "text-in-decision-800",
+    metricClass: "text-in-decision-800",
+    deltaClass: "text-in-decision-800",
   },
 };
 
