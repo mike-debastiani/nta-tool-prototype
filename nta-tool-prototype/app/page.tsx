@@ -15,13 +15,10 @@ export default function Home() {
           HSLU · Bachelorprojekt
         </p>
         <h1 className={cn(hfTypography.h2, "text-stone-900")}>
-          NTA-Prototyp
+        Nachteilsausgleich an Schweizer Hochschulen
         </h1>
         <p className={cn(hfTypography.paragraphRegular, "mt-4 text-stone-600")}>
-          Funktionaler Web-Prototyp zur Simulation des Nachteilsausgleichs (NTA)
-          an Hochschulen. Er dient Forschung und Usability-Tests — kein
-          produktives System. Wählen Sie den Bereich, in den Sie sich anmelden
-          möchten.
+        Interaktiver Webprototyp zur Simulation des Nachteilsausgleichsprozesses an Schweizer Hochschulen. Wählen Sie Ihre Rolle, um fortzufahren.
         </p>
       </header>
 
@@ -36,14 +33,12 @@ export default function Home() {
             <GraduationCap className="size-5" strokeWidth={1.75} aria-hidden />
           </div>
           <div className="flex flex-1 flex-col gap-2">
-            <h2 className={cn(hfTypography.h4, "text-stone-900")}>Portal</h2>
+            <h2 className={cn(hfTypography.h4, "text-stone-900")}>Studierenden Portal</h2>
             <p className={cn(hfTypography.paragraphSmall, "text-stone-600")}>
-              Perspektive Studierende: Antrag erstellen, Beratung und
-              Empfehlung durchlaufen, Status verfolgen und Anpassungen
-              vornehmen.
+            Als Studierende: Beratung und Empfehlung durchlaufen, Antrag stellen, Status verfolgen, Anpassungen vornehmen und den Entscheid einsehen.
             </p>
           </div>
-          <Button asChild className="w-full sm:w-auto">
+          <Button asChild className="w-full rounded-full sm:w-auto">
             <Link href="/student/login">Zum Portal anmelden</Link>
           </Button>
         </section>
@@ -60,20 +55,17 @@ export default function Home() {
           <div className="flex flex-1 flex-col gap-2">
             <h2 className={cn(hfTypography.h4, "text-stone-900")}>Workspace</h2>
             <p className={cn(hfTypography.paragraphSmall, "text-stone-600")}>
-              Perspektive Hochschule: eingereichte Anträge bearbeiten, Beratung
-              und Empfehlung verfassen, Review und Entscheidung im Prozess
-              abbilden.
+            Als Fachperson oder Entscheidungsinstanz: Anträge bearbeiten, Beratungsgespräche dokumentieren, Empfehlungsschreiben verfassen sowie Reviews und Entscheide im Prozess abbilden.
             </p>
           </div>
-          <Button asChild variant="outline" className="w-full sm:w-auto">
+          <Button asChild className="w-full rounded-full sm:w-auto">
             <Link href="/staff/login">Zum Workspace anmelden</Link>
           </Button>
         </section>
       </div>
 
       <p className={cn(hfTypography.paragraphMini, "mt-10 max-w-2xl text-stone-500")}>
-        Testkonten und Demo-Funktionen finden Sie nach der Anmeldung in den
-        jeweiligen Bereichen. Die Anmeldung erfolgt per E-Mail und Passwort.
+      Für zuverlässige Ergebnisse: Jede Rolle in einem separaten Browser öffnen (z.B. Firefox für R1, Chrome für R2) — und pro angemeldetem Account nur einen Tab verwenden.
       </p>
     </PrototypeEntryShell>
   );

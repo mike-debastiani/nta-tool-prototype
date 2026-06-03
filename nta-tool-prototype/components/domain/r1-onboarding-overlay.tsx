@@ -6,9 +6,12 @@ import { Fragment, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Onboarding-Overlay über Step 1 der R1-Antragserstellung (Figma `6359:36452`).
+ * Onboarding-Overlay über Step 1 der R1-Antragserstellung (Figma `6457:26916`).
  * Vier Karten erklären die Prozessphasen; Navigation über «Zurück» / «Weiter»,
  * letzte Karte startet die Antragstellung. Schliessen oben rechts.
+ *
+ * Spacing: Card `p-8` (32px), `gap-10` (40px) zwischen Inhaltsblock und Footer;
+ * Inhaltsblock `gap-6` (24px) Header → Stepper → Text; Titel↔Text `gap-1` (4px).
  */
 
 type PhaseNode = {
@@ -57,8 +60,7 @@ const ONBOARDING_STEPS: readonly OnboardingStep[] = [
     badgeLabel: "Beratung & Empfehlung",
     title: "Beratung & Empfehlung",
     paragraphs: [
-      "Sie geben ihre persönlichen Angaben an, laden Ihr fachärztliches Attest hoch und wählen einen Beratungstermin mit der Fachstelle.",
-      "Nach dem Gespräch verfasst die Fachstelle ein Empfehlungsschreiben. Sobald es freigegeben ist, können Sie Ihren Antrag vollständig ausfüllen und einreichen.",
+      "Sie geben ihre persönlichen Angaben an, laden Ihr fachärztliches Attest hoch und wählen einen Beratungstermin mit der Fachstelle. Nach dem Gespräch verfasst die Fachstelle ein Empfehlungsschreiben. Sobald es freigegeben ist, können Sie Ihren Antrag vollständig ausfüllen und einreichen.",
     ],
     activeNodeIndex: 0,
   },
@@ -76,7 +78,7 @@ const ONBOARDING_STEPS: readonly OnboardingStep[] = [
     badgeLabel: "Anpassung erforderlich",
     title: "Anpassung erforderlich",
     paragraphs: [
-      "Sollte die Fachstelle notwendige Nachbesserungen feststellen, werden Sie kontaktiert. Nehmen Sie die markierten Anpassungen vor und reichen Sie den Antrag erneut ein.",
+      "Sind Nachbesserungen erforderlich, werden die betroffenen Abschnitte markiert und Sie werden benachrichtigt. Nehmen Sie die Anpassungen vor und reichen Sie den Antrag erneut ein.",
     ],
     activeNodeIndex: 2,
   },
@@ -85,7 +87,7 @@ const ONBOARDING_STEPS: readonly OnboardingStep[] = [
     badgeLabel: "In Entscheid",
     title: "In Entscheid",
     paragraphs: [
-      "Die zuständige Instanz prüft Ihren Antrag und erstellt eine Verfügung. Sie werden per E-Mail informiert, sobald es Neuigkeiten gibt und Ihre Verfügung als PDF zum Download bereit steht.",
+      "Ihr Antrag wird anschliessend an die zuständige Entscheidungsinstanz weitergeleitet, die über Bewilligung oder Ablehnung entscheidet. Nach dem Entscheid erhalten Sie eine Verfügung, die Ihnen das Ergebnis offiziell kommuniziert.",
     ],
     activeNodeIndex: 3,
   },
@@ -102,10 +104,9 @@ function StepperNode({
   index: number;
   state: StepNodeState;
 }) {
-  // Feste Knotenbreite 88px (= 40px Kreis + 2×24px) hält den Abstand Kreis ↔
-  // Dashed Line konstant bei 24px; Kreis und Label sind beide zentriert.
+  // Knotenbreite 70px (Figma `6457:26923`); Kreis ↔ Label `gap-2` (8px).
   return (
-    <div className="flex w-[88px] shrink-0 flex-col items-center gap-2">
+    <div className="flex w-[70px] shrink-0 flex-col items-center gap-2">
       {state === "completed" ? (
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-stone-100">
           <Check className="size-5 text-muted-foreground" strokeWidth={2.5} aria-hidden />
@@ -188,63 +189,63 @@ export function R1OnboardingOverlay({
       aria-modal="true"
       aria-label="Onboarding Antragstellung"
     >
-      <div className="flex w-full max-w-[800px] flex-col gap-8 rounded-xl border border-border bg-white p-8 shadow-lg">
-        {/* Header: Status-Badge + Schliessen */}
-        <div className="flex w-full items-center justify-between">
-          <span
-            className={cn(
-              "inline-flex items-center justify-center rounded-lg px-2 py-0.5 text-hf-paragraph-mini-medium",
-              step.badgeClass,
-            )}
-          >
-            {step.badgeLabel}
-          </span>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg px-4 py-2 text-foreground-alt transition-colors hover:bg-stone-100"
-          >
-            <span className="text-hf-paragraph-small-medium">Schliessen</span>
-            <X className="size-4 shrink-0" strokeWidth={2} aria-hidden />
-          </button>
-        </div>
+      <div className="flex w-full max-w-[800px] flex-col gap-10 rounded-xl border border-border bg-stone-50 p-8 shadow-lg">
+        <div className="flex w-full flex-col gap-6">
+          {/* Header: Status-Badge + Schliessen */}
+          <div className="flex w-full items-center justify-between">
+            <span
+              className={cn(
+                "inline-flex items-center justify-center rounded-lg px-2 py-0.5 text-hf-paragraph-mini-medium",
+                step.badgeClass,
+              )}
+            >
+              {step.badgeLabel}
+            </span>
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex min-h-9 items-center justify-center gap-2 rounded-full px-4 py-2 text-foreground-alt transition-colors hover:bg-stone-150"
+            >
+              <span className="text-hf-paragraph-small-medium">Schliessen</span>
+              <X className="size-4 shrink-0" strokeWidth={2} aria-hidden />
+            </button>
+          </div>
 
-        {/* Stepper über die vier Prozessphasen — Knoten 88px breit (Kreis
-            zentriert über Label), Dashed Line startet bündig am Knotenrand →
-            24px Abstand Kreis ↔ Linie. Rand-Knoten halten so das Card-Padding. */}
-        <div className="flex w-full items-start">
-          {PHASE_NODES.map((node, index) => {
-            const state: StepNodeState =
-              index < step.activeNodeIndex
-                ? "completed"
-                : index === step.activeNodeIndex
-                  ? "active"
-                  : "upcoming";
-            return (
-              <Fragment key={node.label}>
-                <StepperNode node={node} index={index} state={state} />
-                {index < PHASE_NODES.length - 1 ? (
-                  <div className="flex h-10 min-w-0 flex-1 items-center" aria-hidden>
-                    <div className="h-0 w-full border-t border-dashed border-stone-300" />
-                  </div>
-                ) : null}
-              </Fragment>
-            );
-          })}
-        </div>
+          {/* Stepper — Knoten 70px, Verbindungslinie auf Kreismitte (40px). */}
+          <div className="flex w-full items-start">
+            {PHASE_NODES.map((node, index) => {
+              const state: StepNodeState =
+                index < step.activeNodeIndex
+                  ? "completed"
+                  : index === step.activeNodeIndex
+                    ? "active"
+                    : "upcoming";
+              return (
+                <Fragment key={node.label}>
+                  <StepperNode node={node} index={index} state={state} />
+                  {index < PHASE_NODES.length - 1 ? (
+                    <div className="flex h-10 min-w-0 flex-1 items-center" aria-hidden>
+                      <div className="h-0 w-full border-t border-dashed border-stone-300" />
+                    </div>
+                  ) : null}
+                </Fragment>
+              );
+            })}
+          </div>
 
-        {/* Titel + Beschreibung */}
-        <div className="flex w-full flex-col gap-2 pt-2">
-          <p className="text-hf-paragraph-large-medium text-black">{step.title}</p>
-          <div className="flex flex-col gap-3.5">
-            {step.paragraphs.map((paragraph) => (
-              <p
-                key={paragraph}
-                className="text-hf-paragraph-small text-muted-foreground"
-              >
-                {paragraph}
-              </p>
-            ))}
+          {/* Titel + Beschreibung — `gap-1` (4px), Text `foreground` */}
+          <div className="flex w-full flex-col gap-1">
+            <p className="text-hf-paragraph-large-medium text-black">{step.title}</p>
+            <div className="flex flex-col gap-1">
+              {step.paragraphs.map((paragraph) => (
+                <p
+                  key={paragraph}
+                  className="text-hf-paragraph-small text-foreground"
+                >
+                  {paragraph}
+                </p>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -259,7 +260,7 @@ export function R1OnboardingOverlay({
             <button
               type="button"
               onClick={() => setStepIndex((index) => Math.max(index - 1, 0))}
-              className="inline-flex min-h-9 items-center justify-center gap-2 rounded-full bg-stone-100 px-4 py-2 text-hf-paragraph-small-medium text-foreground transition-colors hover:bg-stone-200"
+              className="inline-flex min-h-9 items-center justify-center gap-2 rounded-full bg-secondary px-4 py-2 text-hf-paragraph-small-medium text-secondary-foreground transition-colors hover:bg-stone-200"
             >
               Zurück
             </button>
@@ -269,7 +270,7 @@ export function R1OnboardingOverlay({
             onClick={handleNext}
             className="inline-flex min-h-9 items-center justify-center gap-2 rounded-full bg-primary px-4 py-2 text-hf-paragraph-small-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            {isLast ? "Antragstellung beginnen" : "Weiter"}
+            {isLast ? "Antrag starten" : "Weiter"}
           </button>
         </div>
       </div>
