@@ -54,7 +54,8 @@ Hinweise:
 
 | Datei | Rolle |
 |-------|--------|
-| `components/nta-antrag-desktop.tsx` | R1 Flow Step 1–6: Validierung, Fortschritts-/Freischaltlogik, Autosave, Realtime, Delete → Portal |
+| `components/nta-antrag-desktop.tsx` | R1 Flow Step 1–6: Validierung, Fortschritts-/Freischaltlogik, Autosave, Realtime, Delete → Portal; rendert das **Onboarding-Overlay** beim Start eines neuen Antrags (`forceNew && !embedInDashboardShell`, State `isOnboardingOpen`) |
+| `components/domain/r1-onboarding-overlay.tsx` | **Onboarding-Overlay** über Step 1 (Figma `6359:36452`): 4 Karten erklären die Prozessphasen (Beratung & Empfehlung → In Review → Anpassung erforderlich → In Entscheid). Overlay `bg-stone-100/70` + `backdrop-blur-[24px]`, zentrierte weisse Card; Stepper mit erledigten/aktiven/kommenden Knoten; «Zurück»/«Weiter», letzte Karte «Antragstellung beginnen», Schliessen/X |
 | `components/domain/r1-application-flow-layout.tsx` | HF-Layout: `h-screen`, Top-Bar (Titel, Autosave-Hinweis, Schliessen), Sidebar, scrollbarer Form-Bereich |
 | `components/domain/r1-application-flow-layout.tsx` (`R1FlowSupportInformationCard`) | Sidebar-Card «Fragen und Unklarheiten / Weitere Informationen» als fusionierte Accordion-Card mit externen Quicklinks |
 | `components/domain/r1-flow-icons.tsx` | Lucide-Icons + Fortschritts-Statuspunkt (Gradient complete/incomplete) |
@@ -113,6 +114,8 @@ Hinweise:
 ### Step 1 — Persönliche Angaben
 
 - Pflichtfelder inkl. Matrikel **`XX-XXX-XXX`**; Feldweise Fehler-States.
+
+**Onboarding-Overlay:** Beim Start eines **neuen** Antrags (`forceNew`, also `?new` bzw. leerer Flow — nicht in der Dashboard-Shell) legt sich ein Overlay über Step 1 (`R1OnboardingOverlay`, Figma `6359:36452`). Vier Karten erklären die Prozessphasen; Navigation «Zurück»/«Weiter», letzte Karte «Antragstellung beginnen» bzw. Schliessen/X schliessen es (State `isOnboardingOpen`, einmalig am Anfang). HF-Tokens → `High_Fidelity_Design_Kontext.md` § 7.
 
 **Sperre:** Sobald `consultation.status` **`booked`** oder **`done`** ist, sind Step-1-Inhalte (inkl. Studium, Antragsart) **read-only** in **Übersicht (Step 5)** und bei **erneutem Öffnen von Step 1** über die Sidebar.
 

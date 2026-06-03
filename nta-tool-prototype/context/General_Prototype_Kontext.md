@@ -178,6 +178,7 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `components/domain/rich-text-editor.tsx` | TipTap-Wrapper für das Empfehlungsschreiben |
 | `components/domain/recommendation-released-accordion.tsx` | Geteilte Anzeige des freigegebenen Empfehlungsschreibens (R1 + R2) |
 | `components/domain/r1-application-flow-layout.tsx` | HF-Shell R1-Antragsflow: Top-Bar, Sidebar, Fortschrittskarte, `R1FlowFormCard`, `R1FlowField*`, Attest-Callout |
+| `components/domain/r1-onboarding-overlay.tsx` | Onboarding-Overlay über Step 1 beim Start eines neuen Antrags (4 Karten, Prozessphasen-Stepper); Figma `6359:36452` |
 | `components/domain/r1-flow-icons.tsx` | Lucide-Icons für R1-Flow (Fortschritt, Kontakt, Autosave-Save) |
 | `components/domain/r1-booking-scheduler.tsx` | R1 Step 3 Terminbuchung (HF) |
 | `components/domain/r1-booking-confirmation.tsx` | R1 Step 3 Terminbestätigung (HF) |

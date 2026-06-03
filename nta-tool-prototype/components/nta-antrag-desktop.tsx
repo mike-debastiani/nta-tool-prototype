@@ -73,6 +73,7 @@ import {
 } from "@/components/domain/r1-application-flow-layout";
 import { R1FlowBookingConfirmation } from "@/components/domain/r1-booking-confirmation";
 import { R1FlowBookingScheduler } from "@/components/domain/r1-booking-scheduler";
+import { R1OnboardingOverlay } from "@/components/domain/r1-onboarding-overlay";
 import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
 import { R1ApplicationDefinitionSection } from "@/components/domain/r1-application-definition-section";
 import { hfTypography } from "@/lib/design-tokens/typography";
@@ -760,6 +761,9 @@ export function NtaAntragDesktop({
       initialApplication?.data?.r1PortalFlowStep,
       resolveInitialFlowStep(initialApplication, forceNew),
     ),
+  );
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(
+    () => forceNew && !embedInDashboardShell,
   );
   const [isDragActive, setIsDragActive] = useState(false);
   const [stepOneErrors, setStepOneErrors] = useState<
@@ -2935,6 +2939,12 @@ export function NtaAntragDesktop({
         ) : undefined
       }
     />
+
+      <R1OnboardingOverlay
+        open={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
+        onComplete={() => setIsOnboardingOpen(false)}
+      />
 
       {draftExitError ? (
         <p className="fixed right-6 top-16 z-50 max-w-sm text-right text-xs text-destructive">

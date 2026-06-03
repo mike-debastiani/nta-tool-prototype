@@ -221,6 +221,7 @@ Vollständige Mechanik → **`Antrag_Review_Kontext.md`**, R4 → **`Antrag_Bewi
 | `5180:7082` | Formular-Karte + Footer |
 | `5213:1456` | Kontakt-Karte |
 | `5180:7111` | Antrag verwerfen |
+| `6359:36452` | Onboarding-Overlay über Step 1 (4 Karten, Prozessphasen-Stepper); Karten `6359:36558` / `6359:36592` / `6359:36627` / `6359:36663` |
 
 **Layout (`r1-application-flow-layout.tsx`):**
 
@@ -255,6 +256,7 @@ Vollständige Mechanik → **`Antrag_Review_Kontext.md`**, R4 → **`Antrag_Bewi
 | `components/domain/r1-booking-confirmation.tsx` | Step 3 Terminbestätigung (Figma `5307:7907`, Footer `5307:8254`) |
 | `components/domain/recommendation-released-accordion.tsx` | `variant="r1"` für Step 3/5 (Figma `5247:5570`) |
 | `public/images/r1-booking/map-example.png` | Statische Karten-Vorschau in Terminbestätigung |
+| `components/domain/r1-onboarding-overlay.tsx` | Onboarding-Overlay Step 1 (Figma `6359:36452`): Overlay `bg-stone-100/70` + `backdrop-blur-[24px]`, weisse Card (`p-8`, `gap-8`, `border-border`); Phasen-Stepper (Knoten 88px → 24px Abstand Kreis↔Dashed-Line, erledigt = `bg-stone-100` + Check muted), Badges/Buttons aus HF-Tokens |
 
 **Step 5 Übersicht:** Kein zusätzlicher `space-y-*`-Wrapper — Inhalte als **Geschwister** in `R1FlowFormCard` (wie Step 1), damit überall **40px** zwischen den gleichen Abschnitten wie in den Einzelsteps. Step 2 = `scroll-mt-4 space-y-3` + Callout `mb-10`; Step 4 = `R1ApplicationDefinitionSection`.
 
@@ -309,6 +311,7 @@ Vollständige Mechanik → **`Antrag_Review_Kontext.md`**, R4 → **`Antrag_Bewi
 | 2026-05-28 | Locked-step helper tooltip | `r1-application-flow-layout.tsx`: Tooltip auf gesperrten Steps 4/5 («Wird nach der Beratung freigeschaltet») vor Recommendation-Release |
 | 2026-05-28 | Workspace table wheel scroll | `workspace-home-dashboard.tsx` + `workspace-my-tasks-view.tsx`: Wrapper `overflow-visible`, sodass vertikales Scrollen über Tabellenzeilen den weissen Container scrollt |
 | 2026-05-28 | R4 free-text proposal UX | `workspace-r4-decision-view.tsx` + `r4-decision-review-blocks.tsx`: Wording «Hinzufügen/Hinzugefügt», inline-Aktivierung beim Tippen (R1-ähnlich), stabile Fokusführung, automatische neue Leerzeile, Abwählen löscht Zeile |
+| 2026-06-03 | R1 Onboarding-Overlay | `r1-onboarding-overlay.tsx` (Figma `6359:36452`): Overlay `bg-stone-100/70` + Blur 24 über Step 1 beim neuen Antrag (`forceNew`); 4 Karten erklären Prozessphasen; Stepper-Knoten 88px (Kreis zentriert über Label, 24px zur Dashed-Line, Rand-Knoten halten Card-Padding); erledigt = `bg-stone-100` + Check `muted-foreground`; Card `p-8`/`gap-8`/`border-border`, Text-Container `pt-4` |
 
 ---
 
