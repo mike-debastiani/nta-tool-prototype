@@ -15,13 +15,11 @@ import {
   ArrowLeft,
   Circle,
   CircleArrowRight,
-  CircleCheck,
   CircleDashed,
   CircleHelp,
   ExternalLink,
   Eye,
   FileText,
-  Info,
   MessageCircle,
   Mail,
   Lock,
@@ -71,7 +69,11 @@ import {
   type R1ProgressStepVisualState,
   r1FlowProgressStepIndex,
 } from "@/components/domain/r1-application-flow-layout";
-import { R1FlowBookingConfirmation } from "@/components/domain/r1-booking-confirmation";
+import {
+  R1FlowBookingConfirmation,
+  R1FlowInfoCallout,
+  R1FlowSuccessIcon,
+} from "@/components/domain/r1-booking-confirmation";
 import { R1FlowBookingScheduler } from "@/components/domain/r1-booking-scheduler";
 import { R1OnboardingOverlay } from "@/components/domain/r1-onboarding-overlay";
 import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
@@ -2516,27 +2518,22 @@ export function NtaAntragDesktop({
                     assessmentOtherIdPrefix="step4-assessment-other"
                   />
                 ) : currentStep === "step6_submitted" ? (
-                  <div className="mx-auto w-full max-w-[620px] space-y-8 py-10 text-center">
-                    <CircleCheck className="mx-auto size-12 text-teal-600" />
-                    <div className="space-y-2">
-                      <R1FlowSectionTitle>
-                        Antrag erfolgreich eingereicht
-                      </R1FlowSectionTitle>
-                      <p className="text-sm text-muted-foreground">
-                      Ihr Antrag wurde erfolgreich eingereicht und befindet sich nun im Status Review. Den aktuellen Status finden Sie jederzeit unter «Meine Anträge».
-                      </p>
-                    </div>
-                    <div className="mx-auto w-full max-w-[544px] rounded-lg border border-blue-500 bg-blue-100 px-4 py-3">
-                      <div className="flex gap-3 text-left">
-                        <div className="flex shrink-0 items-start pt-0.5">
-                          <Info className="size-4 text-blue-500" strokeWidth={2} aria-hidden />
-                        </div>
-                        <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-blue-500">
-                          Die Fachstelle prüft Ihren Antrag auf Vollständigkeit. Die Bearbeitung dauert
-                          in der Regel 5–10 Werktage. Sie werden per E-Mail informiert, sobald es
-                          Neuigkeiten gibt.
+                  <div className="mx-auto flex w-full max-w-[620px] flex-col items-center gap-8 py-10 text-center">
+                    <R1FlowSuccessIcon />
+                    <div className="flex w-full flex-col gap-6">
+                      <div className="space-y-2">
+                        <R1FlowSectionTitle>
+                          Antrag erfolgreich eingereicht
+                        </R1FlowSectionTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Ihr Antrag wurde erfolgreich eingereicht und befindet sich nun im Status Review. Den aktuellen Status finden Sie jederzeit unter «Meine Anträge».
                         </p>
                       </div>
+                      <R1FlowInfoCallout className="mx-auto max-w-[544px] text-left">
+                        Die Fachstelle prüft Ihren Antrag auf Vollständigkeit. Die Bearbeitung dauert
+                        in der Regel 5–10 Werktage. Sie werden per E-Mail informiert, sobald es
+                        Neuigkeiten gibt.
+                      </R1FlowInfoCallout>
                     </div>
                     <Button
                       type="button"

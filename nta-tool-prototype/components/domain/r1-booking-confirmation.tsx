@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Image from "next/image";
 import { ArrowUpRight, Check, Info, MapPin } from "lucide-react";
 
@@ -11,11 +12,20 @@ const BOOKING_MAP_IMAGE_SRC = "/images/r1-booking/uzh-location-map.png";
 export const R1_BOOKING_MAPS_OPEN_URL =
   "https://maps.app.goo.gl/52DiGCpc4iYEwdQ67";
 
-function R1FlowBookingInfoCallout() {
+/** HF Info-Callout (in-review-50 / in-review-800) — Buchung & Submit-Success. */
+export function R1FlowInfoCallout({
+  children,
+  className,
+  dataNodeId,
+}: {
+  children: ReactNode;
+  className?: string;
+  dataNodeId?: string;
+}) {
   return (
     <div
-      className="w-full rounded-lg bg-in-review-50 px-4 py-3"
-      data-node-id="5307:8135"
+      className={cn("w-full rounded-lg bg-in-review-50 px-4 py-3", className)}
+      data-node-id={dataNodeId}
     >
       <div className="grid grid-cols-[1rem_1fr] gap-x-3 gap-y-0">
         <Info
@@ -25,19 +35,34 @@ function R1FlowBookingInfoCallout() {
           aria-hidden
         />
         <p className="col-start-2 text-left text-hf-paragraph-small-medium text-in-review-800">
-          Sie erhalten eine Bestätigung per E-Mail. Nach der Beratung werden die
-          weiteren Schritte Ihres Antrags freigeschaltet.
+          {children}
         </p>
       </div>
     </div>
   );
 }
 
-function R1FlowBookingSuccessIcon() {
+/** Erfolgs-Check (bewilligt-400 Kreis) — Buchung & Submit-Success. */
+export function R1FlowSuccessIcon({ className }: { className?: string }) {
   return (
-    <div className="flex size-[41px] items-center justify-center rounded-full bg-bewilligt-400" aria-hidden>
+    <div
+      className={cn(
+        "flex size-[41px] items-center justify-center rounded-full bg-bewilligt-400",
+        className,
+      )}
+      aria-hidden
+    >
       <Check className="size-5 text-white" strokeWidth={2.5} />
     </div>
+  );
+}
+
+function R1FlowBookingInfoCallout() {
+  return (
+    <R1FlowInfoCallout data-node-id="5307:8135">
+      Sie erhalten eine Bestätigung per E-Mail. Nach der Beratung werden die
+      weiteren Schritte Ihres Antrags freigeschaltet.
+    </R1FlowInfoCallout>
   );
 }
 
@@ -78,7 +103,7 @@ export function R1FlowBookingConfirmation({
       data-node-id="6101:22681"
     >
       <div className="flex w-full flex-col items-center gap-3">
-        <R1FlowBookingSuccessIcon />
+        <R1FlowSuccessIcon />
         <div className="flex w-full flex-col gap-4">
           <h2 className="w-full text-center text-hf-paragraph-large-medium text-stone-900">
             Ihr Beratungsgespräch ist gebucht!
