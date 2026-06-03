@@ -177,6 +177,39 @@ export const R4_DECISION_REJECTED_REASON_ROW_CLASS =
 export const R4_DECISION_BACK_BUTTON_CLASS =
   "inline-flex h-9 shrink-0 items-center gap-2 text-sm font-medium text-foreground hover:text-foreground/80 disabled:opacity-40";
 
+/** Abgelehnte Blöcke unter der Verfügung — Figma `6430:5454` / `6423:5582`. */
+export const R4_VERFUEGUNG_REJECTED_BLOCK_CLASS =
+  "overflow-hidden rounded-xl border border-abgelehnt-600 bg-background";
+
+export const R4_VERFUEGUNG_REJECTED_BLOCK_BODY_CLASS =
+  "flex flex-col gap-4 p-6";
+
+export const R4_VERFUEGUNG_REJECTED_ROWS_CLASS = "flex w-full flex-col gap-3";
+
+export const R4_VERFUEGUNG_REJECTED_ROW_CARD_CLASS =
+  "flex flex-col gap-1.5 rounded-[10px] border border-border bg-background px-3 py-3";
+
+export const R4_VERFUEGUNG_REJECTED_ROW_HEADER_CLASS =
+  "flex w-full items-start justify-between gap-3";
+
+export const R4_VERFUEGUNG_REJECTED_ROW_LABEL_CLASS =
+  "text-sm font-normal leading-5 text-foreground";
+
+export const R4_VERFUEGUNG_REJECTED_BADGE_CLASS =
+  "shrink-0 text-xs font-medium leading-4 text-abgelehnt-600";
+
+export const R4_VERFUEGUNG_REJECTED_ROW_HINT_CLASS =
+  "text-xs font-normal leading-4 text-muted-foreground";
+
+export const R4_VERFUEGUNG_REJECTED_FOOTER_CLASS =
+  "flex flex-col gap-4 border-t border-border bg-abgelehnt-50 px-5 py-4";
+
+export const R4_VERFUEGUNG_REJECTED_FOOTER_STATUS_ROW_CLASS =
+  "flex w-full items-center justify-end gap-2";
+
+export const R4_VERFUEGUNG_REJECTED_FOOTER_STATUS_CLASS =
+  "inline-flex items-center gap-2 text-sm font-medium leading-5 text-abgelehnt-600";
+
 /** Zeilen-Hintergrund je Badge (Figma Rich Radio Group). */
 export const R4_DECISION_ROW_SURFACE_CLASS = {
   bewilligt: "bg-bewilligt-50",

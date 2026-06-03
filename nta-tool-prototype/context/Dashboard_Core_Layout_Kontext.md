@@ -329,7 +329,7 @@ Credentials: mit Testpersonen abgestimmt (nicht in Repo). Login **`/staff/login`
 | Autosave `r4DecisionReview` | RLS `applications_update_r4_decision` | + Trigger: nur `recommendation` / `consultation` / **`r4DecisionReview`** |
 | «Entscheid abschliessen» | `approved` + **`materializeApprovedR4DecisionReview`** | + Trigger erlaubt zusätzlich **`applicationDefinition`** nur bei `in_implementation` → `approved` (`20260526200000_*`) |
 
-**RLS-Migrationen (Auszug):** `20260513190000` (R4 SELECT), `20260514120000` (R4 UPDATE), `20260526120100` (R2R4 Policies + combined User), `20260526140000` (R2R4 `r4DecisionReview`), `20260526150000` (Worklist/Forward-Fixes), `20260526160000` (R2 Forward `WITH CHECK`), `20260526200000` (R2R4 Definition on approve).
+**RLS-Migrationen (Auszug):** `20260513190000` (R4 SELECT), `20260514120000` (R4 UPDATE), `20260526120100` (R2R4 Policies + combined User), `20260526140000` (R2R4 `r4DecisionReview`), `20260526150000` (Worklist/Forward-Fixes), `20260526160000` (R2 Forward `WITH CHECK`), `20260526200000` (R2R4 Definition on approve), **`20260603140000`** (R4 UPDATE Ziel `rejected`), **`20260603150000`** (R2R4 Trigger `rejected`).
 
 → Entscheidungs-UI im Detail: **`Antrag_Bewilligung_Kontext.md`**; Freitext-Massnahmen R1: **`Antragerstellung_Kontext.md`** § 4 Step 4.
 

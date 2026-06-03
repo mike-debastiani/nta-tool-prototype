@@ -184,7 +184,7 @@ type R1FlowTopBarProps = {
 
 function R1FlowTopBar({ close, autosave }: R1FlowTopBarProps) {
   return (
-    <header className="hf-col-span-12 flex shrink-0 items-center justify-between gap-4 pt-4 pb-5">
+    <header className="hf-col-span-12 flex shrink-0 items-start justify-between gap-4 pt-4 pb-5">
       <h1 className={cn(hfTypography.h4, "shrink-0 text-foreground")}>
         Antrag auf Nachteilsausgleich
       </h1>

@@ -358,6 +358,67 @@ export function allVisibleR4BlocksConfirmed(
   });
 }
 
+/** Mindestens eine bewilligte oder von R4 hinzugefügte Zeile (ohne «Keine»). */
+export function blockHasR4ApprovedOption(
+  block: R4DecisionBlockSnapshot | undefined,
+): boolean {
+  return (block?.rows ?? []).some((row) => row.r4Approved && row.key !== "__keine__");
+}
+
+/**
+ * Gesamter Antrag abgelehnt (OR): keine Bewilligung in Dauer, in Geltungsbereich,
+ * oder in beiden Massnahmen-Blöcken zusammen keine einzige Massnahme.
+ */
+export function isR4ApplicationRejected(
+  review: R4DecisionReview,
+  visibility: R4BlockVisibility,
+): boolean {
+  if (visibility.duration && !blockHasR4ApprovedOption(review.blocks.duration)) {
+    return true;
+  }
+  if (visibility.scope && !blockHasR4ApprovedOption(review.blocks.scope)) {
+    return true;
+  }
+  const measureBlocksVisible = visibility.lectureMeasures || visibility.assessmentMeasures;
+  if (!measureBlocksVisible) return false;
+  const anyMeasureApproved =
+    (visibility.lectureMeasures && blockHasR4ApprovedOption(review.blocks.lectureMeasures))
+    || (visibility.assessmentMeasures
+      && blockHasR4ApprovedOption(review.blocks.assessmentMeasures));
+  return !anyMeasureApproved;
+}
+
+/** Vom Studierenden gewählt, von R4 nicht bewilligt. */
+export function studentRejectedR4Rows(
+  block: R4DecisionBlockSnapshot,
+): R4DecisionRow[] {
+  return block.rows.filter(
+    (row) => row.studentSelected && !row.r4Approved && row.key !== "__keine__",
+  );
+}
+
+const R4_VERFUEGUNG_BLOCK_ORDER: R4DecisionReviewBlockId[] = [
+  "duration",
+  "scope",
+  "lectureMeasures",
+  "assessmentMeasures",
+];
+
+/** Abgelehnte, bestätigte Blöcke für die Verfügungs-Ansicht (mit Begründung). */
+export function getR4RejectedVerfuegungBlockIds(
+  review: R4DecisionReview,
+  visibility: R4BlockVisibility,
+): R4DecisionReviewBlockId[] {
+  return R4_VERFUEGUNG_BLOCK_ORDER.filter((id) => {
+    if (!visibility[id]) return false;
+    const block = review.blocks[id];
+    if (!block?.confirmed || blockHasR4ApprovedOption(block)) return false;
+    const reason = block.decisionReason?.trim();
+    if (reason) return true;
+    return studentRejectedR4Rows(block).length > 0;
+  });
+}
+
 /**
  * Schreibt `r4DecisionReview` in `ApplicationData` — `blocks` pro Schlüssel mergen,
  * damit partielle Payloads nie andere Entscheid-Blöcke aus der DB-JSON löschen.

@@ -70,7 +70,7 @@ Funktionaler Webapp-Prototyp zur Simulation des Nachteilsausgleich-Prozesses (NT
 | R1 — Studierende:r | `/portal` | Antrag stellen, nach R2-Feedback **Block-Anpassungen** (`PortalApplicationAdjustment`), Freigabe zurück an Fachstelle, bewilligten NTA einsehen |
 | R2 — Zentrale Fachstelle | `/workspace` | Beraten, Empfehlung verfassen, **Block-Review** nach Einreichung, Antrag an Entscheid / zur Korrektur weiterleiten |
 | R3 — Workspace-Rolle | `/workspace` | Im Prototyp weiterhin im Policy-Set mit R2 gruppiert; fachliche „dezentrale Entscheid“-Simulation siehe auch **R4** |
-| **R4 — Entscheidungsinstanz (Ist-Code)** | `/workspace` | Bewilligungsflow nach R2-Forward: gleiche Workspace-Shell wie R2, eigene UI in `in_implementation`, RLS-Policies — **`Antrag_Bewilligung_Kontext.md`** |
+| **R4 — Entscheidungsinstanz (Ist-Code)** | `/workspace` | Entscheid in `in_implementation`, Verfügung generieren, Abschluss **`approved`** oder **`rejected`** — **`Antrag_Bewilligung_Kontext.md`** |
 | **R2R4 — kombinierte Testrolle** | `/workspace` | Ein Account mit R2- und R4-Befugnissen (Review bis Entscheid); Home `5949:3172`; Test `r2and4.combined.test@example.com` |
 | R5 — Prüfungsadministration | `/workspace` | Massnahmen-Listen pro Prüfung, Umsetzung organisieren |
 | R6 — Modulverantwortliche | `/workspace` | Massnahmen für eigene Module einsehen (ohne medizinische Details) |

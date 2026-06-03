@@ -20,13 +20,13 @@
 
 | Rolle | DB-Status `in_implementation` (kanonisch **In Entscheid** / R4-Label **Entscheid erforderlich**) | Andere Status |
 |--------|------------------------------------------------------------------------------------------------|---------------|
-| **R4** | **`WorkspaceR4DecisionView`** — Schalter, Block-Bestätigung, Freitext-Vorschläge, Konkretisierung, Verfügung generieren + Entscheid fällen | **`approved`:** ebenfalls `WorkspaceR4DecisionView` (ausgestellte Verfügung, § 5b). Sonst **`WorkspaceApplicationReview`** read-only (`readonly_decision`); kein Empfehlungs-Editor |
+| **R4** | **`WorkspaceR4DecisionView`** — Schalter, Block-Bestätigung, Freitext-Vorschläge, Konkretisierung, Verfügung generieren + Entscheid fällen | **`approved`** / **`rejected`:** ebenfalls `WorkspaceR4DecisionView` (ausgestellte Verfügung, § 5b). Sonst **`WorkspaceApplicationReview`** read-only (`readonly_decision`); kein Empfehlungs-Editor |
 | **R2R4** | Wie **R4** (Capability `hasR4WorkspaceCapabilities`) | Wie **R2** in Review-Phasen (`hasR2WorkspaceCapabilities`); in `in_decision` zusätzlich Status-Audience **R4** («Entscheid erforderlich») |
 | **R2** | Read-only Entscheid-Modus (`readonly_decision`) | Interaktives Block-Review bis Forward |
 
 **Capability-Helfer** (`lib/workspace-role.ts`): `hasR4WorkspaceCapabilities` = **R4** \| **R2R4**; `canEditR4DecisionApplication` (`lib/workspace-application-visibility.ts`) = nur wenn `application.status === in_implementation`.
 
-**Routing** (`workspace-test-flow.tsx`): `showR4DecisionView` = `hasR4WorkspaceCapabilities(role)` **und** kanonisch `in_decision` **oder** `approved` — nicht nur reine DB-Spalte prüfen. Bei `approved` rendert `WorkspaceR4DecisionView` die **ausgestellte Verfügung** statt der Entscheid-Blöcke (§ 5b).
+**Routing** (`workspace-test-flow.tsx`): `showR4DecisionView` = `hasR4WorkspaceCapabilities(role)` **und** kanonisch `in_decision` **oder** `approved` **oder** `rejected` — nicht nur reine DB-Spalte prüfen. Bei `approved` / `rejected` rendert `WorkspaceR4DecisionView` die **ausgestellte Verfügung** statt der Entscheid-Blöcke (§ 5b).
 
 Login: **`/staff/login`** — R2–R6 inkl. **R4** / **R2R4**; Redirect **`/workspace`**. Test-Accounts und Matrix → **`Dashboard_Core_Layout_Kontext.md` § 4b**.
 
@@ -38,10 +38,9 @@ Login: **`/staff/login`** — R2–R6 inkl. **R4** / **R2R4**; Redirect **`/work
 - **Kopfzeile:** geteilt mit R2/R1 — **`ApplicationReviewPageHeader`** + **`ApplicationStatusCallout`** (R4-Hinweis in `in_implementation`).
 - **Scroll/Inset:** `applicationReviewScrollAreaClass` + `applicationReviewSectionGapClass` (`lib/design-tokens/application-scroll.ts`) — **kein** `max-w-4xl`, volle Panelbreite wie `WorkspaceApplicationReview`.
 - **Sidebar «Antragdetails»:** oben Metadaten (`ApplicationDetailsCard`); **kein Bemerkungs-Panel** (`showCommentsSection={false}` in `WorkspaceR4DecisionView`).
-- **Statt Kommentar-Chronik:** **`secondarySection="r4_contacts"`** — Kontakt-Cards (`R4ContactsSection` in `application-review-detail-sidebar.tsx`):
-  - **Antragstellende Person** (Name, E-Mail) — Name via `resolveApplicantDisplayName` (**Vorname Nachname**).
-  - **Kontaktperson Fachstelle** (`consultation.advisor` / `recommendation.releasedBy` / Platzhalter).
-  - **Scroll:** Überschrift «Kontakte» fix; Card-Liste in `detailPanelScrollAreaClass` (`min-h-0 flex-1`), damit bei kurzem Viewport gescrollt werden kann.
+- **Sidebar je Phase:**
+  - **Entscheid-Blöcke** (`canEdit`, nicht in `verfuegungMode`): **`secondarySection="r4_contacts"`** — Kontakt-Cards (`R4ContactsSection` in `application-review-detail-sidebar.tsx`): Antragstellende Person, Kontaktperson Fachstelle; Scroll wie bisher (`detailPanelScrollAreaClass`).
+  - **Verfügungs-Vorschau und ausgestellte Verfügung** (`verfuegungMode` oder `approved` / `rejected`): **`secondarySection="r4_related_documents"`** — **`R4RelatedDocumentsSidebar`** (Figma `6415:26217`): Fachärztliches Attest + Empfehlungsschreiben (Dateigrösse bzw. Freigabedatum); External-Link-Icon dekorativ (kein Download im Prototyp).
 - **R4 Lesesicht** (andere Status): `WorkspaceApplicationReview` mit `workspaceViewerRole="R4"` — ebenfalls **ohne** Bemerkungen, nur Kontakte + read-only Callouts (`muted`).
 
 ---
@@ -139,38 +138,46 @@ Wird **keine** Option bewilligt, tritt **nicht** direkt der Abgelehnt-Zustand ei
 
 ## 5b. Verfügung generieren & Entscheid fällen
 
-Statt einer separat verfassten Verfügung erzeugt R4 die **Verfügung direkt im Tool** aus Antrag + Entscheid. Komponente: **`R4VerfuegungDocument`** (`components/domain/r4-verfuegung-document.tsx`, Figma `6354:26077` / Massnahmenliste `6354:26370`).
+Statt einer separat verfassten Verfügung erzeugt R4 die **Verfügung direkt im Tool** aus Antrag + Entscheid. Komponente: **`R4VerfuegungDocument`** (`components/domain/r4-verfuegung-document.tsx`, Layout Figma **`6415:26074`**; abgelehnte Gesamtansicht **`6426:26226`**).
+
+**Varianten:** `R4VerfuegungVariant` = **`approved`** \| **`rejected`**. Erkennung vor Abschluss: **`isR4ApplicationRejected(review, visibility)`** in `lib/r4-decision-state.ts` (OR-Logik: sichtbarer Block **Dauer** ohne bewilligte Zeile, oder **Geltungsbereich** ohne Bewilligung, oder bei sichtbaren Massnahmen-Blöcken **keine** bewilligte Massnahme in LV **und** Leistungsnachweise zusammen).
+
+### Kopfzeile auf Verfügungs-Screens
+
+- Titel **`Verfügung zum Nachteilsausgleich`** (`ApplicationReviewPageHeader`).
+- **`trailingAction="share"`** (Share2, dekorativ — kein Export im Prototyp).
+- **`items-start`**-Ausrichtung Titelzeile + Icon-Button.
 
 ### Vorschau (`verfuegungMode`, transient)
 
-- Klick auf **„Verfügung generieren“** ersetzt die Entscheid-Blöcke durch die **Verfügungs-Vorschau** (briefartiges Dokument mit **regulärer Border, kein Schatten**).
-- Footer-Zeile mit zwei Buttons: **links „Entscheidung bearbeiten“** (`secondary`, `PenLine`) → zurück zu den Blöcken; **rechts „Entscheid fällen“** (primary pill, `CircleCheckBig`) → `handleComplete`.
-- **„Entscheid fällen“** setzt **`status = approved`**, merged `r4DecisionReview`, ruft **`materializeApprovedR4DecisionReview`** auf und broadcastet (= bisheriges „Abschliessen“; Übermittlung an R1/Antragstellende). *(Ablehnung gesamten Antrags: später.)*
+- Klick auf **„Verfügung generieren“** ersetzt die Entscheid-Blöcke durch die **Verfügungs-Vorschau** (`R4VerfuegungDocument` in `REVIEW_BLOCK_DEFAULT_CLASS`, kein Canvas-Rahmen/Schatten).
+- Sidebar wechselt auf **«Zugehörige Dokumente»** (`r4_related_documents`).
+- Footer: **«Entscheidung bearbeiten»** → zurück zu Blöcken + Kontakte; **«Entscheid fällen»** → `handleComplete` über **`completeR4DecisionWithSupabaseClient`** → **`POST /api/applications/r4-complete-decision`**.
+- **Abschluss-Status:**
+  - **Nicht abgelehnt** (`!isR4ApplicationRejected`): `status = approved`, **`materializeApprovedR4DecisionReview`** → `applicationDefinition`.
+  - **Abgelehnt:** `status = rejected`, **keine** Materialisierung; `r4DecisionReview` bleibt Snapshot.
+- Callout in der Vorschau unterscheidet bewilligt vs. abgelehnt (`previewRejected`).
 
-### Inhalt der Verfügung (Sections)
+### Inhalt der Verfügung (`VERFUEGUNG_CONTENT`)
 
-Fixe Textbausteine zentral in **`VERFUEGUNG_CONTENT`** (oben in der Datei) — einfach anpassbar ohne Layout-Eingriff. Dynamische Angaben aus dem Antrag/Entscheid:
+| Section | Quelle / Verhalten |
+|---------|-------------------|
+| Briefkopf, Adresse, UZH-Logo | `VERFUEGUNG_CONTENT`, `uzh-logo.svg` |
+| Signaturblock oben rechts (4 Zeilen) | Name, Rolle, **Fakultät aus Antrag**, `markus.decision@uzh.ch` |
+| Anrede, Intro | **`approved`:** Standard-Intro Bewilligung; **`rejected`:** eigener Intro-Text (Ablehnung) |
+| Antragsdetails | Einreichung, Verfügungsdatum; Dauer/Geltungsbereich aus **bewilligten** Zeilen (approved) bzw. „Keine … zugesprochen“ bei abgelehnten Choice-Blöcken |
+| Massnahmen LV / Leistungsnachweise | **approved:** nummerierte konkretisierte Liste; **rejected:** nur `rejectedMeasuresText` (keine Massnahmenliste im Dokument) |
+| Einsprachen/Rekurse, Gruss, Footer-Signatur | fix; Fake-Signatur `fake-signature.svg` im Footer |
 
-| Section | Quelle |
-|---------|--------|
-| Briefkopf (Institution + Fakultät) | `VERFUEGUNG_CONTENT.institution` + `getFacultyNameForStudiengang(studiengang)` |
-| Anrede «Guten Tag {Vorname Nachname}» | `resolveApplicantDisplayName` |
-| Titel «… ab {Semester}» | aus aktuellem Datum (`currentSemesterLabel`) |
-| Antragsstellende Person (Name, Vorname / Matrikel / Studienstufe) | `personalData`, `studienstufeFromStudiengang` |
-| Antragsdetails (Einreichung / Verfügungsdatum / Gültigkeitsdauer / Geltungsbereich) | `formatReviewSubmittedAt`, heutiges Datum, **bewilligte Zeilen** aus `review.blocks` |
-| Kontaktpersonen (FSB / Dekanat) | `consultation.advisor` \| `recommendation.releasedBy`; Dekanat fix |
-| Gewährte NTA Massnahmen LV / Leistungsnachweise | **bewilligte + konkretisierte** Zeilen: Heading = Nummer + `concretizedTitle ?? Titel`, eingerückte Beschreibung = `concretizedDescription ?? Default` (Spacings exakt gemäss `6354:26370`: Heading→Liste 24px, Item-Gap 4px, Beschreibung `pl-6`, Titel 16/medium, Beschreibung 14/regular) |
-| Einsprachen und Rekurse (inkl. Rekurs-Link) | **fix** (immer angezeigt) |
-| Grussformel + Unterschrift | `VERFUEGUNG_CONTENT.signer` |
+### Abgelehnte Verfügung — Zusatzblöcke unter dem Dokument
 
-Abgelehnte Massnahmen-Blöcke zeigen statt der Liste den Hinweistext (`rejectedMeasuresText`); rejected Choice-Blöcke erscheinen als „Keine … zugesprochen“ in den Antragsdetails.
+Unter der Verfügung rendert **`R4VerfuegungRejectedBlocks`** nur Blöcke aus **`getR4RejectedVerfuegungBlockIds`**: bestätigt, **ohne** bewilligte Option, mit Begründung und/oder **vom Studierenden gewählt + von R4 abgelehnt** (`studentRejectedR4Rows`). Keine erneute Bearbeitung in der ausgestellten Ansicht.
 
-### Bewilligte Ansicht (`status = approved`)
+### Ausgestellte Ansicht (`approved` / `rejected`)
 
-- **Routing:** `showR4DecisionView` greift jetzt für `in_decision` **und** `approved` (R4/R2R4) — bewilligte Anträge zeigen **nicht** mehr die Review-Block-Lesesicht, sondern die **ausgestellte Verfügung** (`WorkspaceR4DecisionView`, `isApproved`).
-- Reihenfolge: zuerst die **Verfügung**, danach die **Anhänge** (Fachärztliches Attest → Empfehlungsschreiben → Persönliche Situationsbeschreibung). Antragsteller-Block und Entscheid-Blöcke entfallen (in der Verfügung enthalten).
-- Bei den Anhang-Blöcken in dieser Ansicht ist der **„Von Fachstelle bestätigt“-Footer ausgeblendet** (`R4FacultyConfirmedBlock` Prop **`showFacultyFooter={false}`**) — im Bewilligt-Kontext logisch redundant.
-- Callout oben weist auf die erfolgte Bewilligung/Übermittlung hin.
+- **Routing:** `showR4DecisionView` für `in_decision`, **`approved`** und **`rejected`** (R4/R2R4).
+- **Nur die Verfügung** in der Hauptspalte — **keine** Duplikate von Attest, Empfehlungsschreiben oder Situationsbeschreibung darunter (Zugriff über Sidebar «Zugehörige Dokumente»).
+- Status-Callout: Bewilligung vs. Ablehnung (`isApproved` / `isRejected`).
 
 ---
 
@@ -204,15 +211,16 @@ Nach erfolgreichem Abschluss schreibt **`materializeApprovedR4DecisionReview`** 
 
 - **APIs (Server, optional / Fallback):**
   - **`POST /api/applications/r4-persist-decision`** — merge `r4DecisionReview` (**R4** oder **R2R4** via `hasR4WorkspaceCapabilities`, nur Status `in_implementation`).
-  - **`POST /api/applications/r4-complete-decision`** — prüft alle sichtbaren Entscheid-Blöcke `confirmed`, setzt **`approved`**, ruft Materialisierung auf, Broadcast.
-- **Ist-Pfad im UI:** Speichern und Abschliessen primär per Browser-Session (`lib/r4-workspace-supabase-persist.ts`: `persistR4DecisionWithSupabaseClient`, `completeR4DecisionWithSupabaseClient`).
+  - **`POST /api/applications/r4-complete-decision`** — prüft alle sichtbaren Blöcke `confirmed`; setzt **`approved`** (+ Materialisierung) oder **`rejected`** (ohne Materialisierung) via **`isR4ApplicationRejected`**; optional Service-Role; Broadcast.
+- **Ist-Pfad im UI:** Zwischenstand **`persistR4DecisionWithSupabaseClient`** (Browser-Session + RLS). **Abschluss** **`completeR4DecisionWithSupabaseClient`** → ruft die API-Route auf (Session; Service-Role auf dem Server falls gesetzt).
 
 ### 6.4 RLS / Supabase (Ist)
 
 - **Additive Policies** (Migration `supabase/migrations/20260513190000_r4_workspace_select_policies.sql`):
   - **`applications_select_r4_workspace`** — R4 darf `applications` in den üblichen Workspace-Status lesen (inkl. `in_decision`, `in_implementation`, `approved`, `rejected`, …).
   - **`users_select_r4_workspace_applicants`** — R4 darf Zeilen in `public.users` lesen für **eigene Profilzeile** (`users.id = auth.uid()`) und für **Antragsteller**, die einen passenden Antrag haben (Embed `users!applications_applicant_id_fkey` in der Listen-Query).
-- **UPDATE für R4** (Migration `supabase/migrations/20260514120000_applications_update_r4_decision.sql`): Policy **`applications_update_r4_decision`** — R4 darf `applications` aktualisieren, wenn `status = in_implementation` (`USING`); `WITH CHECK` erlaubt Ziel `in_implementation` **oder** `approved` (Abschluss). Ohne diese Policy schlagen Client-Updates mit dem normalen Supabase-Key fehl, wenn kein Service-Role verwendet wird.
+- **UPDATE für R4** (Migration `20260514120000_applications_update_r4_decision.sql`, erweitert durch **`20260603140000_r4_decision_allow_rejected_status.sql`**): Policy **`applications_update_r4_decision`** — `USING` nur `in_implementation`; `WITH CHECK` erlaubt Ziel **`in_implementation`**, **`approved`** oder **`rejected`**. Ohne die Erweiterung schlägt «Entscheid fällen» bei abgelehnter Verfügung mit RLS-Fehler fehl (bewilligt funktioniert weiterhin).
+- **R2R4-Trigger** (`20260603150000_r2r4_trigger_allow_rejected_status.sql`): `in_decision_phase` kennt Zielstatus **`rejected`**; Abschluss `in_implementation` → `rejected` darf nur `r4DecisionReview` ändern (wie Zwischenstand), nicht `applicationDefinition`.
 - **Pflicht für alle neuen Policies auf `users`/`applications`:** Rolle des eingeloggten Users **nur** über **`current_user_role()`** ausdrücken (bereits im Projekt als `SECURITY DEFINER` — gleiches Muster wie `applications_select_r2_worklist`). **Nicht** `EXISTS (SELECT 1 FROM public.users …)` innerhalb von RLS auf `users` verwenden → sonst Postgres **„infinite recursion detected in policy for relation users“** (betrifft dann auch R1/R2-Login beim Profil-Select).
 - **APIs** `r4-persist-decision` / `r4-complete-decision` können weiterhin optional den **Service-Role-Client** nutzen, wenn Schreib-RLS für R4/R2R4 in einer Umgebung noch fehlt — nach Session-Auth und Rollenprüfung **`hasR4WorkspaceCapabilities`** (R4, R2R4). Produktiv sind dedizierte UPDATE-Policies vorzuziehen.
 - **Supabase Free Egress:** Überschreitung drosselt Traffic, **nicht** die genannte Policy-Rekursion (das ist rein Postgres-RLS).
@@ -240,18 +248,21 @@ Ziel: kein „Kreuzschalten“ (ein Klick ändert scheinbar eine andere Zeile) u
 
 | Bereich | Pfad |
 |---------|------|
-| R4 Vollansicht | `components/domain/workspace-r4-decision-view.tsx` (Entscheid, Verfügungs-Vorschau, bewilligte Ansicht) |
-| Verfügung (Dokument) | `components/domain/r4-verfuegung-document.tsx` (`R4VerfuegungDocument`, `VERFUEGUNG_CONTENT`) |
+| R4 Vollansicht | `components/domain/workspace-r4-decision-view.tsx` (Entscheid, Verfügungs-Vorschau, ausgestellte Verfügung approved/rejected) |
+| Verfügung (Dokument) | `components/domain/r4-verfuegung-document.tsx` (`R4VerfuegungDocument`, `VERFUEGUNG_CONTENT`, Varianten) |
+| Abgelehnte Blöcke unter Verfügung | `components/domain/r4-verfuegung-rejected-blocks.tsx` |
+| Sidebar Zugehörige Dokumente | `components/domain/r4-related-documents-sidebar.tsx` |
+| Verfügungs-Assets | `public/images/r4-decision/uzh-logo.svg`, `fake-signature.svg` |
 | R4 UI-Bausteine | `components/domain/r4-decision-review-blocks.tsx` (`R4Switch`, `R4DecisionOptionRow`, `R4DecisionProposalInput`, `R4FacultyConfirmedBlock` (`showFacultyFooter`), `R4DecisionConcretizeList`/`-Footer`, `R4DecisionDefinedList`, `R4DecisionRejectReasonFooter`, `R4DecisionRejectedReasonFooter`/`-Readonly`, Footer) |
 | R4 Design-Tokens | `lib/design-tokens/r4-decision-block.ts` |
 | Review-Header / Callout | `application-review-page-header.tsx`, `application-status-callout.tsx` |
-| Sidebar Kontakte | `application-review-detail-sidebar.tsx` (`secondarySection="r4_contacts"`) |
+| Sidebar | `application-review-detail-sidebar.tsx` (`r4_contacts` \| `r4_related_documents`) |
 | Workspace-Einbindung | `components/domain/workspace-test-flow.tsx`, `app/workspace/page.tsx`, `lib/workspace-applications-list.ts`, `app/api/workspace/applications/route.ts` |
 | Login / Profil | `components/domain/login-card.tsx` (`getSession()` nach `signInWithPassword`, dann `users.role`) |
 | Layout / Avatar | `components/domain/role-dashboard-layout.tsx` (`workspaceAccountInitials`) |
 | Status / Labels R4 | `lib/application-status.ts` |
 | Typen | `lib/test-flow-types.ts` |
-| Merge / Zeilenbau / Sichtbarkeit | `lib/r4-decision-state.ts` (`mergeR4DecisionReview`, `createR4ProposalRow`, `supportsR4CustomProposalInput`, `materializeApprovedR4DecisionReview`, `mergeR4DecisionReviewRespectingLocalDirty`, …) |
+| Merge / Ablehnungslogik | `lib/r4-decision-state.ts` (`isR4ApplicationRejected`, `blockHasR4ApprovedOption`, `getR4RejectedVerfuegungBlockIds`, `studentRejectedR4Rows`, `materializeApprovedR4DecisionReview`, `mergeR4DecisionReviewRespectingLocalDirty`, …) |
 | Sichtbarkeit / Edit-Gate | `lib/workspace-application-visibility.ts` (`filterWorkspaceApplicationsForRole`, `canEditR4DecisionApplication`) |
 | Browser-Persistenz R4 | `lib/r4-workspace-supabase-persist.ts` |
 | Auto-Grow-Freitext | `components/ui/auto-grow-textarea.tsx` (R4-Vorschlag + R1-Sonstige-Massnahmen) |
@@ -263,10 +274,11 @@ Ziel: kein „Kreuzschalten“ (ein Klick ändert scheinbar eine andere Zeile) u
 ## 9. Abgrenzung / später
 
 - Kein separates Feld-Annotation-Modell (weiterhin F6-Ist: Block-Ebene).
-- **Ablehnung gesamten Antrags** oder Aufteilung bewilligt/teilweise abgelehnt auf Antragsebene: aktuell nicht — nur **Verfügung generieren → Entscheid fällen → bewilligt** als Prototyp-Endpunkt.
-- Die Verfügung wird **on-the-fly** aus `r4DecisionReview` / `applicationDefinition` gerendert (`R4VerfuegungDocument`) — **nicht** als eigenes Dokument/PDF persistiert oder versioniert; das Ausstellungsdatum ist das jeweils aktuelle Datum der Ansicht.
-- R3/R5/R6: unverändert; Fachrolle **R4** ist in diesem Flow die genannte Entscheidungsinstanz (Produktsprache; im Gesamtkonzept teils als R3 beschrieben — im Code-Rollenenum **R4**).
+- **Teilbewilligung** auf Antragsebene: im Prototyp nur über Block-Entscheide; Gesamtstatus **`rejected`** wenn die OR-Regel in `isR4ApplicationRejected` greift (kein separates „teilweise bewilligt“-Label).
+- Verfügung **on-the-fly** aus `r4DecisionReview` — **nicht** als PDF persistiert; Ausstellungsdatum = aktuelles Datum der Ansicht.
+- Share-Button und External-Link in der Dokumenten-Sidebar ohne Backend-Anbindung.
+- R3/R5/R6: unverändert; Entscheidungsinstanz im Code = **R4**.
 
 ---
 
-*Letzte Aktualisierung: Verfügung generieren statt „Entscheid abschliessen" (`R4VerfuegungDocument`, Vorschau + „Entscheid fällen"), bewilligte Ansicht zeigt ausgestellte Verfügung mit Anhängen danach (ohne „Von Fachstelle bestätigt"-Footer), Routing `approved` → `WorkspaceR4DecisionView`. Zuvor: Massnahmen-Konkretisierung (Karten mit Titel-/Beschreibungs-Input → definiert) und Begründungs-Schritt bei abgelehnten Blöcken (Massnahmen + Choice-Blöcke); stabiler Proposal-Key/idempotenter Upsert (Freitext-Duplikat-Bugfix); transiente UI-Flags `concretizing`/`rejecting`/`rejectionDraft`; neue Felder `concretizedTitle`/`concretizedDescription`/`decisionReason`. Zuvor: Freitext-Vorschläge nach Block-Bestätigung sichtbar; scrollbare R4-Kontakte; Materialisierung bei `approved`; R2R4-Trigger für `applicationDefinition`; `AutoGrowTextarea`; Test-Matrix → `Dashboard_Core_Layout_Kontext.md` § 4b.*
+*Letzte Aktualisierung: Abgelehnte Verfügung (`rejected`, `R4VerfuegungVariant`, `R4VerfuegungRejectedBlocks`), Sidebar «Zugehörige Dokumente», Entscheid fällen → `approved` \| `rejected` via API + RLS-Migrationen `20260603140000` / `20260603150000`, Routing `rejected` → `WorkspaceR4DecisionView`. Zuvor: bewilligte ausgestellte Verfügung ohne Anhänge in der Hauptspalte; Verfügungs-Layout Figma `6415:26074`; «Entscheid fällen» statt direktem Abschluss-CTA.*

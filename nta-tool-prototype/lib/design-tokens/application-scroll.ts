@@ -51,8 +51,8 @@ export const dashboardMainPanelScrollAreaClass = [
  */
 export const applicationReviewContentInsetClass = "px-12 pt-12";
 
-/** Abstand Header/Callout → erster Review-Block (32px). */
-export const applicationReviewSectionGapClass = "gap-8";
+/** Abstand Header/Callout → erster Review-Block bzw. Verfügung (32px). */
+export const applicationReviewSectionGapClass = "gap-10";
 
 /** Review / Portal-Adjustment / R4 (edge-to-edge). */
 export const applicationReviewScrollAreaClass = [

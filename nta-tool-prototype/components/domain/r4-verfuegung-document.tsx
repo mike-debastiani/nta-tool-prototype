@@ -1,12 +1,13 @@
 import { Fragment, type ReactNode } from "react";
+import Image from "next/image";
 
-import { formatReviewSubmittedAt } from "@/lib/application-review-labels";
 import { resolveApplicantDisplayName } from "@/lib/application-assignee";
 import { isR4ProposalRowKey } from "@/lib/r4-decision-state";
 import {
   getFacultyNameForStudiengang,
   studienstufeFromStudiengang,
 } from "@/lib/uzh-studiengaenge";
+import { REVIEW_BLOCK_DEFAULT_CLASS } from "@/lib/design-tokens/review-block";
 import { hfTypography } from "@/lib/design-tokens/typography";
 import {
   type R4DecisionBlockSnapshot,
@@ -15,17 +16,18 @@ import {
 } from "@/lib/test-flow-types";
 import { cn } from "@/lib/utils";
 
+const UZH_LOGO_SRC = "/images/r4-decision/uzh-logo.svg";
+const FAKE_SIGNATURE_SRC = "/images/r4-decision/fake-signature.svg";
+
+/** Figma `6415:26074` — Abschnitt mit unterer Trennlinie (kein separater Divider). */
+const VERFUEGUNG_SECTION_BORDER_CLASS =
+  "border-b border-border pb-5";
+
 /* -------------------------------------------------------------------------------------------------
  * Inhalts-Konfiguration der Verfügung
- *
- * Alle FIXEN Textbausteine der Verfügung sind hier zentral gebündelt, damit sie einfach
- * angepasst werden können, ohne das Layout anzufassen. Dynamische Angaben (Name, Massnahmen,
- * Gültigkeit, …) werden aus dem Antrag (`application` / `review`) abgeleitet (siehe unten).
  * ------------------------------------------------------------------------------------------------*/
 export const VERFUEGUNG_CONTENT = {
-  /** Absender / Hochschule (Briefkopf links). */
   institution: "Universität Zürich",
-  /** Fallback-Fakultätsname, falls kein Studiengang am Antrag hängt. */
   facultyFallback: "Rechtswissenschaftliche Fakultät",
   addressLines: [
     "Universität Zürich",
@@ -33,19 +35,14 @@ export const VERFUEGUNG_CONTENT = {
     "Rämistrasse 74/2",
     "CH-8001 Zürich",
   ],
-  /** Unterzeichnende Person (rechts oben + Unterschrift unten). */
   signer: {
     name: "Markus Decision",
     role: "Studiendekan",
-    email: "studium@uzh.ch",
+    email: "markus.decision@uzh.ch",
   },
-  /** Ort für die Datumszeile. */
   city: "Zürich",
-  /** Titel der Verfügung — `{semester}` wird durch das aktuelle Semester ersetzt. */
   titleTemplate: "Verfügung betreffend Nachteilsausgleichender Massnahmen ab {semester}",
-  /** Anrede — `{name}` = «Vorname Nachname». */
   greetingTemplate: "Guten Tag {name}",
-  /** Einleitungssatz (fix). */
   intro:
     "Ich beziehe mich auf Ihren Antrag um Gewährung nachteilsausgleichender Massnahmen (NTA). Wir haben diesen eingehend geprüft. Nachfolgend finden Sie die bewilligten NTA mit allen relevanten Angaben.",
   labels: {
@@ -53,30 +50,21 @@ export const VERFUEGUNG_CONTENT = {
     personName: "Name, Vorname",
     personMatrikel: "Matrikelnummer",
     personStufe: "Studienstufe",
-    details: "Antragsdetails",
-    detailEingereicht: "Antragseinreichung",
-    detailAusgestellt: "Verfügung ausgestellt",
-    detailDauer: "Gültigkeitsdauer",
-    detailScope: "Geltungsbereich",
     contacts: "Kontaktpersonen",
     contactFsb: "Kontaktstelle Fachstelle Studium und Behinderung (FSB)",
     contactDekanat: "Kontakt Dekanat",
     measuresLecture: "Gewährte NTA Massnahmen für Lehrveranstaltungen",
     measuresAssessment: "Gewährte NTA Massnahmen für Leistungsnachweise",
   },
-  /** Kontakt Dekanat (fix). */
+  contactDekanatPrefix: "Student Services: ",
   contactDekanatEmail: "studium@uzh.ch",
-  /** Platzhalter, falls ein Block ohne zugesprochene Auswahl entschieden wurde. */
-  emptyDurationValue: "Keine Gültigkeitsdauer zugesprochen",
-  emptyScopeValue: "Kein Geltungsbereich zugesprochen",
-  /** Hinweistexte, falls ein Massnahmen-Block abgelehnt wurde (keine Massnahme gewährt). */
+  contactFsbEmailFallback: "fachstelle@uzh.ch",
   rejectedMeasuresText: {
     lecture:
       "Der antragstellenden Person wurden keine Ausgleichsmassnahmen im Bezug auf Lehrveranstaltungen gewährt.",
     assessment:
       "Der antragstellenden Person wurden keine Ausgleichsmassnahmen im Bezug auf Leistungsnachweise gewährt.",
   },
-  /** Einsprachen / Rekurse (fix, immer angezeigt). */
   appeals: {
     heading: "Einsprachen und Rekurse",
     rekursLeadIn:
@@ -91,9 +79,14 @@ export const VERFUEGUNG_CONTENT = {
   closing: "Freundliche Grüsse",
 } as const;
 
-/* -------------------------------------------------------------------------------------------------
- * Datenableitung aus dem Antrag
- * ------------------------------------------------------------------------------------------------*/
+/** Textbausteine abgelehnte Verfügung — Figma `6426:26894`. */
+export const VERFUEGUNG_REJECTED_CONTENT = {
+  introLead:
+    "Ich beziehe mich auf Ihren Antrag um Gewährung nachteilsausgleichender Massnahmen (NTA). Wir haben diesen eingehend geprüft. Nach sorgfältiger Prüfung können wir Ihrem",
+  introEmphasis: " Antrag nicht stattgeben.",
+  introTail:
+    " Über die Möglichkeit, gegen diesen Entscheid Einsprache zu erheben, informiert Sie die nachfolgende Rechtsmittelbelehrung.",
+} as const;
 
 function formatSwissDate(value: Date): string {
   return value.toLocaleDateString("de-CH", {
@@ -103,20 +96,14 @@ function formatSwissDate(value: Date): string {
   });
 }
 
-/** Aktuelles Semester (Frühjahrs-/Herbstsemester) für den Verfügungstitel. */
 function currentSemesterLabel(now = new Date()): string {
-  const month = now.getMonth(); // 0 = Januar
-  const isSpring = month >= 1 && month <= 7; // Feb–Aug
+  const month = now.getMonth();
+  const isSpring = month >= 1 && month <= 7;
   return `${isSpring ? "Frühjahrssemester" : "Herbstsemester"} ${now.getFullYear()}`;
 }
 
 type VerfuegungMeasureItem = { key: string; title: string; description: string };
 
-/**
- * Bewilligte Massnahmen eines Blocks als nummerierte Einträge mit Titel + Beschreibung —
- * identisch zur Darstellung im «definiert»-Zustand der Entscheidung (`R4DecisionDefinedList`).
- * Konkretisierte Werte (`concretizedTitle`/`-Description`) werden bevorzugt.
- */
 function approvedMeasureItems(
   block: R4DecisionBlockSnapshot | undefined,
 ): VerfuegungMeasureItem[] {
@@ -135,51 +122,58 @@ function approvedMeasureItems(
     });
 }
 
-function approvedDurationLabel(block: R4DecisionBlockSnapshot | undefined): string | null {
-  const row = block?.rows.find((r) => r.r4Approved);
-  if (!row) return null;
-  return (row.concretizedTitle ?? row.title).trim() || null;
+/** Rechts oben im Adressblock — Fakultät aus dem Antrag. */
+function signerContactLines(facultyName: string): string[] {
+  const { name, role, email } = VERFUEGUNG_CONTENT.signer;
+  return [name, role, facultyName, email];
 }
 
-function approvedScopeLabels(block: R4DecisionBlockSnapshot | undefined): string[] {
-  return (block?.rows ?? [])
-    .filter((row) => row.r4Approved)
-    .map((row) => (isR4ProposalRowKey(row.key) ? row.title.trim() : row.title))
-    .filter(Boolean);
-}
-
-/* -------------------------------------------------------------------------------------------------
- * Layout-Bausteine
- * ------------------------------------------------------------------------------------------------*/
-
-function Divider() {
-  return <div className="h-px w-full bg-border" aria-hidden />;
-}
-
-function DocSection({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="flex w-full flex-col gap-3">
-      <h3 className={cn(hfTypography.paragraphMedium, "text-foreground")}>{title}</h3>
-      {children}
-    </section>
-  );
+function formatFsbContactLine(advisorName: string): { prefix: string; email: string } {
+  const trimmed = advisorName.trim();
+  const emailMatch = trimmed.match(/[\w.+-]+@[\w.-]+\.\w+/);
+  if (emailMatch) {
+    const email = emailMatch[0];
+    const prefix = trimmed.replace(email, "").replace(/:\s*$/, "").trim();
+    return {
+      prefix: prefix ? `${prefix}: ` : "",
+      email,
+    };
+  }
+  return {
+    prefix: trimmed ? `${trimmed}: ` : "",
+    email: VERFUEGUNG_CONTENT.contactFsbEmailFallback,
+  };
 }
 
 function DefinitionRow({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="flex items-start gap-4">
+    <div className="flex w-full items-start">
       <span
         className={cn(
           hfTypography.paragraphRegular,
-          "w-[200px] shrink-0 text-muted-foreground",
+          "w-[188px] shrink-0 text-muted-foreground",
         )}
       >
         {label}
       </span>
-      <span className={cn(hfTypography.paragraphMedium, "min-w-0 flex-1 text-foreground")}>
+      <span className={cn(hfTypography.paragraphMedium, "min-w-0 text-foreground")}>
         {value}
       </span>
     </div>
+  );
+}
+
+function ContactEmailLine({ prefix, email }: { prefix: string; email: string }) {
+  return (
+    <p className={cn(hfTypography.paragraphMedium, "text-foreground")}>
+      <span>{prefix}</span>
+      <a
+        href={`mailto:${email}`}
+        className="underline decoration-from-font underline-offset-2"
+      >
+        {email}
+      </a>
+    </p>
   );
 }
 
@@ -193,20 +187,28 @@ function MeasuresSection({
   rejectedText: string;
 }) {
   return (
-    <section className="flex w-full flex-col gap-6">
+    <section className={cn("flex w-full flex-col gap-3", VERFUEGUNG_SECTION_BORDER_CLASS)}>
       <h3 className={cn(hfTypography.paragraphLargeBold, "text-foreground")}>{title}</h3>
       {items.length > 0 ? (
-        <ol className="flex w-full flex-col gap-4">
+        <ol className="m-0 flex w-full list-none flex-col gap-2 p-0">
           {items.map((item, index) => (
-            <li key={item.key} className="flex w-full flex-col gap-1">
-              {/* Heading: Nummerierung + Massnahmentitel (paragraph regular/medium, 16/24). */}
-              <div className="flex w-full text-base font-medium leading-6 text-foreground">
+            <li key={item.key} className="flex w-full flex-col gap-0.5">
+              <div
+                className={cn(
+                  hfTypography.paragraphMedium,
+                  "flex w-full leading-6 text-foreground",
+                )}
+              >
                 <span className="w-6 shrink-0 tabular-nums">{index + 1}.</span>
                 <span className="min-w-0 flex-1">{item.title}</span>
               </div>
-              {/* Beschreibung mit Einzug unter dem Titel (paragraph small/regular, 14/20). */}
               <div className="w-full pl-6">
-                <p className="whitespace-pre-wrap text-sm font-normal leading-5 text-foreground">
+                <p
+                  className={cn(
+                    hfTypography.paragraphSmall,
+                    "whitespace-pre-wrap text-foreground",
+                  )}
+                >
                   {item.description || "—"}
                 </p>
               </div>
@@ -220,26 +222,25 @@ function MeasuresSection({
   );
 }
 
-/* -------------------------------------------------------------------------------------------------
- * Verfügung
- * ------------------------------------------------------------------------------------------------*/
+export type R4VerfuegungVariant = "approved" | "rejected";
 
 type R4VerfuegungDocumentProps = {
   application: WorkspaceApplication;
   review: R4DecisionReview;
+  variant?: R4VerfuegungVariant;
   className?: string;
 };
 
 /**
- * Generierte Verfügung (R4-Entscheid). Briefartiges Dokument, dessen fixe Textbausteine in
- * `VERFUEGUNG_CONTENT` liegen und dessen dynamische Angaben aus Antrag + R4-Entscheid stammen.
- * Figma `6354:26077`.
+ * Generierte Verfügung (R4-Entscheid). Layout Figma `6415:26074` (Inhalt ohne Canvas-Rahmen).
  */
 export function R4VerfuegungDocument({
   application,
   review,
+  variant = "approved",
   className,
 }: R4VerfuegungDocumentProps) {
+  const isRejected = variant === "rejected";
   const data = application.data;
   const personal = data.personalData;
 
@@ -259,155 +260,179 @@ export function R4VerfuegungDocument({
   const title = VERFUEGUNG_CONTENT.titleTemplate.replace("{semester}", semester);
   const greeting = VERFUEGUNG_CONTENT.greetingTemplate.replace("{name}", applicantFullName);
 
-  const submittedLabel = formatReviewSubmittedAt(data) ?? formatSwissDate(new Date(application.created_at));
   const issuedLabel = formatSwissDate(new Date());
-
-  const durationLabel = approvedDurationLabel(review.blocks.duration);
-  const scopeLabels = approvedScopeLabels(review.blocks.scope);
 
   const lectureItems = approvedMeasureItems(review.blocks.lectureMeasures);
   const assessmentItems = approvedMeasureItems(review.blocks.assessmentMeasures);
-  const showLecture = Boolean(review.blocks.lectureMeasures);
-  const showAssessment = Boolean(review.blocks.assessmentMeasures);
+  const showLecture = !isRejected && Boolean(review.blocks.lectureMeasures);
+  const showAssessment = !isRejected && Boolean(review.blocks.assessmentMeasures);
 
-  const fsbContact =
+  const fsbAdvisor =
     data.consultation?.advisor?.trim()
     || data.recommendation?.releasedBy?.trim()
     || "NTA Fachstelle";
+  const fsbContact = formatFsbContactLine(fsbAdvisor);
 
   const addressLines = VERFUEGUNG_CONTENT.addressLines.map((line) =>
     line.replace("{faculty}", facultyName),
   );
 
+  const facultyDisplayLines = facultyName.includes("\n")
+    ? facultyName.split("\n")
+    : facultyName.includes(" Fakultät")
+      ? facultyName.split(" Fakultät").map((part, i) =>
+          i === 0 ? `${part.trimEnd()}` : `Fakultät${part}`,
+        )
+      : [facultyName];
+
   return (
     <article
       className={cn(
-        "flex w-full flex-col gap-16 rounded-xl border border-border bg-background p-8 sm:p-10 lg:p-12",
+        REVIEW_BLOCK_DEFAULT_CLASS,
+        "flex w-full shrink-0 flex-col gap-24 pt-12 pb-6 px-8",
         className,
       )}
       aria-label="Generierte Verfügung"
     >
-      {/* Briefkopf */}
-      <header className="flex items-center gap-6">
-        <span className={cn(hfTypography.paragraphLargeBold, "text-foreground")}>
-          {VERFUEGUNG_CONTENT.institution}
-        </span>
-        <span className="h-10 w-px bg-border" aria-hidden />
-        <span className={cn(hfTypography.paragraphMedium, "text-foreground")}>
-          {facultyName}
-        </span>
-      </header>
-
-      {/* Absender / Unterzeichnende Person */}
-      <div className="flex items-start justify-between gap-6">
-        <p className={cn(hfTypography.paragraphMedium, "whitespace-pre-line text-foreground")}>
-          {addressLines.join("\n")}
-        </p>
-        <p
-          className={cn(
-            hfTypography.paragraphMedium,
-            "whitespace-pre-line text-right text-foreground",
-          )}
-        >
-          {`${VERFUEGUNG_CONTENT.signer.name}\n${VERFUEGUNG_CONTENT.signer.role}\n${VERFUEGUNG_CONTENT.signer.email}`}
-        </p>
-      </div>
-
-      {/* Titel + Body */}
-      <div className="flex flex-col gap-12">
-        <div className="flex flex-col gap-3">
-          <p className={cn(hfTypography.paragraphSmall, "text-muted-foreground")}>
-            {VERFUEGUNG_CONTENT.city}, {issuedLabel}
-          </p>
-          <h2 className={cn(hfTypography.h3, "text-foreground")}>{title}</h2>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-4 text-foreground">
-            <p className={cn(hfTypography.paragraphLargeMedium, "text-foreground")}>{greeting}</p>
-            <p className={cn(hfTypography.paragraphRegular, "text-foreground")}>
-              {VERFUEGUNG_CONTENT.intro}
+      {/* Adresse — Figma `6415:26076` */}
+      <div className="flex w-full flex-col gap-22">
+        <header className="flex h-[48px] w-full items-start">
+          <div className="flex items-start gap-8">
+            <Image
+              src={UZH_LOGO_SRC}
+              alt=""
+              width={141}
+              height={48}
+              className="h-[48px] w-[141px] shrink-0 object-contain object-left"
+              unoptimized
+            />
+            <span className="h-10 w-px shrink-0 bg-border" aria-hidden />
+            <p
+              className={cn(
+                hfTypography.paragraphMedium,
+                "max-w-[311px] break-words text-foreground",
+              )}
+            >
+              {facultyDisplayLines.map((line, i) => (
+                <Fragment key={line}>
+                  {i > 0 ? <br /> : null}
+                  {line}
+                </Fragment>
+              ))}
             </p>
           </div>
+        </header>
 
-          <Divider />
+        <div
+          className={cn(
+            hfTypography.paragraphSmall,
+            "flex w-full flex-col gap-4 text-foreground",
+          )}
+        >
+          <p className="whitespace-pre-line text-foreground">{addressLines.join("\n")}</p>
+          <p className="w-full whitespace-pre-line text-right text-foreground">
+            {signerContactLines(facultyName).join("\n")}
+          </p>
+        </div>
+      </div>
 
-          <DocSection title={VERFUEGUNG_CONTENT.labels.person}>
-            <div className="flex flex-col gap-1">
-              <DefinitionRow label={VERFUEGUNG_CONTENT.labels.personName} value={nameVorname} />
-              <DefinitionRow label={VERFUEGUNG_CONTENT.labels.personMatrikel} value={matrikel} />
-              <DefinitionRow label={VERFUEGUNG_CONTENT.labels.personStufe} value={studienstufe} />
+      {/* Inhalt — Figma `6415:26086`, gap 20px zwischen Abschnitten */}
+      <div className="flex w-full flex-col gap-5">
+        {/* Anrede — `6415:26087` */}
+        <section className={cn("flex w-full flex-col gap-12", VERFUEGUNG_SECTION_BORDER_CLASS)}>
+          <div className="flex w-full flex-col gap-3">
+            <p className={cn(hfTypography.paragraphSmall, "text-muted-foreground")}>
+              {VERFUEGUNG_CONTENT.city}, {issuedLabel}
+            </p>
+            <h2 className={cn(hfTypography.h3, "text-foreground")}>{title}</h2>
+          </div>
+          <div className="flex w-full flex-col gap-1 text-foreground">
+            <p className={cn(hfTypography.paragraphLargeBold, "text-foreground")}>{greeting}</p>
+            {isRejected ? (
+              <p className={cn(hfTypography.paragraphRegular, "text-foreground")}>
+                {VERFUEGUNG_REJECTED_CONTENT.introLead}
+                <span className={cn(hfTypography.paragraphBold, "text-foreground")}>
+                  {VERFUEGUNG_REJECTED_CONTENT.introEmphasis}
+                </span>
+                {VERFUEGUNG_REJECTED_CONTENT.introTail}
+              </p>
+            ) : (
+              <p className={cn(hfTypography.paragraphRegular, "text-foreground")}>
+                {VERFUEGUNG_CONTENT.intro}
+              </p>
+            )}
+          </div>
+        </section>
+
+        {/* Antragsstellende Person — `6415:26094` */}
+        <section
+          className={cn(
+            "flex w-full flex-col gap-1",
+            VERFUEGUNG_SECTION_BORDER_CLASS,
+          )}
+        >
+          <h3 className={cn(hfTypography.paragraphMedium, "text-foreground")}>
+            {VERFUEGUNG_CONTENT.labels.person}
+          </h3>
+          <div className="flex w-full flex-col">
+            <DefinitionRow label={VERFUEGUNG_CONTENT.labels.personName} value={nameVorname} />
+            <DefinitionRow label={VERFUEGUNG_CONTENT.labels.personMatrikel} value={matrikel} />
+            <DefinitionRow label={VERFUEGUNG_CONTENT.labels.personStufe} value={studienstufe} />
+          </div>
+        </section>
+
+        {/* Kontaktpersonen — `6415:26106` */}
+        <section
+          className={cn(
+            "flex w-full flex-col gap-2",
+            VERFUEGUNG_SECTION_BORDER_CLASS,
+          )}
+        >
+          <h3 className={cn(hfTypography.paragraphMedium, "text-foreground")}>
+            {VERFUEGUNG_CONTENT.labels.contacts}
+          </h3>
+          <div className="flex w-full flex-col gap-3">
+            <div className="flex w-full flex-col">
+              <p className={cn(hfTypography.paragraphRegular, "text-muted-foreground")}>
+                {VERFUEGUNG_CONTENT.labels.contactFsb}
+              </p>
+              <ContactEmailLine prefix={fsbContact.prefix} email={fsbContact.email} />
             </div>
-          </DocSection>
-
-          <Divider />
-
-          <DocSection title={VERFUEGUNG_CONTENT.labels.details}>
-            <div className="flex flex-col gap-1">
-              <DefinitionRow
-                label={VERFUEGUNG_CONTENT.labels.detailEingereicht}
-                value={submittedLabel}
-              />
-              <DefinitionRow
-                label={VERFUEGUNG_CONTENT.labels.detailAusgestellt}
-                value={issuedLabel}
-              />
-              <DefinitionRow
-                label={VERFUEGUNG_CONTENT.labels.detailDauer}
-                value={durationLabel ?? VERFUEGUNG_CONTENT.emptyDurationValue}
-              />
-              <DefinitionRow
-                label={VERFUEGUNG_CONTENT.labels.detailScope}
-                value={
-                  scopeLabels.length > 0
-                    ? scopeLabels.join(", ")
-                    : VERFUEGUNG_CONTENT.emptyScopeValue
-                }
+            <div className="flex w-full flex-col">
+              <p className={cn(hfTypography.paragraphRegular, "text-muted-foreground")}>
+                {VERFUEGUNG_CONTENT.labels.contactDekanat}
+              </p>
+              <ContactEmailLine
+                prefix={VERFUEGUNG_CONTENT.contactDekanatPrefix}
+                email={VERFUEGUNG_CONTENT.contactDekanatEmail}
               />
             </div>
-          </DocSection>
+          </div>
+        </section>
 
-          <Divider />
+        {showLecture ? (
+          <MeasuresSection
+            title={VERFUEGUNG_CONTENT.labels.measuresLecture}
+            items={lectureItems}
+            rejectedText={VERFUEGUNG_CONTENT.rejectedMeasuresText.lecture}
+          />
+        ) : null}
 
-          <DocSection title={VERFUEGUNG_CONTENT.labels.contacts}>
-            <div className="flex flex-col gap-1">
-              <DefinitionRow label={VERFUEGUNG_CONTENT.labels.contactFsb} value={fsbContact} />
-              <DefinitionRow
-                label={VERFUEGUNG_CONTENT.labels.contactDekanat}
-                value={VERFUEGUNG_CONTENT.contactDekanatEmail}
-              />
-            </div>
-          </DocSection>
+        {showAssessment ? (
+          <MeasuresSection
+            title={VERFUEGUNG_CONTENT.labels.measuresAssessment}
+            items={assessmentItems}
+            rejectedText={VERFUEGUNG_CONTENT.rejectedMeasuresText.assessment}
+          />
+        ) : null}
 
-          <Divider />
-
-          {showLecture ? (
-            <Fragment>
-              <MeasuresSection
-                title={VERFUEGUNG_CONTENT.labels.measuresLecture}
-                items={lectureItems}
-                rejectedText={VERFUEGUNG_CONTENT.rejectedMeasuresText.lecture}
-              />
-              <Divider />
-            </Fragment>
-          ) : null}
-
-          {showAssessment ? (
-            <Fragment>
-              <MeasuresSection
-                title={VERFUEGUNG_CONTENT.labels.measuresAssessment}
-                items={assessmentItems}
-                rejectedText={VERFUEGUNG_CONTENT.rejectedMeasuresText.assessment}
-              />
-              <Divider />
-            </Fragment>
-          ) : null}
-
-          <section className="flex w-full flex-col gap-4">
-            <h3 className={cn(hfTypography.paragraphLargeBold, "text-foreground")}>
-              {VERFUEGUNG_CONTENT.appeals.heading}
-            </h3>
-            <p className={cn(hfTypography.paragraphRegular, "text-foreground")}>
+        {/* Einsprachen — `6415:26130` */}
+        <section className={cn("flex w-full flex-col gap-3", VERFUEGUNG_SECTION_BORDER_CLASS)}>
+          <h3 className={cn(hfTypography.paragraphLargeBold, "text-foreground")}>
+            {VERFUEGUNG_CONTENT.appeals.heading}
+          </h3>
+          <div className="flex w-full flex-col gap-2">
+            <p className={cn(hfTypography.paragraphSmall, "text-foreground")}>
               {VERFUEGUNG_CONTENT.appeals.rekursLeadIn}
               <a
                 href={VERFUEGUNG_CONTENT.appeals.rekursLinkHref}
@@ -419,52 +444,37 @@ export function R4VerfuegungDocument({
               </a>
               {VERFUEGUNG_CONTENT.appeals.rekursTrailing}
             </p>
-            <p className={cn(hfTypography.paragraphRegular, "text-foreground")}>
+            <p className={cn(hfTypography.paragraphSmall, "text-foreground")}>
               {VERFUEGUNG_CONTENT.appeals.dekanat}
             </p>
-          </section>
+          </div>
+        </section>
 
-          <Divider />
-        </div>
-      </div>
-
-      {/* Grussformel + Unterschrift */}
-      <div className="flex flex-col gap-3">
-        <p className={cn(hfTypography.paragraphMedium, "text-foreground")}>
-          {VERFUEGUNG_CONTENT.closing}
-        </p>
-        <SignatureMark />
-        <div className="flex flex-col">
-          <span className={cn(hfTypography.paragraphMedium, "text-foreground")}>
-            {VERFUEGUNG_CONTENT.signer.name}
-          </span>
-          <span className={cn(hfTypography.paragraphRegular, "text-muted-foreground")}>
-            {VERFUEGUNG_CONTENT.signer.role}
-          </span>
-        </div>
+        {/* Fusszeile — `6415:26137` */}
+        <footer className="flex w-full flex-col gap-4">
+          <p className={cn(hfTypography.paragraphRegular, "text-foreground")}>
+            {VERFUEGUNG_CONTENT.closing}
+          </p>
+          <div className="flex w-fit flex-col gap-1">
+            <Image
+              src={FAKE_SIGNATURE_SRC}
+              alt=""
+              width={92}
+              height={55}
+              className="h-[55px] w-[92px] object-contain object-left"
+              unoptimized
+            />
+            <div className="flex flex-col">
+              <span className={cn(hfTypography.paragraphMedium, "text-primary")}>
+                {VERFUEGUNG_CONTENT.signer.name}
+              </span>
+              <span className={cn(hfTypography.paragraphRegular, "text-muted-foreground")}>
+                {VERFUEGUNG_CONTENT.signer.role}
+              </span>
+            </div>
+          </div>
+        </footer>
       </div>
     </article>
-  );
-}
-
-/** Dezente Unterschrift-Andeutung (Platzhalter anstelle einer eingescannten Unterschrift). */
-function SignatureMark() {
-  return (
-    <svg
-      width="92"
-      height="40"
-      viewBox="0 0 92 40"
-      fill="none"
-      className="text-foreground"
-      aria-hidden
-    >
-      <path
-        d="M2 30C8 18 13 8 17 10c4 2-2 20 2 22 4 2 9-22 13-22 3 0 1 16 4 16 4 0 8-14 12-14 3 0 2 10 5 10 5 0 9-12 15-16"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }

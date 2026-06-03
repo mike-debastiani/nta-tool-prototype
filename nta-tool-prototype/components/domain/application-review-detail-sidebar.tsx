@@ -3,6 +3,7 @@
 import { Check, EllipsisVertical, MessageSquare, MoreHorizontal, X } from "lucide-react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { ApplicationDetailsCard } from "@/components/domain/application-details-card";
+import { R4RelatedDocumentsSidebar } from "@/components/domain/r4-related-documents-sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -86,8 +87,12 @@ type ApplicationReviewDetailSidebarProps = {
    * (z. B. R1-Portal solange nicht «Anpassung erforderlich», R2 «Beratung & Empfehlung»).
    */
   showCommentsSection?: boolean;
-  /** R4: Kontakt-Cards statt Kommentarbereich. */
-  secondarySection?: "comments" | "r4_contacts";
+  /**
+   * R4: `r4_related_documents` = «Zugehörige Dokumente» (Verfügungs-Screens);
+   * `r4_contacts` = «Kontakte» (Entscheid-Schritt / Review ohne Verfügung).
+   * `r4_decision` = beides (Legacy-Kombi, falls benötigt).
+   */
+  secondarySection?: "comments" | "r4_contacts" | "r4_related_documents" | "r4_decision";
   /** R1 «Anpassung erforderlich» — Figma `5858:22820`; sonst R2 `5866:2021`. */
   bemerkungenVariant?: "r1" | "r2";
 };
@@ -184,8 +189,17 @@ export function ApplicationReviewDetailSidebar({
           variant={bemerkungenVariant}
         />
       ) : null}
+      {secondarySection === "r4_decision" ? (
+        <>
+          <R4RelatedDocumentsSidebar application={application} />
+          <R4ContactsSection application={application} />
+        </>
+      ) : null}
       {secondarySection === "r4_contacts" ? (
         <R4ContactsSection application={application} />
+      ) : null}
+      {secondarySection === "r4_related_documents" ? (
+        <R4RelatedDocumentsSidebar application={application} />
       ) : null}
     </div>
   );

@@ -93,7 +93,7 @@ Hinweise:
 | `components/ui/accordion.tsx` | shadcn-Wrapper um `radix-ui` Accordion (ohne Hover-Underline) |
 | `app/api/applications/review-forward/route.ts` | R2 Forward: `in_implementation` / `needs_correction` (RLS-konform); merged `data` muss **`r1AdjustmentResolutions`** nicht streichen (Trigger) |
 | `app/api/applications/r4-persist-decision/route.ts` | Optional: R4 merge `r4DecisionReview` (primär Browser-Client, siehe `r4-workspace-supabase-persist`) |
-| `app/api/applications/r4-complete-decision/route.ts` | Optional: R4 Abschluss → `approved` |
+| `app/api/applications/r4-complete-decision/route.ts` | R4 Abschluss → `approved` (Materialisierung) oder `rejected` (`isR4ApplicationRejected`) |
 | `app/api/applications/r1-release-adjustments/route.ts` | R1: `needs_correction` \| `needs_adjustment` → `in_review`, merged `workspaceReview`, geleerte Resolutions, Broadcast |
 | `lib/r1-adjustment-release.ts` | Bedingungen und Build von `postSubmit` nach R1-Freigabe (`pending_after_adjustment`, Filter `forwardedComments`) |
 | `lib/workspace-review-hydration-key.ts` | Fingerabdruck `postSubmit` für stabile R2-Remounts bei wiederholtem `in_review` |
@@ -102,7 +102,7 @@ Hinweise:
 | `lib/application-status.ts` | Zentrale fachliche States + rollenabhängige Labels/Farben |
 | `lib/r2-review-persist.ts` | Helfer `dataWithoutLegacyReviewRoots` für trigger-konforme R2-Saves |
 | `lib/r4-decision-state.ts` | R4: Zeilen-Merge, Sichtbarkeit, Server/Client-Reconcile (`mergeR4DecisionReviewRespectingLocalDirty`, …) |
-| `lib/r4-workspace-supabase-persist.ts` | R4: persist/complete über Browser-Supabase-Client (Session + RLS) |
+| `lib/r4-workspace-supabase-persist.ts` | R4: persist per Session-Client; complete via API-Route (s. `Antrag_Bewilligung_Kontext.md` § 6.3) |
 | `lib/review-workspace-blocks.ts` | Block-IDs + `reviewWorkspaceAnchorId` (Anker-Sprung in R1/R2-Sidebar-Kommentaren) |
 | `components/domain/application-status-badge.tsx` | Badge-UI aus Status-Ableitung |
 | `utils/supabase/service-role.ts` | Optionaler Service-Role-Client (Forward **nicht** nötig; optional für R4-Listen-Fallback wenn RLS noch nicht ausgerollt) |
@@ -358,7 +358,7 @@ State-Badges orientieren sich an **Figma-Farbkodierung** (kompakt, ohne Border) 
 
 ## 11. DB / RLS / Trigger — nicht verletzen
 
-- Workspace-Policies: Zugriff für Rollen **R2, R3, R5, R6** (bestehende `applications_select_r2_worklist`). **R4** erhält dieselbe Lesesicht auf die Inbox über die additive Migration **`20260513190000_r4_workspace_select_policies.sql`** (`applications_select_r4_workspace` sowie `users_select_r4_workspace_applicants` für Embed). **R4-Schreiben:** Migration **`20260514120000_applications_update_r4_decision.sql`** — Policy **`applications_update_r4_decision`** (`USING` `in_implementation`, `WITH CHECK` `in_implementation` oder `approved`). **Wichtig:** beide Policy-Familien nutzen **`current_user_role()`** (wie die übrigen Workspace-Policies) — **kein** `EXISTS (SELECT … FROM public.users …)` innerhalb von RLS auf `users`/`applications`, sonst Endlos-Rekursion Postgres (**Symptom u. a.:** Login kann Profil nicht laden). Die **SELECT**-Policy `applications_select_r2_worklist` umfasst seit Migration **`extend_workspace_select_to_decision_states`** auch **`in_implementation`**, **`approved`** und **`rejected`** — sonst scheitert der `UPDATE` von `in_review → in_implementation` am implizit folgenden `RETURNING`-SELECT (Postgres-RLS-Mechanik). **`SUPABASE_SERVICE_ROLE_KEY` ist für den Forward-Pfad nicht erforderlich.**
+- Workspace-Policies: Zugriff für Rollen **R2, R3, R5, R6** (bestehende `applications_select_r2_worklist`). **R4** erhält dieselbe Lesesicht auf die Inbox über die additive Migration **`20260513190000_r4_workspace_select_policies.sql`** (`applications_select_r4_workspace` sowie `users_select_r4_workspace_applicants` für Embed). **R4-Schreiben:** Policy **`applications_update_r4_decision`** (`20260514120000_*`, **`20260603140000_r4_decision_allow_rejected_status.sql`** für Ziel **`rejected`**). **Wichtig:** beide Policy-Familien nutzen **`current_user_role()`** (wie die übrigen Workspace-Policies) — **kein** `EXISTS (SELECT … FROM public.users …)` innerhalb von RLS auf `users`/`applications`, sonst Endlos-Rekursion Postgres (**Symptom u. a.:** Login kann Profil nicht laden). Die **SELECT**-Policy `applications_select_r2_worklist` umfasst seit Migration **`extend_workspace_select_to_decision_states`** auch **`in_implementation`**, **`approved`** und **`rejected`** — sonst scheitert der `UPDATE` von `in_review → in_implementation` am implizit folgenden `RETURNING`-SELECT (Postgres-RLS-Mechanik). **`SUPABASE_SERVICE_ROLE_KEY` ist für den Forward-Pfad nicht erforderlich.**
 - **UPDATE**-Policy `applications_update_r2_worklist` deckt den Übergang aus `in_review` heraus (`USING`); `WITH CHECK` erlaubt die Ziel-Status `in_implementation` / `needs_correction`.
 - R1 darf eigenen Antrag nur in **erlaubten Status** updaten (`applications_update_r1_own_limited`).
 - **Konsequenz:** Beratungsphase darf technisch **nicht** in einem Status landen, der den **späteren Final-Submit** durch R1 blockiert. Umgesetzter Pfad: Beratung im Workspace u. a. bei **`submitted`**, finaler Submit R1 → **`in_review`** → R2-Forward → **`in_implementation`** / **`needs_correction`**.

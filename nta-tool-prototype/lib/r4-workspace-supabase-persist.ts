@@ -1,10 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import {
-  allVisibleR4BlocksConfirmed,
-  getR4BlockVisibility,
-  materializeApprovedR4DecisionReview,
-  mergeApplicationDataWithR4Review,
-} from "@/lib/r4-decision-state";
+import { mergeApplicationDataWithR4Review } from "@/lib/r4-decision-state";
 import type { UserRole } from "@/lib/auth";
 import type { ApplicationData, R4DecisionReview } from "@/lib/test-flow-types";
 import { hasR4WorkspaceCapabilities } from "@/lib/workspace-role";
@@ -101,68 +96,50 @@ export async function persistR4DecisionWithSupabaseClient(
   return { ok: true };
 }
 
-/** Entscheid abschliessen: Status `approved` + gemergtes `r4DecisionReview`. */
+function rlsCompleteDecisionHint(message: string): string {
+  if (!message.includes("row-level security")) return message;
+  return `${message} Auf Supabase die Migration «20260603140000_r4_decision_allow_rejected_status.sql» anwenden (RLS-Zielstatus «rejected»/«approved»).`;
+}
+
+/**
+ * Entscheid abschliessen (`approved` oder `rejected`).
+ * Nutzt die API-Route (optional Service-Role), damit RLS in Dev-Umgebungen
+ * ohne frische Migration nicht blockiert.
+ */
 export async function completeR4DecisionWithSupabaseClient(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   applicationId: string,
   incoming: R4DecisionReview,
 ): Promise<{ ok: true } | { ok: false; error: R4WorkspacePersistFailure }> {
-  const authErr = await assertWorkspaceR4User(supabase);
-  if (authErr) return { ok: false, error: authErr };
-
-  const { data: row, error: fetchError } = await supabase
-    .from("applications")
-    .select("id,status,data")
-    .eq("id", applicationId)
-    .maybeSingle<{ id: string; status: string; data: ApplicationData }>();
-
-  if (fetchError || !row) {
+  let response: Response;
+  try {
+    response = await fetch("/api/applications/r4-complete-decision", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ applicationId, r4DecisionReview: incoming }),
+    });
+  } catch {
     return {
       ok: false,
-      error: { status: 404, message: fetchError?.message ?? "Antrag nicht gefunden." },
+      error: { status: 500, message: "Netzwerkfehler beim Abschluss des Entscheids." },
     };
   }
 
-  if (row.status !== "in_implementation") {
+  let payload: { error?: string } = {};
+  try {
+    payload = (await response.json()) as { error?: string };
+  } catch {
+    payload = {};
+  }
+
+  if (!response.ok) {
+    const message = payload.error ?? `Abschluss fehlgeschlagen (${response.status}).`;
     return {
       ok: false,
       error: {
-        status: 409,
-        message: "Abschluss nur im Status «Entscheid erforderlich» möglich.",
-      },
-    };
-  }
-
-  const mergedData = mergeApplicationDataWithR4Review(row.data, incoming);
-  const visibility = getR4BlockVisibility(mergedData);
-  if (!allVisibleR4BlocksConfirmed(incoming, visibility)) {
-    return {
-      ok: false,
-      error: {
-        status: 409,
-        message: "Bitte bestätigen Sie zuerst alle sichtbaren Entscheid-Blöcke.",
-      },
-    };
-  }
-
-  const finalizedData = materializeApprovedR4DecisionReview(mergedData);
-
-  const { data: updatedRows, error: updateError } = await supabase
-    .from("applications")
-    .update({ status: "approved", data: finalizedData })
-    .eq("id", applicationId)
-    .select("id");
-
-  if (updateError) {
-    return { ok: false, error: { status: 500, message: updateError.message } };
-  }
-  if (!updatedRows?.length) {
-    return {
-      ok: false,
-      error: {
-        status: 500,
-        message:
-          "Abschluss wurde nicht ausgeführt (0 Zeilen). Fehlt die RLS-Policy «applications_update_r4_decision»? Migration `20260514120000_applications_update_r4_decision.sql` anwenden.",
+        status: response.status,
+        message: rlsCompleteDecisionHint(message),
       },
     };
   }

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { Check, CircleCheckBig, FileText, Info, Loader2, PenLine } from "lucide-react";
+import { Check, CircleCheckBig, CircleX, FileText, Info, Loader2, PenLine } from "lucide-react";
 import { ApplicationReviewDetailSidebar } from "@/components/domain/application-review-detail-sidebar";
 import { ApplicationReviewPageHeader } from "@/components/domain/application-review-page-header";
 import { ApplicationStatusCallout } from "@/components/domain/application-status-callout";
@@ -36,7 +36,11 @@ import {
   type R4ConcretizeItem,
 } from "@/components/domain/r4-decision-review-blocks";
 import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
-import { R4VerfuegungDocument } from "@/components/domain/r4-verfuegung-document";
+import {
+  R4VerfuegungDocument,
+  type R4VerfuegungVariant,
+} from "@/components/domain/r4-verfuegung-document";
+import { R4VerfuegungRejectedBlocks } from "@/components/domain/r4-verfuegung-rejected-blocks";
 import {
   REVIEW_WORKSPACE_APPLICANT_BLOCK_TITLE,
   reviewWorkspaceAnchorId,
@@ -50,6 +54,7 @@ import {
   buildScopeRows,
   createR4ProposalRow,
   getR4BlockVisibility,
+  isR4ApplicationRejected,
   isR4BlockDirty,
   isR4ProposalRowKey,
   mergeR4DecisionReview,
@@ -166,8 +171,9 @@ export function WorkspaceR4DecisionView({
 
   const statusMeta = getApplicationStatusMeta(application, "R4");
   const submittedAtLabel = formatReviewSubmittedAt(data);
-  /** Antrag bewilligt → ausgestellte Verfügung statt Entscheid-Blöcke anzeigen. */
+  /** Antrag bewilligt oder abgelehnt → ausgestellte Verfügung statt Entscheid-Blöcke. */
   const isApproved = statusMeta.canonicalState === "approved";
+  const isRejected = statusMeta.canonicalState === "rejected";
 
   const [review, setReview] = useState<R4DecisionReview>(() =>
     mergeR4DecisionReview(data),
@@ -207,6 +213,10 @@ export function WorkspaceR4DecisionView({
   const serverR4ReviewUpdatedAt = application.data?.r4DecisionReview?.updatedAt;
 
   const visibility = useMemo(() => getR4BlockVisibility(data), [data]);
+  const previewRejected = isR4ApplicationRejected(review, visibility);
+  const verfuegungVariant: R4VerfuegungVariant =
+    isRejected || (verfuegungMode && previewRejected) ? "rejected" : "approved";
+  const showIssuedVerfuegung = isApproved || isRejected;
 
   const baselines = useMemo<Record<R4DecisionReviewBlockId, R4DecisionBlockSnapshot>>(
     () => ({
@@ -1040,6 +1050,9 @@ export function WorkspaceR4DecisionView({
     [application, reviewerDisplayName, workspaceRole],
   );
 
+  /** Verfügung sichtbar (Vorschau oder ausgestellt) → «Zugehörige Dokumente»; sonst «Kontakte». */
+  const showVerfuegungSidebar = showIssuedVerfuegung || verfuegungMode;
+
   const detailPanelSignature = useMemo(
     () =>
       [
@@ -1047,12 +1060,16 @@ export function WorkspaceR4DecisionView({
         application.updated_at,
         statusMeta.canonicalState,
         statusMeta.label,
+        showVerfuegungSidebar ? "verfuegung" : "entscheid",
+        verfuegungVariant,
       ].join("\u001e"),
     [
       application.id,
       application.updated_at,
       statusMeta.canonicalState,
       statusMeta.label,
+      showVerfuegungSidebar,
+      verfuegungVariant,
     ],
   );
 
@@ -1068,7 +1085,9 @@ export function WorkspaceR4DecisionView({
         adjustmentComposer={null}
         savedReviewComments={[]}
         showCommentsSection={false}
-        secondarySection="r4_contacts"
+        secondarySection={
+          showVerfuegungSidebar ? "r4_related_documents" : "r4_contacts"
+        }
       />
     ),
   );
@@ -1156,16 +1175,34 @@ export function WorkspaceR4DecisionView({
           applicationReviewSectionGapClass,
         )}
       >
-        <div className="flex flex-col gap-6">
-          <ApplicationReviewPageHeader submittedAtLabel={submittedAtLabel} />
+        <div className="flex shrink-0 flex-col gap-6">
+          <ApplicationReviewPageHeader
+            submittedAtLabel={submittedAtLabel}
+            title={
+              showVerfuegungSidebar
+                ? "Verfügung zum Nachteilsausgleich"
+                : "Antrag auf Nachteilsausgleich"
+            }
+            trailingAction={showVerfuegungSidebar ? "share" : "more"}
+          />
           {canEdit && !verfuegungMode ? (
             <ApplicationStatusCallout badgeClassName={statusMeta.className} icon={Info}>
               Entscheiden Sie über den von der Fachstelle bestätigten Antrag. Vom Studierenden gewählte Optionen sind mit «Bewilligt» vorgemerkt. Passen Sie die Schalter bei Bedarf an, und bestätigen Sie die Auswahl pro Block. Anschliessend können Sie die Verfügung generieren.
             </ApplicationStatusCallout>
           ) : null}
-          {canEdit && verfuegungMode ? (
+          {canEdit && verfuegungMode && previewRejected ? (
+            <ApplicationStatusCallout badgeClassName={statusMeta.className} icon={CircleX}>
+              Vorschau der generierten Verfügung. Der Antrag wird aufgrund Ihrer Entscheid abgelehnt. Prüfen Sie die Angaben und Begründungen. Über «Entscheidung bearbeiten» kehren Sie zum Entscheid zurück; mit «Entscheid fällen» wird die Verfügung übermittelt.
+            </ApplicationStatusCallout>
+          ) : null}
+          {canEdit && verfuegungMode && !previewRejected ? (
             <ApplicationStatusCallout badgeClassName={statusMeta.className} icon={FileText}>
               Vorschau der generierten Verfügung. Prüfen Sie die Angaben. Über «Entscheidung bearbeiten» kehren Sie zum Entscheid zurück; mit «Entscheid fällen» wird die Verfügung an die antragstellende Person übermittelt und der Antrag bewilligt.
+            </ApplicationStatusCallout>
+          ) : null}
+          {isRejected ? (
+            <ApplicationStatusCallout badgeClassName={statusMeta.className} icon={CircleX}>
+              Der Antrag wurde abgelehnt. Die Verfügung mit der Rechtsmittelbelehrung wurde der antragstellenden Person übermittelt. Die Begründung des Entscheids finden Sie unten auf dieser Seite.
             </ApplicationStatusCallout>
           ) : null}
           {isApproved ? (
@@ -1175,16 +1212,27 @@ export function WorkspaceR4DecisionView({
           ) : null}
         </div>
 
-        {isApproved ? (
-          <div className="flex flex-col gap-6">
-            <R4VerfuegungDocument application={application} review={review} />
-            {renderAttestBlock(false)}
-            {recommendationBlock}
-            {renderDefinitionBlock(false)}
+        {showIssuedVerfuegung ? (
+          <div className="flex shrink-0 flex-col gap-6">
+            <R4VerfuegungDocument
+              application={application}
+              review={review}
+              variant={verfuegungVariant}
+            />
+            {verfuegungVariant === "rejected" ? (
+              <R4VerfuegungRejectedBlocks application={application} review={review} />
+            ) : null}
           </div>
         ) : verfuegungMode ? (
-          <div className="flex flex-col gap-6">
-            <R4VerfuegungDocument application={application} review={review} />
+          <div className="flex shrink-0 flex-col gap-6">
+            <R4VerfuegungDocument
+              application={application}
+              review={review}
+              variant={verfuegungVariant}
+            />
+            {verfuegungVariant === "rejected" ? (
+              <R4VerfuegungRejectedBlocks application={application} review={review} />
+            ) : null}
             <div className="flex w-full items-center justify-between gap-3 pt-2">
               <Button
                 type="button"
@@ -1222,7 +1270,7 @@ export function WorkspaceR4DecisionView({
             ) : null}
           </div>
         ) : (
-        <div className="flex flex-col gap-6">
+        <div className="flex shrink-0 flex-col gap-6">
           {applicantBlock}
           {renderAttestBlock(true)}
           {recommendationBlock}

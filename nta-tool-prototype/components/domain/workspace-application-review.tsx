@@ -1156,7 +1156,9 @@ export function WorkspaceApplicationReview({
         showCommentsSection={
           workspaceViewerRole !== "R4" && viewMode !== "readonly_consultation"
         }
-        secondarySection={workspaceViewerRole === "R4" ? "r4_contacts" : "comments"}
+        secondarySection={
+          workspaceViewerRole === "R4" ? "r4_contacts" : "comments"
+        }
       />
     ),
   );

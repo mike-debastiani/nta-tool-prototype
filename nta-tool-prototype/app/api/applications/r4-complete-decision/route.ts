@@ -3,6 +3,7 @@ import { broadcastApplicationRowUpdated } from "@/lib/application-realtime-sync"
 import {
   allVisibleR4BlocksConfirmed,
   getR4BlockVisibility,
+  isR4ApplicationRejected,
   materializeApprovedR4DecisionReview,
   mergeApplicationDataWithR4Review,
 } from "@/lib/r4-decision-state";
@@ -88,18 +89,30 @@ export async function POST(request: Request) {
     );
   }
 
-  const finalizedData = materializeApprovedR4DecisionReview(mergedData);
+  const rejected = isR4ApplicationRejected(incoming, visibility);
+  const finalizedData = rejected
+    ? mergedData
+    : materializeApprovedR4DecisionReview(mergedData);
+  const nextStatus: ApplicationStatus = rejected ? "rejected" : "approved";
 
   const { error: updateError } = await db
     .from("applications")
     .update({
-      status: "approved",
+      status: nextStatus,
       data: finalizedData,
     })
     .eq("id", applicationId);
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    const hint =
+      updateError.message.includes("row-level security")
+      && nextStatus === "rejected"
+        ? " Migration `20260603140000_r4_decision_allow_rejected_status.sql` auf der Datenbank anwenden."
+        : "";
+    return NextResponse.json(
+      { error: `${updateError.message}${hint}` },
+      { status: 500 },
+    );
   }
 
   await broadcastApplicationRowUpdated(supabase, applicationId);
