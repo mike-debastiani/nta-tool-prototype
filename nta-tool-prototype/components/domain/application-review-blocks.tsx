@@ -545,7 +545,7 @@ export function ReviewBlockComposerFooter({
         </Button>
         <Button
           type="button"
-          className="h-8 gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          className="h-8 gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-stone-600"
           onClick={() => onSave(draft)}
         >
           <MessageSquare className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
@@ -721,7 +721,7 @@ export function ReviewBlockR1PrimaryButton({
   return (
     <Button
       type="button"
-      className="h-8 gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+      className="h-8 gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-stone-600"
       onClick={onClick}
       disabled={disabled}
     >

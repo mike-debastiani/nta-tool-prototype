@@ -7,7 +7,7 @@ export const DASHBOARD_SIDEBAR_PADDING_CLASS = "py-3 pl-[18px]";
 
 /** Nav-Item aktiv (Figma `5509:11682` — `general/primary`). */
 export const DASHBOARD_NAV_ITEM_ACTIVE_CLASS =
-  "rounded-[7px] bg-primary text-primary-foreground";
+  "rounded-[7px] bg-primary text-primary-foreground hover:bg-stone-600";
 
 /** Nav-Item inaktiv — unveränderte Layout-Klassen (`NAV_ITEM_BASE` in Shell). */
 export const DASHBOARD_NAV_ITEM_IDLE_CLASS =
@@ -133,7 +133,7 @@ export const WORKSPACE_HOME_R2R4_ASSIGNED_TASKS_CARD_CLASS =
 
 /** Figma `5948:27469` / `5955:21930` — Maximize/Minimize oben rechts im Anträge-Panel. */
 export const WORKSPACE_HOME_TABLE_PANEL_TOGGLE_BUTTON_CLASS =
-  "flex size-9 shrink-0 items-center justify-center rounded-full bg-primary p-2 text-primary-foreground transition-opacity hover:opacity-90";
+  "flex size-9 shrink-0 items-center justify-center rounded-full bg-primary p-2 text-primary-foreground transition-colors hover:bg-stone-600";
 
 /** Figma `5948:27470` — Toolbar-Zeile im Anträge-Panel. */
 export const WORKSPACE_HOME_TABLE_TOOLBAR_ROW_CLASS =
@@ -159,7 +159,7 @@ export const WORKSPACE_HOME_TABLE_FILTER_TOGGLE_CLASS =
 
 /** Aktiver Tab — `bg-primary`, `primary-foreground` (Figma `5948:27475`). */
 export const WORKSPACE_HOME_TABLE_FILTER_TAB_ACTIVE_CLASS =
-  "min-h-[29px] rounded-full border border-border bg-primary px-2 py-1 text-primary-foreground";
+  "min-h-[29px] rounded-full border border-border bg-primary px-2 py-1 text-primary-foreground hover:bg-stone-600";
 
 /** Inaktiver Tab — `rounded-[10px]`, muted (Figma `5948:27478`). */
 export const WORKSPACE_HOME_TABLE_FILTER_TAB_INACTIVE_CLASS =

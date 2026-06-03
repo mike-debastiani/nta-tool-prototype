@@ -58,7 +58,7 @@ export function WorkspaceConsultationAppointmentCard({
         <button
           type="button"
           onClick={() => router.push("/workspace?view=terminplaner")}
-          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary p-2 text-primary-foreground transition-opacity hover:opacity-90"
+          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary p-2 text-primary-foreground transition-colors hover:bg-stone-600"
           aria-label="Beratungen planen öffnen"
         >
           <ArrowUpRight className="size-4" strokeWidth={1.75} aria-hidden />

@@ -73,7 +73,7 @@ export const R4_DECISION_EDITING_FOOTER_CLASS =
 export const R4_DECISION_CONFIRMED_FOOTER_CLASS = REVIEW_BLOCK_CONFIRMED_FOOTER_CLASS;
 
 export const R4_DECISION_CONFIRM_SELECTION_BUTTON_CLASS =
-  "inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40";
+  "inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-stone-600 disabled:opacity-40";
 
 export const R4_DECISION_RESET_BUTTON_CLASS =
   "inline-flex h-9 shrink-0 items-center gap-2 text-sm font-medium text-foreground hover:text-foreground/80 disabled:opacity-40";

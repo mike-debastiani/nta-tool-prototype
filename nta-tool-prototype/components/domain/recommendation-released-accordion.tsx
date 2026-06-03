@@ -2,12 +2,12 @@
 
 import type { ReactNode } from "react";
 import { ChevronDown, ExternalLink } from "lucide-react";
+import { Accordion as AccordionPrimitive } from "radix-ui";
 
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger,
 } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 
@@ -22,8 +22,6 @@ type RecommendationReleasedAccordionProps = {
   className?: string;
   /** Nur `variant="r1"`: z. B. Kenntnisnahme-Checkbox (Figma 5247:5575). */
   children?: ReactNode;
-  /** Workspace Review/R4: öffnet Empfehlung im Dokument-Tab (Core-Layout). */
-  applicationId?: string;
 };
 
 function getAuthorInitials(name: string) {
@@ -45,20 +43,14 @@ function formatReleasedAt(iso?: string) {
 }
 
 /**
- * Visueller «In neuem Tab öffnen»-Indikator. Bewusst KEIN `<button>`, da diese Meta-Zeile
- * im `AccordionTrigger` (selbst ein `<button>`) liegt — verschachtelte Buttons sind ungültiges
- * HTML und lösen Hydration-Fehler aus.
+ * Visueller «In neuem Tab öffnen»-Indikator (keine Aktion — nur Icon + Hover).
  */
-function OpenInDocumentTabButton({
-  className,
-}: {
-  className?: string;
-}) {
+function OpenInDocumentTabIndicator({ className }: { className?: string }) {
   return (
     <span
       title="Empfehlungsschreiben in neuem Tab öffnen"
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground",
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-[9999px] text-muted-foreground transition-colors hover:bg-stone-100 hover:text-foreground",
         className,
       )}
       aria-hidden
@@ -68,23 +60,18 @@ function OpenInDocumentTabButton({
   );
 }
 
-/** Freigabe-Meta (HF 5247:5570) — R1, R2, R4 einheitlich. */
-function ReleasedMeta({
+/** Freigabe-Meta (HF 5247:5570) — Datum, Avatar, Chevron (ohne Tab-Icon). */
+function ReleasedMetaTriggerContent({
   releasedAtLabel,
   authorDisplayName,
   initials,
-  applicationId,
 }: {
   releasedAtLabel: string | null;
   authorDisplayName: string;
   initials: string;
-  applicationId?: string;
 }) {
   return (
-    <div className="flex shrink-0 items-center gap-2" data-node-id="5253:5665">
-      {applicationId ? (
-        <OpenInDocumentTabButton />
-      ) : null}
+    <>
       <p className="shrink-0 whitespace-nowrap text-hf-paragraph-mini-medium text-muted-foreground">
         {releasedAtLabel
           ? `Freigegeben am ${releasedAtLabel} durch`
@@ -101,7 +88,62 @@ function ReleasedMeta({
         className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
         aria-hidden
       />
-    </div>
+    </>
+  );
+}
+
+const ACCORDION_TRIGGER_BASE_CLASS = cn(
+  "group flex min-w-0 items-center gap-2 text-left hover:no-underline",
+  "rounded-none px-0 py-0 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20",
+);
+
+type RecommendationAccordionHeaderProps = {
+  title: ReactNode;
+  headerClassName?: string;
+  showOpenIndicator: boolean;
+  releasedAtLabel: string | null;
+  authorDisplayName: string;
+  initials: string;
+  triggerDataNodeId?: string;
+};
+
+/**
+ * Header wie Antragsansicht (R2/R4): Titel links; rechts Tab-Icon, dann Freigabe-Meta im Trigger.
+ */
+function RecommendationAccordionHeader({
+  title,
+  headerClassName,
+  showOpenIndicator,
+  releasedAtLabel,
+  authorDisplayName,
+  initials,
+  triggerDataNodeId,
+}: RecommendationAccordionHeaderProps) {
+  return (
+    <AccordionPrimitive.Header
+      className={cn("flex w-full items-start justify-between gap-3", headerClassName)}
+    >
+      {title}
+      <div className="flex shrink-0 items-center gap-2">
+        {showOpenIndicator ? <OpenInDocumentTabIndicator /> : null}
+        <AccordionPrimitive.Trigger
+          data-slot="accordion-trigger"
+          data-node-id={triggerDataNodeId}
+          className={cn(ACCORDION_TRIGGER_BASE_CLASS, "shrink-0")}
+        >
+          <div
+            className="flex items-center gap-2"
+            data-node-id="5253:5665"
+          >
+            <ReleasedMetaTriggerContent
+              releasedAtLabel={releasedAtLabel}
+              authorDisplayName={authorDisplayName}
+              initials={initials}
+            />
+          </div>
+        </AccordionPrimitive.Trigger>
+      </div>
+    </AccordionPrimitive.Header>
   );
 }
 
@@ -120,10 +162,10 @@ export function RecommendationReleasedAccordion({
   anchorId,
   className,
   children,
-  applicationId,
 }: RecommendationReleasedAccordionProps) {
   const releasedAtLabel = formatReleasedAt(releasedAt);
   const initials = getAuthorInitials(authorDisplayName);
+  const showOpenIndicator = html.trim().length > 0;
 
   if (variant === "r1") {
     return (
@@ -134,24 +176,18 @@ export function RecommendationReleasedAccordion({
       >
         <Accordion type="single" collapsible defaultValue="recommendation">
           <AccordionItem value="recommendation" className="border-b-0">
-            <AccordionTrigger
-              className={cn(
-                "group flex w-full items-start justify-between gap-3 rounded-none px-0 py-0",
-                "text-left hover:no-underline",
-                "[&>svg:last-child]:hidden",
-              )}
-              data-node-id="5253:5631"
-            >
-              <h2 className="shrink-0 whitespace-nowrap text-hf-paragraph-large-medium text-stone-900">
-                Empfehlungsschreiben
-              </h2>
-              <ReleasedMeta
-                releasedAtLabel={releasedAtLabel}
-                authorDisplayName={authorDisplayName}
-                initials={initials}
-                applicationId={applicationId}
-              />
-            </AccordionTrigger>
+            <RecommendationAccordionHeader
+              title={
+                <h2 className="min-w-0 shrink-0 whitespace-nowrap text-hf-paragraph-large-medium text-stone-900">
+                  Empfehlungsschreiben
+                </h2>
+              }
+              showOpenIndicator={showOpenIndicator}
+              releasedAtLabel={releasedAtLabel}
+              authorDisplayName={authorDisplayName}
+              initials={initials}
+              triggerDataNodeId="5253:5631"
+            />
             <AccordionContent className="px-0 pt-4 pb-0">
               <div
                 className="flex w-full flex-col items-start gap-5"
@@ -173,25 +209,18 @@ export function RecommendationReleasedAccordion({
   const content = (
     <Accordion type="single" collapsible defaultValue="recommendation">
       <AccordionItem value="recommendation" className="border-b-0">
-        <AccordionTrigger
-          className={cn(
-            "group hover:no-underline [&>svg:last-child]:hidden",
-            "py-5",
-            variant === "card" ? "px-6" : "px-0",
-          )}
-        >
-          <div className="flex flex-1 items-center justify-between gap-3 pr-2">
-            <h2 className="text-lg font-medium text-foreground">
+        <RecommendationAccordionHeader
+          title={
+            <h2 className="min-w-0 text-lg font-medium text-foreground">
               Empfehlungsschreiben der Fachstelle
             </h2>
-            <ReleasedMeta
-              releasedAtLabel={releasedAtLabel}
-              authorDisplayName={authorDisplayName}
-              initials={initials}
-              applicationId={applicationId}
-            />
-          </div>
-        </AccordionTrigger>
+          }
+          headerClassName={variant === "card" ? "px-6 py-5" : undefined}
+          showOpenIndicator={showOpenIndicator}
+          releasedAtLabel={releasedAtLabel}
+          authorDisplayName={authorDisplayName}
+          initials={initials}
+        />
         <AccordionContent
           className={cn(variant === "card" ? "px-6 pb-5" : "px-0 pb-0")}
         >

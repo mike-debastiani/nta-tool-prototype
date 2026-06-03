@@ -109,6 +109,7 @@ import {
 } from "@/lib/r1-adjustment-baseline";
 import { r1AllRequestedAdjustmentsSaved } from "@/lib/r1-adjustment-release";
 import {
+  R1_ATTEST_FILE_REMOVE_BUTTON_CLASS,
   R1_RICH_OPTION_EDITABLE_CLASS,
   R1_RICH_OPTION_GROUP_CLASS,
 } from "@/lib/design-tokens/r1-review-block";
@@ -1234,7 +1235,7 @@ export function PortalApplicationAdjustment({
             {canEditBlocks ? (
               <Button
                 type="button"
-                className="h-10 shrink-0 gap-2 rounded-full bg-zinc-900 px-5 text-white hover:bg-zinc-800 disabled:opacity-60"
+                className="h-10 shrink-0 gap-2 rounded-full bg-zinc-900 px-5 text-white hover:bg-stone-600 disabled:opacity-60"
                 disabled={
                   !r1AllRequestedAdjustmentsSaved(data)
                   || releaseSubmitting
@@ -1740,7 +1741,7 @@ function AttestEditForm({
             <button
               type="button"
               onClick={() => remove(file.id)}
-              className="shrink-0 self-center rounded-md p-2 text-destructive/80 transition hover:bg-destructive/10 hover:text-destructive"
+              className={R1_ATTEST_FILE_REMOVE_BUTTON_CLASS}
               aria-label={`${file.name ?? "Datei"} entfernen`}
             >
               <Trash2 className="size-4" />

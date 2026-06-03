@@ -618,7 +618,7 @@ function RecommendationDraftEditor({
           </div>
           <Button
             type="button"
-            className="gap-2 bg-zinc-900 text-white hover:bg-zinc-800"
+            className="gap-2 bg-zinc-900 text-white hover:bg-stone-600"
             disabled={!canRelease}
             onClick={() => {
               if (!editor || !hasRecommendationBody) return;

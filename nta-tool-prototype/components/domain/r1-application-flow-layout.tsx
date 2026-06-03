@@ -356,7 +356,7 @@ const R1_FLOW_CONTACT_PHONE = "+41 44 634 45 44";
 const R1_FLOW_MORE_INFORMATION_LINKS = [
   {
     label: "Fachstelle Studium und Behinderung",
-    href: "https://www.sib.uzh.ch/de/studium/behinderung.html",
+    href: "https://www.disabilityoffice.uzh.ch/de.html",
   },
   {
     label: "Attest-Checkliste im ICF Format",

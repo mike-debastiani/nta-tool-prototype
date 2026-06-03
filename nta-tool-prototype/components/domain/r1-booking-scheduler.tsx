@@ -201,7 +201,7 @@ export function R1FlowBookingScheduler({
                       className={cn(
                         "relative flex aspect-square size-full min-h-8 w-full items-center justify-center rounded-xl p-2 text-hf-paragraph-small transition-colors",
                         isSelected &&
-                          "bg-stone-900 text-stone-50 hover:bg-stone-900",
+                          "bg-stone-900 text-stone-50 hover:bg-stone-600",
                         !isSelected && isBookable && "bg-stone-100 text-stone-900 hover:bg-stone-150",
                         !isSelected &&
                           !isBookable &&

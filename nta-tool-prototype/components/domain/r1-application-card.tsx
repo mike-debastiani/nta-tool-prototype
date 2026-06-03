@@ -43,7 +43,7 @@ export function R1ApplicationCard({ application, className }: R1ApplicationCardP
           {visual.title}
         </p>
         <span
-          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity group-hover:opacity-90"
+          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-stone-600"
           aria-hidden
         >
           <ArrowUpRight className="size-4" strokeWidth={1.75} aria-hidden />

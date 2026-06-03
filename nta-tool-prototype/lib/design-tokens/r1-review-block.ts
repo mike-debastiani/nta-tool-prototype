@@ -31,3 +31,7 @@ export const R1_RICH_OPTION_STATUS_SELECTED_CLASS =
 
 export const R1_RICH_OPTION_STATUS_UNSELECTED_CLASS =
   "shrink-0 text-hf-paragraph-mini text-neutral-400";
+
+/** Attest-Datei entfernen — nur Hover `abgelehnt-100` + `rounded-full` (Rest wie destructive-Link). */
+export const R1_ATTEST_FILE_REMOVE_BUTTON_CLASS =
+  "shrink-0 self-center rounded-full p-2 text-destructive/80 transition hover:bg-abgelehnt-100 hover:text-destructive";

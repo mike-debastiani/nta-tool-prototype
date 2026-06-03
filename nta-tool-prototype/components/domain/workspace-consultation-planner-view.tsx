@@ -248,7 +248,7 @@ function dayStateClasses(options: {
 }): string {
   const { isSelected, hasAppointment, isSlotDay, isCurrentMonth } = options;
   if (isSelected) {
-    return "bg-stone-900 text-stone-50 hover:bg-stone-900";
+    return "bg-stone-900 text-stone-50 hover:bg-stone-600";
   }
   if (hasAppointment) {
     return "bg-consultation-surface text-foreground hover:bg-consultation-surface/80";

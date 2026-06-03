@@ -76,6 +76,7 @@ import { R1FlowBookingScheduler } from "@/components/domain/r1-booking-scheduler
 import { R1OnboardingOverlay } from "@/components/domain/r1-onboarding-overlay";
 import { RecommendationReleasedAccordion } from "@/components/domain/recommendation-released-accordion";
 import { R1ApplicationDefinitionSection } from "@/components/domain/r1-application-definition-section";
+import { R1_ATTEST_FILE_REMOVE_BUTTON_CLASS } from "@/lib/design-tokens/r1-review-block";
 import { hfTypography } from "@/lib/design-tokens/typography";
 import {
   createAttestFileEntryFromBrowserFile,
@@ -127,6 +128,9 @@ import {
 } from "@/lib/measure-custom-lines";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
+
+const ICF_FORMAT_INFO_URL =
+  "https://careers.iconplc.com/blogs/2025-4/what-is-an-informed-consent-form-icf";
 
 export type NtaAntragUploadFile = {
   id: string;
@@ -1486,7 +1490,6 @@ export function NtaAntragDesktop({
     month: "long",
   });
   const bookedAppointmentTimeLine = `${bookedSlot.replace(" - ", " – ")} Uhr`;
-  const bookedMapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(bookedLocation)}`;
   const bookedCalendarDateRange = formatGoogleCalendarDate(bookedDate, bookedSlot);
   const bookedCalendarHref = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("Beratungsgespräch NTA")}&dates=${bookedCalendarDateRange.start}/${bookedCalendarDateRange.end}&location=${encodeURIComponent(bookedLocation)}&details=${encodeURIComponent("Beratungstermin mit der Fachstelle Studium und Behinderung.")}`;
   const recommendationReleased = isRecommendationReleasedToR1(application?.data);
@@ -2313,7 +2316,14 @@ export function NtaAntragDesktop({
                       </R1FlowSectionTitle>
                       <p className="text-sm text-muted-foreground">
                         Laden Sie Ihr fachärztliches Attest im{" "}
-                        <span className="underline underline-offset-2">ICF-Format</span>{" "}
+                        <a
+                          href={ICF_FORMAT_INFO_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline underline-offset-2"
+                        >
+                          ICF-Format
+                        </a>{" "}
                         hoch. Es muss Diagnose, Auswirkungen auf studienrelevante Aktivitäten
                         sowie empfohlene Massnahmen enthalten.
                       </p>
@@ -2397,7 +2407,7 @@ export function NtaAntragDesktop({
                                 };
                               })
                             }
-                            className="shrink-0 self-center rounded-md p-2 text-destructive/80 transition hover:bg-destructive/10 hover:text-destructive"
+                            className={R1_ATTEST_FILE_REMOVE_BUTTON_CLASS}
                             aria-label={`${file.name} löschen`}
                           >
                             <Trash2 className="size-4" />
@@ -2428,7 +2438,6 @@ export function NtaAntragDesktop({
                     appointmentDayLine={bookedAppointmentDayLine}
                     appointmentTimeLine={bookedAppointmentTimeLine}
                     locationLines={bookedLocationLines}
-                    mapsHref={bookedMapsHref}
                     onReschedule={() => setCurrentStep("step3_booking")}
                     onAddToCalendar={() => {
                       window.open(bookedCalendarHref, "_blank", "noopener,noreferrer");
@@ -2658,7 +2667,14 @@ export function NtaAntragDesktop({
                         </R1FlowSectionTitle>
                         <p className="text-sm text-muted-foreground">
                           Laden Sie Ihr fachärztliches Attest im{" "}
-                          <span className="underline underline-offset-2">ICF-Format</span>{" "}
+                          <a
+                          href={ICF_FORMAT_INFO_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline underline-offset-2"
+                        >
+                          ICF-Format
+                        </a>{" "}
                           hoch. Es muss Diagnose, Auswirkungen auf studienrelevante Aktivitäten
                           sowie empfohlene Massnahmen enthalten.
                         </p>
@@ -2748,7 +2764,7 @@ export function NtaAntragDesktop({
                                 };
                               })
                             }
-                            className="shrink-0 self-center rounded-md p-2 text-destructive/80 transition hover:bg-destructive/10 hover:text-destructive"
+                            className={R1_ATTEST_FILE_REMOVE_BUTTON_CLASS}
                             aria-label={`${file.name} löschen`}
                           >
                             <Trash2 className="size-4" />

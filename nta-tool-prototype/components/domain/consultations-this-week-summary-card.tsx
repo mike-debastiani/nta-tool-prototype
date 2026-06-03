@@ -85,7 +85,7 @@ export function ConsultationsThisWeekSummaryCard({
         <button
           type="button"
           onClick={onHeaderIconClick}
-          className="flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90"
+          className="flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-stone-600"
           aria-label="Beratungen planen öffnen"
         >
           <Calendar className="size-4" strokeWidth={1.75} aria-hidden />

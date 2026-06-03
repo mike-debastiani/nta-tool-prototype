@@ -7,6 +7,10 @@ import { cn } from "@/lib/utils";
 
 const BOOKING_MAP_IMAGE_SRC = "/images/r1-booking/uzh-location-map.png";
 
+/** Beratungsstandort — «In Maps öffnen» (Antragserstellung Schritt 3). */
+export const R1_BOOKING_MAPS_OPEN_URL =
+  "https://maps.app.goo.gl/52DiGCpc4iYEwdQ67";
+
 function R1FlowBookingInfoCallout() {
   return (
     <div
@@ -46,7 +50,6 @@ export type R1FlowBookingConfirmationProps = {
   /** z. B. «10:00 – 11:00 Uhr» */
   appointmentTimeLine: string;
   locationLines: string[];
-  mapsHref: string;
   mapImageSrc?: string;
   onReschedule?: () => void;
   onAddToCalendar?: () => void;
@@ -60,7 +63,6 @@ export function R1FlowBookingConfirmation({
   appointmentDayLine,
   appointmentTimeLine,
   locationLines,
-  mapsHref,
   mapImageSrc = BOOKING_MAP_IMAGE_SRC,
   onReschedule,
   onAddToCalendar,
@@ -135,10 +137,10 @@ export function R1FlowBookingConfirmation({
                 aria-hidden
               />
               <a
-                href={mapsHref}
+                href={R1_BOOKING_MAPS_OPEN_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="absolute right-3 top-3 z-10 inline-flex min-h-9 items-center justify-center gap-2 rounded-lg bg-stone-900 px-4 py-2 text-hf-paragraph-small-medium text-stone-50 transition-colors hover:bg-stone-800"
+                className="absolute right-3 top-3 z-10 inline-flex min-h-9 items-center justify-center gap-2 rounded-[99999px] bg-stone-900 px-4 py-2 text-hf-paragraph-small-medium text-stone-50 transition-colors hover:bg-stone-600"
                 data-node-id="6101:23688"
               >
                 <ArrowUpRight className="size-4 shrink-0" strokeWidth={2} aria-hidden />
@@ -163,7 +165,7 @@ export function R1FlowBookingConfirmation({
           </button>
             <button
               type="button"
-              className="inline-flex h-9 w-full items-center justify-center rounded-full bg-stone-900 px-4 py-2 text-hf-paragraph-small-medium text-stone-50 transition-colors hover:bg-stone-800"
+              className="inline-flex h-9 w-full items-center justify-center rounded-full bg-stone-900 px-4 py-2 text-hf-paragraph-small-medium text-stone-50 transition-colors hover:bg-stone-600"
               onClick={onAddToCalendar}
             >
               Zum Kalender hinzufügen

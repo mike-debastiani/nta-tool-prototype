@@ -1471,7 +1471,6 @@ export function WorkspaceApplicationReview({
               data.recommendation?.releasedBy?.trim()
               || "NTA Fachstelle"
             }
-            applicationId={application.id}
           />
         ) : null}
 
@@ -1699,7 +1698,7 @@ export function WorkspaceApplicationReview({
           {!readOnly ? (
             <Button
               type="button"
-              className="h-11 w-fit gap-2 rounded-full bg-zinc-900 px-5 text-white hover:bg-zinc-800"
+              className="h-11 w-fit gap-2 rounded-full bg-zinc-900 px-5 text-white hover:bg-stone-600"
               disabled={!allReviewBlocksDone || isForwarding}
               onClick={() => void handleForwardReview()}
             >

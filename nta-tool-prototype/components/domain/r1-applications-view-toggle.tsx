@@ -24,7 +24,7 @@ export function R1ApplicationsViewToggle({
         className={cn(
           "flex size-10 items-center justify-center rounded-l-lg transition-colors",
           value === "cards"
-            ? "bg-primary text-primary-foreground"
+            ? "bg-primary text-primary-foreground hover:bg-stone-600"
             : "bg-black/5 text-foreground hover:bg-black/10",
         )}
         aria-pressed={value === "cards"}
@@ -38,7 +38,7 @@ export function R1ApplicationsViewToggle({
         className={cn(
           "flex size-10 items-center justify-center rounded-r-lg transition-colors",
           value === "table"
-            ? "bg-primary text-primary-foreground"
+            ? "bg-primary text-primary-foreground hover:bg-stone-600"
             : "bg-black/5 text-foreground hover:bg-black/10",
         )}
         aria-pressed={value === "table"}
