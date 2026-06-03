@@ -20,7 +20,10 @@ import {
 } from "@/lib/application-review-labels";
 import { workspaceApplicationListNumber } from "@/components/domain/application-review-blocks";
 import type { ApplicationAssignee } from "@/lib/application-assignee";
-import type { ApplicationStatusMeta } from "@/lib/application-status";
+import {
+  isConsultationPhaseApplication,
+  type ApplicationStatusMeta,
+} from "@/lib/application-status";
 import { resolveApplicantDisplayName } from "@/lib/application-assignee";
 import { studienstufeFromStudiengang } from "@/lib/studiengaenge";
 import type { ApplicationData, WorkspaceApplication } from "@/lib/test-flow-types";
@@ -91,6 +94,7 @@ export function ApplicationDetailsCard({
   const personal = application.data.personalData;
   const statusDotColor = statusTextColorFromBadgeClass(statusMeta.className);
   const displayApplicationId = workspaceApplicationListNumber(application);
+  const hideSubmissionDetails = isConsultationPhaseApplication(application);
 
   const copyApplicationId = useCallback(async () => {
     try {
@@ -163,17 +167,21 @@ export function ApplicationDetailsCard({
           value={studienstufeFromStudiengang(personal?.studiengang)}
         />
 
-        <DetailRow
-          icon={CalendarCheck}
-          label="Eingereicht am"
-          value={submitted ?? "—"}
-        />
+        {!hideSubmissionDetails ? (
+          <>
+            <DetailRow
+              icon={CalendarCheck}
+              label="Eingereicht am"
+              value={submitted ?? "—"}
+            />
 
-        <DetailRow
-          icon={CalendarCheck}
-          label="Gültigkeitsdauer"
-          value={formatValidityDuration(application.data)}
-        />
+            <DetailRow
+              icon={CalendarCheck}
+              label="Gültigkeitsdauer"
+              value={formatValidityDuration(application.data)}
+            />
+          </>
+        ) : null}
 
         <DetailRow
           icon={Users}

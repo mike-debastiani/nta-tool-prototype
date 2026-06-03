@@ -1698,7 +1698,7 @@ export function WorkspaceApplicationReview({
           {!readOnly ? (
             <Button
               type="button"
-              className="h-11 w-fit gap-2 rounded-full bg-zinc-900 px-5 text-white hover:bg-stone-600"
+              className="h-11 w-fit gap-2 rounded-full px-5"
               disabled={!allReviewBlocksDone || isForwarding}
               onClick={() => void handleForwardReview()}
             >

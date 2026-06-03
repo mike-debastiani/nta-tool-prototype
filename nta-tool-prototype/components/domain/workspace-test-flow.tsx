@@ -597,8 +597,8 @@ function RecommendationDraftEditor({
           <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
             <Button
               type="button"
-              variant="outline"
-              className="gap-2"
+              variant="secondary"
+              className="gap-2 rounded-full"
               disabled={busy || !editor}
               onClick={() => {
                 if (!editor) return;
@@ -618,7 +618,7 @@ function RecommendationDraftEditor({
           </div>
           <Button
             type="button"
-            className="gap-2 bg-zinc-900 text-white hover:bg-stone-600"
+            className="gap-2 rounded-full"
             disabled={!canRelease}
             onClick={() => {
               if (!editor || !hasRecommendationBody) return;

@@ -9,6 +9,10 @@ import {
   formControlNativeFieldClass,
 } from "@/lib/design-tokens/form-control";
 import {
+  PRIMARY_BUTTON_DISABLED_CLASS,
+  PRIMARY_BUTTON_HOVER_CLASS,
+} from "@/lib/design-tokens/interactive-buttons";
+import {
   REVIEW_BLOCK_ACTION_FOOTER_BAR_CLASS,
   REVIEW_BLOCK_BODY_CLASS,
   REVIEW_BLOCK_CONFIRMED_CLASS,
@@ -83,7 +87,7 @@ export const R4_DECISION_EDITING_FOOTER_CLASS =
 export const R4_DECISION_CONFIRMED_FOOTER_CLASS = REVIEW_BLOCK_CONFIRMED_FOOTER_CLASS;
 
 export const R4_DECISION_CONFIRM_SELECTION_BUTTON_CLASS =
-  "inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-stone-600 disabled:opacity-40";
+  `inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground ${PRIMARY_BUTTON_HOVER_CLASS} ${PRIMARY_BUTTON_DISABLED_CLASS}`;
 
 export const R4_DECISION_RESET_BUTTON_CLASS =
   "inline-flex h-9 shrink-0 items-center gap-2 text-sm font-medium text-foreground hover:text-foreground/80 disabled:opacity-40";

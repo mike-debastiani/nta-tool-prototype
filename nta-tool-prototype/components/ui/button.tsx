@@ -2,6 +2,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
+import { PRIMARY_BUTTON_DISABLED_CLASS } from "@/lib/design-tokens/interactive-buttons"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
@@ -9,7 +10,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-stone-600",
+        default: cn(
+          "bg-primary text-primary-foreground hover:bg-stone-600",
+          PRIMARY_BUTTON_DISABLED_CLASS,
+        ),
         outline:
           "border-border bg-background shadow-xs hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
