@@ -12,7 +12,7 @@ export type IssuedVerfuegungCalloutContent = {
 };
 
 const R2_R4_APPROVED =
-  "Der Antrag wurde bewilligt. Die folgende Verfügung wurde der antragstellenden Person übermittelt. Die bewilligten Angaben sind in der Verfügung festgehalten.";
+  "Der Antrag wurde bewilligt. Die folgende Verfügung wurde der antragstellenden Person übermittelt. Die bewilligten NTA Massnahmen sind in der Verfügung festgehalten.";
 
 const R2_R4_REJECTED =
   "Der Antrag wurde abgelehnt. Die Verfügung mit der Rechtsmittelbelehrung wurde der antragstellenden Person übermittelt. Die Begründung des Entscheids finden Sie unten auf dieser Seite.";

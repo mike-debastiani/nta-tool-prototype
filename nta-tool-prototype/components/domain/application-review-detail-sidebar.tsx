@@ -502,12 +502,12 @@ function ReviewBemerkungItemR2({
       )}
       {...bemerkungItemInteractionProps(onNavigate)}
     >
-      <div className="flex w-full items-center justify-between gap-2">
-        <p className={cn(hfTypography.paragraphMedium, "min-w-0 text-foreground")}>
+      <div className="flex w-full flex-col gap-1">
+        <p className={cn(hfTypography.paragraphMedium, "w-full text-foreground")}>
           {comment.blockTitle}
         </p>
         <time
-          className={cn(hfTypography.paragraphMini, "shrink-0 text-stone-500")}
+          className={cn(hfTypography.paragraphMini, "text-stone-500")}
           dateTime={new Date(comment.createdAt).toISOString()}
         >
           {formatBemerkungDate(comment.createdAt)}

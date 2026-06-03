@@ -1218,7 +1218,9 @@ export function WorkspaceApplicationReview({
         savedReviewComments={savedReviewComments}
         onSavedCommentNavigate={navigateFromSavedComment}
         showCommentsSection={
-          workspaceViewerRole !== "R4" && viewMode !== "readonly_consultation"
+          workspaceViewerRole !== "R4"
+          && viewMode !== "readonly_consultation"
+          && statusMeta.canonicalState !== "in_decision"
         }
         secondarySection={
           workspaceViewerRole === "R4" ? "r4_contacts" : "comments"
