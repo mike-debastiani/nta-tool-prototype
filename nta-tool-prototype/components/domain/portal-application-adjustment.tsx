@@ -37,6 +37,7 @@ import {
   ApplicationReviewDetailSidebar,
   type SavedReviewComment,
 } from "@/components/domain/application-review-detail-sidebar";
+import { ApplicationIssuedVerfuegungView } from "@/components/domain/application-issued-verfuegung-view";
 import { ApplicationReviewPageHeader } from "@/components/domain/application-review-page-header";
 import { ApplicationStatusCallout } from "@/components/domain/application-status-callout";
 import { useRegisterDashboardDetailPanel } from "@/components/domain/dashboard-detail-panel-context";
@@ -333,6 +334,9 @@ export function PortalApplicationAdjustment({
   const statusMeta = getApplicationStatusMeta(snapshot, "R1");
   const isInReviewPortal = statusMeta.canonicalState === "in_review";
   const isInDecisionPortal = statusMeta.canonicalState === "in_decision";
+  const isIssuedVerfuegungPortal =
+    statusMeta.canonicalState === "approved"
+    || statusMeta.canonicalState === "rejected";
   // Entscheidend ist der aktuelle kanonische Status des Snapshots (Realtime),
   // nicht nur der Server-Prop-Zustand beim ersten Render.
   const canEditBlocks = statusMeta.canonicalState === "needs_adjustment";
@@ -892,7 +896,18 @@ export function PortalApplicationAdjustment({
         bemerkungenVariant="r1"
       />
     ),
+    !isIssuedVerfuegungPortal,
   );
+
+  if (isIssuedVerfuegungPortal) {
+    return (
+      <ApplicationIssuedVerfuegungView
+        application={snapshot}
+        calloutAudience="R1"
+        applicantDisplayName={applicantDisplayName}
+      />
+    );
+  }
 
   return (
     <div className="flex min-h-0 flex-1 w-full min-w-0 flex-col overflow-hidden">

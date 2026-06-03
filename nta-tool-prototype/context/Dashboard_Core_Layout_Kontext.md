@@ -411,7 +411,7 @@ Gemeinsam für **Portal (Adjustment)** und **Workspace (Review, R4, …)** — n
 
 ### Mechanik
 
-- Registrierung: `useRegisterDashboardDetailPanel(signature, render, enabled)` (`dashboard-detail-panel-context.tsx`).
+- Registrierung: `useRegisterDashboardDetailPanel(signature, render, enabled)` (`dashboard-detail-panel-context.tsx`). Bei `enabled: false` wird nichts registriert und das Panel nicht geleert (andere Komponente in der Baumhierarchie kann registrieren, z. B. ausgestellte Verfügung in `ApplicationIssuedVerfuegungView`).
 - Shell rendert rechts neben dem weissen Inhalts-Panel eine Spalte auf **`bg-stone-100`** (Rahmen zum Viewport).
 - **Geschlossen:** `w-0`, kein Inhalt.
 - **Geöffnet:** **`w-[330px]`** (`DASHBOARD_DETAIL_PANEL_WIDTH_CLASS`) — Karte **Antragdetails** (Figma `5652:18411`, `application-details-card.tsx`, `hf-content-panel-card` + Shadow): Reihenfolge **Status** → **Zuletzt aktualisiert** → Antragsteller → … → **Antrags-ID** (UI: `workspaceApplicationListNumber`, z. B. `NTA-2026-CDF5`; technische UUID unverändert in DB) + Kommentare/Kontakte je nach Page.

@@ -25,6 +25,7 @@ import { WorkspaceEvaluateView } from "@/components/domain/workspace-evaluate-vi
 import { WorkspaceHomeDashboard } from "@/components/domain/workspace-home-dashboard";
 import { WorkspaceMyTasksView } from "@/components/domain/workspace-my-tasks-view";
 import { workspaceShowsConsultationPlannerView } from "@/lib/workspace-nav-access";
+import { ApplicationIssuedVerfuegungView } from "@/components/domain/application-issued-verfuegung-view";
 import { WorkspaceR4DecisionView } from "@/components/domain/workspace-r4-decision-view";
 import { RichTextEditor } from "@/components/domain/rich-text-editor";
 import { type UserRole } from "@/lib/auth";
@@ -466,6 +467,21 @@ export function WorkspaceTestFlow({
           reviewerDisplayName={reviewerDisplayName}
           workspaceRole={workspaceRole}
           onPersisted={handleApplicationPersisted}
+        />
+      );
+    }
+
+    if (
+      selectedCanonicalState === "approved"
+      || selectedCanonicalState === "rejected"
+    ) {
+      return (
+        <ApplicationIssuedVerfuegungView
+          key={`${selectedApplication.id}-${selectedApplication.status}-verfuegung`}
+          application={selectedApplication}
+          calloutAudience="R2"
+          workspaceRole={workspaceRole}
+          reviewerDisplayName={reviewerDisplayName}
         />
       );
     }

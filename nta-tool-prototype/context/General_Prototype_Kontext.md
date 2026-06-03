@@ -200,6 +200,8 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `lib/r4-decision-state.ts` | R4 Merge, Freitext-`proposal:*`-Zeilen, `materializeApprovedR4DecisionReview`, Client-Reconcile |
 | `lib/workspace-application-visibility.ts` | R4-Home-Whitelist, `canEditR4DecisionApplication` |
 | `lib/r4-workspace-supabase-persist.ts` | R4: persist per Session-Client; complete via **`/api/applications/r4-complete-decision`** (`approved` \| `rejected`) |
+| `components/domain/application-issued-verfuegung-view.tsx` | Ausgestellte Verfügung R1/R2/R4 (`approved`/`rejected`), Sidebar «Zugehörige Dokumente» |
+| `lib/issued-verfuegung-callouts.ts` | Rollenspezifische Verfügungs-Callouts + Icons (`CircleCheck` / `CircleX`) |
 | `components/domain/r4-verfuegung-document.tsx` | R4 Verfügungsdokument (`approved` / `rejected`) |
 | `components/domain/r4-verfuegung-rejected-blocks.tsx` | Abgelehnte Entscheid-Blöcke unter abgelehnter Verfügung |
 | `components/domain/r4-related-documents-sidebar.tsx` | Sidebar Attest + Empfehlung auf Verfügungs-Screens |

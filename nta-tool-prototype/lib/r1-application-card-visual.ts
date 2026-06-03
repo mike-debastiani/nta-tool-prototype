@@ -12,7 +12,7 @@ export const R1_CARD_STATUS_BADGE_CLASS: Record<CanonicalApplicationState, strin
   needs_adjustment: "bg-adjustment-100 text-adjustment-600",
   in_decision: "bg-in-decision-50 text-in-decision-800",
   approved: "bg-bewilligt-50 text-bewilligt-800",
-  rejected: "bg-abgelehnt-100 text-abgelehnt-700",
+  rejected: "bg-abgelehnt-50 text-abgelehnt-600",
 };
 
 export type R1CardVisualVariant =

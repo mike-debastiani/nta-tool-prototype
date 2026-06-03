@@ -69,8 +69,10 @@ Zentral in `lib/design-tokens/status-badge-colors.ts`, konsumiert von `lib/appli
 | Anpassung | `bg-adjustment-100 text-adjustment-500` |
 | In Entscheid | `bg-in-decision-100 text-in-decision-500` |
 | Bewilligt | `bg-bewilligt-100 text-bewilligt-700` |
-| Abgelehnt | `bg-abgelehnt-200 text-abgelehnt-700` |
+| Abgelehnt | `bg-abgelehnt-50 text-abgelehnt-600` |
 | R2 „Empfehlung verfasst“ | `bg-stone-100 text-stone-500` |
+
+**Header-Callouts** (`application-status-callout.tsx`): Hintergrund und Text/Icon-Farbe aus dem Status-Badge via `hfStatusCalloutClasses`. Ausgestellte Verfügung: bewilligt **`CircleCheck`**, abgelehnt **`CircleX`** (`lib/issued-verfuegung-callouts.ts`).
 
 ---
 

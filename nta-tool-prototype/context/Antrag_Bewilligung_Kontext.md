@@ -175,9 +175,10 @@ Unter der Verfügung rendert **`R4VerfuegungRejectedBlocks`** nur Blöcke aus **
 
 ### Ausgestellte Ansicht (`approved` / `rejected`)
 
-- **Routing:** `showR4DecisionView` für `in_decision`, **`approved`** und **`rejected`** (R4/R2R4).
+- **Routing:** R4/R2R4 → `WorkspaceR4DecisionView` (delegiert an `ApplicationIssuedVerfuegungView`); **R2** → `ApplicationIssuedVerfuegungView` mit Callout-Audience **R2** (gleiche Texte wie R4); **R1** → `PortalApplicationAdjustment` → `ApplicationIssuedVerfuegungView` mit Audience **R1** (eigene Callout-Texte für Studierende).
 - **Nur die Verfügung** in der Hauptspalte — **keine** Duplikate von Attest, Empfehlungsschreiben oder Situationsbeschreibung darunter (Zugriff über Sidebar «Zugehörige Dokumente»).
-- Status-Callout: Bewilligung vs. Ablehnung (`isApproved` / `isRejected`).
+- Status-Callout: `lib/issued-verfuegung-callouts.ts` — R1 bewilligt/abgelehnt in Du-Form; R2/R4 in Verwaltungs-Perspektive. Icons: **bewilligt** `CircleCheck`, **abgelehnt** `CircleX`. Farben über `ApplicationStatusCallout` + `getApplicationStatusMeta` (Badge **Abgelehnt:** `bg-abgelehnt-50 text-abgelehnt-600`; Callout übernimmt dieselben Klassen via `hfStatusCalloutClasses`).
+- **Detail-Panel:** `ApplicationIssuedVerfuegungView` registriert `secondarySection="r4_related_documents"`. R1: `PortalApplicationAdjustment` setzt `useRegisterDashboardDetailPanel(…, enabled: !isIssuedVerfuegungPortal)`, damit die Parent-Registrierung die Kind-Registrierung nicht überschreibt (`Dashboard_Core_Layout_Kontext.md` § 6).
 
 ---
 
@@ -248,7 +249,8 @@ Ziel: kein „Kreuzschalten“ (ein Klick ändert scheinbar eine andere Zeile) u
 
 | Bereich | Pfad |
 |---------|------|
-| R4 Vollansicht | `components/domain/workspace-r4-decision-view.tsx` (Entscheid, Verfügungs-Vorschau, ausgestellte Verfügung approved/rejected) |
+| Ausgestellte Verfügung (R1/R2/R4) | `components/domain/application-issued-verfuegung-view.tsx`, `lib/issued-verfuegung-callouts.ts` |
+| R4 Vollansicht | `components/domain/workspace-r4-decision-view.tsx` (Entscheid, Verfügungs-Vorschau; delegiert `approved`/`rejected` an `ApplicationIssuedVerfuegungView`) |
 | Verfügung (Dokument) | `components/domain/r4-verfuegung-document.tsx` (`R4VerfuegungDocument`, `VERFUEGUNG_CONTENT`, Varianten) |
 | Abgelehnte Blöcke unter Verfügung | `components/domain/r4-verfuegung-rejected-blocks.tsx` |
 | Sidebar Zugehörige Dokumente | `components/domain/r4-related-documents-sidebar.tsx` |
@@ -281,4 +283,4 @@ Ziel: kein „Kreuzschalten“ (ein Klick ändert scheinbar eine andere Zeile) u
 
 ---
 
-*Letzte Aktualisierung: Abgelehnte Verfügung (`rejected`, `R4VerfuegungVariant`, `R4VerfuegungRejectedBlocks`), Sidebar «Zugehörige Dokumente», Entscheid fällen → `approved` \| `rejected` via API + RLS-Migrationen `20260603140000` / `20260603150000`, Routing `rejected` → `WorkspaceR4DecisionView`. Zuvor: bewilligte ausgestellte Verfügung ohne Anhänge in der Hauptspalte; Verfügungs-Layout Figma `6415:26074`; «Entscheid fällen» statt direktem Abschluss-CTA.*
+*Letzte Aktualisierung: Geteilte ausgestellte Verfügung `ApplicationIssuedVerfuegungView` (R1 Portal, R2 Workspace, R4 delegiert); Callouts/Icons in `issued-verfuegung-callouts.ts`; R1-Panel-Fix (`enabled: false` auf Parent); Status **Abgelehnt** `abgelehnt-50`/`abgelehnt-600` für Badge + Callout. Zuvor: abgelehnte Verfügung, Sidebar «Zugehörige Dokumente», RLS `20260603140000` / `20260603150000`.*

@@ -56,6 +56,7 @@ Hinweise:
 |-------|--------|
 | `components/nta-antrag-desktop.tsx` | R1 Flow Step 1–6: Validierung, Fortschritts-/Freischaltlogik, Autosave, Realtime, Delete → Portal; rendert das **Onboarding-Overlay** beim Start eines neuen Antrags (`forceNew && !embedInDashboardShell`, State `isOnboardingOpen`) |
 | `components/domain/r1-onboarding-overlay.tsx` | **Onboarding-Overlay** über Step 1 (Figma `6359:36452`): 4 Karten erklären die Prozessphasen (Beratung & Empfehlung → In Review → Anpassung erforderlich → In Entscheid). Overlay `bg-stone-100/70` + `backdrop-blur-[24px]`, zentrierte weisse Card; Stepper mit erledigten/aktiven/kommenden Knoten; «Zurück»/«Weiter», letzte Karte «Antragstellung beginnen», Schliessen/X |
+| `components/domain/application-issued-verfuegung-view.tsx` | **Ausgestellte Verfügung** (R1/R2/R4) bei `approved`/`rejected`: gleicher Screen wie R4, rollenspezifische Callouts (`lib/issued-verfuegung-callouts.ts`); R1 über `PortalApplicationAdjustment` |
 | `components/domain/r1-application-flow-layout.tsx` | HF-Layout: `h-screen`, Top-Bar (Titel, Autosave-Hinweis, Schliessen), Sidebar, scrollbarer Form-Bereich |
 | `components/domain/r1-application-flow-layout.tsx` (`R1FlowSupportInformationCard`) | Sidebar-Card «Fragen und Unklarheiten / Weitere Informationen» als fusionierte Accordion-Card mit externen Quicklinks |
 | `components/domain/r1-flow-icons.tsx` | Lucide-Icons + Fortschritts-Statuspunkt (Gradient complete/incomplete) |

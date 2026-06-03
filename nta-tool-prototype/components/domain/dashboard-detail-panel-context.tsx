@@ -90,7 +90,6 @@ export function useRegisterDashboardDetailPanel(
 
   useLayoutEffect(() => {
     if (!enabled || !signature) {
-      setRegistration(null);
       return;
     }
 
@@ -98,5 +97,9 @@ export function useRegisterDashboardDetailPanel(
       signature,
       render: () => renderRef.current(),
     });
+
+    return () => {
+      setRegistration(null);
+    };
   }, [enabled, signature, setRegistration]);
 }

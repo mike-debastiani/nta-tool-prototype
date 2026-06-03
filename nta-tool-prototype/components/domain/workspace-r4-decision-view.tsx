@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Check, CircleCheckBig, CircleX, FileText, Info, Loader2, PenLine } from "lucide-react";
+import { ApplicationIssuedVerfuegungView } from "@/components/domain/application-issued-verfuegung-view";
 import { ApplicationReviewDetailSidebar } from "@/components/domain/application-review-detail-sidebar";
 import { ApplicationReviewPageHeader } from "@/components/domain/application-review-page-header";
 import { ApplicationStatusCallout } from "@/components/domain/application-status-callout";
@@ -1165,6 +1166,17 @@ export function WorkspaceR4DecisionView({
     </R4FacultyConfirmedBlock>
   ) : null);
 
+  if (showIssuedVerfuegung) {
+    return (
+      <ApplicationIssuedVerfuegungView
+        application={application}
+        calloutAudience="R4"
+        workspaceRole={workspaceRole}
+        reviewerDisplayName={reviewerDisplayName}
+      />
+    );
+  }
+
   return (
     <div className="flex min-h-0 flex-1 w-full min-w-0 flex-col overflow-hidden">
       <div
@@ -1200,30 +1212,9 @@ export function WorkspaceR4DecisionView({
               Vorschau der generierten Verfügung. Prüfen Sie die Angaben. Über «Entscheidung bearbeiten» kehren Sie zum Entscheid zurück; mit «Entscheid fällen» wird die Verfügung an die antragstellende Person übermittelt und der Antrag bewilligt.
             </ApplicationStatusCallout>
           ) : null}
-          {isRejected ? (
-            <ApplicationStatusCallout badgeClassName={statusMeta.className} icon={CircleX}>
-              Der Antrag wurde abgelehnt. Die Verfügung mit der Rechtsmittelbelehrung wurde der antragstellenden Person übermittelt. Die Begründung des Entscheids finden Sie unten auf dieser Seite.
-            </ApplicationStatusCallout>
-          ) : null}
-          {isApproved ? (
-            <ApplicationStatusCallout badgeClassName={statusMeta.className} icon={FileText}>
-              Der Antrag wurde bewilligt. Die folgende Verfügung wurde der antragstellenden Person übermittelt. Die bewilligten Angaben sind in der Verfügung festgehalten.
-            </ApplicationStatusCallout>
-          ) : null}
         </div>
 
-        {showIssuedVerfuegung ? (
-          <div className="flex shrink-0 flex-col gap-6">
-            <R4VerfuegungDocument
-              application={application}
-              review={review}
-              variant={verfuegungVariant}
-            />
-            {verfuegungVariant === "rejected" ? (
-              <R4VerfuegungRejectedBlocks application={application} review={review} />
-            ) : null}
-          </div>
-        ) : verfuegungMode ? (
+        {verfuegungMode ? (
           <div className="flex shrink-0 flex-col gap-6">
             <R4VerfuegungDocument
               application={application}

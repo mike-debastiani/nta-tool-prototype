@@ -28,7 +28,7 @@ export const hfStatusBadgeClassR1: Record<HfStatusBadgeState, string> = {
   needs_adjustment: "bg-adjustment-100 text-adjustment-500",
   in_decision: "bg-in-decision-100 text-in-decision-500",
   approved: "bg-bewilligt-100 text-bewilligt-700",
-  rejected: "bg-abgelehnt-200 text-abgelehnt-700",
+  rejected: "bg-abgelehnt-50 text-abgelehnt-600",
 };
 
 /** R2/R4: gleiche Farben wie R1 für Beratung & Review; nur Labels unterscheiden sich. */

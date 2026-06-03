@@ -79,7 +79,7 @@
 
 ### Auslösung Review-Ansicht
 
-- **`workspace-test-flow.tsx`:** Detail-States `consultation_recommendation` … → **`WorkspaceApplicationReview`** (View Modes; **R4/R2R4:** `workspaceViewerRole="R4"` wo Lesesicht). Kanonisch **`in_decision`**, **`approved`** oder **`rejected`** mit **`hasR4WorkspaceCapabilities`** → **`WorkspaceR4DecisionView`** (Verfügung / Entscheid) statt Review. **R2** allein: in `in_decision` nur `readonly_decision`. Toolbar «Zurück zur Liste» auch für **`rejected`**. Matrix → **`Dashboard_Core_Layout_Kontext.md` § 4b**.
+- **`workspace-test-flow.tsx`:** Detail-States `consultation_recommendation` … → **`WorkspaceApplicationReview`** (View Modes; **R4/R2R4:** `workspaceViewerRole="R4"` wo Lesesicht). Kanonisch **`in_decision`** mit **`hasR4WorkspaceCapabilities`** → **`WorkspaceR4DecisionView`** (Entscheid / Verfügungs-Vorschau). **`approved`/`rejected`:** R4/R2R4 → `WorkspaceR4DecisionView` (delegiert **`ApplicationIssuedVerfuegungView`**); **R2** allein → direkt **`ApplicationIssuedVerfuegungView`**. **R2** in `in_decision` nur `readonly_decision`. Toolbar «Zurück zur Liste» auch für **`rejected`**. Matrix → **`Dashboard_Core_Layout_Kontext.md` § 4b**.
 - Die alte „Empfehlung freigeben“-Karte ist abgelöst durch den `WorkspaceApplicationReview` mit `viewMode="readonly_consultation"` + `RecommendationDraftEditor` als `bottomAction`.
 
 ### View Modes (`WorkspaceReviewViewMode`)
@@ -114,7 +114,8 @@ Definiert in `components/domain/workspace-application-review.tsx`; abgeleitet im
 | Bemerkungen-Tokens | `lib/design-tokens/review-bemerkungen.ts` | R1 pending/done (`5858:22820`), R2 Chronik (`5866:2021`) |
 | R1-Block-Footer | `lib/design-tokens/r1-review-block.ts` | R1 Anpassungs-Footer («Anpassung vornehmen», Bearbeiten, Speichern, Zurücksetzen) |
 | R1-Baseline | `lib/r1-adjustment-baseline.ts` | `readR1AdjustmentBlockBaselines`, Merge mit `recommendation.r1AdjustmentBlockBaselines` |
-| Detail-Sidebar | `components/domain/application-review-detail-sidebar.tsx` | Antragdetails; Chronik **`bemerkungenVariant`** `r1` \| `r2`; **R4 Entscheid:** `r4_contacts`; **R4 Verfügung:** `r4_related_documents` (Attest, Empfehlung) — siehe `Antrag_Bewilligung_Kontext.md` § 3 |
+| Detail-Sidebar | `components/domain/application-review-detail-sidebar.tsx` | Antragdetails; Chronik **`bemerkungenVariant`** `r1` \| `r2`; **R4 Entscheid:** `r4_contacts`; **Verfügung / ausgestellt (R1/R2/R4):** `r4_related_documents` via **`ApplicationIssuedVerfuegungView`** — siehe `Antrag_Bewilligung_Kontext.md` § 3, § 5b |
+| Ausgestellte Verfügung | `components/domain/application-issued-verfuegung-view.tsx`, `lib/issued-verfuegung-callouts.ts` | Geteilter Screen `approved`/`rejected`; R1: `PortalApplicationAdjustment` deaktiviert eigene Panel-Registrierung (`enabled: false`), Kind registriert «Zugehörige Dokumente» |
 | Persistenz-Helfer | `lib/r2-review-persist.ts` | `dataWithoutLegacyReviewRoots`, Pfade unter `recommendation.workspaceReview` |
 | Forward-API | `app/api/applications/review-forward/route.ts` | Session-Client-Update auf `in_implementation` / `needs_correction`, schreibt finale Review-Snapshots |
 | R1-Release API | `app/api/applications/r1-release-adjustments/route.ts` | Antragsteller: `needs_correction` \| `needs_adjustment` → `in_review`, merged `workspaceReview`, Broadcast |
