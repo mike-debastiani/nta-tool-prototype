@@ -4,12 +4,18 @@
  */
 
 import {
+  formControlFocusVisibleClass,
+  formControlInvalidRingClass,
+  formControlNativeFieldClass,
+} from "@/lib/design-tokens/form-control";
+import {
   REVIEW_BLOCK_ACTION_FOOTER_BAR_CLASS,
   REVIEW_BLOCK_BODY_CLASS,
   REVIEW_BLOCK_CONFIRMED_CLASS,
   REVIEW_BLOCK_CONFIRMED_FOOTER_CLASS,
   REVIEW_BLOCK_DEFAULT_CLASS,
 } from "@/lib/design-tokens/review-block";
+import { cn } from "@/lib/utils";
 
 /** Antragsteller, Attest, Definition, Empfehlung — neutral, Fachstelle bestätigt (`5641:23410`). */
 export const R4_FACULTY_CONFIRMED_BLOCK_CLASS = REVIEW_BLOCK_DEFAULT_CLASS;
@@ -34,7 +40,11 @@ export const R4_DECISION_ROW_LIST_CLASS = "flex flex-col gap-2";
 
 /** Freitext-Vorschlag unter den Optionen (`5907:23378`). */
 export const R4_DECISION_PROPOSAL_INPUT_CLASS =
-  "flex min-h-12 w-full items-start gap-2 rounded-[10px] border border-border bg-background px-3 py-2 shadow-xs";
+  cn(
+    "flex min-h-12 w-full items-start gap-2 rounded-[10px] border border-border bg-background px-3 py-2 shadow-xs transition-[color,box-shadow] outline-none",
+    formControlFocusVisibleClass,
+    formControlInvalidRingClass,
+  );
 
 /** Rich-Radio-Zeile — `gap-24` Inhalt ↔ Schalter (`xl`). */
 export const R4_DECISION_ROW_CLASS =
@@ -135,11 +145,16 @@ export const R4_DECISION_CONCRETIZE_FIELD_LABEL_CLASS =
   "text-sm font-medium leading-5 text-muted-foreground";
 
 /** Einzeiliges Titel-Input (`120:13760`). */
-export const R4_DECISION_CONCRETIZE_TITLE_INPUT_CLASS =
-  "h-9 w-full rounded-lg border border-border bg-background px-3 text-sm leading-5 text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60";
+export const R4_DECISION_CONCRETIZE_TITLE_INPUT_CLASS = cn(
+  formControlNativeFieldClass,
+  "h-9 w-full rounded-lg border border-border bg-background px-3 text-sm leading-5 text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60",
+);
 
-export const R4_DECISION_CONCRETIZE_TEXTAREA_CLASS =
-  "block w-full resize-none rounded-lg border border-border bg-background px-2 py-2 text-sm leading-5 text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60";
+export const R4_DECISION_CONCRETIZE_TEXTAREA_CLASS = cn(
+  "block w-full resize-none rounded-lg border border-border bg-background px-2 py-2 text-sm leading-5 text-foreground shadow-xs placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60",
+  formControlFocusVisibleClass,
+  formControlInvalidRingClass,
+);
 
 /** Fixierte (read-only) Beschreibung im «definiert»-Zustand (`6344:25407`). */
 export const R4_DECISION_CONCRETIZE_DESCRIPTION_CLASS =

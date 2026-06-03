@@ -19,6 +19,7 @@ import {
 } from "@/lib/application-review-labels";
 import { hasMeasureOtherSelection } from "@/lib/measure-custom-lines";
 import { reviewWorkspaceAnchorId } from "@/lib/review-workspace-blocks";
+import { formControlFocusVisibleClass } from "@/lib/design-tokens/form-control";
 import { cn } from "@/lib/utils";
 
 const APPLICATION_SCOPE_OPTIONS = [
@@ -104,10 +105,11 @@ export function R1ApplicationDefinitionSection({
               placeholder="Auswirkungen auf das Studium..."
               rows={1}
               className={cn(
-                "min-h-[116px] w-full resize-none overflow-hidden rounded-lg border bg-background px-3 py-2 text-sm shadow-xs outline-none transition",
+                "min-h-[116px] w-full resize-none overflow-hidden rounded-lg border bg-background px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow]",
+                formControlFocusVisibleClass,
                 errors.situationDescription
                   ? "border-destructive"
-                  : "border-border focus:border-ring",
+                  : "border-border",
               )}
             />
             {errors.situationDescription ? (

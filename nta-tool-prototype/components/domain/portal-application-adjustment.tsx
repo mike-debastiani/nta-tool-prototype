@@ -1060,10 +1060,8 @@ export function PortalApplicationAdjustment({
                     )
                   }
                   className={cn(
-                    "min-h-[120px] w-full rounded-lg border bg-background px-3 py-2 text-sm shadow-xs outline-none transition focus:border-ring",
-                    errors.situationDescription
-                      ? "border-destructive"
-                      : "border-border",
+                    "min-h-[120px] w-full",
+                    errors.situationDescription && "border-destructive",
                   )}
                 />
                 {errors.situationDescription ? (

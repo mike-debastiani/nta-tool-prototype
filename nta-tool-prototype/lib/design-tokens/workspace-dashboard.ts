@@ -150,7 +150,7 @@ export const WORKSPACE_HOME_TABLE_SEARCH_INPUT_CLASS = [
   "h-9 min-h-9 w-full rounded-full border-border bg-transparent py-[7.5px] pl-10 pr-3",
   "text-hf-paragraph-small text-foreground shadow-none",
   "placeholder:text-muted-foreground",
-  "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+  "focus:border-ring focus:ring-3 focus:ring-ring/50 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
 ].join(" ");
 
 /** Toggle `5948:27474` — Segment-Container. */

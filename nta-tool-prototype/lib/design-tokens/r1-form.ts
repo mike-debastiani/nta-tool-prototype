@@ -1,3 +1,4 @@
+import { formControlFocusWithinClass } from "@/lib/design-tokens/form-control";
 import { cn } from "@/lib/utils";
 
 /** Titel + Beschreibung innerhalb eines Feldes (4px zwischen den Zeilen). */
@@ -39,5 +40,6 @@ export const r1FlowInputClassName =
 /** Select-/Combobox-Trigger im R1-Step-1-Formular. */
 export const r1FlowSelectTriggerClassName = cn(
   "flex w-full min-w-0 items-center gap-1.5 rounded-md border border-neutral-300 bg-background px-2.5 text-sm shadow-xs transition-[color,box-shadow] outline-none",
-  "focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:border-neutral-600",
+  formControlFocusWithinClass,
+  "dark:border-neutral-600",
 );

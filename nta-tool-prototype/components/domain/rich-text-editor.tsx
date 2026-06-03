@@ -47,6 +47,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formControlFocusVisibleClass } from "@/lib/design-tokens/form-control";
 import { cn } from "@/lib/utils";
 
 type RichTextEditorProps = {
@@ -128,7 +129,7 @@ export function RichTextEditor({
           "tiptap ProseMirror",
           "min-h-[320px] rounded-lg border border-border bg-background px-4 py-3",
           "text-sm leading-6 text-foreground shadow-xs outline-none transition",
-          "focus:border-ring focus:ring-[3px] focus:ring-ring/20",
+          formControlFocusVisibleClass,
         ),
         role: "textbox",
         ...(ariaLabel ? { "aria-label": ariaLabel } : {}),

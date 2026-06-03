@@ -120,9 +120,13 @@ function RecommendationAccordionHeader({
   triggerDataNodeId,
 }: RecommendationAccordionHeaderProps) {
   return (
-    <AccordionPrimitive.Header
-      className={cn("flex w-full items-start justify-between gap-3", headerClassName)}
-    >
+    <AccordionPrimitive.Header asChild>
+      <div
+        className={cn(
+          "flex w-full items-start justify-between gap-3",
+          headerClassName,
+        )}
+      >
       {title}
       <div className="flex shrink-0 items-center gap-2">
         {showOpenIndicator ? <OpenInDocumentTabIndicator /> : null}
@@ -142,6 +146,7 @@ function RecommendationAccordionHeader({
             />
           </div>
         </AccordionPrimitive.Trigger>
+      </div>
       </div>
     </AccordionPrimitive.Header>
   );
