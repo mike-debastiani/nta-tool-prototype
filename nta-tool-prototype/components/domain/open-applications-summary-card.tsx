@@ -18,6 +18,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { AllApplicationsBucketId } from "@/lib/workspace-all-applications-stats";
+import {
+  hfInDecisionChartBarSurfaceClass,
+  hfInDecisionChartPieStrokeClass,
+  hfInDecisionStatusForegroundClass,
+} from "@/lib/design-tokens/status-badge-colors";
 import { hfTypography } from "@/lib/design-tokens/typography";
 import {
   type OpenApplicationsBucketId,
@@ -36,8 +41,8 @@ export type OpenApplicationsChartView = "vertical" | "pie" | "horizontal" | "com
 
 const VIEW_OPTIONS: { value: OpenApplicationsChartView; label: string }[] = [
   { value: "vertical", label: "Vertikal" },
-  { value: "pie", label: "Kreis" },
   { value: "horizontal", label: "Horizontal" },
+  { value: "pie", label: "Kreis" },
   { value: "combined", label: "Kombiniert" },
 ];
 
@@ -56,9 +61,9 @@ const BUCKET_STYLES: Record<
     pieStrokeClass: "stroke-adjustment-200",
   },
   in_decision: {
-    barClass: "bg-in-decision-200",
-    textClass: "text-in-decision-800",
-    pieStrokeClass: "stroke-in-decision-200",
+    barClass: hfInDecisionChartBarSurfaceClass,
+    textClass: hfInDecisionStatusForegroundClass,
+    pieStrokeClass: hfInDecisionChartPieStrokeClass,
   },
   approved: {
     barClass: "bg-bewilligt-100",
@@ -84,8 +89,9 @@ const BUCKET_LABELS: Record<ApplicationsChartBucketId, string> = {
 const HEADER_TO_CONTENT_GAP_CLASS = "gap-4";
 const CHART_BAR_GAP_PX = 24;
 const TOTAL_TO_CHART_GAP_PX = 64;
-const BAR_VALUE_INSET_BOTTOM_PX = 16;
-const BAR_VALUE_INSET_LEFT_PX = 16;
+const BAR_VALUE_INSET_BOTTOM_PX = 8;
+const BAR_VALUE_INSET_LEFT_PX = 8;
+const MIN_BAR_SIZE_PCT = 12;
 const COMBINED_VALUE_INSET_TOP_PX = 8;
 /** Figma `rounded-xl` — Überlappung zwischen gestapelten Segmenten. */
 const COMBINED_SEGMENT_OVERLAP_PX = 12;
@@ -93,6 +99,8 @@ const COMBINED_SEGMENT_MIN_HEIGHT_PX = 24;
 const COMBINED_BORDER_RADIUS_PX = 12;
 const BAR_TOOLTIP_SHOW_DELAY_MS = 250;
 const BAR_TOOLTIP_HIDE_DELAY_MS = 80;
+/** Abstand Tooltip → Label bei 0 (ohne sichtbaren Balken). */
+const ZERO_LABEL_TOOLTIP_GAP_CLASS = "mb-2";
 
 /**
  * Stapel unten → oben (Figma `5862:24126`).
@@ -107,6 +115,22 @@ const COMBINED_STACK_BOTTOM_TO_TOP: {
   { id: "in_review", zIndex: 10 },
 ];
 
+/** R4 Home «Alle Anträge» — Standard-Diagrammansicht (Figma `5948:27359`). */
+export const R4_ALL_APPLICATIONS_DEFAULT_CHART_VIEW: OpenApplicationsChartView = "horizontal";
+
+function resolveDefaultChartView(
+  allowedViews: OpenApplicationsChartView[] | undefined,
+  defaultChartView: OpenApplicationsChartView | undefined,
+): OpenApplicationsChartView {
+  const options = allowedViews
+    ? VIEW_OPTIONS.filter((option) => allowedViews.includes(option.value))
+    : VIEW_OPTIONS;
+  if (defaultChartView && options.some((option) => option.value === defaultChartView)) {
+    return defaultChartView;
+  }
+  return options[0]?.value ?? "vertical";
+}
+
 type OpenApplicationsSummaryCardProps = {
   stats: ApplicationsChartStats | OpenApplicationsStats;
   className?: string;
@@ -115,6 +139,8 @@ type OpenApplicationsSummaryCardProps = {
   totalAriaLabel?: string;
   /** Einschränkung der Diagrammansichten (z. B. R4 nur Vertikal/Horizontal). */
   allowedViews?: OpenApplicationsChartView[];
+  /** Startansicht; muss in `allowedViews` bzw. `VIEW_OPTIONS` enthalten sein. */
+  defaultChartView?: OpenApplicationsChartView;
   onHeaderIconClick?: () => void;
   headerIconAriaLabel?: string;
   onBucketClick?: (bucketId: ApplicationsChartBucketId) => void;
@@ -141,7 +167,7 @@ function BucketBarTooltip({
   anchor,
 }: {
   bucketId: ApplicationsChartBucketId;
-  anchor: "vertical" | "horizontal" | "combined";
+  anchor: "vertical" | "horizontal" | "combined" | "zero-label";
 }) {
   const [open, setOpen] = useState(false);
   const timeoutRef = useRef<number | null>(null);
@@ -174,17 +200,16 @@ function BucketBarTooltip({
   };
 
   const tooltipPositionClass =
-    anchor === "vertical"
-      ? "bottom-full left-1/2 mb-2 -translate-x-1/2"
-      : anchor === "horizontal"
-        ? "left-full top-1/2 ml-2 -translate-y-1/2"
-        : "bottom-full left-1/2 mb-2 -translate-x-1/2";
+    anchor === "horizontal"
+      ? "left-full top-1/2 ml-2 -translate-y-1/2"
+      : cn(
+          "bottom-full left-1/2 -translate-x-1/2",
+          anchor === "zero-label" ? ZERO_LABEL_TOOLTIP_GAP_CLASS : "mb-2",
+        );
   const tickPositionClass =
-    anchor === "vertical"
-      ? "left-1/2 top-full -translate-x-1/2 -translate-y-1/2"
-      : anchor === "horizontal"
-        ? "left-0 top-1/2 -translate-x-1/2 -translate-y-1/2"
-        : "left-1/2 top-full -translate-x-1/2 -translate-y-1/2";
+    anchor === "horizontal"
+      ? "left-0 top-1/2 -translate-x-1/2 -translate-y-1/2"
+      : "left-1/2 top-full -translate-x-1/2 -translate-y-1/2";
 
   return (
     <div
@@ -251,9 +276,8 @@ function ChartValueLabel({
   return (
     <span
       className={cn(
-        hfTypography.paragraphLargeMedium,
+        "text-hf-paragraph-large-medium whitespace-nowrap",
         styles.textClass,
-        "whitespace-nowrap",
         className,
       )}
     >
@@ -406,21 +430,42 @@ function VerticalBarsChart({
       {buckets.map((bucket) => {
         const heightPct = (bucket.value / max) * 100;
         const styles = bucketStyle(bucket.id);
+        const hasValue = bucket.value > 0;
         return (
-          <div key={bucket.id} className="flex h-full min-w-0 flex-1 items-end justify-center">
-            <div
-              className={cn(
-                "relative flex w-full min-w-0 cursor-pointer flex-col justify-end rounded-xl",
-                styles.barClass,
-              )}
-              style={{
-                height: `${Math.max(heightPct, bucket.value > 0 ? 12 : 0)}%`,
-              }}
-              onClick={() => onBucketClick?.(bucket.id)}
-            >
-              <BucketBarTooltip bucketId={bucket.id} anchor="vertical" />
-              <VerticalBarValue value={bucket.value} bucketId={bucket.id} />
-            </div>
+          <div
+            key={bucket.id}
+            className={cn(
+              "relative flex h-full min-w-0 flex-1 flex-col justify-end",
+              onBucketClick && "cursor-pointer",
+            )}
+            onClick={() => onBucketClick?.(bucket.id)}
+            onKeyDown={(event) => {
+              if (!onBucketClick) return;
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onBucketClick(bucket.id);
+              }
+            }}
+            role={onBucketClick ? "button" : undefined}
+            tabIndex={onBucketClick ? 0 : undefined}
+          >
+            {hasValue ? (
+              <div
+                className={cn(
+                  "relative flex w-full min-w-0 flex-col justify-end rounded-xl",
+                  styles.barClass,
+                )}
+                style={{ height: `${Math.max(heightPct, MIN_BAR_SIZE_PCT)}%` }}
+              >
+                <BucketBarTooltip bucketId={bucket.id} anchor="vertical" />
+                <VerticalBarValue value={bucket.value} bucketId={bucket.id} />
+              </div>
+            ) : (
+              <div className="relative flex w-full justify-center">
+                <BucketBarTooltip bucketId={bucket.id} anchor="zero-label" />
+                <VerticalBarValue value={bucket.value} bucketId={bucket.id} />
+              </div>
+            )}
           </div>
         );
       })}
@@ -446,18 +491,42 @@ function HorizontalBarsChart({
       {buckets.map((bucket) => {
         const widthPct = (bucket.value / max) * 100;
         const styles = bucketStyle(bucket.id);
+        const hasValue = bucket.value > 0;
         return (
-          <div key={bucket.id} className="flex min-h-0 flex-1 items-center">
-            <div
-              className={cn("relative flex h-full min-w-[58px] cursor-pointer rounded-xl", styles.barClass)}
-              style={{
-                width: `${Math.max(widthPct, bucket.value > 0 ? 12 : 0)}%`,
-              }}
-              onClick={() => onBucketClick?.(bucket.id)}
-            >
-              <BucketBarTooltip bucketId={bucket.id} anchor="horizontal" />
-              <HorizontalBarValue value={bucket.value} bucketId={bucket.id} />
-            </div>
+          <div
+            key={bucket.id}
+            className={cn(
+              "relative flex min-h-0 flex-1 items-center",
+              onBucketClick && "cursor-pointer",
+            )}
+            onClick={() => onBucketClick?.(bucket.id)}
+            onKeyDown={(event) => {
+              if (!onBucketClick) return;
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onBucketClick(bucket.id);
+              }
+            }}
+            role={onBucketClick ? "button" : undefined}
+            tabIndex={onBucketClick ? 0 : undefined}
+          >
+            {hasValue ? (
+              <div
+                className={cn(
+                  "relative flex h-full min-w-[58px] rounded-xl",
+                  styles.barClass,
+                )}
+                style={{ width: `${Math.max(widthPct, MIN_BAR_SIZE_PCT)}%` }}
+              >
+                <BucketBarTooltip bucketId={bucket.id} anchor="horizontal" />
+                <HorizontalBarValue value={bucket.value} bucketId={bucket.id} />
+              </div>
+            ) : (
+              <div className="relative inline-flex h-full items-center">
+                <BucketBarTooltip bucketId={bucket.id} anchor="horizontal" />
+                <HorizontalBarValue value={bucket.value} bucketId={bucket.id} />
+              </div>
+            )}
           </div>
         );
       })}
@@ -749,6 +818,7 @@ export function OpenApplicationsSummaryCard({
   title = "Offene Antragsverfahren",
   totalAriaLabel,
   allowedViews,
+  defaultChartView,
   onHeaderIconClick,
   headerIconAriaLabel,
   onBucketClick,
@@ -761,8 +831,13 @@ export function OpenApplicationsSummaryCard({
         : VIEW_OPTIONS,
     [allowedViews],
   );
-  const defaultView = viewOptions[0]?.value ?? "vertical";
-  const [view, setView] = useState<OpenApplicationsChartView>(defaultView);
+  const defaultView = useMemo(
+    () => resolveDefaultChartView(allowedViews, defaultChartView),
+    [allowedViews, defaultChartView],
+  );
+  const [view, setView] = useState<OpenApplicationsChartView>(() =>
+    resolveDefaultChartView(allowedViews, defaultChartView),
+  );
   const displayBuckets = stats.buckets;
   const resolvedView = viewOptions.some((option) => option.value === view)
     ? view

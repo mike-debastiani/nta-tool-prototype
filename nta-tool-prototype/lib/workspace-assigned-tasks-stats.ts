@@ -6,6 +6,8 @@ import {
 import {
   hfConsultationStatusForegroundClass,
   hfConsultationStatusSurfaceClass,
+  hfInDecisionStatusForegroundClass,
+  hfInDecisionStatusSurfaceClass,
   hfInReviewStatusForegroundClass,
   hfInReviewStatusSurfaceClass,
 } from "@/lib/design-tokens/status-badge-colors";
@@ -63,10 +65,10 @@ const BUCKET_META: Record<
   },
   entscheidungen: {
     label: "Entscheidungen",
-    surfaceClass: "bg-in-decision-100",
-    labelClass: "text-in-decision-800",
-    metricClass: "text-in-decision-800",
-    deltaClass: "text-in-decision-800",
+    surfaceClass: hfInDecisionStatusSurfaceClass,
+    labelClass: hfInDecisionStatusForegroundClass,
+    metricClass: hfInDecisionStatusForegroundClass,
+    deltaClass: hfInDecisionStatusForegroundClass,
   },
 };
 

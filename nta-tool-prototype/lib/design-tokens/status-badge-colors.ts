@@ -17,6 +17,14 @@ export const hfInReviewStatusSurfaceClass = "bg-beratung-100";
 export const hfInReviewStatusForegroundClass = "text-beratung-500";
 export const hfInReviewStatusBadgeClass = `${hfInReviewStatusSurfaceClass} ${hfInReviewStatusForegroundClass}`;
 
+/** «In Entscheid» / «Entscheid erforderlich» — Text immer Entscheid-800. */
+export const hfInDecisionStatusSurfaceClass = "bg-in-decision-100";
+export const hfInDecisionStatusForegroundClass = "text-in-decision-800";
+export const hfInDecisionStatusBadgeClass = `${hfInDecisionStatusSurfaceClass} ${hfInDecisionStatusForegroundClass}`;
+/** KPI «Offene Antragsverfahren» / «Alle Anträge» — Balkenfläche 200, Zahl/Tooltip 800. */
+export const hfInDecisionChartBarSurfaceClass = "bg-in-decision-200";
+export const hfInDecisionChartPieStrokeClass = "stroke-in-decision-200";
+
 /**
  * Status badge utility classes — High Fidelity palettes.
  * Single source for `application-status.ts`; do not duplicate in components.
@@ -26,7 +34,7 @@ export const hfStatusBadgeClassR1: Record<HfStatusBadgeState, string> = {
   consultation_recommendation: hfConsultationStatusBadgeClass,
   in_review: hfInReviewStatusBadgeClass,
   needs_adjustment: "bg-adjustment-100 text-adjustment-600",
-  in_decision: "bg-in-decision-100 text-in-decision-800",
+  in_decision: hfInDecisionStatusBadgeClass,
   approved: "bg-bewilligt-100 text-bewilligt-700",
   rejected: "bg-abgelehnt-50 text-abgelehnt-600",
 };

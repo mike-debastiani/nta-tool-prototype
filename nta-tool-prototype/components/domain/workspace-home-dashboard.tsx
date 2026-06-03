@@ -8,6 +8,7 @@ import { AssignedTasksSummaryCard } from "@/components/domain/assigned-tasks-sum
 import { ConsultationsThisWeekSummaryCard } from "@/components/domain/consultations-this-week-summary-card";
 import {
   OpenApplicationsSummaryCard,
+  R4_ALL_APPLICATIONS_DEFAULT_CHART_VIEW,
   type ApplicationsChartBucketId,
 } from "@/components/domain/open-applications-summary-card";
 import { useWorkspaceApplicationsTableState } from "@/components/domain/use-workspace-applications-table-state";
@@ -211,10 +212,12 @@ export function WorkspaceHomeDashboard({
         {isR4Home ? (
           <>
             <OpenApplicationsSummaryCard
+              key="r4-all-applications-kpi"
               stats={allApplicationsStats}
               title="Alle Anträge"
               totalAriaLabel={`${allApplicationsStats.total} Anträge gesamt`}
               allowedViews={["vertical", "horizontal"]}
+              defaultChartView={R4_ALL_APPLICATIONS_DEFAULT_CHART_VIEW}
               className={WORKSPACE_HOME_R4_OPEN_CARD_CLASS}
               onHeaderIconClick={maximizeApplicationsTable}
               headerIconAriaLabel="Anträge-Tabelle maximieren"
