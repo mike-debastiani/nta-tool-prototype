@@ -23,6 +23,14 @@ import {
 } from "lucide-react";
 import { AutoGrowTextarea } from "@/components/ui/auto-grow-textarea";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -347,6 +355,7 @@ export function PortalApplicationAdjustment({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [releaseSubmitting, setReleaseSubmitting] = useState(false);
   const [releaseError, setReleaseError] = useState<string | null>(null);
@@ -778,12 +787,7 @@ export function PortalApplicationAdjustment({
     }
   };
 
-  const deleteApplication = async () => {
-    const shouldDelete = window.confirm(
-      "Möchten Sie diesen Antrag wirklich zurückziehen? Der Antrag wird aus dem System entfernt; dieser Vorgang kann nicht rückgängig gemacht werden.",
-    );
-    if (!shouldDelete) return;
-
+  const performWithdrawApplication = async () => {
     setDeleting(true);
     setDeleteError(null);
     const { error } = await supabase
@@ -797,6 +801,7 @@ export function PortalApplicationAdjustment({
       return;
     }
 
+    setWithdrawDialogOpen(false);
     router.push("/portal/home");
     router.refresh();
   };
@@ -911,6 +916,7 @@ export function PortalApplicationAdjustment({
   }
 
   return (
+    <>
     <div className="flex min-h-0 flex-1 w-full min-w-0 flex-col overflow-hidden">
       <div
         ref={scrollRootRef}
@@ -1224,7 +1230,7 @@ export function PortalApplicationAdjustment({
                 "h-10 gap-2 rounded-full px-4 text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/15",
                 "focus-visible:border-destructive/30 focus-visible:ring-destructive/20",
               )}
-              onClick={() => void deleteApplication()}
+              onClick={() => setWithdrawDialogOpen(true)}
               disabled={deleting || saving}
             >
               <Trash2 className="size-4 shrink-0" aria-hidden />
@@ -1264,6 +1270,45 @@ export function PortalApplicationAdjustment({
         </div>
       </div>
     </div>
+
+    <Dialog
+      open={withdrawDialogOpen}
+      onOpenChange={(open) => {
+        if (!open && deleting) return;
+        setWithdrawDialogOpen(open);
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Antrag zurückziehen?</DialogTitle>
+          <DialogDescription>
+            Möchten Sie diesen Antrag wirklich zurückziehen? Der Antrag wird aus dem
+            System entfernt; dieser Vorgang kann nicht rückgängig gemacht werden.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-full"
+            disabled={deleting}
+            onClick={() => setWithdrawDialogOpen(false)}
+          >
+            Abbrechen
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            className="rounded-full"
+            disabled={deleting}
+            onClick={() => void performWithdrawApplication()}
+          >
+            {deleting ? "Wird zurückgezogen…" : "Zurückziehen"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 

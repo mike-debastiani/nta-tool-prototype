@@ -85,6 +85,8 @@ export type DashboardNavItemConfig = {
   href: string;
   icon: ReactNode;
   badge?: number;
+  /** false = Hover sichtbar, keine Navigation (z. B. Einstellungen, Hilfe). */
+  interactive?: boolean;
 };
 
 type WorkspaceDashboardShellProps = {
@@ -239,22 +241,22 @@ function WorkspaceNavItem({
   active: boolean;
   collapsed: boolean;
 }) {
-  return (
-    <Link
-      href={item.href}
-      onClick={(event) => event.stopPropagation()}
-      className={cn(
-        NAV_ITEM_BASE,
-        "relative",
-        collapsed ? "overflow-visible" : "overflow-hidden",
-        workspaceSidebarNavItemWidthTransitionClass,
-        "w-full justify-start",
-        collapsed ? "max-w-10 gap-0 pr-0" : "max-w-full gap-2 pr-3",
-        active ? DASHBOARD_NAV_ITEM_ACTIVE_CLASS : DASHBOARD_NAV_ITEM_IDLE_CLASS,
-      )}
-      aria-label={collapsed ? item.label : undefined}
-      title={collapsed ? item.label : undefined}
-    >
+  const interactive = item.interactive !== false;
+  const className = cn(
+    NAV_ITEM_BASE,
+    "relative",
+    collapsed ? "overflow-visible" : "overflow-hidden",
+    workspaceSidebarNavItemWidthTransitionClass,
+    "w-full justify-start",
+    collapsed ? "max-w-10 gap-0 pr-0" : "max-w-full gap-2 pr-3",
+    active && interactive
+      ? DASHBOARD_NAV_ITEM_ACTIVE_CLASS
+      : DASHBOARD_NAV_ITEM_IDLE_CLASS,
+    !interactive && "cursor-default",
+  );
+
+  const content = (
+    <>
       <span className={workspaceSidebarIconSlotClass}>
         <span className="inline-flex size-4 shrink-0 items-center justify-center">{item.icon}</span>
       </span>
@@ -304,6 +306,32 @@ function WorkspaceNavItem({
           </span>
         </>
       ) : null}
+    </>
+  );
+
+  if (!interactive) {
+    return (
+      <span
+        role="presentation"
+        className={className}
+        aria-label={collapsed ? item.label : undefined}
+        title={collapsed ? item.label : undefined}
+        onClick={(event) => event.stopPropagation()}
+      >
+        {content}
+      </span>
+    );
+  }
+
+  return (
+    <Link
+      href={item.href}
+      onClick={(event) => event.stopPropagation()}
+      className={className}
+      aria-label={collapsed ? item.label : undefined}
+      title={collapsed ? item.label : undefined}
+    >
+      {content}
     </Link>
   );
 }
@@ -364,7 +392,7 @@ function WorkspaceSidebar({
             </div>
             {topItems.map((item) => (
               <WorkspaceNavItem
-                key={item.href}
+                key={item.label}
                 item={item}
                 active={isActive(item.href)}
                 collapsed={collapsed}
@@ -383,9 +411,9 @@ function WorkspaceSidebar({
           <WorkspaceNavSeparator />
           {bottomItems.map((item) => (
             <WorkspaceNavItem
-              key={item.href}
+              key={item.label}
               item={item}
-              active={isActive(item.href)}
+              active={item.interactive !== false && isActive(item.href)}
               collapsed={collapsed}
             />
           ))}
@@ -784,11 +812,13 @@ export function PortalDashboardShell({
         label: "Einstellungen",
         href: "/portal/home?view=einstellungen",
         icon: <Settings className="size-4" strokeWidth={1.75} />,
+        interactive: false,
       },
       {
         label: "Hilfe",
         href: "/portal/home?view=hilfe",
         icon: <CircleHelp className="size-4" strokeWidth={1.75} />,
+        interactive: false,
       },
     ],
     [],
@@ -854,11 +884,13 @@ export function WorkspaceDashboardShell({
         label: "Einstellungen",
         href: "/workspace?view=einstellungen",
         icon: <Settings className="size-4" strokeWidth={1.75} />,
+        interactive: false,
       },
       {
         label: "Hilfe",
         href: "/workspace?view=hilfe",
         icon: <CircleHelp className="size-4" strokeWidth={1.75} />,
+        interactive: false,
       },
     ],
     [],

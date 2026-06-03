@@ -93,6 +93,11 @@
   --hf-in-decision-300: #d1b5fd;
   --hf-in-decision-400: #b68bfa;
   --hf-in-decision-500: #985cf6;
+  --hf-in-decision-600: #8535e8;
+  --hf-in-decision-700: #7324d4;
+  --hf-in-decision-800: #6219c4;
+  --hf-in-decision-900: #5214a8;
+  --hf-in-decision-950: #421086;
 
   /* —— Positiv / Bewilligt —— */
   --hf-bewilligt-50: #f0fdf5;
@@ -204,6 +209,11 @@
   --color-in-decision-300: var(--hf-in-decision-300);
   --color-in-decision-400: var(--hf-in-decision-400);
   --color-in-decision-500: var(--hf-in-decision-500);
+  --color-in-decision-600: var(--hf-in-decision-600);
+  --color-in-decision-700: var(--hf-in-decision-700);
+  --color-in-decision-800: var(--hf-in-decision-800);
+  --color-in-decision-900: var(--hf-in-decision-900);
+  --color-in-decision-950: var(--hf-in-decision-950);
 
   --color-bewilligt-50: var(--hf-bewilligt-50);
   --color-bewilligt-100: var(--hf-bewilligt-100);

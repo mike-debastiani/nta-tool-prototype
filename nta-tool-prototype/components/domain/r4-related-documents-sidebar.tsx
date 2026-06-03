@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { EllipsisVertical, ExternalLink, FileText } from "lucide-react";
+import { EllipsisVertical, FileText } from "lucide-react";
 
+import { OpenInDocumentTabIndicator } from "@/components/domain/open-in-document-tab-indicator";
 import { APPLICATION_CONTENT_PANEL_CARD_CLASS } from "@/lib/design-tokens/application-content-panel";
 import { hfTypography } from "@/lib/design-tokens/typography";
 import { cn } from "@/lib/utils";
@@ -14,7 +15,7 @@ type RelatedDocumentItem = {
   subtitle: string;
 };
 
-/** Figma `6415:26217` — eine Dezimalstelle wie im Beispiel (z. B. «2.9 MB»). */
+/** Figma `6531:26481` — eine Dezimalstelle wie im Beispiel (z. B. «2.9 MB»). */
 function formatDocumentFileSize(sizeInBytes: number): string {
   if (!sizeInBytes || Number.isNaN(sizeInBytes)) return "—";
   return `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -57,11 +58,19 @@ function buildRelatedDocuments(application: WorkspaceApplication): RelatedDocume
   return items;
 }
 
+/** Einzelnes Dokument — Figma Item `6531:26487` (Icon 24px, External-Link 16px). */
 function RelatedDocumentRow({ title, subtitle }: { title: string; subtitle: string }) {
   return (
-    <div className="flex w-full items-center gap-4 rounded-lg border border-border p-4">
-      <FileText className="size-6 shrink-0 text-muted-foreground" strokeWidth={1.75} aria-hidden />
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
+    <div
+      className="flex w-full items-center gap-4 rounded-lg border border-border p-4"
+      data-node-id="6531:26487"
+    >
+      <FileText
+        className="size-6 shrink-0 text-foreground"
+        strokeWidth={1.75}
+        aria-hidden
+      />
+      <div className="flex min-w-0 flex-1 flex-col text-hf-paragraph-small">
         <p className={cn(hfTypography.paragraphSmallMedium, "truncate text-foreground")}>
           {title}
         </p>
@@ -69,19 +78,13 @@ function RelatedDocumentRow({ title, subtitle }: { title: string; subtitle: stri
           {subtitle}
         </p>
       </div>
-      <span
-        className="inline-flex size-6 shrink-0 items-center justify-center text-muted-foreground"
-        title="Dokument im Antrag enthalten"
-        aria-hidden
-      >
-        <ExternalLink className="size-6" strokeWidth={1.75} />
-      </span>
+      <OpenInDocumentTabIndicator title="Dokument im Antrag enthalten" />
     </div>
   );
 }
 
 /**
- * Sidebar-Karte «Zugehörige Dokumente» (Figma `6415:26217`) — Atteste + Empfehlungsschreiben.
+ * Sidebar-Karte «Zugehörige Dokumente» (Figma `6531:26481`) — Atteste + Empfehlungsschreiben.
  * Das External-Link-Icon ist nur ein visueller Indikator (kein Öffnen in neuem Tab).
  */
 export function R4RelatedDocumentsSidebar({
@@ -100,6 +103,7 @@ export function R4RelatedDocumentsSidebar({
         "flex w-full shrink-0 flex-col gap-4 p-4",
         className,
       )}
+      data-node-id="6531:26482"
       aria-labelledby="r4-related-documents-heading"
     >
       <div className="flex items-center justify-between gap-2">

@@ -51,7 +51,7 @@
 
 ### Bekannte Figma-Lücken
 
-- **In Entscheidung 600–950:** In der HF-Datei sind die Swatches 600–950 visuell alle auf `#985cf6` (500) gesetzt; Textlabels sind Platzhalter (Stone). Im Code sind nur **50–500** hinterlegt. Vor Nutzung dunklerer Violett-Töne bitte in Figma nachziehen oder hier Hex ergänzen.
+- **In Entscheidung 600–950:** In Figma waren 600–950 zunächst Platzhalter; im Code sind **600–950** als abgestuftes Violett hinterlegt (Text u. a. **`in-decision-800`**). Bei Abweichung zur HF-Datei Hex in `high-fidelity-colors.css` anpassen.
 
 - **Anpassung erforderlich 800:** Figma hat `#b44f09` (gleich wie 700) — 1:1 übernommen.
 
@@ -66,8 +66,8 @@ Zentral in `lib/design-tokens/status-badge-colors.ts`, konsumiert von `lib/appli
 | Entwurf | `bg-entwurf-100 text-entwurf-500` |
 | Beratung & Empfehlung | `bg-consultation-surface` / `text-consultation-accent` (`#E0F2FE` / `#0EA5E9`) |
 | In Review / Review erforderlich (R1, R2, R4) | `bg-beratung-100 text-beratung-500` |
-| Anpassung | `bg-adjustment-100 text-adjustment-500` |
-| In Entscheid | `bg-in-decision-100 text-in-decision-500` |
+| Anpassung | `bg-adjustment-100 text-adjustment-600` |
+| In Entscheid | `bg-in-decision-100 text-in-decision-800` |
 | Bewilligt | `bg-bewilligt-100 text-bewilligt-700` |
 | Abgelehnt | `bg-abgelehnt-50 text-abgelehnt-600` |
 | R2 „Empfehlung verfasst“ | `bg-stone-100 text-stone-500` |
@@ -206,7 +206,7 @@ Utility-Klassen: `hf-px-page` (Toolbar-Padding), `hf-gap-grid` (Gap = Gutter).
 | `5641:23410` | R4 Fachstelle-bestätigt |
 | `5657:17967` / `5907:23351` / `5657:18077` | R4 Entscheid-Schalter; `5907:23378` Freitext-Vorschlag (nur Massnahmen; `AutoGrowTextarea`) |
 | `6415:26074` | R4 Verfügungsdokument (`R4VerfuegungDocument`) |
-| `6415:26217` | R4 Sidebar «Zugehörige Dokumente» |
+| `6531:26481` | R4 Sidebar «Zugehörige Dokumente» (Items `6531:26487`) |
 | `6426:26226` | R4 abgelehnte Verfügung + abgelehnte Blöcke |
 
 Vollständige Mechanik → **`Antrag_Review_Kontext.md`**, R4 → **`Antrag_Bewilligung_Kontext.md`**, Shell → **`Dashboard_Core_Layout_Kontext.md`**.

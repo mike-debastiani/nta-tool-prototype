@@ -57,7 +57,7 @@ const BUCKET_STYLES: Record<
   },
   in_decision: {
     barClass: "bg-in-decision-200",
-    textClass: "text-in-decision-500",
+    textClass: "text-in-decision-800",
     pieStrokeClass: "stroke-in-decision-200",
   },
   approved: {

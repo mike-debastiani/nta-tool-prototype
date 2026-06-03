@@ -162,7 +162,7 @@ export function getR1CardVisualConfig(
       return {
         variant,
         shellClass: "bg-in-decision-100",
-        titleClass: "text-in-decision-500",
+        titleClass: "text-in-decision-800",
         title: "Offenes Antragsverfahren",
         progressSteps: [
           completedStep("review"),
@@ -191,7 +191,7 @@ export function getR1CardVisualConfig(
       return {
         variant,
         shellClass: "bg-abgelehnt-100",
-        titleClass: "text-abgelehnt-800",
+        titleClass: "text-abgelehnt-600",
         title: "Abgelehnt",
         progressSteps: [
           completedStep("review"),
@@ -212,30 +212,36 @@ export function getR1CardVisualConfig(
 /** Aktive Progress-Palette → Tailwind-Klassen (Figma `5856:21926`). */
 export const R1_PROGRESS_PALETTE_CLASS: Record<
   R1ProgressPalette,
-  { circle: string; label: string }
+  { circleBg: string; circleText: string; label: string }
 > = {
   neutral: {
-    circle: "bg-stone-150 text-muted-foreground",
+    circleBg: "bg-stone-150",
+    circleText: "text-muted-foreground",
     label: "text-muted-foreground",
   },
   in_review: {
-    circle: "bg-in-review-50 text-beratung-800",
+    circleBg: "bg-in-review-50",
+    circleText: "text-beratung-800",
     label: "text-beratung-800",
   },
   adjustment: {
-    circle: "bg-adjustment-100 text-adjustment-600",
+    circleBg: "bg-adjustment-100",
+    circleText: "text-adjustment-600",
     label: "text-adjustment-600",
   },
   in_decision: {
-    circle: "bg-in-decision-100 text-in-decision-500",
-    label: "text-in-decision-500",
+    circleBg: "bg-in-decision-100",
+    circleText: "text-in-decision-800",
+    label: "text-in-decision-800",
   },
   bewilligt: {
-    circle: "bg-bewilligt-50 text-bewilligt-800",
+    circleBg: "bg-bewilligt-50",
+    circleText: "text-bewilligt-800",
     label: "text-bewilligt-800",
   },
   abgelehnt: {
-    circle: "bg-abgelehnt-50 text-abgelehnt-600",
+    circleBg: "bg-abgelehnt-50",
+    circleText: "text-abgelehnt-600",
     label: "text-abgelehnt-600",
   },
 };

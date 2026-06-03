@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ChevronDown, ExternalLink } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Accordion as AccordionPrimitive } from "radix-ui";
 
 import {
@@ -9,6 +9,7 @@ import {
   AccordionContent,
   AccordionItem,
 } from "@/components/ui/accordion";
+import { OpenInDocumentTabIndicator } from "@/components/domain/open-in-document-tab-indicator";
 import { cn } from "@/lib/utils";
 
 type Variant = "card" | "plain" | "r1";
@@ -40,24 +41,6 @@ function formatReleasedAt(iso?: string) {
     month: "2-digit",
     year: "numeric",
   });
-}
-
-/**
- * Visueller «In neuem Tab öffnen»-Indikator (keine Aktion — nur Icon + Hover).
- */
-function OpenInDocumentTabIndicator({ className }: { className?: string }) {
-  return (
-    <span
-      title="Empfehlungsschreiben in neuem Tab öffnen"
-      className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-[9999px] text-muted-foreground transition-colors hover:bg-stone-100 hover:text-foreground",
-        className,
-      )}
-      aria-hidden
-    >
-      <ExternalLink className="size-4" aria-hidden />
-    </span>
-  );
 }
 
 /** Freigabe-Meta (HF 5247:5570) — Datum, Avatar, Chevron (ohne Tab-Icon). */
@@ -129,7 +112,9 @@ function RecommendationAccordionHeader({
       >
       {title}
       <div className="flex shrink-0 items-center gap-2">
-        {showOpenIndicator ? <OpenInDocumentTabIndicator /> : null}
+        {showOpenIndicator ? (
+          <OpenInDocumentTabIndicator title="Empfehlungsschreiben in neuem Tab öffnen" />
+        ) : null}
         <AccordionPrimitive.Trigger
           data-slot="accordion-trigger"
           data-node-id={triggerDataNodeId}

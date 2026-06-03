@@ -57,24 +57,31 @@ function StepCircle({ step, index }: { step: R1ProgressStep; index: number }) {
       <div
         className={cn(
           "flex size-10 shrink-0 items-center justify-center rounded-full",
-          palette.circle,
+          palette.circleBg,
         )}
         aria-hidden
       >
-        <X className="size-5 text-abgelehnt-600" strokeWidth={2.5} />
+        <X className={cn("size-5", palette.circleText)} strokeWidth={2.5} />
       </div>
     );
   }
+
+  const isActive = step.state === "active";
 
   return (
     <div
       className={cn(
         "relative flex size-10 shrink-0 items-center justify-center rounded-full",
-        step.state === "active" ? palette.circle : "bg-stone-150 text-muted-foreground",
+        isActive ? palette.circleBg : "bg-stone-150",
       )}
       aria-hidden
     >
-      <span className={cn(hfTypography.paragraphSmallMedium, "leading-none")}>
+      <span
+        className={cn(
+          "text-hf-paragraph-small-medium leading-none",
+          isActive ? palette.circleText : "text-muted-foreground",
+        )}
+      >
         {index + 1}
       </span>
     </div>

@@ -74,7 +74,7 @@ const ONBOARDING_STEPS: readonly OnboardingStep[] = [
     activeNodeIndex: 1,
   },
   {
-    badgeClass: "bg-adjustment-100 text-adjustment-500",
+    badgeClass: "bg-adjustment-100 text-adjustment-600",
     badgeLabel: "Anpassung erforderlich",
     title: "Anpassung erforderlich",
     paragraphs: [
@@ -83,7 +83,7 @@ const ONBOARDING_STEPS: readonly OnboardingStep[] = [
     activeNodeIndex: 2,
   },
   {
-    badgeClass: "bg-in-decision-100 text-in-decision-500",
+    badgeClass: "bg-in-decision-100 text-in-decision-800",
     badgeLabel: "In Entscheid",
     title: "In Entscheid",
     paragraphs: [

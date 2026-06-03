@@ -64,9 +64,9 @@ const BUCKET_META: Record<
   entscheidungen: {
     label: "Entscheidungen",
     surfaceClass: "bg-in-decision-100",
-    labelClass: "text-in-decision-500",
-    metricClass: "text-in-decision-500",
-    deltaClass: "text-in-decision-500",
+    labelClass: "text-in-decision-800",
+    metricClass: "text-in-decision-800",
+    deltaClass: "text-in-decision-800",
   },
 };
 

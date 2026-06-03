@@ -18,7 +18,7 @@ const R2_R4_REJECTED =
   "Der Antrag wurde abgelehnt. Die Verfügung mit der Rechtsmittelbelehrung wurde der antragstellenden Person übermittelt. Die Begründung des Entscheids finden Sie unten auf dieser Seite.";
 
 const R1_APPROVED =
-  "Ihr Antrag auf Nachteilsausgleich wurde bewilligt. Die Verfügung mit den genehmigten Massnahmen finden Sie unten zum Download.";
+  "Ihr Antrag auf Nachteilsausgleich wurde bewilligt. In der nachfolgenden Verfügung sind die bewilligten NTA Massnahmen festgehalten.";
 
 const R1_REJECTED =
   "Ihr Antrag auf Nachteilsausgleich wurde abgelehnt. Die Verfügung mit der Rechtsmittelbelehrung steht unten zum Download bereit. Die Begründung des Entscheids finden Sie ebenfalls unten auf dieser Seite.";

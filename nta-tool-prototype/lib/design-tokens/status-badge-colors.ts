@@ -25,8 +25,8 @@ export const hfStatusBadgeClassR1: Record<HfStatusBadgeState, string> = {
   draft: "bg-entwurf-100 text-entwurf-500",
   consultation_recommendation: hfConsultationStatusBadgeClass,
   in_review: hfInReviewStatusBadgeClass,
-  needs_adjustment: "bg-adjustment-100 text-adjustment-500",
-  in_decision: "bg-in-decision-100 text-in-decision-500",
+  needs_adjustment: "bg-adjustment-100 text-adjustment-600",
+  in_decision: "bg-in-decision-100 text-in-decision-800",
   approved: "bg-bewilligt-100 text-bewilligt-700",
   rejected: "bg-abgelehnt-50 text-abgelehnt-600",
 };

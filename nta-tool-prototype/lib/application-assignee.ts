@@ -14,8 +14,14 @@ export type ApplicationAssignee = {
 const R2_FALLBACK = "NTA Fachstelle";
 const R4_FALLBACK = "Entscheidungsinstanz";
 
-/** Prototyp: R4-Name in Listen, wenn Viewer R2 ist (sollte zum R4-Test-`display_name` passen). */
-export const WORKSPACE_PROTOTYPE_R4_REVIEWER_NAME = R4_FALLBACK;
+/**
+ * R1/R2: «Zugewiesen an» bei Status In Entscheid (R4 sieht weiterhin eigenes Konto / `R4_FALLBACK`).
+ * Entspricht Verfügungs-Unterzeichner in `r4-verfuegung-document.tsx`.
+ */
+export const PROTOTYPE_IN_DECISION_ASSIGNEE_NAME = "Markus Decision";
+
+/** Prototyp: R4-Name in Listen/Sidebar, wenn Viewer R1 oder R2 ist. */
+export const WORKSPACE_PROTOTYPE_R4_REVIEWER_NAME = PROTOTYPE_IN_DECISION_ASSIGNEE_NAME;
 
 /** Prototyp: R2-Name in Listen, wenn Viewer R4 ist. */
 export const WORKSPACE_PROTOTYPE_R2_REVIEWER_NAME = R2_FALLBACK;
@@ -86,7 +92,7 @@ export function resolveWorkspaceRoleAssigneeNames(options: {
  *
  * - Anpassung erforderlich / Bewilligt / Abgelehnt → Antragsteller (Formularname)
  * - In Review / Beratung & Empfehlung → angemeldetes R2-Konto
- * - In Entscheid → angemeldetes R4-Konto
+ * - In Entscheid → R4-Konto (eingeloggt) bzw. `PROTOTYPE_IN_DECISION_ASSIGNEE_NAME` für R1/R2-Viewer
  */
 export function resolveApplicationAssignee(options: {
   canonicalState: CanonicalApplicationState;

@@ -40,7 +40,7 @@ Login: **`/staff/login`** — R2–R6 inkl. **R4** / **R2R4**; Redirect **`/work
 - **Sidebar «Antragdetails»:** oben Metadaten (`ApplicationDetailsCard`); **kein Bemerkungs-Panel** (`showCommentsSection={false}` in `WorkspaceR4DecisionView`).
 - **Sidebar je Phase:**
   - **Entscheid-Blöcke** (`canEdit`, nicht in `verfuegungMode`): **`secondarySection="r4_contacts"`** — Kontakt-Cards (`R4ContactsSection` in `application-review-detail-sidebar.tsx`): Antragstellende Person, Kontaktperson Fachstelle; Scroll wie bisher (`detailPanelScrollAreaClass`).
-  - **Verfügungs-Vorschau und ausgestellte Verfügung** (`verfuegungMode` oder `approved` / `rejected`): **`secondarySection="r4_related_documents"`** — **`R4RelatedDocumentsSidebar`** (Figma `6415:26217`): Fachärztliches Attest + Empfehlungsschreiben (Dateigrösse bzw. Freigabedatum); External-Link-Icon dekorativ (kein Download im Prototyp).
+  - **Verfügungs-Vorschau und ausgestellte Verfügung** (`verfuegungMode` oder `approved` / `rejected`): **`secondarySection="r4_related_documents"`** — **`R4RelatedDocumentsSidebar`** (Figma `6531:26481`): Fachärztliches Attest + Empfehlungsschreiben (Dateigrösse bzw. Freigabedatum); External-Link 16px dekorativ (kein Download im Prototyp).
 - **R4 Lesesicht** (andere Status): `WorkspaceApplicationReview` mit `workspaceViewerRole="R4"` — ebenfalls **ohne** Bemerkungen, nur Kontakte + read-only Callouts (`muted`).
 
 ---
