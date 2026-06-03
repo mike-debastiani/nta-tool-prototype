@@ -8,9 +8,18 @@ export type WorkspaceConsultationAppointmentDetails = {
   advisorLines: string[];
 };
 
-export function parseConsultationStart(application: WorkspaceApplication): Date | null {
-  const slot = application.data.consultation?.slot?.trim();
-  const iso = application.data.consultation?.dateIso?.trim();
+type ConsultationDateFields = {
+  dateIso?: string;
+  slot?: string;
+  date?: string;
+};
+
+export function parseConsultationStartFromFields(
+  fields: ConsultationDateFields | null | undefined,
+): Date | null {
+  if (!fields) return null;
+  const slot = fields.slot?.trim();
+  const iso = fields.dateIso?.trim();
   if (iso) {
     const date = new Date(iso);
     if (Number.isFinite(date.getTime())) {
@@ -27,7 +36,7 @@ export function parseConsultationStart(application: WorkspaceApplication): Date 
     }
   }
 
-  const fallback = application.data.consultation?.date?.trim();
+  const fallback = fields.date?.trim();
   if (!fallback) return null;
 
   const match =
@@ -68,6 +77,10 @@ export function parseConsultationStart(application: WorkspaceApplication): Date 
     }
   }
   return date;
+}
+
+export function parseConsultationStart(application: WorkspaceApplication): Date | null {
+  return parseConsultationStartFromFields(application.data.consultation);
 }
 
 function formatConsultationTimeLine(slot: string | undefined): string {

@@ -1315,6 +1315,24 @@ export function NtaAntragDesktop({
       targetId = data.id as string;
     }
 
+    const priorConsultation = application?.data?.consultation;
+    const nextDateIso = selectedBookingDate.toISOString();
+    const supersededAppointments = [...(priorConsultation?.supersededAppointments ?? [])];
+    if (priorConsultation?.dateIso) {
+      const dateChanged = priorConsultation.dateIso !== nextDateIso;
+      const slotChanged =
+        (priorConsultation.slot ?? "").trim() !== selectedBookingSlot.trim();
+      if (dateChanged || slotChanged) {
+        supersededAppointments.push({
+          dateIso: priorConsultation.dateIso,
+          slot: priorConsultation.slot,
+          date: priorConsultation.date,
+          location: priorConsultation.location,
+          locationType: priorConsultation.locationType,
+        });
+      }
+    }
+
     const { error: updateError } = await supabase
       .from("applications")
       .update({
@@ -1336,13 +1354,15 @@ export function NtaAntragDesktop({
           consultation: {
             status: "booked",
             date: bookingDateLabel,
-            dateIso: selectedBookingDate.toISOString(),
+            dateIso: nextDateIso,
             slot: selectedBookingSlot,
             location: selectedBookingOption.location,
             locationType: selectedBookingOption.mode,
-            advisor: MOCK_ADVISOR,
+            advisor: priorConsultation?.advisor ?? MOCK_ADVISOR,
+            supersededAppointments:
+              supersededAppointments.length > 0 ? supersededAppointments : undefined,
           },
-          recommendation: {
+          recommendation: application?.data?.recommendation ?? {
             ready: false,
             url: "https://www.google.com",
           },

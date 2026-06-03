@@ -16,7 +16,6 @@ import {
   Video,
 } from "lucide-react";
 
-import { workspaceApplicationListNumber } from "@/components/domain/application-review-blocks";
 import { WorkspaceApplicationsTableFilterPopover } from "@/components/domain/workspace-applications-table-filter-popover";
 import { Input } from "@/components/ui/input";
 import {
@@ -45,10 +44,13 @@ import {
   hasReleasedRecommendation,
   isConsultationPhaseApplication,
 } from "@/lib/application-status";
-import { resolveApplicantDisplayName } from "@/lib/application-assignee";
 import type { UserRole } from "@/lib/auth";
 import type { WorkspaceApplication } from "@/lib/test-flow-types";
 import { parseConsultationStart } from "@/lib/workspace-consultation-appointment";
+import {
+  buildConsultationPlannerAppointments,
+  CONSULTATION_PLANNER_APPOINTMENT_ROW_CLASS,
+} from "@/lib/workspace-consultation-planner-appointments";
 import { cn } from "@/lib/utils";
 
 type WorkspaceConsultationPlannerViewProps = {
@@ -60,19 +62,6 @@ type WorkspaceConsultationPlannerViewProps = {
 
 const WEEKDAY_LABELS = ["MO", "DI", "MI", "DO", "FR", "SA", "SO"] as const;
 const TERMIN_SORT_COLUMN = "termin";
-
-type ConsultationAppointment = {
-  applicationId: string;
-  applicantName: string;
-  appointmentDate: Date;
-  dateKey: string;
-  weekdayShortLine: string;
-  timeLabel: string;
-  locationLabel: string;
-  locationType: "zoom" | "onsite";
-  releasedToApplicant: boolean;
-  listNumber: string;
-};
 
 type RecommendationListRow = {
   applicationId: string;
@@ -170,76 +159,6 @@ function isPotentialAvailabilityDay(date: Date): boolean {
   return weekday >= 1 && weekday <= 5;
 }
 
-/** Reale Beratungstermine aus `applications.data.consultation`. */
-/**
- * Adresse als Paar-Schema: «Gebäude, Raum • Strasse, PLZ Ort».
- * Komma-getrennte Teile werden paarweise mit «, » gruppiert, Gruppen mit « • » getrennt.
- */
-function formatAppointmentLocation(raw: string | undefined): string {
-  const parts =
-    raw
-      ?.split(",")
-      .map((part) => part.trim())
-      .filter(Boolean) ?? [];
-
-  if (parts.length === 0) {
-    return "UZH Gebäude SBO, Raum E-103 • Schönbergstrasse 15, 8001 Zürich";
-  }
-
-  const groups: string[] = [];
-  for (let index = 0; index < parts.length; index += 2) {
-    groups.push(parts.slice(index, index + 2).join(", "));
-  }
-  return groups.join(" • ");
-}
-
-/** Hat der Antrag einen real gebuchten Beratungstermin (unabhängig vom Antragsstatus)? */
-function hasBookedConsultation(application: WorkspaceApplication): boolean {
-  const status = application.data.consultation?.status;
-  return status === "booked" || status === "done";
-}
-
-function buildConsultationAppointments(
-  applications: WorkspaceApplication[],
-): ConsultationAppointment[] {
-  return applications
-    .flatMap((application) => {
-      if (!hasBookedConsultation(application)) return [];
-
-      const startsAt = parseConsultationStart(application);
-      if (!startsAt) return [];
-
-      const slot = application.data.consultation?.slot?.trim();
-      const timeLabel = slot
-        ? normalizeSlotLabel(slot)
-        : startsAt.toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" });
-
-      const weekdayShortLine = `${capitalize(
-        startsAt.toLocaleDateString("de-CH", { weekday: "long" }),
-      )}, ${startsAt.toLocaleDateString("de-CH", { day: "numeric", month: "long" })}`;
-
-      const locationLabel = formatAppointmentLocation(application.data.consultation?.location);
-      const locationType =
-        application.data.consultation?.locationType === "zoom" ? "zoom" : "onsite";
-
-      return [
-        {
-          applicationId: application.id,
-          applicantName: resolveApplicantDisplayName(application),
-          appointmentDate: startsAt,
-          dateKey: formatDateKey(startsAt),
-          weekdayShortLine,
-          timeLabel,
-          locationLabel,
-          locationType,
-          releasedToApplicant: hasReleasedRecommendation(application),
-          listNumber: workspaceApplicationListNumber(application),
-        } satisfies ConsultationAppointment,
-      ];
-    })
-    .sort((a, b) => a.appointmentDate.getTime() - b.appointmentDate.getTime());
-}
-
 function dayStateClasses(options: {
   isSelected: boolean;
   hasAppointment: boolean;
@@ -271,7 +190,7 @@ export function WorkspaceConsultationPlannerView({
   const today = useMemo(() => startOfDay(new Date()), []);
 
   const appointments = useMemo(
-    () => buildConsultationAppointments(applications),
+    () => buildConsultationPlannerAppointments(applications),
     [applications],
   );
 
@@ -579,24 +498,24 @@ export function WorkspaceConsultationPlannerView({
             ) : (
               <div className="flex flex-col gap-2">
                 {selectedDayAppointments.map((appointment) => {
-                  const released = appointment.releasedToApplicant;
+                  const rowStyle =
+                    CONSULTATION_PLANNER_APPOINTMENT_ROW_CLASS[appointment.variant];
+                  const mutedText = appointment.variant === "completed";
                   return (
                     <button
-                      key={`${appointment.applicationId}-${appointment.dateKey}`}
+                      key={appointment.listKey}
                       type="button"
                       onClick={() => onSelectApplication(appointment.applicationId)}
                       className={cn(
                         "flex w-full items-start justify-between gap-3 rounded-[10px] px-3 py-2 text-left transition-colors",
-                        released
-                          ? "bg-abgelehnt-100 hover:bg-abgelehnt-100/70"
-                          : "bg-consultation-surface hover:bg-consultation-surface/80",
+                        rowStyle.surface,
                       )}
                     >
                       <div className="flex min-w-0 items-stretch gap-3">
                         <span
                           className={cn(
                             "w-1 shrink-0 self-stretch rounded-sm",
-                            released ? "bg-abgelehnt-600" : "bg-beratung-500",
+                            rowStyle.accent,
                           )}
                           aria-hidden
                         />
@@ -604,8 +523,9 @@ export function WorkspaceConsultationPlannerView({
                           <div className="flex w-[120px] shrink-0 flex-col gap-0.5">
                             <p
                               className={cn(
-                                "text-hf-paragraph-mini text-muted-foreground",
-                                released && "line-through",
+                                "text-hf-paragraph-mini",
+                                mutedText ? "text-stone-500" : "text-muted-foreground",
+                                rowStyle.strike && "line-through",
                               )}
                             >
                               {appointment.weekdayShortLine}
@@ -613,7 +533,8 @@ export function WorkspaceConsultationPlannerView({
                             <p
                               className={cn(
                                 "text-hf-paragraph-small-medium",
-                                released ? "text-foreground line-through" : "text-foreground",
+                                mutedText ? "text-stone-500" : "text-foreground",
+                                rowStyle.strike && "line-through",
                               )}
                             >
                               {appointment.timeLabel}
@@ -623,30 +544,47 @@ export function WorkspaceConsultationPlannerView({
                             <p
                               className={cn(
                                 "truncate text-hf-paragraph-small-medium",
-                                released ? "text-foreground line-through" : "text-foreground",
+                                mutedText ? "text-stone-500" : "text-foreground",
+                                rowStyle.strike && "line-through",
                               )}
                             >
                               {appointment.applicantName}
                             </p>
                             {appointment.locationType === "zoom" ? (
-                              <span className="inline-flex items-center gap-1 text-hf-paragraph-mini text-muted-foreground">
+                              <span
+                                className={cn(
+                                  "inline-flex items-center gap-1 text-hf-paragraph-mini",
+                                  mutedText ? "text-stone-400" : "text-muted-foreground",
+                                  rowStyle.strike && "line-through",
+                                )}
+                              >
                                 <Video className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
                                 Teams
                               </span>
                             ) : (
-                              <p className="truncate text-hf-paragraph-mini text-muted-foreground">
+                              <p
+                                className={cn(
+                                  "truncate text-hf-paragraph-mini",
+                                  mutedText ? "text-stone-400" : "text-muted-foreground",
+                                  rowStyle.strike && "line-through",
+                                )}
+                              >
                                 {appointment.locationLabel}
                               </p>
                             )}
                           </div>
                         </div>
                       </div>
-                      <span
-                        className="flex shrink-0 items-center self-center text-foreground-alt"
-                        aria-hidden
-                      >
-                        <EllipsisVertical className="size-4" strokeWidth={1.75} />
-                      </span>
+                      <div className="flex shrink-0 items-center gap-2 self-center">
+                        {appointment.variant === "completed" ? (
+                          <span className="inline-flex items-center rounded-md bg-bewilligt-100 px-2 py-0.5 text-hf-paragraph-mini-medium text-bewilligt-600">
+                            Erledigt
+                          </span>
+                        ) : null}
+                        <span className="text-foreground-alt" aria-hidden>
+                          <EllipsisVertical className="size-4" strokeWidth={1.75} />
+                        </span>
+                      </div>
                     </button>
                   );
                 })}

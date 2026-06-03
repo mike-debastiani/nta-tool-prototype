@@ -112,6 +112,15 @@ export type ApplicationDefinitionData = {
   assessmentOtherText?: string;
 };
 
+/** Früherer Slot nach «Termin verschieben» — Terminplaner: rot/durchgestrichen. */
+export type ConsultationSupersededAppointment = {
+  dateIso: string;
+  slot?: string;
+  date?: string;
+  location?: string;
+  locationType?: "zoom" | "onsite";
+};
+
 export type ApplicationData = {
   title?: string;
   summary?: string;
@@ -142,6 +151,8 @@ export type ApplicationData = {
     location?: string;
     locationType?: "zoom" | "onsite";
     advisor?: string;
+    /** Verschobene Termine (Historie für R2 Terminplaner). */
+    supersededAppointments?: ConsultationSupersededAppointment[];
   };
   recommendation?: {
     ready?: boolean;
