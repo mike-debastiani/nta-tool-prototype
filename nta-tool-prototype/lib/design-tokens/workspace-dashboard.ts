@@ -7,7 +7,7 @@ export const DASHBOARD_SIDEBAR_PADDING_CLASS = "py-3 pl-[18px]";
 
 /** Nav-Item aktiv (Figma `5509:11682` — `general/primary`). */
 export const DASHBOARD_NAV_ITEM_ACTIVE_CLASS =
-  "rounded-[7px] bg-primary text-primary-foreground hover:bg-stone-600";
+  "rounded-[7px] bg-primary text-primary-foreground";
 
 /** Nav-Item inaktiv — unveränderte Layout-Klassen (`NAV_ITEM_BASE` in Shell). */
 export const DASHBOARD_NAV_ITEM_IDLE_CLASS =

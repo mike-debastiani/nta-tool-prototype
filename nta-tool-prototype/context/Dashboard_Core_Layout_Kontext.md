@@ -31,7 +31,10 @@ DashboardShell (intern)
 | `components/domain/workspace-r2-toolbar-context.tsx` | Slot für Workspace-Top-Bar links (z. B. «Zurück zur Liste») |
 | `components/domain/workspace-home-dashboard.tsx` | Workspace-Home (Figma `5509:11682`); KPI-Zeile live inkl. «Anstehende Beratungen»; Anträge inkl. Beratungsphase |
 | `components/domain/workspace-my-tasks-view.tsx` | `/workspace?view=aufgaben` — vorab gefilterte Aufgaben + gleiche Tabellen-Toolbar |
-| `components/domain/workspace-evaluate-view.tsx` | `/workspace?view=auswerten` — leerer Platzhalter (`stone-50`) |
+| `components/domain/workspace-evaluate-view.tsx` | `/workspace?view=auswerten` — R2-Institutionsauswertung (KPIs, Charts, Filter) |
+| `components/domain/workspace-evaluate-charts.tsx` | SVG/CSS-Charts für Auswerten (Balken, Monate, Fakultäts-Stapel) |
+| `lib/workspace-evaluate-mock-data.ts` | `getEvaluateSnapshot(filters)` — lädt JSON, skaliert Filter |
+| `lib/config/workspace-evaluate-mock.json` | **SSOT** Mock-Zahlen (Fakultäten inkl. `statusCounts`, Monate, Massnahmen, KPIs) |
 | `components/domain/use-workspace-applications-table-state.ts` | Shared State: Offen/Alle (nur Home), Suche, Facetten, Sortierung; optional `excludeConsultationPhase` (Default: aus) |
 | `components/domain/workspace-applications-table-toolbar.tsx` | Suche, Offen/Alle-Toggle (Home), Filter-Popover, aktive Pills |
 | `components/domain/workspace-applications-table-filter-popover.tsx` | Facettierte Filter (Status, Studiengang, Fakultät, Zugewiesen an, «Nur mir») |
@@ -163,7 +166,7 @@ Beim **Aufklappen:** `layoutMini` sofort `false`, dann `collapsed` → `false` (
 | Home | `/workspace` |
 | Meine Aufgaben | `/workspace?view=aufgaben` — Badge = Gesamtanzahl Aufgaben (s. oben) |
 | Beratungen planen | `/workspace?view=terminplaner` — **R2, R3, R2R4** (Sidebar via `lib/workspace-nav-access.ts`); **R4** ohne Eintrag; `WorkspaceConsultationPlannerView` (Figma `6297:23890`): zwei `stone-50`-Karten — **Beratungstermine** (Monatskalender + Tagesliste) und **Beratungen & Empfehlungen Liste** |
-| Auswerten | `/workspace?view=auswerten` — `WorkspaceEvaluateView` (leerer Platzhalter) |
+| Auswerten | `/workspace?view=auswerten` — `WorkspaceEvaluateView` (alle Workspace-Rollen; Inhalt R2-Zielbild) |
 | Einstellungen / Hilfe | `?view=einstellungen` / `?view=hilfe` |
 
 Aktiv-Logik: `useDashboardNavActive(variant)` — Pfad + optional `view`-Query-Parameter.
@@ -226,7 +229,7 @@ Default-Zurück: `portalDefaultBackButton` in `workspace-dashboard-shell.tsx`.
 | `/workspace` ohne `?view=` | `WorkspaceHomeDashboard` | R2, R3, R4, **R2R4** |
 | `/workspace?view=aufgaben` | `WorkspaceMyTasksView` | R2, R3, R4, **R2R4** |
 | `/workspace?view=terminplaner` | `WorkspaceConsultationPlannerView` (R2/R3/**R2R4**) — Monatskalender + Tagestermine + Empfehlungsliste (Live aus `data.consultation`) | R4 → Redirect `/workspace` |
-| `/workspace?view=auswerten` | `WorkspaceEvaluateView` (leer) | alle Workspace-Rollen |
+| `/workspace?view=auswerten` | `WorkspaceEvaluateView` — Mock-Aggregate, Filter, Charts (s. § 5c) | alle Workspace-Rollen |
 | kein Antrag selektiert, sonstige `?view=` (z. B. Einstellungen, Hilfe) | Inbox-Card-Liste | R5/R6 bzw. Platzhalter |
 | `?application=<uuid>` gesetzt | Review / R4-Entscheid | je Status/Rolle |
 
@@ -405,6 +408,85 @@ Credentials: mit Testpersonen abgestimmt (nicht in Repo). Login **`/staff/login`
 
 ---
 
+## 5c. Workspace — Auswerten (`?view=auswerten`)
+
+Zielbild für die **zentrale NTA-Fachstelle (R2):** gebündelte, institutionelle Statistik über NTA-Anträge — etwas, das an Hochschulen heute meist **fehlt** (kein zentrales Auswertungssystem). Der Prototyp demonstriert Planung, Berichtspflichten und Prozessverbesserung **ohne** Supabase-Aggregation.
+
+### Routing & Zielgruppe
+
+| Aspekt | Ist |
+|--------|-----|
+| **Route** | `/workspace?view=auswerten` — `workspace-test-flow.tsx` rendert `<WorkspaceEvaluateView />` ohne Live-`applications` |
+| **Sidebar** | Eintrag für **alle** Workspace-Rollen (R2–R6) sichtbar; Inhalte für **R2** optimiert (kein fakultätsbeschränkter R4-Filter nötig) |
+| **Daten** | Ausschliesslich Mock — **kein** `applications`-Query, **keine** RLS |
+
+### Layout (wie Home / «Beratungen planen»)
+
+| Ebene | Klassen / Regel |
+|-------|------------------|
+| **Weisses Panel** | Shell `bg-background` — Inhalt **nicht** in einem einzelnen `stone-50`-Wrapper |
+| **Header** | `hfTypography.h3` «Auswerten» + Datum `de-CH` (Wochentag) rechts |
+| **Filterleiste** | `bg-primary`, invertierte Controls (`h-9`); Zeitraum 6/12/24 Mon., Bildungsstufe, Fakultät |
+| **Karten** | `rounded-xl bg-stone-50 p-6`, Abstände `gap-6` |
+
+### Mock-Daten — Single Source of Truth
+
+**Datei:** `lib/config/workspace-evaluate-mock.json`  
+**Loader:** `getEvaluateSnapshot(filters, referenceDate?)` in `lib/workspace-evaluate-mock-data.ts`
+
+| JSON-Bereich | Inhalt |
+|--------------|--------|
+| `meta` | Referenz UZH 2024, `totalApplications` (548), Basiszeitraum 12 Monate |
+| `context` | NTA-Kontext (~1'100 / 28'000 Studierende), Korrekturrunden-%, `newToday` / `newThisWeek` |
+| `periodScales` / `degreeShares` | Skalierung bei UI-Filtern (6/12/24 Mon.; Alle / BA / MA) |
+| `faculties[]` | Pro Fakultät: `applicationCount`, `medianDaysToDecision`, **`statusCounts`** (alle 7 kanonischen Status) |
+| `monthly`, `scope`, `lectureMeasures`, `assessmentMeasures` | Volumen, Geltung, Top-Massnahmen |
+| `processDurations`, `degreeLevel` | Bearbeitungsdauer, BA/MA-Aufschlüsselung |
+
+**Fakultäts-Status:** Jede Fakultät hat **eigene** `statusCounts` (Abweichung je Status ca. ±10–13 Prozentpunkte gegenüber Universitätsmittel). Bei Filter «Alle Fakultäten» werden Status-KPIs **summiert**; bei Fakultätsfilter nur die gewählte Verteilung. `approvalRatePct` und `pipelineCount` werden aus `statusCounts` abgeleitet (nicht hardcodiert).
+
+**Anpassung der Zahlen:** Nur `workspace-evaluate-mock.json` editieren — Charts, KPIs und Tabelle folgen automatisch.
+
+### UI-Inhalte (Informationsarchitektur)
+
+| Block | Komponente / Daten |
+|-------|-------------------|
+| KPI-Zeile | Anträge gesamt, offene Verfahren, Bewilligungsquote, Median Einreichung → Entscheid |
+| Anträge nach Status | `EvaluateVerticalBars` — `statusBuckets` aus Snapshot |
+| Eingänge nach Monat | `EvaluateMonthlyBars` — Peaks Sep./Okt., Feb. (Mock) |
+| Gültigkeitsdauer / Geltungsbereich | Segment + horizontale Balken |
+| Häufigste Massnahmen | LV + LN Top-Ranking |
+| Bearbeitungsdauer | Mediane + Verteilung &lt;14 / 14–30 / &gt;30 Tage |
+| Statusverteilung je Fakultät | `EvaluateFacultyStatusStacks` — nur wenn Fakultät = «Alle» |
+| Nach Fakultät | Volumen-Balken + Tabelle (Anträge, Bewilligungsquote, Pipeline, Abgelehnt, Median) |
+| Nach Bildungsstufe | BA/MA-Vergleich (gestapelte Anteile) |
+| Kontext UZH | Hinweis NTA-Quote Studierende vs. Antragsvolumen |
+
+Status-Farben: `EVALUATE_STATUS_CHART_META` (an `application-status` / HF-Paletten angelehnt).
+
+### Filter-Verhalten
+
+| Filter | Wirkung auf Snapshot |
+|--------|----------------------|
+| **Zeitraum** | `periodScales` × alle Zähler |
+| **Bildungsstufe** | `degreeShares` × Volumen; bei BA/MA nur eine Stufe in «Nach Bildungsstufe» |
+| **Fakultät** | Eine Fakultät: Status-Chart + KPIs nur diese Fakultät; sonst Summe/alle Zeilen |
+
+### Abhängigkeiten
+
+```
+WorkspaceEvaluateView (client)
+└─ getEvaluateSnapshot(filters) ← workspace-evaluate-mock.json
+   ├─ EvaluateVerticalBars / EvaluateMonthlyBars / … (workspace-evaluate-charts.tsx)
+   └─ hfTypography, WORKSPACE_HOME_KPI_ROW_GAP_CLASS
+```
+
+### Bewusst nicht im Scope
+
+Export CSV/PDF, Drill-down in Einzelanträge, `application_events`-Timeline, echte DB-Aggregation, R5/R6-Sonderansichten.
+
+---
+
 ## 6. Rechtes Antragdetails-Panel
 
 Gemeinsam für **Portal (Adjustment)** und **Workspace (Review, R4, …)** — nicht für den R1-Step-Flow ohne Dashboard-Shell.
@@ -529,4 +611,4 @@ Optional (Tokens `DASHBOARD_DETAIL_PANEL_RIM_WIDTH_CLASS`, `workspaceDetailPanel
 
 ---
 
-*Letzte Aktualisierung: «Beratungen planen» implementiert (Figma `6297:23890`) — Monatskalender + Tagestermine + Empfehlungsliste; Home-Tabelle inkl. Beratungsphase; Beratungstermin-Karte in R2-Review (Figma `6081:24572`); Auswerten-Platzhalter; KPI «Anstehende Beratungen»; KPI-Interaktionen & Nav-Badge.*
+*Letzte Aktualisierung: **Auswerten** implementiert — `WorkspaceEvaluateView` mit Mock-SSOT `workspace-evaluate-mock.json`, Filterleiste Primary, fakultätsspezifische Statusverteilung; vgl. § 5c.*

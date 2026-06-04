@@ -1,0 +1,191 @@
+{
+  "meta": {
+    "reference": "UZH-Richtwerte 2024, Forschungsprototyp",
+    "basePeriodMonths": 12,
+    "totalApplications": 548,
+    "comment": "Einheitliche Mock-Basis für /workspace?view=auswerten — alle KPIs und Filter leiten sich hieraus ab."
+  },
+  "context": {
+    "ntaStudentsApprox": 1100,
+    "totalStudentsApprox": 28000,
+    "ntaSharePct": 3.9,
+    "withCorrectionRoundPct": 31,
+    "newToday": 3,
+    "newThisWeek": 11
+  },
+  "periodScales": {
+    "6": 0.54,
+    "12": 1,
+    "24": 1.92
+  },
+  "degreeShares": {
+    "all": 1,
+    "bachelor": 0.7,
+    "master": 0.3
+  },
+  "applicationTypes": [
+    { "id": "studium", "label": "Studium", "count": 485 },
+    { "id": "aufnahme", "label": "Aufnahmeverfahren", "count": 63 }
+  ],
+  "validityDuration": [
+    { "id": "full_study", "label": "Gesamte Studiendauer", "count": 356 },
+    { "id": "one_semester", "label": "Ein Semester", "count": 192 }
+  ],
+  "scope": [
+    { "label": "Schriftliche Prüfungen", "count": 412 },
+    { "label": "Mündliche Prüfungen", "count": 368 },
+    { "label": "Schriftliche Arbeiten", "count": 334 },
+    { "label": "Während Lehrveranstaltungen", "count": 286 },
+    { "label": "Praktika", "count": 124 }
+  ],
+  "lectureMeasures": [
+    { "key": "m1", "label": "Zusätzliche Pausen", "count": 312 },
+    { "key": "m6", "label": "Kein unaufgefordertes Aufrufen", "count": 278 },
+    { "key": "m3", "label": "Angepasste Präsenzpflicht", "count": 198 },
+    { "key": "m5", "label": "Reservierter Sitzplatz", "count": 164 },
+    { "key": "m4", "label": "Audioaufnahme-Erlaubnis", "count": 92 },
+    { "key": "m2", "label": "Einzelarbeit statt Gruppenarbeit", "count": 76 },
+    { "key": "none", "label": "Keine (LV)", "count": 48 }
+  ],
+  "assessmentMeasures": [
+    { "key": "m4", "label": "Zeitverlängerung", "count": 356 },
+    { "key": "m6", "label": "Separater Prüfungsraum", "count": 298 },
+    { "key": "m2", "label": "Anpassung der Prüfungsunterlagen", "count": 241 },
+    { "key": "m5", "label": "Angepasste Pausenregelung", "count": 186 },
+    { "key": "m1", "label": "Einsatz technischer Hilfsmittel", "count": 142 },
+    { "key": "m3", "label": "Einsatz personeller Unterstützung", "count": 88 },
+    { "key": "none", "label": "Keine (LN)", "count": 36 }
+  ],
+  "monthly": [
+    { "submitted": 14, "decided": 12 },
+    { "submitted": 16, "decided": 14 },
+    { "submitted": 78, "decided": 70 },
+    { "submitted": 74, "decided": 66 },
+    { "submitted": 38, "decided": 34 },
+    { "submitted": 34, "decided": 30 },
+    { "submitted": 44, "decided": 40 },
+    { "submitted": 62, "decided": 56 },
+    { "submitted": 46, "decided": 42 },
+    { "submitted": 42, "decided": 38 },
+    { "submitted": 40, "decided": 36 },
+    { "submitted": 24, "decided": 22 }
+  ],
+  "processDurations": {
+    "medianDays": 28,
+    "averageDays": 31,
+    "medianReviewReleaseDays": 18,
+    "medianConsultationToReleaseDays": 12,
+    "medianInDecisionDays": 9,
+    "distribution": [
+      { "label": "Unter 14 Tagen", "pct": 22 },
+      { "label": "14–30 Tagen", "pct": 48 },
+      { "label": "Über 30 Tagen", "pct": 30 }
+    ]
+  },
+  "degreeLevel": {
+    "bachelor": {
+      "count": 384,
+      "approved": 291,
+      "rejected": 36,
+      "inPipeline": 34
+    },
+    "master": {
+      "count": 164,
+      "approved": 125,
+      "rejected": 16,
+      "inPipeline": 14
+    }
+  },
+  "faculties": [
+    {
+      "shortCode": "PhF",
+      "name": "Philosophische Fakultät",
+      "applicationCount": 144,
+      "medianDaysToDecision": 26,
+      "statusCounts": {
+        "draft": 3,
+        "consultation_recommendation": 10,
+        "in_review": 9,
+        "needs_adjustment": 7,
+        "in_decision": 5,
+        "approved": 88,
+        "rejected": 22
+      }
+    },
+    {
+      "shortCode": "WWF",
+      "name": "Wirtschaftswissenschaftliche Fakultät",
+      "applicationCount": 116,
+      "medianDaysToDecision": 27,
+      "statusCounts": {
+        "draft": 3,
+        "consultation_recommendation": 4,
+        "in_review": 3,
+        "needs_adjustment": 5,
+        "in_decision": 3,
+        "approved": 88,
+        "rejected": 10
+      }
+    },
+    {
+      "shortCode": "RWF",
+      "name": "Rechtswissenschaftliche Fakultät",
+      "applicationCount": 95,
+      "medianDaysToDecision": 30,
+      "statusCounts": {
+        "draft": 2,
+        "consultation_recommendation": 3,
+        "in_review": 6,
+        "needs_adjustment": 12,
+        "in_decision": 8,
+        "approved": 46,
+        "rejected": 18
+      }
+    },
+    {
+      "shortCode": "MeF",
+      "name": "Medizinische Fakultät",
+      "applicationCount": 88,
+      "medianDaysToDecision": 29,
+      "statusCounts": {
+        "draft": 2,
+        "consultation_recommendation": 5,
+        "in_review": 3,
+        "needs_adjustment": 1,
+        "in_decision": 2,
+        "approved": 72,
+        "rejected": 3
+      }
+    },
+    {
+      "shortCode": "MNF",
+      "name": "Mathematisch-naturwissenschaftliche Fakultät",
+      "applicationCount": 83,
+      "medianDaysToDecision": 25,
+      "statusCounts": {
+        "draft": 4,
+        "consultation_recommendation": 6,
+        "in_review": 3,
+        "needs_adjustment": 2,
+        "in_decision": 2,
+        "approved": 60,
+        "rejected": 6
+      }
+    },
+    {
+      "shortCode": "TRF",
+      "name": "Theologische und Religionswissenschaftliche Fakultät",
+      "applicationCount": 22,
+      "medianDaysToDecision": 22,
+      "statusCounts": {
+        "draft": 1,
+        "consultation_recommendation": 2,
+        "in_review": 1,
+        "needs_adjustment": 1,
+        "in_decision": 1,
+        "approved": 15,
+        "rejected": 1
+      }
+    }
+  ]
+}

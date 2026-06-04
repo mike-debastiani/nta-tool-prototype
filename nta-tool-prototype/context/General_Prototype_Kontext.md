@@ -131,7 +131,10 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `app/workspace/page.tsx` | `requireUserProfile` R2–R6, `fetchWorkspaceApplicationsList`, `workspaceTasksBadgeCount` (Summe KPI-Aufgaben) |
 | `components/domain/workspace-test-flow.tsx` | Routing: Home / `?view=aufgaben` / `?view=auswerten` / `?view=terminplaner` (+ optional `tasksBucket`) / Review; R2–R4 Home + Meine Aufgaben |
 | `components/domain/workspace-home-dashboard.tsx` | KPI: Bucket→Tabellenfilter, Total→Reset, Aufgaben-Bucket→`tasksBucket`; Home-Tabelle inkl. Beratungsphase |
-| `components/domain/workspace-evaluate-view.tsx` | `/workspace?view=auswerten` — leerer Platzhalter |
+| `components/domain/workspace-evaluate-view.tsx` | `/workspace?view=auswerten` — R2-Institutionsauswertung (Mock) |
+| `components/domain/workspace-evaluate-charts.tsx` | Chart-Bausteine für Auswerten |
+| `lib/workspace-evaluate-mock-data.ts` | `getEvaluateSnapshot` — Filter + Aggregation aus JSON |
+| `lib/config/workspace-evaluate-mock.json` | SSOT Mock-Daten Auswerten (Fakultäten, Status, Monate, …) |
 | `components/domain/workspace-consultation-planner-view.tsx` | `/workspace?view=terminplaner` (R2/R3/R2R4) — Monatskalender + Tagestermine + «Beratungen & Empfehlungen Liste» (Figma `6297:23890`) |
 | `components/domain/workspace-consultation-appointment-card.tsx` | Beratungstermin-Karte in R2-Review (Figma `6081:24572`) |
 | `lib/workspace-consultation-appointment.ts` | Termin-Parsing/Formatierung für Review-Karte + KPI |
