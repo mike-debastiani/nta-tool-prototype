@@ -6,6 +6,7 @@ import {
   EvaluateFacultyStatusStacks,
   EvaluateHorizontalBars,
   EvaluateMonthlyBars,
+  EvaluateProcessDurationCard,
   EvaluateSegmentStrip,
   EvaluateVerticalBars,
   type EvaluateBarItem,
@@ -402,47 +403,29 @@ export function WorkspaceEvaluateView() {
       </EvaluateCard>
 
       <EvaluateCard title="Bearbeitungsdauer (Prozess)">
-        <div className="grid min-w-0 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            {
-              label: "Einreichung → Review-Freigabe",
-              days: snapshot.processDurations.medianReviewReleaseDays,
-            },
-            {
-              label: "Beratung → Empfehlung freigegeben",
-              days: snapshot.processDurations.medianConsultationToReleaseDays,
-            },
-            {
-              label: "In Entscheid (Median)",
-              days: snapshot.processDurations.medianInDecisionDays,
-            },
-            {
-              label: "Einreichung → Entscheid (Median)",
-              days: snapshot.processDurations.medianDays,
-            },
-          ].map((metric) => (
-            <div key={metric.label} className="rounded-lg bg-background/80 px-4 py-3">
-              <p className={cn(hfTypography.paragraphMiniMedium, "text-muted-foreground")}>
-                {metric.label}
-              </p>
-              <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
-                {metric.days} Tage
-              </p>
-            </div>
-          ))}
+        <div className="grid min-w-0 gap-6 lg:grid-cols-3">
+          <EvaluateProcessDurationCard
+            title="Gesamtbearbeitungsdauer"
+            subtitle="Einreichung → Entscheid"
+            days={snapshot.processDurations.totalMedianDays}
+            surfaceClass="bg-bewilligt-100"
+            textClass="text-bewilligt-700"
+          />
+          <EvaluateProcessDurationCard
+            title="Review Dauer"
+            subtitle="Einreichung → Weiterleitung an Entscheid"
+            days={snapshot.processDurations.reviewMedianDays}
+            surfaceClass="bg-beratung-100"
+            textClass="text-beratung-500"
+          />
+          <EvaluateProcessDurationCard
+            title="Entscheidung Dauer"
+            subtitle="Entscheid → Bewilligung / Ablehnung"
+            days={snapshot.processDurations.inDecisionMedianDays}
+            surfaceClass="bg-in-decision-100"
+            textClass="text-in-decision-800"
+          />
         </div>
-        <EvaluateHorizontalBars
-          items={snapshot.processDurations.distribution.map((bucket, index) => ({
-            id: `dur-${index}`,
-            label: bucket.label,
-            value: bucket.pct,
-            barClass: "bg-in-decision-200",
-            textClass: "text-in-decision-800",
-          }))}
-        />
-        <p className={cn(hfTypography.paragraphMini, "text-muted-foreground")}>
-          Verteilung Einreichung → Entscheid (abgeschlossene Verfahren, Anteil in %).
-        </p>
       </EvaluateCard>
 
       {filters.faculty === "all" ? (

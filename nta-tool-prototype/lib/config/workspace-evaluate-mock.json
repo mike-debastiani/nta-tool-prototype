@@ -71,16 +71,10 @@
     { "submitted": 24, "decided": 22 }
   ],
   "processDurations": {
-    "medianDays": 28,
-    "averageDays": 31,
-    "medianReviewReleaseDays": 18,
-    "medianConsultationToReleaseDays": 12,
-    "medianInDecisionDays": 9,
-    "distribution": [
-      { "label": "Unter 14 Tagen", "pct": 22 },
-      { "label": "14–30 Tagen", "pct": 48 },
-      { "label": "Über 30 Tagen", "pct": 30 }
-    ]
+    "totalMedianDays": 28,
+    "reviewMedianDays": 18,
+    "inDecisionMedianDays": 9,
+    "averageDays": 31
   },
   "degreeLevel": {
     "bachelor": {

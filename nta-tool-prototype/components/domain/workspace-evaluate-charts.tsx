@@ -250,42 +250,59 @@ export function EvaluateFacultyStatusStacks({
   faculties: EvaluateFacultyRow[];
   className?: string;
 }) {
+  const maxApplications = Math.max(...faculties.map((faculty) => faculty.count), 1);
+
   return (
     <ul className={cn("flex flex-col gap-4", className)} role="list">
       {faculties.map((faculty) => {
         const total = faculty.count || 1;
+        const volumeWidthPct = (faculty.count / maxApplications) * 100;
         return (
-          <li key={faculty.shortCode} className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <li key={faculty.shortCode} className="flex min-w-0 flex-col gap-1">
+            <div
+              className="flex min-w-0 items-baseline justify-between gap-2 self-start overflow-visible"
+              style={{ width: `${volumeWidthPct}%` }}
+            >
               <span
-                className={cn(hfTypography.paragraphSmallMedium, "text-foreground")}
+                className={cn(hfTypography.paragraphSmallMedium, "shrink-0 text-foreground")}
                 title={faculty.name}
               >
                 {faculty.shortCode}
               </span>
-              <span className={cn(hfTypography.paragraphMini, "text-muted-foreground")}>
-                {faculty.count} Anträge · Quote {faculty.approvalRatePct} % · Pipeline{" "}
-                {faculty.pipelineCount}
-              </span>
+              <div className="min-w-0 shrink-0 whitespace-nowrap text-right">
+                <span
+                  className={cn(
+                    hfTypography.paragraphSmallMedium,
+                    "tabular-nums text-foreground",
+                  )}
+                >
+                  {faculty.count.toLocaleString("de-CH")}
+                </span>
+                <span className={cn(hfTypography.paragraphMini, "text-muted-foreground")}>
+                  {" "}
+                  · Quote {faculty.approvalRatePct}%
+                </span>
+              </div>
             </div>
             <div
-              className="flex h-3 w-full overflow-hidden rounded-full bg-stone-200"
+              className="flex h-3 min-w-0 self-start overflow-hidden rounded-full bg-stone-200"
+              style={{ width: `${volumeWidthPct}%` }}
               role="img"
-              aria-label={`Statusverteilung ${faculty.shortCode}`}
+              aria-label={`Statusverteilung ${faculty.shortCode}, ${faculty.count} Anträge, Quote ${faculty.approvalRatePct} Prozent`}
             >
-              {FACULTY_STACK_STATUS_ORDER.map((statusId) => {
-                const value = faculty.statusCounts[statusId];
-                if (value <= 0) return null;
-                const meta = EVALUATE_STATUS_CHART_META[statusId];
-                return (
-                  <div
-                    key={statusId}
-                    className={cn("h-full min-w-0", meta.barClass)}
-                    style={{ width: `${(value / total) * 100}%` }}
-                    title={`${meta.label}: ${value}`}
-                  />
-                );
-              })}
+                {FACULTY_STACK_STATUS_ORDER.map((statusId) => {
+                  const value = faculty.statusCounts[statusId];
+                  if (value <= 0) return null;
+                  const meta = EVALUATE_STATUS_CHART_META[statusId];
+                  return (
+                    <div
+                      key={statusId}
+                      className={cn("h-full min-w-0", meta.barClass)}
+                      style={{ width: `${(value / total) * 100}%` }}
+                      title={`${meta.label}: ${value}`}
+                    />
+                  );
+                })}
             </div>
           </li>
         );
@@ -307,5 +324,42 @@ export function EvaluateFacultyStatusStacks({
         })}
       </li>
     </ul>
+  );
+}
+
+/** Process duration metric tile — title + subtitle stacked, large value at bottom. */
+export function EvaluateProcessDurationCard({
+  title,
+  days,
+  subtitle,
+  surfaceClass,
+  textClass,
+}: {
+  title: string;
+  days: number;
+  subtitle: string;
+  surfaceClass: string;
+  textClass: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex min-h-[163px] flex-col items-start justify-between rounded-xl p-4",
+        surfaceClass,
+      )}
+    >
+      <div className="flex w-full flex-col items-start gap-1">
+        <p className={cn(hfTypography.paragraphMedium, "font-medium", textClass)}>{title}</p>
+        <p className={cn(hfTypography.paragraphSmall, textClass)}>{subtitle}</p>
+      </div>
+      <p
+        className={cn(
+          "text-[40px] font-semibold leading-[40px] tracking-normal tabular-nums",
+          textClass,
+        )}
+      >
+        {days} Tage
+      </p>
+    </div>
   );
 }

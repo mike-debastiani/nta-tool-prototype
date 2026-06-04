@@ -99,13 +99,13 @@ export const EVALUATE_STATUS_CHART_META: Record<
   draft: { label: "Entwurf", barClass: "bg-entwurf-200", textClass: "text-entwurf-500" },
   consultation_recommendation: {
     label: "Beratung & Empfehlung",
-    barClass: "bg-beratung-200",
-    textClass: "text-consultation-accent",
+    barClass: "bg-[#C0D9F7]",
+    textClass: "text-beratung-500",
   },
   in_review: {
     label: "In Review",
-    barClass: "bg-in-review-200",
-    textClass: "text-beratung-500",
+    barClass: "bg-[#93C5FD]",
+    textClass: "text-beratung-600",
   },
   needs_adjustment: {
     label: "Anpassung erforderlich",
@@ -326,7 +326,7 @@ export function getEvaluateSnapshot(
       openPipeline: pipelineFromStatus(statusScaled),
       approvalRatePct: approvalRateFromStatus(statusScaled),
       medianDaysToDecision:
-        facultyRow?.medianDaysToDecision ?? DATASET.processDurations.medianDays,
+        facultyRow?.medianDaysToDecision ?? DATASET.processDurations.totalMedianDays,
       newToday: roundCount(DATASET.context.newToday * combinedScale),
       newThisWeek: roundCount(DATASET.context.newThisWeek * combinedScale),
       withCorrectionRoundPct: DATASET.context.withCorrectionRoundPct,
@@ -351,7 +351,8 @@ export function getEvaluateSnapshot(
     assessmentMeasures: scaleCounts(DATASET.assessmentMeasures, combinedScale),
     processDurations: {
       ...DATASET.processDurations,
-      medianDays: facultyRow?.medianDaysToDecision ?? DATASET.processDurations.medianDays,
+      totalMedianDays:
+        facultyRow?.medianDaysToDecision ?? DATASET.processDurations.totalMedianDays,
     },
     byFaculty,
     byDegreeLevel: [
