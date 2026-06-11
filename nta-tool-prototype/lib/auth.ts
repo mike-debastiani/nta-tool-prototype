@@ -38,3 +38,27 @@ export async function requireUserProfile(
 
   return profile;
 }
+
+/**
+ * Reads the signed-in user's role without redirecting. Returns `null` when no
+ * session exists (e.g. on public login pages). Used by the global role
+ * indicator banner so it can show the active role on any route.
+ */
+export async function getOptionalUserRole(): Promise<UserRole | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return null;
+  }
+
+  const { data: profile } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle<Pick<UserProfile, "role">>();
+
+  return profile?.role ?? null;
+}

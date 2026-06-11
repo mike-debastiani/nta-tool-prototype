@@ -120,6 +120,23 @@
 }
 
 @layer utilities {
+  /* Höhe des globalen Rollen-Banners (siehe role-indicator-banner.tsx).
+     Standard 0px → keine Auswirkung. Ist der Banner offen, spiegelt der
+     Client seine gemessene Höhe hierher, damit die viewport-hohen Layout-
+     Wurzeln (h-screen / min-h-screen) entsprechend schrumpfen und der Banner
+     den Inhalt nach unten schiebt, ohne das Core-Layout zu verändern. */
+  :root {
+    --role-banner-height: 0px;
+  }
+
+  .h-screen {
+    height: calc(100vh - var(--role-banner-height));
+  }
+
+  .min-h-screen {
+    min-height: calc(100vh - var(--role-banner-height));
+  }
+
   .combobox-command-list {
     scrollbar-gutter: stable;
     scrollbar-width: thin;
