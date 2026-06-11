@@ -1,0 +1,61 @@
+{
+  "targetState": "in_decision",
+  "title": "NTA Antrag Joel Brügger",
+  "personalData": {
+    "vorname": "Joel",
+    "name": "Brügger",
+    "email": "joel.bruegger@students.uzh.ch",
+    "phone": "+41 78 905 62 18",
+    "matrikel": "22-743-119",
+    "studiengang": "BA Erziehungswissenschaft",
+    "semester": "4",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Psychiatrie_Panikstoerung_Bruegger.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** Joel Brügger, geb. 2003  \n**Diagnose:** Panikstörung (F41.0) mit situativ ausgelösten Panikattacken  \n**Attestierende Stelle:** Psychiatrische Universitätsklinik Zürich, Ambulanz für Angsterkrankungen\n\n## Studienrelevante Beeinträchtigungen\n\n- Plötzliche Panikattacken mit Herzrasen, Atemnot und Kontrollverlust in beengten, vollen Räumen\n- Erhöhte Anspannung und Konzentrationsverlust in mündlichen und beobachteten Prüfungen\n- Vermeidungsverhalten gegenüber dicht besetzten Grossveranstaltungen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Reservierter Sitzplatz mit Ausgangsnähe und Rückzugsmöglichkeit bei akuter Panik\n- Verzicht auf unaufgefordertes mündliches Aufrufen\n- Durchführung von Prüfungen in einem separaten Raum mit angepasster Pausenregelung\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer; begleitende Verhaltenstherapie läuft.\n\nZürich, 2. Mai 2026 — Dr. med. Claudia Berger, Fachärztin für Psychiatrie und Psychotherapie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-05-01",
+    "date": "Freitag, 1. Mai 2026",
+    "slot": "15:00–15:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer Panikstörung treten bei mir in beengten, vollen Räumen plötzliche Panikattacken mit Herzrasen, Atemnot und dem Gefühl von Kontrollverlust auf. In mündlichen und beobachteten Prüfungssituationen steigt meine Anspannung so stark, dass ich den Faden verliere, obwohl ich vorbereitet bin. Dicht besetzte Grossveranstaltungen meide ich teilweise, weil ich keinen raschen Rückzug habe. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Mündliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m5", "m6"],
+    "lectureOtherLines": [
+      "Rückzugsmöglichkeit bei akuter Panikattacke mit kurzfristigem Austritt und geregelter Nacharbeit"
+    ],
+    "assessmentMeasures": ["m5", "m6"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 05.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 1. Mai 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom Mai 2026. Das Attest bestätigt eine diagnostizierte <strong>Panikstörung (F41.0)</strong> mit situativ ausgelösten Panikattacken und ausgeprägter Anspannung in Prüfungssituationen.</p><p>Wie im Gespräch geschildert, treten die Beeinträchtigungen insbesondere in beengten, vollen Räumen, bei mündlicher Exposition sowie in dicht besetzten Grossveranstaltungen ohne Rückzugsmöglichkeit auf. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Reservierter Sitzplatz mit Ausgangsnähe, um bei akuter Panik unauffällig kurz austreten zu können.</li><li>Verzicht auf unaufgefordertes mündliches Aufrufen, um angstbedingte Blockaden zu vermeiden.</li><li>Rückzugsmöglichkeit bei akuter Panikattacke mit kurzfristigem Austritt und geregelter Nacharbeit.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Durchführung von Prüfungen in einem separaten Raum mit deutlich reduzierter Personenzahl.</li><li>Angepasste Pausenregelung mit kurzen, individuellen Pausen ohne Zeitabzug zur Beruhigung bei aufkommender Panik.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Sandra Meier<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 05.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 1. Mai 2026 und auf das fachärztliche Attest im ICF-Format vom Mai 2026. Bestätigt ist eine Panikstörung (F41.0). Geeignete Massnahmen: – Reservierter Sitzplatz mit Ausgangsnähe. – Verzicht auf unaufgefordertes mündliches Aufrufen. – Rückzugsmöglichkeit bei akuter Panikattacke. – Durchführung von Prüfungen in einem separaten Raum. – Angepasste Pausenregelung ohne Zeitabzug. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Sandra Meier, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-13T15:05:00.000Z",
+  "reviewForwardedAt": "2026-05-18T11:00:00.000Z",
+  "r4Decision": {
+    "updatedAt": "2026-05-23T13:30:00.000Z",
+    "concretizations": [
+      {
+        "blockId": "lectureMeasures",
+        "measureKey": "m5",
+        "title": "Reservierter Sitzplatz mit Ausgangsnähe",
+        "description": "Es wird ein fester Sitzplatz nahe einem Ausgang reserviert, damit bei akuter Panik ein unauffälliger kurzer Austritt möglich ist."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m6",
+        "title": "Separater Prüfungsraum mit reduzierter Personenzahl",
+        "description": "Prüfungen werden in einem separaten Raum mit deutlich reduzierter Personenzahl durchgeführt, um panikauslösende Reize zu verringern."
+      }
+    ]
+  }
+}

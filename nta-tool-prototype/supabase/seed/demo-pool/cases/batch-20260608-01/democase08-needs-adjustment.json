@@ -1,0 +1,54 @@
+{
+  "targetState": "needs_adjustment",
+  "title": "NTA Antrag Léa Steiner",
+  "personalData": {
+    "vorname": "Léa",
+    "name": "Steiner",
+    "email": "lea.steiner@students.uzh.ch",
+    "phone": "+41 78 906 35 71",
+    "matrikel": "22-540-118",
+    "studiengang": "BA Politikwissenschaft",
+    "semester": "4",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_ORL_Hoerbeeintraechtigung_Steiner.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Léa Steiner, geb. 2003  \n**Diagnose:** Hochgradige Schwerhörigkeit beidseits (H90.3), versorgt mit Hörgeräten  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Klinik für Ohren-, Nasen-, Hals- und Gesichtschirurgie\n\n## Studienrelevante Beeinträchtigungen\n\n- Erhebliches Sprachverstehen-Defizit in halligen, grossen Hörsälen und bei Hintergrundlärm\n- Erschwertes Folgen von Diskussionen mit mehreren, wechselnden Sprechenden\n- Erhöhter Aufmerksamkeits- und Energieaufwand durch konstantes Lippenlesen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Reservierter Sitzplatz in den vorderen Reihen mit Sicht auf die vortragende Person\n- Einsatz einer FM-/Mikrofonanlage sowie Bereitstellung von Folien und Skripten im Voraus\n- Erlaubnis zur Audioaufnahme von Lehrveranstaltungen\n- Personelle Unterstützung (Schriftdolmetschung) sowie technische Hilfsmittel bei Prüfungen\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer.\n\nZürich, 8. Mai 2026 — Dr. med. Karin Lüthi, Fachärztin für Oto-Rhino-Laryngologie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-05-07",
+    "date": "Donnerstag, 7. Mai 2026",
+    "slot": "13:15–14:00",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer hochgradigen beidseitigen Schwerhörigkeit verstehe ich in grossen, halligen Hörsälen und bei Hintergrundlärm einen erheblichen Teil des Gesprochenen nicht, obwohl ich mit Hörgeräten versorgt bin. Besonders in Diskussionen mit mehreren wechselnden Sprechenden kann ich dem Verlauf nur erschwert folgen. Das konstante Lippenlesen kostet mich viel Aufmerksamkeit und Energie. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Mündliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m4", "m5"],
+    "lectureOtherLines": [
+      "Einsatz einer FM-/Mikrofonanlage sowie Bereitstellung von Folien und Skripten im Voraus zur Unterstützung des Sprachverstehens"
+    ],
+    "assessmentMeasures": ["m1", "m3", "m6"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 10.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 7. Mai 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom Mai 2026. Das Attest bestätigt eine diagnostizierte <strong>hochgradige Schwerhörigkeit beidseits (H90.3)</strong> mit erheblichem Sprachverstehen-Defizit in grossen Hörsälen und bei Hintergrundlärm.</p><p>Wie im Gespräch geschildert, treten die Beeinträchtigungen insbesondere in halligen Grossveranstaltungen, bei Diskussionen mit mehreren Sprechenden sowie in mündlichen Prüfungssituationen auf. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Reservierter Sitzplatz in den vorderen Reihen mit freier Sicht auf die vortragende Person zur Unterstützung des Lippenlesens.</li><li>Erlaubnis zur Audioaufnahme von Lehrveranstaltungen zu persönlichen Lernzwecken.</li><li>Einsatz einer FM-/Mikrofonanlage sowie Bereitstellung von Folien und Skripten im Voraus.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Einsatz technischer Hilfsmittel zur Verständnissicherung bei mündlichen Prüfungen.</li><li>Personelle Unterstützung in Form einer Schriftdolmetschung bei mündlichen Prüfungssituationen.</li><li>Durchführung von Prüfungen in einem separaten, akustisch ruhigen Raum.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Sandra Meier<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 10.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 7. Mai 2026 und auf das fachärztliche Attest im ICF-Format vom Mai 2026. Bestätigt ist eine hochgradige Schwerhörigkeit beidseits (H90.3). Geeignete Massnahmen: – Reservierter Sitzplatz in den vorderen Reihen mit Sicht auf die vortragende Person. – Erlaubnis zur Audioaufnahme von Lehrveranstaltungen. – Einsatz einer FM-/Mikrofonanlage und Bereitstellung von Folien vorab. – Einsatz technischer Hilfsmittel bei mündlichen Prüfungen. – Personelle Unterstützung (Schriftdolmetschung). – Durchführung von Prüfungen in einem separaten, ruhigen Raum. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Sandra Meier, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-18T09:10:00.000Z",
+  "reviewForwardedAt": "2026-05-24T13:00:00.000Z",
+  "adjustmentRequests": [
+    {
+      "blockId": "lectureMeasures",
+      "remark": "Die Freitext-Massnahme zur FM-/Mikrofonanlage nennt keine zuständige Stelle für die Bereitstellung. Bitte ergänzen Sie, ob die Anlage über die Fachstelle, das Institut oder eigenes Gerät bereitgestellt wird, und konkretisieren Sie den technischen Bedarf."
+    },
+    {
+      "blockId": "duration",
+      "remark": "Sie beantragen die Massnahmen für die gesamte Studiendauer. Da die Hörgeräteversorgung laut Attest noch angepasst wird, bitte begründen Sie kurz, weshalb keine befristete Bewilligung mit Verlaufskontrolle ausreichend wäre."
+    }
+  ]
+}

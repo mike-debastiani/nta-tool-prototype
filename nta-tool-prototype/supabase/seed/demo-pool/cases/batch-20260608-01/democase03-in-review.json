@@ -1,0 +1,46 @@
+{
+  "targetState": "in_review",
+  "title": "NTA Antrag Elias Widmer",
+  "personalData": {
+    "vorname": "Elias",
+    "name": "Widmer",
+    "email": "elias.widmer@students.uzh.ch",
+    "phone": "+41 76 902 14 58",
+    "matrikel": "22-604-339",
+    "studiengang": "BA Computerlinguistik und Sprachtechnologie",
+    "semester": "5",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Psychiatrie_Autismus_Widmer.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** Elias Widmer, geb. 2002  \n**Diagnose:** Autismus-Spektrum-Störung (F84.5), ohne Intelligenzminderung  \n**Attestierende Stelle:** Psychiatrische Universitätsklinik Zürich, Spezialsprechstunde Autismus\n\n## Studienrelevante Beeinträchtigungen\n\n- Ausgeprägte Reizüberflutung in vollen, lauten Hörsälen mit hoher kognitiver Erschöpfung\n- Erhebliche Belastung durch unvorbereitete mündliche Exposition und spontane Beteiligung\n- Erhöhter Bedarf an Struktur, Vorhersehbarkeit und vorab bekanntem Ablauf\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Angepasste Präsenzpflicht und Verzicht auf unaufgefordertes mündliches Aufrufen\n- Bereitstellung von Ablauf und Materialien im Voraus zur Reduktion von Unvorhersehbarkeit\n- Durchführung von Prüfungen in einem separaten, reizarmen Raum mit Zeitverlängerung\n- Schriftliche statt mündliche Prüfungsformate, soweit fachlich gleichwertig\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer.\n\nZürich, 16. Mai 2026 — Dr. med. Martin Lehmann, Facharzt für Psychiatrie und Psychotherapie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-05-15",
+    "date": "Freitag, 15. Mai 2026",
+    "slot": "09:00–09:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Im Rahmen einer Autismus-Spektrum-Störung erlebe ich in vollen, lauten Hörsälen eine starke Reizüberflutung, die mich nach kurzer Zeit kognitiv erschöpft. Unvorbereitete mündliche Exposition und spontane Aufrufe belasten mich erheblich und führen zu Blockaden. Ich bin auf klare Strukturen, einen vorab bekannten Ablauf und reizarme Prüfungsbedingungen angewiesen, um meine fachliche Leistung tatsächlich abrufen zu können. Ich beantrage daher Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Mündliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m3", "m6"],
+    "lectureOtherLines": [
+      "Bereitstellung von Ablaufplan und Veranstaltungsmaterialien im Voraus, um Unvorhersehbarkeit und Reizbelastung zu reduzieren"
+    ],
+    "assessmentMeasures": ["m4", "m6"],
+    "assessmentOtherLines": [
+      "Mündliche Prüfungsformate nach Möglichkeit durch gleichwertige schriftliche Formate ersetzen"
+    ]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 19.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 15. Mai 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom Mai 2026. Das Attest bestätigt eine diagnostizierte <strong>Autismus-Spektrum-Störung (F84.5)</strong> mit ausgeprägter Reizüberflutung und erheblicher Belastung durch unvorbereitete mündliche Exposition.</p><p>Wie im Gespräch geschildert, treten die Beeinträchtigungen insbesondere in vollen, lauten Hörsälen, bei spontanen mündlichen Beiträgen sowie in unstrukturierten Prüfungssituationen auf. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Angepasste Präsenzpflicht für besonders reizintensive Grossveranstaltungen mit der Möglichkeit, Inhalte alternativ nachzuarbeiten.</li><li>Verzicht auf unaufgefordertes mündliches Aufrufen, um Blockaden durch unvorbereitete Exposition zu vermeiden.</li><li>Bereitstellung von Ablaufplan und Materialien im Voraus, um Unvorhersehbarkeit und Reizbelastung zu senken.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Durchführung von Prüfungen in einem separaten, reizarmen Raum mit reduzierter akustischer und visueller Stimulation.</li><li>Zeitverlängerung bei Prüfungen (Richtwert: 25 %), da die kognitive Erschöpfung die effektive Bearbeitungszeit verkürzt.</li><li>Ersatz mündlicher Prüfungsformate durch gleichwertige schriftliche Formate, soweit fachlich vertretbar.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Sandra Meier<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 19.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 15. Mai 2026 und auf das fachärztliche Attest im ICF-Format vom Mai 2026. Bestätigt ist eine Autismus-Spektrum-Störung (F84.5) mit ausgeprägter Reizüberflutung. Geeignete Massnahmen: – Angepasste Präsenzpflicht für reizintensive Grossveranstaltungen. – Verzicht auf unaufgefordertes mündliches Aufrufen. – Bereitstellung von Ablaufplan und Materialien im Voraus. – Durchführung von Prüfungen in einem separaten, reizarmen Raum. – Zeitverlängerung von rund 25 % bei Prüfungen. – Ersatz mündlicher Prüfungsformate durch schriftliche, soweit fachlich vertretbar. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Sandra Meier, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-29T08:55:00.000Z"
+}

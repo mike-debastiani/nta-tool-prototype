@@ -1,0 +1,50 @@
+{
+  "targetState": "rejected",
+  "title": "NTA Antrag Laura Gloor",
+  "personalData": {
+    "vorname": "Laura",
+    "name": "Gloor",
+    "email": "laura.gloor@students.uzh.ch",
+    "phone": "+41 76 280 64 19",
+    "matrikel": "23-355-902",
+    "studiengang": "BA Politikwissenschaft",
+    "semester": "3",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "Attest_Gastroenterologie_Reizdarm_Gloor.md",
+    "markdownContent": "# Fachärztliches Attest\n\n**Patientin:** Laura Gloor, geb. 2004  \n**Diagnose:** Reizdarmsyndrom (K58.9), diarrhö-dominanter Typ  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Gastroenterologie\n\n## Studienrelevante Beeinträchtigungen\n\n- Plötzlicher, dringender Stuhldrang, der kurzfristige Toilettengänge nötig macht\n- Verstärkung der Beschwerden unter Stress, etwa in Prüfungssituationen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Angepasste Pausenregelung mit kurzfristigen Toilettengängen ohne Zeitabzug\n- Sitzplatz mit Toilettennähe\n\n**Gültigkeit der Empfehlung:** ein Semester.\n\nZürich, 14. April 2026 — Dr. med. Sandra Roth, Fachärztin für Gastroenterologie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-04-10",
+    "date": "Freitag, 10. April 2026",
+    "slot": "09:30–10:15",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund eines Reizdarmsyndroms vom diarrhö-dominanten Typ leide ich unter plötzlichem, dringendem Stuhldrang, der kurzfristige Toilettengänge nötig macht. Unter Stress, insbesondere in Prüfungssituationen, verstärken sich die Beschwerden deutlich. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen, darunter zusätzliche Zeit, einen separaten Raum sowie eine angepasste Pausenregelung. Ich beantrage diese Massnahmen für ein Semester.",
+    "duration": "one_semester",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m1"],
+    "assessmentMeasures": ["m4", "m5", "m6"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 14.04.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 10. April 2026 sowie auf das eingereichte fachärztliche Attest vom April 2026. Das Attest bestätigt ein diagnostiziertes <strong>Reizdarmsyndrom (K58.9)</strong> mit plötzlichem Stuhldrang unter Stress.</p><p>Wie im Gespräch geschildert, äussern sich die Beeinträchtigungen vor allem in der Notwendigkeit kurzfristiger Toilettengänge in Prüfungssituationen. Eine angepasste Pausenregelung erscheint geeignet; die zusätzlich beantragte Zeitverlängerung sowie ein generell separater Raum gehen über den dokumentierten Bedarf hinaus.</p><p>Aus Sicht der Fachstelle erscheint folgende Massnahme geeignet, den beschriebenen Nachteil auszugleichen:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Zusätzliche, flexibel nutzbare Pausen bei längeren Lehrveranstaltungen für kurzfristige Toilettengänge.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Beantragt wurden eine angepasste Pausenregelung, eine Zeitverlängerung sowie ein separater Raum; aus fachlicher Sicht ist eine reine Pausenregelung mit Toilettennähe ausreichend.</li></ul><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Suzanne Beispiel<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 14.04.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 10. April 2026 und auf das fachärztliche Attest vom April 2026. Bestätigt ist ein Reizdarmsyndrom (K58.9). Geeignet erscheint eine angepasste Pausenregelung mit Toilettennähe. Die zusätzlich beantragte Zeitverlängerung sowie ein generell separater Raum gehen über den dokumentierten Bedarf hinaus. Die abschliessende Beurteilung obliegt der Entscheidungsinstanz. Freundliche Grüsse, Dr. Suzanne Beispiel, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-04-24T14:35:00.000Z",
+  "reviewForwardedAt": "2026-04-29T09:45:00.000Z",
+  "r4Decision": {
+    "updatedAt": "2026-05-13T16:10:00.000Z",
+    "rejectedBlocks": [
+      {
+        "blockId": "assessmentMeasures",
+        "reason": "Der dokumentierte Nachteil – kurzfristiger Toilettenbedarf unter Stress – wird durch eine angepasste Pausenregelung mit Toilettennähe sachgerecht ausgeglichen, die der Block bereits umfasst. Eine zusätzliche pauschale Zeitverlängerung ist nicht begründet, da das Attest keinen erhöhten Bearbeitungsaufwand, sondern lediglich Unterbrechungen ausweist; diese werden über die Pausenregelung ohne Zeitabzug aufgefangen. Auch die generelle Durchführung in einem separaten Raum ist nicht erforderlich und steht nicht im Verhältnis zur Einschränkung. Die beantragte Kombination wird daher in dieser Form abgelehnt.",
+        "rejectedMeasureKeys": ["m4", "m5", "m6"]
+      }
+    ]
+  }
+}

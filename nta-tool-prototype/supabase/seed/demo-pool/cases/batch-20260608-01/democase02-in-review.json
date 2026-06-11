@@ -1,0 +1,40 @@
+{
+  "targetState": "in_review",
+  "title": "NTA Antrag Lukas Bachmann",
+  "personalData": {
+    "vorname": "Lukas",
+    "name": "Bachmann",
+    "email": "lukas.bachmann@students.uzh.ch",
+    "phone": "+41 79 338 21 47",
+    "matrikel": "23-145-882",
+    "studiengang": "BLaw Rechtswissenschaft",
+    "semester": "4",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Psychiatrie_Angststoerung_Bachmann.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** Lukas Bachmann, geb. 2003  \n**Diagnose:** Generalisierte Angststörung (F41.1) mit ausgeprägter sozialer Prüfungsangst  \n**Attestierende Stelle:** Psychiatrische Universitätsklinik Zürich, Ambulanz für junge Erwachsene\n\n## Studienrelevante Beeinträchtigungen\n\n- Starke Angstreaktionen mit körperlicher Symptomatik in mündlichen und beobachteten Prüfungssituationen\n- Blockaden und Gedankenabrisse bei unangekündigter mündlicher Beteiligung in Grossveranstaltungen\n- Erhöhte Anspannung und Konzentrationsverlust in dicht besetzten Prüfungsräumen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Verzicht auf unaufgefordertes mündliches Aufrufen in Lehrveranstaltungen\n- Reservierter Sitzplatz mit Ausgangsnähe zur Entlastung der Angstsituation\n- Durchführung schriftlicher Prüfungen in einem separaten, reizarmen Raum\n- Zeitverlängerung bei schriftlichen Prüfungen zum Ausgleich angstbedingter Blockaden\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer; begleitende Psychotherapie läuft.\n\nZürich, 15. Mai 2026 — Dr. med. Claudia Berger, Fachärztin für Psychiatrie und Psychotherapie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-05-14",
+    "date": "Donnerstag, 14. Mai 2026",
+    "slot": "11:00–11:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer generalisierten Angststörung mit sozialer Prüfungsangst reagiere ich in mündlichen und beobachteten Prüfungssituationen mit starker körperlicher Anspannung, Herzrasen und Gedankenblockaden. Werde ich in Grossveranstaltungen unangekündigt aufgerufen, verliere ich regelmässig den Faden, obwohl ich inhaltlich gut vorbereitet bin. In dicht besetzten Prüfungsräumen steigt meine Anspannung so stark, dass meine Leistungsfähigkeit deutlich sinkt. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Mündliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m5", "m6"],
+    "assessmentMeasures": ["m4", "m6"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 17.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 14. Mai 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom Mai 2026. Das Attest bestätigt eine diagnostizierte <strong>generalisierte Angststörung (F41.1)</strong> mit ausgeprägter sozialer Prüfungsangst und deutlichen Auswirkungen in mündlichen sowie beobachteten Studiensituationen.</p><p>Wie im Gespräch geschildert, äussern sich die Beeinträchtigungen insbesondere bei unangekündigter mündlicher Beteiligung in Grossveranstaltungen sowie in dicht besetzten Prüfungsräumen, in denen Anspannung und Blockaden die Leistungsfähigkeit erheblich mindern. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Reservierter Sitzplatz mit Ausgangsnähe, um bei akuter Anspannung unauffällig kurz aus der Situation austreten zu können.</li><li>Verzicht auf unaufgefordertes mündliches Aufrufen, um angstbedingte Blockaden in Grossveranstaltungen zu vermeiden.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Durchführung schriftlicher Prüfungen in einem separaten, reizarmen Raum mit deutlich reduzierter Personenzahl.</li><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %), um angstbedingte Blockaden zu Beginn der Prüfung auszugleichen.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Sandra Meier<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 17.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 14. Mai 2026 und auf das fachärztliche Attest im ICF-Format vom Mai 2026. Bestätigt ist eine generalisierte Angststörung (F41.1) mit sozialer Prüfungsangst. Geeignete Massnahmen: – Reservierter Sitzplatz mit Ausgangsnähe. – Verzicht auf unaufgefordertes mündliches Aufrufen. – Durchführung schriftlicher Prüfungen in einem separaten, reizarmen Raum. – Zeitverlängerung von rund 25 % bei schriftlichen Prüfungen. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Sandra Meier, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-26T13:50:00.000Z"
+}

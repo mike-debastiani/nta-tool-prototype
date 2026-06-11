@@ -217,6 +217,32 @@
   margin-bottom: 0;
 }
 
+.tiptap.ProseMirror h1,
+.tiptap-content h1 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+
+.tiptap.ProseMirror h2,
+.tiptap-content h2 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.375;
+  letter-spacing: -0.025em;
+}
+
+.tiptap.ProseMirror h3,
+.tiptap-content h3 {
+  margin: 0.75rem 0 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.375;
+}
+
 .tiptap.ProseMirror li > p,
 .tiptap-content li > p {
   margin: 0;

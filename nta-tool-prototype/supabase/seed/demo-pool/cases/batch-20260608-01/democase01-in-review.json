@@ -1,0 +1,42 @@
+{
+  "targetState": "in_review",
+  "title": "NTA Antrag Noémie Favre",
+  "personalData": {
+    "vorname": "Noémie",
+    "name": "Favre",
+    "email": "noemie.favre@students.uzh.ch",
+    "phone": "+41 78 214 56 31",
+    "matrikel": "21-732-118",
+    "studiengang": "MSc Data Science",
+    "semester": "2",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Neurologie_Migraene_Favre.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Noémie Favre, geb. 2001  \n**Diagnose:** Chronische Migräne mit Aura (G43.1), photosensibel  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Kopfschmerzsprechstunde Neurologie\n\n## Studienrelevante Beeinträchtigungen\n\n- Häufige, teils mehrtägige Migräneattacken mit ausgeprägter Licht- und Lärmempfindlichkeit\n- Deutlich reduzierte Konzentrations- und Bildschirmtoleranz in reizintensiven Hörsälen\n- Erhöhte Erschöpfung und Fehleranfälligkeit bei langen, ununterbrochenen Prüfungen\n- Anfallsbedingte kurzfristige Ausfälle, die feste Pausenfenster erforderlich machen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Reservierter Sitzplatz mit reduzierter Lichtexposition in Lehrveranstaltungen\n- Zusätzliche Pausen in langen Veranstaltungen und Prüfungen\n- Zeitverlängerung sowie Durchführung schriftlicher Prüfungen in einem reizarmen, separaten Raum\n\n**Gültigkeit der Empfehlung:** ein Semester; neurologische Verlaufskontrolle vorgesehen.\n\nZürich, 9. Mai 2026 — Dr. med. Tobias Reber, Facharzt für Neurologie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-05-08",
+    "date": "Freitag, 8. Mai 2026",
+    "slot": "13:30–14:15",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer chronischen Migräne mit Aura reagiere ich in reizintensiven Hörsälen sehr empfindlich auf grelles Licht und Lärm, was nach kurzer Zeit zu Konzentrationsabbrüchen führt. Lange schriftliche Prüfungen ohne Pausen lösen häufig Attacken aus und erhöhen meine Fehlerquote deutlich. Während einer Attacke bin ich teils mehrere Stunden nicht leistungsfähig und auf einen Rückzug aus der Reizsituation angewiesen. Ich beantrage daher für ein Semester Massnahmen in Lehrveranstaltungen und bei schriftlichen Leistungsnachweisen.",
+    "duration": "one_semester",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m1", "m5"],
+    "lectureOtherLines": [
+      "Sitzplatz mit reduzierter Lichtexposition (abseits direkter Strahler und heller Fensterfronten) zur Verringerung migräneauslösender Reize"
+    ],
+    "assessmentMeasures": ["m4", "m5", "m6"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 12.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 8. Mai 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom Mai 2026. Das Attest bestätigt eine diagnostizierte <strong>chronische Migräne mit Aura (G43.1)</strong> mit ausgeprägter Licht- und Lärmempfindlichkeit sowie deutlicher Beeinträchtigung der Konzentrations- und Bildschirmtoleranz in studienrelevanten Situationen.</p><p>Wie im Gespräch geschildert, treten die Beeinträchtigungen insbesondere in reizintensiven Grossveranstaltungen sowie bei langen, ununterbrochenen schriftlichen Prüfungen auf, in denen sich Erschöpfung und Fehleranfälligkeit verstärken. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Reservierter Sitzplatz mit reduzierter Lichtexposition, abseits direkter Strahler und heller Fensterfronten, um migräneauslösende Reize zu verringern.</li><li>Zusätzliche Pausen bei Lehrveranstaltungsblöcken von mehr als 90 Minuten zur kurzfristigen Reizreduktion und Regeneration.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %), da Attacken und Erschöpfung die effektive Bearbeitungszeit verkürzen.</li><li>Durchführung schriftlicher Prüfungen in einem separaten, reizarmen Raum mit gedämpfter Beleuchtung und reduzierter akustischer Stimulation.</li><li>Individuelle Pausenregelung während schriftlicher Prüfungen ohne Zeitabzug, um bei beginnender Attacke kurz aus der Reizsituation austreten zu können.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Sandra Meier<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 12.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 8. Mai 2026 und auf das fachärztliche Attest im ICF-Format vom Mai 2026. Bestätigt ist eine chronische Migräne mit Aura (G43.1) mit ausgeprägter Licht- und Lärmempfindlichkeit. Geeignete Massnahmen: – Reservierter Sitzplatz mit reduzierter Lichtexposition. – Zusätzliche Pausen bei Veranstaltungen über 90 Minuten. – Zeitverlängerung von rund 25 % bei schriftlichen Prüfungen. – Durchführung schriftlicher Prüfungen in einem separaten, reizarmen Raum. – Individuelle Pausenregelung während Prüfungen ohne Zeitabzug. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Sandra Meier, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-22T10:35:00.000Z"
+}

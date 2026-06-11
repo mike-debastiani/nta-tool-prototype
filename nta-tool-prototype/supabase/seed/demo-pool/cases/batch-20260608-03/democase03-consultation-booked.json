@@ -1,0 +1,26 @@
+{
+  "targetState": "consultation_booked",
+  "title": "NTA Antrag Janina Lutz",
+  "personalData": {
+    "vorname": "Janina",
+    "name": "Lutz",
+    "email": "janina.lutz@students.uzh.ch",
+    "phone": "+41 78 305 41 92",
+    "matrikel": "23-208-661",
+    "studiengang": "BA Ethnologie",
+    "semester": "2",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Psychiatrie_PTBS_Lutz.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Janina Lutz, geb. 2004  \n**Diagnose:** Posttraumatische Belastungsstörung (F43.1)  \n**Attestierende Stelle:** Psychiatrische Universitätsklinik Zürich, Ambulanz für Traumafolgestörungen\n\n## Studienrelevante Beeinträchtigungen\n\n- Intrusionen und erhöhte Schreckhaftigkeit in dicht besetzten, reizintensiven Räumen\n- Konzentrationseinbrüche und Anspannung unter Prüfungsdruck\n- Belastung durch enge, fensterlose Prüfungsräume ohne Ausgangsnähe\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Reservierter Sitzplatz mit Ausgangsnähe\n- Durchführung von Prüfungen in einem separaten, reizarmen Raum\n- Zeitverlängerung bei schriftlichen Prüfungen\n\n**Gültigkeit der Empfehlung:** wird im Beratungsgespräch konkretisiert; traumatherapeutische Behandlung läuft.\n\nZürich, 5. Juni 2026 — Dr. med. Claudia Berger, Fachärztin für Psychiatrie und Psychotherapie"
+  },
+  "consultation": {
+    "status": "booked",
+    "dateIso": "2026-06-11",
+    "date": "Donnerstag, 11. Juni 2026",
+    "slot": "10:00–10:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  }
+}

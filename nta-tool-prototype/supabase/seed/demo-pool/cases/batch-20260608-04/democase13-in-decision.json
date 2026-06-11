@@ -1,0 +1,76 @@
+{
+  "targetState": "in_decision",
+  "title": "NTA Antrag Jana Moor",
+  "personalData": {
+    "vorname": "Jana",
+    "name": "Moor",
+    "email": "jana.moor@students.uzh.ch",
+    "phone": "+41 76 642 80 19",
+    "matrikel": "22-518-770",
+    "studiengang": "BA Computerlinguistik und Sprachtechnologie",
+    "semester": "4",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Psychiatrie_Autismus_Moor.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Jana Moor, geb. 2003  \n**Diagnose:** Autismus-Spektrum-Störung (F84.5, Asperger-Syndrom)  \n**Attestierende Stelle:** Psychiatrische Universitätsklinik Zürich, Spezialsprechstunde Autismus\n\n## Studienrelevante Beeinträchtigungen\n\n- Ausgeprägte Reizüberempfindlichkeit gegenüber Lärm und visuellen Reizen\n- Erschwerte Verarbeitung mehrdeutiger oder mündlicher Aufgabenstellungen unter Zeitdruck\n- Hohe Belastung durch unvorhersehbare Abläufe und mündliche Prüfungssituationen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Durchführung von Prüfungen in einem reizarmen, separaten Raum\n- Schriftliche und eindeutige Aufgabenstellungen sowie Material vorab\n- Zeitverlängerung bei schriftlichen Prüfungen\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer.\n\nZürich, 4. Mai 2026 — Dr. med. Stefan Widmer, Facharzt für Psychiatrie und Psychotherapie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-04-29",
+    "date": "Mittwoch, 29. April 2026",
+    "slot": "13:00–13:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer Autismus-Spektrum-Störung bin ich gegenüber Lärm und visuellen Reizen ausgeprägt überempfindlich, was dicht besetzte Prüfungsräume sehr belastend macht. Mehrdeutige oder rein mündliche Aufgabenstellungen kann ich unter Zeitdruck nur erschwert verarbeiten, und unvorhersehbare Abläufe sowie mündliche Prüfungssituationen lösen starke Anspannung aus. Im Studiengang Computerlinguistik betrifft dies schriftliche und mündliche Prüfungen sowie Lehrveranstaltungen. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Mündliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m3", "m6"],
+    "lectureOtherLines": [
+      "Bereitstellung von Veranstaltungsmaterial und Ablaufinformationen vorab zur besseren Strukturierung"
+    ],
+    "assessmentMeasures": ["m4", "m6"],
+    "assessmentOtherLines": [
+      "Eindeutige, schriftlich formulierte Aufgabenstellungen ohne mehrdeutige Formulierungen"
+    ]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 04.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 29. April 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom Mai 2026. Das Attest bestätigt eine diagnostizierte <strong>Autismus-Spektrum-Störung (F84.5)</strong> mit ausgeprägter Reizüberempfindlichkeit.</p><p>Wie im Gespräch geschildert, äussern sich die Beeinträchtigungen insbesondere in der Reizüberempfindlichkeit, der erschwerten Verarbeitung mehrdeutiger Aufgaben sowie der Belastung durch unvorhersehbare Abläufe. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Erlaubnis zur Nutzung von Gehörschutz oder Noise-Cancelling-Kopfhörern in reizintensiven Phasen.</li><li>Reservierter Sitzplatz in reizarmer Position abseits von Durchgängen und Fensterfronten.</li><li>Bereitstellung von Veranstaltungsmaterial und Ablaufinformationen vorab zur besseren Strukturierung.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Durchführung schriftlicher Prüfungen in einem reizarmen, separaten Raum.</li><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %) zum Ausgleich des erhöhten Verarbeitungsaufwands.</li><li>Eindeutige, schriftlich formulierte Aufgabenstellungen ohne mehrdeutige Formulierungen.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Suzanne Beispiel<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 04.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 29. April 2026 und auf das fachärztliche Attest im ICF-Format vom Mai 2026. Bestätigt ist eine Autismus-Spektrum-Störung (F84.5). Geeignete Massnahmen: – Erlaubnis zur Nutzung von Gehörschutz. – Reservierter Sitzplatz in reizarmer Position. – Material und Ablaufinformationen vorab. – Durchführung schriftlicher Prüfungen in reizarmem, separatem Raum. – Zeitverlängerung von rund 25 %. – Eindeutige, schriftliche Aufgabenstellungen. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Suzanne Beispiel, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-12T09:30:00.000Z",
+  "reviewForwardedAt": "2026-05-18T10:00:00.000Z",
+  "r4Decision": {
+    "updatedAt": "2026-05-27T11:50:00.000Z",
+    "concretizations": [
+      {
+        "blockId": "lectureMeasures",
+        "measureKey": "m3",
+        "title": "Gehörschutz in reizintensiven Phasen",
+        "description": "Die Nutzung von Gehörschutz oder Noise-Cancelling-Kopfhörern in reizintensiven Veranstaltungsphasen wird zugelassen."
+      },
+      {
+        "blockId": "lectureMeasures",
+        "measureKey": "m6",
+        "title": "Reservierter reizarmer Sitzplatz",
+        "description": "Es wird ein Sitzplatz abseits von Durchgängen und Fensterfronten reserviert, um die Reizbelastung zu reduzieren."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m6",
+        "title": "Reizarmer, separater Prüfungsraum",
+        "description": "Schriftliche Prüfungen werden in einem reizarmen, separaten Raum durchgeführt."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m4",
+        "title": "Zeitverlängerung 25 % bei schriftlichen Prüfungen",
+        "description": "Die Bearbeitungszeit schriftlicher Prüfungen wird um 25 % verlängert, um den erhöhten Verarbeitungsaufwand auszugleichen."
+      }
+    ]
+  }
+}

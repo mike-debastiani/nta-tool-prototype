@@ -1,0 +1,43 @@
+{
+  "targetState": "in_review",
+  "title": "NTA Antrag Selina Graf",
+  "personalData": {
+    "vorname": "Selina",
+    "name": "Graf",
+    "email": "selina.graf@students.uzh.ch",
+    "phone": "+41 78 662 47 15",
+    "matrikel": "20-734-558",
+    "studiengang": "MA Soziologie",
+    "semester": "9",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Psychiatrie_Depression_Graf.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Selina Graf, geb. 2000  \n**Diagnose:** Rezidivierende depressive Störung, gegenwärtig mittelgradige Episode (F33.1)  \n**Attestierende Stelle:** Psychiatrische Universitätsklinik Zürich, Ambulatorium\n\n## Studienrelevante Beeinträchtigungen\n\n- Deutlich reduzierte Konzentrations- und Antriebsfähigkeit in depressiven Episoden\n- Verlangsamtes Arbeitstempo und erhöhte Erschöpfbarkeit bei langen Prüfungen\n- Erhebliche Belastung durch enge, starre Abgabefristen in akuten Phasen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Zeitverlängerung und angepasste Pausenregelung bei schriftlichen Prüfungen\n- Durchführung von Prüfungen in einem separaten, reizarmen Raum\n- Flexible Abgabefristen für schriftliche Arbeiten in akuten Episoden\n\n**Gültigkeit der Empfehlung:** ein Semester; psychotherapeutische Behandlung läuft, Verlaufskontrolle vorgesehen.\n\nZürich, 20. Mai 2026 — Dr. med. Thomas Egli, Facharzt für Psychiatrie und Psychotherapie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-05-19",
+    "date": "Dienstag, 19. Mai 2026",
+    "slot": "14:30–15:15",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer rezidivierenden depressiven Störung bin ich in akuten Episoden in Konzentration und Antrieb deutlich eingeschränkt und ermüde rasch. Lange schriftliche Prüfungen kann ich dadurch nur mit erheblicher Anstrengung in der vorgesehenen Zeit bewältigen. Besonders belastend sind enge, starre Abgabefristen für schriftliche Arbeiten, die in depressiven Phasen kaum einzuhalten sind, obwohl ich inhaltlich gut vorbereitet bin. Ich beantrage deshalb Massnahmen bei Leistungsnachweisen für ein Semester.",
+    "duration": "one_semester",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Schriftliche Arbeiten",
+      "Mündliche Prüfungen"
+    ],
+    "lectureMeasuresKeine": true,
+    "assessmentMeasures": ["m4", "m5", "m6"],
+    "assessmentOtherLines": [
+      "Flexible bzw. moderat verlängerte Abgabefristen für schriftliche Arbeiten in akuten depressiven Episoden"
+    ]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 24.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 19. Mai 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom Mai 2026. Das Attest bestätigt eine diagnostizierte <strong>rezidivierende depressive Störung (F33.1)</strong> mit deutlich reduzierter Konzentrations- und Antriebsfähigkeit in akuten Episoden.</p><p>Wie im Gespräch geschildert, treten die Beeinträchtigungen insbesondere bei langen schriftlichen Prüfungen, durch verlangsamtes Arbeitstempo sowie bei engen, starren Abgabefristen auf. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %), um das verlangsamte Arbeitstempo auszugleichen.</li><li>Angepasste Pausenregelung mit kurzen, individuellen Pausen ohne Zeitabzug zur Entlastung bei Erschöpfung.</li><li>Durchführung von Prüfungen in einem separaten, reizarmen Raum zur Reduktion zusätzlicher Belastung.</li><li>Flexible bzw. moderat verlängerte Abgabefristen für schriftliche Arbeiten in akuten depressiven Episoden.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Sandra Meier<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 24.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 19. Mai 2026 und auf das fachärztliche Attest im ICF-Format vom Mai 2026. Bestätigt ist eine rezidivierende depressive Störung (F33.1). Geeignete Massnahmen: – Zeitverlängerung von rund 25 % bei schriftlichen Prüfungen. – Angepasste Pausenregelung ohne Zeitabzug. – Durchführung von Prüfungen in einem separaten, reizarmen Raum. – Flexible Abgabefristen für schriftliche Arbeiten in akuten Episoden. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Sandra Meier, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-06-02T16:35:00.000Z"
+}

@@ -1,0 +1,50 @@
+{
+  "targetState": "needs_adjustment",
+  "title": "NTA Antrag Corina Zürcher",
+  "personalData": {
+    "vorname": "Corina",
+    "name": "Zürcher",
+    "email": "corina.zuercher@students.uzh.ch",
+    "phone": "+41 76 712 39 84",
+    "matrikel": "20-905-118",
+    "studiengang": "MLaw Rechtswissenschaft",
+    "semester": "9",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Psychiatrie_Zwangsstoerung_Zuercher.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Corina Zürcher, geb. 2000  \n**Diagnose:** Zwangsstörung (F42.1) mit vorwiegend Kontrollzwängen  \n**Attestierende Stelle:** Psychiatrische Universitätsklinik Zürich, Ambulatorium\n\n## Studienrelevante Beeinträchtigungen\n\n- Zeitintensive Kontrollhandlungen, die das zügige Bearbeiten von Prüfungsaufgaben deutlich verlangsamen\n- Erhöhte Anspannung und Konzentrationsverlust unter striktem Zeitdruck\n- Belastung in dicht besetzten Prüfungsräumen durch das Bedürfnis, Zwangshandlungen zu verbergen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Zeitverlängerung bei schriftlichen Prüfungen\n- Durchführung von Prüfungen in einem separaten, ruhigen Raum\n- Angepasste Pausenregelung zur Reduktion von Anspannung\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer; Verhaltenstherapie läuft.\n\nZürich, 18. Mai 2026 — Dr. med. Claudia Berger, Fachärztin für Psychiatrie und Psychotherapie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-05-14",
+    "date": "Donnerstag, 14. Mai 2026",
+    "slot": "11:00–11:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer Zwangsstörung mit vorwiegend Kontrollzwängen benötige ich für zeitintensive Kontrollhandlungen deutlich mehr Zeit, was das zügige Bearbeiten von Prüfungsaufgaben verlangsamt. Unter striktem Zeitdruck steigen meine Anspannung und mein Konzentrationsverlust stark an. In dicht besetzten Prüfungsräumen belastet mich zusätzlich das Bedürfnis, meine Zwangshandlungen zu verbergen. Ich beantrage deshalb Massnahmen bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Schriftliche Arbeiten"
+    ],
+    "lectureMeasuresKeine": true,
+    "assessmentMeasures": ["m4", "m5", "m6"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 18.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 14. Mai 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom Mai 2026. Das Attest bestätigt eine diagnostizierte <strong>Zwangsstörung (F42.1)</strong> mit vorwiegend Kontrollzwängen und deutlich verlangsamter Aufgabenbearbeitung.</p><p>Wie im Gespräch geschildert, treten die Beeinträchtigungen insbesondere durch zeitintensive Kontrollhandlungen, erhöhte Anspannung unter Zeitdruck sowie Belastung in dicht besetzten Prüfungsräumen auf. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %), um den durch Kontrollhandlungen erhöhten Zeitbedarf auszugleichen.</li><li>Durchführung von Prüfungen in einem separaten, ruhigen Raum mit reduzierter Personenzahl.</li><li>Angepasste Pausenregelung mit kurzen, individuellen Pausen ohne Zeitabzug zur Reduktion der Anspannung.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Suzanne Beispiel<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 18.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 14. Mai 2026 und auf das fachärztliche Attest im ICF-Format vom Mai 2026. Bestätigt ist eine Zwangsstörung (F42.1). Geeignete Massnahmen: – Zeitverlängerung von rund 25 % bei schriftlichen Prüfungen. – Durchführung von Prüfungen in einem separaten, ruhigen Raum. – Angepasste Pausenregelung ohne Zeitabzug. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Suzanne Beispiel, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-27T09:40:00.000Z",
+  "reviewForwardedAt": "2026-06-01T10:20:00.000Z",
+  "adjustmentRequests": [
+    {
+      "blockId": "assessmentMeasures",
+      "remark": "Bitte begründen Sie die Höhe der beantragten Zeitverlängerung konkreter: Wie viel zusätzliche Zeit beanspruchen die Kontrollhandlungen typischerweise, und weshalb sind 25 % angemessen und nicht ein geringerer oder höherer Richtwert?"
+    },
+    {
+      "blockId": "attest",
+      "remark": "Das Attest enthält keine Angabe zur aktuellen Symptomschwere bzw. zum Behandlungsstand. Bitte reichen Sie eine ergänzende fachärztliche Einschätzung nach, inwieweit die laufende Verhaltenstherapie die Prüfungssituation bereits beeinflusst."
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "targetState": "in_review",
+  "title": "NTA Antrag Robin Tanner",
+  "personalData": {
+    "vorname": "Robin",
+    "name": "Tanner",
+    "email": "robin.tanner@students.uzh.ch",
+    "phone": "+41 79 884 26 50",
+    "matrikel": "19-905-241",
+    "studiengang": "MLaw International and Comparative Law",
+    "semester": "10",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Neurologie_MS_Tanner.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** Robin Tanner, geb. 1999  \n**Diagnose:** Multiple Sklerose (G35), schubförmig-remittierender Verlauf  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Klinik für Neurologie, MS-Sprechstunde\n\n## Studienrelevante Beeinträchtigungen\n\n- Ausgeprägte Fatigue mit rascher kognitiver Erschöpfung bei langer Belastung\n- Phasenweise feinmotorische Einschränkungen der Hände beim längeren Schreiben\n- Konzentrations- und Aufmerksamkeitsschwankungen im Tagesverlauf\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Zusätzliche Pausen und Erlaubnis zur Audioaufnahme von Lehrveranstaltungen\n- Einsatz technischer Hilfsmittel beim Schreiben (Laptop)\n- Zeitverlängerung und angepasste Pausenregelung bei schriftlichen Prüfungen\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer; neurologische Verlaufskontrolle laufend.\n\nZürich, 23. Mai 2026 — Dr. med. Nadia Köhler, Fachärztin für Neurologie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-05-22",
+    "date": "Freitag, 22. Mai 2026",
+    "slot": "08:45–09:30",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer schubförmig verlaufenden Multiplen Sklerose leide ich unter einer ausgeprägten Fatigue, die mich bei langer geistiger Belastung rasch erschöpft. Phasenweise treten zudem feinmotorische Einschränkungen der Hände auf, die längeres handschriftliches Arbeiten erschweren. Meine Konzentration schwankt im Tagesverlauf, was sich besonders in langen Prüfungen und textintensiven juristischen Arbeiten bemerkbar macht. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Schriftliche Arbeiten",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m1", "m4"],
+    "assessmentMeasures": ["m1", "m4", "m5"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 26.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 22. Mai 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom Mai 2026. Das Attest bestätigt eine diagnostizierte <strong>Multiple Sklerose (G35)</strong> mit ausgeprägter Fatigue, phasenweisen feinmotorischen Einschränkungen und Konzentrationsschwankungen.</p><p>Wie im Gespräch geschildert, treten die Beeinträchtigungen insbesondere bei langer geistiger Belastung, längerem handschriftlichem Arbeiten sowie in langen Prüfungen und textintensiven juristischen Arbeiten auf. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Zusätzliche Pausen bei Lehrveranstaltungsblöcken von mehr als 90 Minuten zur Entlastung bei Fatigue.</li><li>Erlaubnis zur Audioaufnahme von Lehrveranstaltungen, um erschöpfungsbedingt verpasste Inhalte nacharbeiten zu können.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Einsatz technischer Hilfsmittel wie eines Laptops zum Schreiben, um feinmotorische Einschränkungen auszugleichen.</li><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %) wegen der fatiguebedingt reduzierten Belastbarkeit.</li><li>Angepasste Pausenregelung mit kurzen, individuellen Pausen ohne Zeitabzug.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Sandra Meier<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 26.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 22. Mai 2026 und auf das fachärztliche Attest im ICF-Format vom Mai 2026. Bestätigt ist eine Multiple Sklerose (G35). Geeignete Massnahmen: – Zusätzliche Pausen bei Blöcken über 90 Minuten. – Erlaubnis zur Audioaufnahme von Lehrveranstaltungen. – Einsatz technischer Hilfsmittel (Laptop) beim Schreiben. – Zeitverlängerung von rund 25 % bei schriftlichen Prüfungen. – Angepasste Pausenregelung ohne Zeitabzug. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Sandra Meier, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-06-05T09:05:00.000Z"
+}

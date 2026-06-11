@@ -1,0 +1,51 @@
+{
+  "targetState": "rejected",
+  "title": "NTA Antrag Livia Thalmann",
+  "personalData": {
+    "vorname": "Livia",
+    "name": "Thalmann",
+    "email": "livia.thalmann@students.uzh.ch",
+    "phone": "+41 78 558 30 47",
+    "matrikel": "22-771-625",
+    "studiengang": "BA Philosophie",
+    "semester": "4",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "Attest_Psychiatrie_ADHS_Thalmann.md",
+    "markdownContent": "# Fachärztliches Attest\n\n**Patientin:** Livia Thalmann, geb. 2003  \n**Diagnose:** Aufmerksamkeitsdefizitstörung (F90.0), vorwiegend unaufmerksamer Typ  \n**Attestierende Stelle:** Psychiatrische Praxis Dr. med. T. Huber, Zürich\n\n## Studienrelevante Beeinträchtigungen\n\n- Erhöhte Ablenkbarkeit und Konzentrationsschwierigkeiten in langen Prüfungen\n- Erhöhter Zeitbedarf bei der Aufgabenstrukturierung\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Zeitverlängerung bei schriftlichen Prüfungen\n- Durchführung von Prüfungen in einem reizarmen Raum\n\n**Gültigkeit der Empfehlung:** ein Semester.\n\nZürich, 4. Mai 2026 — Dr. med. Thomas Huber, Facharzt für Psychiatrie und Psychotherapie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-04-30",
+    "date": "Donnerstag, 30. April 2026",
+    "slot": "16:00–16:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer Aufmerksamkeitsdefizitstörung vom unaufmerksamen Typ bin ich in langen Prüfungen leicht ablenkbar und habe Konzentrationsschwierigkeiten sowie einen erhöhten Zeitbedarf bei der Aufgabenstrukturierung. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen, darunter eine Zeitverlängerung, einen reizarmen Raum sowie die Möglichkeit, schriftliche Prüfungen mündlich abzulegen. Im Studiengang Philosophie betrifft dies schriftliche und mündliche Prüfungen. Ich beantrage diese Massnahmen für ein Semester.",
+    "duration": "one_semester",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Mündliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m1", "m6"],
+    "assessmentMeasures": ["m4", "m6", "m7"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 04.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 30. April 2026 sowie auf das eingereichte Attest vom Mai 2026. Das Attest bestätigt eine diagnostizierte <strong>Aufmerksamkeitsdefizitstörung (F90.0)</strong> vom unaufmerksamen Typ.</p><p>Wie im Gespräch geschildert, wirken sich die Beeinträchtigungen durch erhöhte Ablenkbarkeit und Konzentrationsschwierigkeiten in langen Prüfungen aus. Während Massnahmen in Lehrveranstaltungen geeignet erscheinen, geht die beantragte Kombination bei Leistungsnachweisen – insbesondere die generelle Umwandlung schriftlicher in mündliche Prüfungen – über den dokumentierten Bedarf hinaus.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen in Lehrveranstaltungen geeignet:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Reservierter Sitzplatz in reizarmer Position zur Reduktion von Ablenkung.</li><li>Möglichkeit einer kurzen Pause bei nachlassender Konzentration.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Beantragt wurden eine Zeitverlängerung, ein reizarmer Raum sowie die Umwandlung schriftlicher in mündliche Prüfungen; die Umwandlung verändert den Prüfungsgegenstand und ist nicht verhältnismässig.</li></ul><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Suzanne Beispiel<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 04.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 30. April 2026 und auf das Attest vom Mai 2026. Bestätigt ist eine Aufmerksamkeitsdefizitstörung (F90.0). In Lehrveranstaltungen erscheinen ein reizarmer Sitzplatz sowie kurze Pausen geeignet. Die bei Leistungsnachweisen beantragte Kombination aus Zeitverlängerung, separatem Raum und der Umwandlung schriftlicher in mündliche Prüfungen geht über den dokumentierten Bedarf hinaus; insbesondere die Umwandlung verändert den Prüfungsgegenstand. Die abschliessende Beurteilung obliegt der Entscheidungsinstanz. Freundliche Grüsse, Dr. Suzanne Beispiel, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-14T15:15:00.000Z",
+  "reviewForwardedAt": "2026-05-19T10:05:00.000Z",
+  "r4Decision": {
+    "updatedAt": "2026-06-02T15:25:00.000Z",
+    "rejectedBlocks": [
+      {
+        "blockId": "assessmentMeasures",
+        "reason": "Beantragt wurde unter anderem, schriftliche Prüfungen generell mündlich ablegen zu dürfen. Diese Massnahme verändert bei textlastigen philosophischen Prüfungen den Prüfungsgegenstand, da die schriftliche Argumentationsfähigkeit ein eigenständiges Lernziel darstellt, und kann daher nicht bewilligt werden. Die zusätzlich beantragte Kombination aus pauschaler Zeitverlängerung und separatem Raum ist im vorgelegten Attest nur allgemein und nicht prüfungsbezogen begründet. Der Massnahmenblock wird in dieser Form abgelehnt; eine fachärztlich konkretisierte Neubeurteilung einzelner, verhältnismässiger Massnahmen bleibt möglich.",
+        "rejectedMeasureKeys": ["m4", "m6", "m7"]
+      }
+    ]
+  }
+}

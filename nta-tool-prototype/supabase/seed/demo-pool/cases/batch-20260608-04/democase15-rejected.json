@@ -1,0 +1,55 @@
+{
+  "targetState": "rejected",
+  "title": "NTA Antrag Tanja Oberholzer",
+  "personalData": {
+    "vorname": "Tanja",
+    "name": "Oberholzer",
+    "email": "tanja.oberholzer@students.uzh.ch",
+    "phone": "+41 76 503 28 91",
+    "matrikel": "20-884-512",
+    "studiengang": "MA Psychologie",
+    "semester": "10",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "Attest_Rheumatologie_Fibromyalgie_Oberholzer.md",
+    "markdownContent": "# Fachärztliches Attest\n\n**Patientin:** Tanja Oberholzer, geb. 2000  \n**Diagnose:** Fibromyalgie-Syndrom (M79.7)  \n**Attestierende Stelle:** Hausärztliche Praxis Dr. med. R. Frei, Zürich\n\n## Studienrelevante Beeinträchtigungen\n\n- Chronische, wechselnd lokalisierte Schmerzen und allgemeine Erschöpfung\n- Reduzierte Belastbarkeit bei längerem Sitzen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Zusätzliche Pausen in Lehrveranstaltungen\n- Zeitverlängerung und angepasste Pausenregelung bei Prüfungen\n\n**Gültigkeit der Empfehlung:** ein Semester.\n\nZürich, 24. April 2026 — Dr. med. Roland Frei, Facharzt für Allgemeine Innere Medizin"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-04-22",
+    "date": "Mittwoch, 22. April 2026",
+    "slot": "15:30–16:15",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund eines Fibromyalgie-Syndroms leide ich unter chronischen, wechselnd lokalisierten Schmerzen und allgemeiner Erschöpfung, die meine Belastbarkeit bei längerem Sitzen reduzieren. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen, darunter zusätzliche Pausen, eine Zeitverlängerung sowie eine angepasste Pausenregelung. Im Studiengang Psychologie betrifft dies vor allem längere schriftliche Prüfungen. Ich beantrage diese Massnahmen für ein Semester.",
+    "duration": "one_semester",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m1"],
+    "assessmentMeasures": ["m4", "m5"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 24.04.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 22. April 2026 sowie auf das eingereichte Attest vom April 2026. Das Attest bestätigt ein diagnostiziertes <strong>Fibromyalgie-Syndrom (M79.7)</strong>.</p><p>Wie im Gespräch geschildert, äussern sich die Beschwerden in chronischen Schmerzen und Erschöpfung mit reduzierter Belastbarkeit bei längerem Sitzen. Das vorgelegte hausärztliche Attest beschreibt die studienbezogene Funktionseinschränkung jedoch nur allgemein und leitet keinen konkreten, prüfungsbezogenen Mehrbedarf ab.</p><p>Aus Sicht der Fachstelle lässt sich auf der vorliegenden Grundlage kein verhältnismässiger Nachteilsausgleich begründen. Wir empfehlen, ein fachärztliches Attest mit konkreter Beschreibung der studienrelevanten Funktionseinschränkungen nachzureichen.</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Beantragt wurden zusätzliche Pausen; ein über die regulären Pausen hinausgehender Bedarf ist nicht belegt.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Beantragt wurden eine Zeitverlängerung sowie eine angepasste Pausenregelung; beide sind im vorliegenden Attest nicht hinreichend begründet.</li></ul><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Suzanne Beispiel<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 24.04.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 22. April 2026 und auf das Attest vom April 2026. Bestätigt ist ein Fibromyalgie-Syndrom (M79.7). Das hausärztliche Attest beschreibt die studienbezogene Funktionseinschränkung nur allgemein. Auf dieser Grundlage lässt sich kein verhältnismässiger Nachteilsausgleich begründen; empfohlen wird ein fachärztliches Attest mit konkreter Beschreibung der studienrelevanten Einschränkungen. Die abschliessende Beurteilung obliegt der Entscheidungsinstanz. Freundliche Grüsse, Dr. Suzanne Beispiel, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-06T11:25:00.000Z",
+  "reviewForwardedAt": "2026-05-11T10:10:00.000Z",
+  "r4Decision": {
+    "updatedAt": "2026-05-25T14:50:00.000Z",
+    "rejectedBlocks": [
+      {
+        "blockId": "lectureMeasures",
+        "reason": "Beantragt wurden zusätzliche Pausen in Lehrveranstaltungen. Das vorgelegte hausärztliche Attest beschreibt die Beeinträchtigung jedoch nur in allgemeiner Form und weist keinen konkreten, über die regulären Veranstaltungspausen hinausgehenden Bedarf nach. Da Lehrveranstaltungen ohnehin reguläre Pausen vorsehen und keine spezifische studienbezogene Funktionseinschränkung dargelegt ist, kann die Massnahme auf dieser Grundlage nicht bewilligt werden.",
+        "rejectedMeasureKeys": ["m1"]
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "reason": "Beantragt wurden eine Zeitverlängerung sowie eine angepasste Pausenregelung bei schriftlichen Prüfungen. Das Attest leitet weder einen erhöhten Zeitbedarf noch einen konkreten Pausenbedarf aus einer prüfungsbezogenen Funktionseinschränkung ab, sondern bleibt bei einer allgemeinen Schilderung von Schmerzen und Erschöpfung. Ohne eine fachärztlich konkretisierte Grundlage ist der beantragte Nachteilsausgleich nicht verhältnismässig begründbar; der Block wird in dieser Form abgelehnt. Eine erneute Prüfung ist nach Vorlage eines fachärztlichen Attests möglich.",
+        "rejectedMeasureKeys": ["m4", "m5"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,43 @@
+{
+    "targetState": "in_review",
+    "title": "NTA Antrag Janosch Wüthrich",
+    "personalData": {
+      "vorname": "Janosch",
+      "name": "Wüthrich",
+      "email": "janosch.wuethrich@students.uzh.ch",
+      "phone": "+41 79 631 24 87",
+      "matrikel": "20-915-336",
+      "studiengang": "BA Publizistik- und Kommunikationswissenschaft",
+      "semester": "5",
+      "antragsart": "studium"
+    },
+    "attest": {
+      "fileName": "Attest_Psychotherapie_Angststoerung_Wuethrich.md",
+      "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** Janosch Wüthrich, geb. 2001  \n**Diagnose:** Soziale Phobie mit ausgeprägter Prüfungsangst (F40.1)  \n**Attestierende Stelle:** Psychotherapeutische Praxis Oberstrass, Zürich\n\n## Studienrelevante Beeinträchtigungen\n\n- Ausgeprägte Angst in Situationen mit Bewertung durch andere, insbesondere bei mündlichen Prüfungen und Referaten\n- Bei mündlicher Exposition vor Gruppen Blockaden, Zittern, Herzrasen und phasenweise Sprechhemmung bis zum Abbruch\n- Erhöhte Anspannung bereits Tage vor angekündigten Bewertungssituationen mit Schlafstörungen\n- In schriftlichen Prüfungen mit grosser Gruppe verstärkte Unruhe und Konzentrationsverlust durch wahrgenommene Beobachtung\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Separater Prüfungsraum mit kleiner oder ohne Gruppe zur Reduktion der Beobachtungssituation\n- Bei mündlichen Prüfungen vorgängige Bekanntgabe von Ablauf und Prüfungsperson\n- Zeitverlängerung bei schriftlichen Prüfungen zur Kompensation angstbedingter Blockaden\n- Reduktion der Pflicht zu spontaner mündlicher Beteiligung in Seminaren\n- Möglichkeit, ein Referat in kleinerem Rahmen oder mit angepasster Form abzulegen\n\n**Gültigkeit der Empfehlung:** für die gesamte Studiendauer; therapeutische Begleitung läuft.\n\nZürich, 5. März 2026 — lic. phil. Cornelia Brunschwiler, Fachpsychologin für Psychotherapie FSP"
+    },
+    "consultation": {
+      "status": "done",
+      "dateIso": "2026-03-11",
+      "date": "Mittwoch, 11. März 2026",
+      "slot": "09:00–09:45",
+      "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+      "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+    },
+    "applicationDefinition": {
+      "situationDescription": "Aufgrund einer sozialen Phobie mit starker Prüfungsangst fällt es mir besonders schwer, in mündlichen Prüfungen und bei Referaten vor Gruppen zu bestehen. Schon Tage vor angekündigten Bewertungssituationen baut sich eine erhebliche Anspannung auf, die meinen Schlaf und meine Vorbereitung beeinträchtigt. In mündlichen Situationen kommt es zu Blockaden, Zittern und Sprechhemmungen, obwohl ich inhaltlich gut vorbereitet bin. Auch in grossen schriftlichen Prüfungen erlebe ich durch das Gefühl, beobachtet zu werden, eine deutliche Konzentrationseinbusse. Ich beantrage Massnahmen, die die Beobachtungssituation reduzieren und mir eine faire Leistungserbringung ermöglichen.",
+      "duration": "full_study",
+      "scopeSelections": [
+        "Schriftliche Prüfungen",
+        "Mündliche Prüfungen",
+        "Während Lehrveranstaltungen"
+      ],
+      "lectureMeasures": ["m6"],
+      "assessmentMeasures": ["m4", "m6"],
+      "assessmentOtherLines": [
+        "Mündliche Prüfungen mit vorgängiger Bekanntgabe von Ablauf und Prüfungsperson"
+      ]
+    },
+    "recommendationHtml": "<p>Sehr geehrte Damen und Herren,</p><p>Herr <strong>Janosch Wüthrich</strong> hat am 11.03.2026 die Beratung der NTA-Fachstelle wahrgenommen. Das psychotherapeutische Attest bestätigt eine soziale Phobie mit ausgeprägter Prüfungsangst (F40.1), die insbesondere mündliche Prüfungen, Referate sowie schriftliche Prüfungen in grossen Gruppen beeinträchtigt.</p><h2>Empfehlung der Fachstelle für die gesamte Studiendauer</h2><ul><li>Separater Prüfungsraum zur Reduktion der Beobachtungssituation.</li><li>Zeitverlängerung bei schriftlichen Prüfungen.</li><li>Verzicht auf unaufgefordertes mündliches Aufbieten in Lehrveranstaltungen.</li><li>Bei mündlichen Prüfungen vorgängige Bekanntgabe von Ablauf und Prüfungsperson.</li><li>Möglichkeit, ein Referat in kleinerem Rahmen oder angepasster Form abzulegen.</li></ul><p>Die beantragten Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Freundliche Grüsse<br/>Dr. Sandra Meier, NTA-Fachstelle UZH</p>",
+    "recommendationText": "Sehr geehrte Damen und Herren, Herr Janosch Wüthrich hat am 11.03.2026 die Beratung der NTA-Fachstelle wahrgenommen. Das psychotherapeutische Attest bestätigt eine soziale Phobie mit ausgeprägter Prüfungsangst (F40.1), die mündliche Prüfungen, Referate und schriftliche Prüfungen in grossen Gruppen beeinträchtigt. Empfehlung für die gesamte Studiendauer: separater Prüfungsraum, Zeitverlängerung bei schriftlichen Prüfungen, Verzicht auf unaufgefordertes mündliches Aufbieten, vorgängige Bekanntgabe von Ablauf und Prüfungsperson bei mündlichen Prüfungen sowie die Möglichkeit, ein Referat in kleinerem Rahmen abzulegen. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse Dr. Sandra Meier, NTA-Fachstelle UZH",
+    "submittedAt": "2026-03-17T10:08:00.000Z"
+  }

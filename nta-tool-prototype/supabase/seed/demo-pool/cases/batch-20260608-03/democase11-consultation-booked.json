@@ -1,0 +1,26 @@
+{
+  "targetState": "consultation_booked",
+  "title": "NTA Antrag Selina Meyer",
+  "personalData": {
+    "vorname": "Selina",
+    "name": "Meyer",
+    "email": "selina.meyer@students.uzh.ch",
+    "phone": "+41 76 619 23 85",
+    "matrikel": "21-447-902",
+    "studiengang": "BA Religionswissenschaft",
+    "semester": "5",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Orthopaedie_Rueckenleiden_Meyer.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Selina Meyer, geb. 2002  \n**Diagnose:** Chronisches lumbales Rückenleiden mit Bandscheibenvorfall L4/L5 (M51.1)  \n**Attestierende Stelle:** Schulthess Klinik Zürich, Wirbelsäulenzentrum\n\n## Studienrelevante Beeinträchtigungen\n\n- Schmerzen bei längerem ununterbrochenem Sitzen mit Ausstrahlung ins Bein\n- Bedarf an regelmässigem Positionswechsel und kurzem Aufstehen\n- Konzentrationsverlust durch zunehmende Schmerzen in langen Prüfungen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Zusätzliche Pausen und Möglichkeit zum Positionswechsel in Lehrveranstaltungen\n- Angepasste Pausenregelung und Zeitverlängerung bei schriftlichen Prüfungen\n- Ergonomische Sitzgelegenheit am Prüfungsplatz\n\n**Gültigkeit der Empfehlung:** wird im Beratungsgespräch konkretisiert; orthopädische Betreuung läuft.\n\nZürich, 6. Juni 2026 — Dr. med. Felix Hartmann, Facharzt für Orthopädische Chirurgie"
+  },
+  "consultation": {
+    "status": "booked",
+    "dateIso": "2026-06-18",
+    "date": "Donnerstag, 18. Juni 2026",
+    "slot": "11:00–11:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  }
+}

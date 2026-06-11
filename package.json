@@ -8,6 +8,9 @@
     "dev": "npm run dev --workspace=nta-tool-prototype",
     "build": "npm run build --workspace=nta-tool-prototype",
     "start": "npm run start --workspace=nta-tool-prototype",
-    "lint": "npm run lint --workspace=nta-tool-prototype"
+    "lint": "npm run lint --workspace=nta-tool-prototype",
+    "validate:demo-case": "npm run validate:demo-case --workspace=nta-tool-prototype --",
+    "demo-pool:summary": "npm run demo-pool:summary --workspace=nta-tool-prototype --",
+    "demo-pool:import": "npm run demo-pool:import --workspace=nta-tool-prototype --"
   }
 }

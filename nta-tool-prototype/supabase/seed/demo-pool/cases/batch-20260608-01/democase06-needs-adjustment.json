@@ -1,0 +1,53 @@
+{
+  "targetState": "needs_adjustment",
+  "title": "NTA Antrag Sophie Aebischer",
+  "personalData": {
+    "vorname": "Sophie",
+    "name": "Aebischer",
+    "email": "sophie.aebischer@students.uzh.ch",
+    "phone": "+41 76 483 19 27",
+    "matrikel": "21-208-554",
+    "studiengang": "BA Geschichte",
+    "semester": "6",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Psychiatrie_Legasthenie_Aebischer.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Sophie Aebischer, geb. 2002  \n**Diagnose:** Lese-Rechtschreib-Störung (Legasthenie, F81.0)  \n**Attestierende Stelle:** Universitäre Poliklinik für Lern- und Entwicklungsstörungen, Zürich\n\n## Studienrelevante Beeinträchtigungen\n\n- Deutlich verlangsamtes Lesen umfangreicher Quellen- und Sekundärtexte\n- Erhöhte Fehlerquote bei zeitgebundenem Schreiben trotz inhaltlicher Vorbereitung\n- Rasche Ermüdung beim Lesen langer Prüfungs- und Hausarbeitstexte\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Anpassung der Prüfungsunterlagen (Schriftgrösse, Zeilenabstand, Schriftart)\n- Einsatz technischer Hilfsmittel (Vorlesesoftware, Rechtschreibkorrektur)\n- Zeitverlängerung bei schriftlichen Prüfungen und Arbeiten\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer.\n\nZürich, 30. April 2026 — Dr. phil. Regula Imhof, Fachpsychologin für Legasthenie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-04-29",
+    "date": "Mittwoch, 29. April 2026",
+    "slot": "14:00–14:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer Lese-Rechtschreib-Störung lese ich umfangreiche Quellen- und Sekundärtexte deutlich langsamer als Mitstudierende und ermüde dabei rasch. Bei zeitgebundenen schriftlichen Prüfungen und Hausarbeiten steigt meine Fehlerquote stark an, obwohl ich inhaltlich gut vorbereitet bin. Besonders in einem textintensiven Studiengang wie Geschichte wirkt sich dies erheblich auf meine Leistungen aus. Ich beantrage deshalb Massnahmen bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Schriftliche Arbeiten"
+    ],
+    "lectureMeasuresKeine": true,
+    "assessmentMeasures": ["m1", "m2", "m4"],
+    "assessmentOtherLines": [
+      "Zulassung einer Rechtschreib- und Vorlesesoftware bei schriftlichen Prüfungen und Hausarbeiten"
+    ]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 02.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 29. April 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom April 2026. Das Attest bestätigt eine diagnostizierte <strong>Lese-Rechtschreib-Störung (F81.0)</strong> mit deutlich verlangsamtem Lesen und erhöhter Fehlerquote bei zeitgebundenem Schreiben.</p><p>Wie im Gespräch geschildert, wirken sich die Beeinträchtigungen insbesondere bei der Bearbeitung umfangreicher Quellentexte sowie bei zeitgebundenen schriftlichen Prüfungen und Hausarbeiten aus. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Einsatz technischer Hilfsmittel wie Vorlesesoftware und Rechtschreibkorrektur bei schriftlichen Prüfungen und Hausarbeiten.</li><li>Anpassung der Prüfungsunterlagen hinsichtlich Schriftgrösse, Zeilenabstand und Schriftart zur Erleichterung des Lesens.</li><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %), da das verlangsamte Lesen die effektive Bearbeitungszeit verkürzt.</li><li>Zulassung einer Rechtschreib- und Vorlesesoftware auch bei schriftlichen Hausarbeiten.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Sandra Meier<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 02.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 29. April 2026 und auf das fachärztliche Attest im ICF-Format vom April 2026. Bestätigt ist eine Lese-Rechtschreib-Störung (F81.0). Geeignete Massnahmen: – Einsatz technischer Hilfsmittel (Vorlesesoftware, Rechtschreibkorrektur). – Anpassung der Prüfungsunterlagen. – Zeitverlängerung von rund 25 % bei schriftlichen Prüfungen. – Zulassung einer Rechtschreib- und Vorlesesoftware bei Hausarbeiten. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Sandra Meier, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-11T11:25:00.000Z",
+  "reviewForwardedAt": "2026-05-15T09:30:00.000Z",
+  "adjustmentRequests": [
+    {
+      "blockId": "definition",
+      "remark": "Bitte konkretisieren Sie, in welchen konkreten Leistungsnachweisen (Klausuren, Seminararbeiten, Quellenexegesen) die Lesegeschwindigkeit am stärksten ins Gewicht fällt, und nennen Sie mindestens ein Beispiel aus dem laufenden Semester."
+    },
+    {
+      "blockId": "assessmentMeasures",
+      "remark": "Die parallele Beantragung von technischer Vorlesesoftware (m1) und der Zulassung einer separaten Rechtschreibsoftware als Freitext überschneidet sich. Bitte trennen Sie klar, welches Hilfsmittel für welche Prüfungsform vorgesehen ist."
+    }
+  ]
+}

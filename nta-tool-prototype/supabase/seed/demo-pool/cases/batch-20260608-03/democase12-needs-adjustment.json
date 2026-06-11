@@ -1,0 +1,47 @@
+{
+  "targetState": "needs_adjustment",
+  "title": "NTA Antrag Tobias Wenger",
+  "personalData": {
+    "vorname": "Tobias",
+    "name": "Wenger",
+    "email": "tobias.wenger@students.uzh.ch",
+    "phone": "+41 78 884 25 60",
+    "matrikel": "22-247-913",
+    "studiengang": "BA Soziologie",
+    "semester": "4",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Psychiatrie_SozialePhobie_Wenger.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** Tobias Wenger, geb. 2003  \n**Diagnose:** Soziale Phobie (F40.1) mit ausgeprägter Angst vor Bewertungssituationen  \n**Attestierende Stelle:** Psychiatrische Universitätsklinik Zürich, Ambulanz für Angsterkrankungen\n\n## Studienrelevante Beeinträchtigungen\n\n- Starke Angst und körperliche Symptomatik bei mündlichen Beiträgen und Referaten vor Gruppen\n- Blockaden und Gedankenabrisse bei unangekündigter mündlicher Beteiligung\n- Erhöhte Anspannung in dicht besetzten Prüfungsräumen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Verzicht auf unaufgefordertes mündliches Aufrufen in Lehrveranstaltungen\n- Durchführung schriftlicher Prüfungen in einem separaten Raum\n- Mündliche Prüfungen nach Möglichkeit in kleinerem Rahmen oder schriftlich gleichwertig\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer; Psychotherapie läuft.\n\nZürich, 25. Mai 2026 — Dr. med. Claudia Berger, Fachärztin für Psychiatrie und Psychotherapie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-05-21",
+    "date": "Donnerstag, 21. Mai 2026",
+    "slot": "13:30–14:15",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer sozialen Phobie reagiere ich bei mündlichen Beiträgen und Referaten vor Gruppen mit starker Angst und körperlicher Symptomatik. Werde ich unangekündigt mündlich aufgerufen, gerate ich in Blockaden und verliere den Faden, obwohl ich inhaltlich vorbereitet bin. In dicht besetzten Prüfungsräumen steigt meine Anspannung zusätzlich. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Mündliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m6"],
+    "assessmentMeasures": ["m6", "m7"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 25.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 21. Mai 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom Mai 2026. Das Attest bestätigt eine diagnostizierte <strong>soziale Phobie (F40.1)</strong> mit ausgeprägter Angst vor Bewertungssituationen und mündlicher Exposition.</p><p>Wie im Gespräch geschildert, treten die Beeinträchtigungen insbesondere bei mündlichen Beiträgen vor Gruppen, bei unangekündigter mündlicher Beteiligung sowie in dicht besetzten Prüfungsräumen auf. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Verzicht auf unaufgefordertes mündliches Aufrufen, um angstbedingte Blockaden zu vermeiden.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Durchführung schriftlicher Prüfungen in einem separaten Raum mit deutlich reduzierter Personenzahl.</li><li>Mündliche Prüfungen nach Möglichkeit in kleinerem Rahmen durchführen oder, soweit fachlich gleichwertig, durch ein schriftliches Format ersetzen.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Suzanne Beispiel<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 25.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 21. Mai 2026 und auf das fachärztliche Attest im ICF-Format vom Mai 2026. Bestätigt ist eine soziale Phobie (F40.1). Geeignete Massnahmen: – Verzicht auf unaufgefordertes mündliches Aufrufen. – Durchführung schriftlicher Prüfungen in einem separaten Raum. – Mündliche Prüfungen in kleinerem Rahmen oder gleichwertig schriftlich. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Suzanne Beispiel, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-06-02T14:25:00.000Z",
+  "reviewForwardedAt": "2026-06-06T09:50:00.000Z",
+  "adjustmentRequests": [
+    {
+      "blockId": "assessmentMeasures",
+      "remark": "Der pauschale Ersatz mündlicher durch schriftliche Prüfungen (m7) berührt prüfungsrelevante Kompetenzen. Bitte präzisieren Sie, für welche konkreten Module dies beantragt wird, und ob alternativ eine mündliche Prüfung in kleinerem Rahmen ausreichend wäre."
+    }
+  ]
+}

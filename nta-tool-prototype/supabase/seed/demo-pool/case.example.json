@@ -1,0 +1,46 @@
+{
+  "targetState": "in_review",
+  "title": "NTA Antrag Lara Hofmann",
+  "personalData": {
+    "vorname": "Lara",
+    "name": "Hofmann",
+    "email": "lara.hofmann@students.uzh.ch",
+    "phone": "+41 78 412 90 33",
+    "matrikel": "22-318-604",
+    "studiengang": "BA Psychologie",
+    "semester": "3",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Psychiatrie_ADHS_Hofmann.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Lara Hofmann, geb. 2003  \n**Diagnose:** Aufmerksamkeitsdefizit-/Hyperaktivitätsstörung (ADHS), kombinierte Form (F90.0)  \n**Attestierende Stelle:** Psychiatrische Universitätsklinik Zürich, Ambulanz Studierende\n\n## Studienrelevante Beeinträchtigungen\n\n- Deutlich reduzierte Aufrechterhaltung der Aufmerksamkeit in Veranstaltungen über 90 Minuten\n- Erhöhte Fehleranfälligkeit unter Zeitdruck und bei unangekündigter mündlicher Beteiligung\n- Erschöpfung und kognitive Überlastung bei gleichzeitigen sensorischen Reizen (Grosser Hörsaal)\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Zusätzliche Pausen in langen Lehrveranstaltungen\n- Verzicht auf unaufgefordertes mündliches Aufbieten\n- Verlängerung der Bearbeitungszeit bei schriftlichen Prüfungen\n- Rückzugsmöglichkeit bei akuter Überforderung in Grossveranstaltungen\n- Prüfung in zwei zeitlich getrennten Blöcken an aufeinanderfolgenden Tagen, soweit fachlich vertretbar\n\n**Gültigkeit der Empfehlung:** mindestens ein Semester; Verlaufkontrolle empfohlen.\n\nZürich, 28. Februar 2026 — Dr. med. Patricia Keller, Fachärztin für Psychiatrie und Psychotherapie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-03-04",
+    "date": "Dienstag, 4. März 2026",
+    "slot": "14:15–15:00",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Seit Beginn des Studiums fällt mir das Durchhalten in langen Vorlesungen und Prüfungen mit Zeitdruck deutlich schwerer als bei Mitstudierenden. Die ADHS-Diagnose erklärt meine Schwierigkeiten bei unangekündigter mündlicher Beteiligung und bei längeren schriftlichen Leistungsnachweisen. In Grossveranstaltungen verliere ich nach etwa einer Stunde den Fokus; in Prüfungen gerate ich unter Stress in Leistungseinbrüche, obwohl ich mich inhaltlich vorbereite. Ich beantrage deshalb einen einsemestrigen Nachteilsausgleich mit Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen.",
+    "duration": "one_semester",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Mündliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m1", "m6"],
+    "lectureOtherLines": [
+      "Rückzugsmöglichkeit bei akuter Überforderung in Grossveranstaltungen (kurzfristiger Austritt mit Nacharbeit)"
+    ],
+    "assessmentMeasures": ["m4", "m6"],
+    "assessmentOtherLines": [
+      "Schriftliche Prüfung in zwei Teilblöcken an zwei aufeinanderfolgenden Tagen, sofern fachlich gleichwertig"
+    ]
+  },
+  "recommendationHtml": "<p>Sehr geehrte Damen und Herren,</p><p>Frau <strong>Lara Hofmann</strong> hat am 04.03.2026 die Beratung der NTA-Fachstelle wahrgenommen. Das psychiatrische Attest bestätigt eine ADHS (kombinierte Form) mit studienrelevanter Beeinträchtigung bei langen Veranstaltungen, Zeitdruck und unangekündigter mündlicher Beteiligung.</p><h2>Empfehlung der Fachstelle für ein Semester</h2><ul><li>Zusätzliche Pausen in Lehrveranstaltungen sowie Verzicht auf unaufgefordertes mündliches Aufbieten.</li><li>Rückzugsmöglichkeit bei akuter Überforderung in Grossveranstaltungen mit geregelter Nacharbeit.</li><li>Zeitverlängerung und separater Prüfungsraum bei schriftlichen Leistungsnachweisen.</li><li>Prüfung in zwei Teilblöcken an zwei aufeinanderfolgenden Tagen, soweit fachlich vertretbar.</li></ul><p>Die beantragten Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Freundliche Grüsse<br/>Dr. Sandra Meier, NTA-Fachstelle UZH</p>",
+  "recommendationText": "Sehr geehrte Damen und Herren, Frau Lara Hofmann hat am 04.03.2026 die Beratung wahrgenommen. Das psychiatrische Attest bestätigt ADHS mit studienrelevanter Beeinträchtigung. Empfehlung für ein Semester: zusätzliche Pausen, kein unaufgefordertes Aufbieten, Rückzugsmöglichkeit bei Überforderung, Zeitverlängerung und separater Prüfungsraum, ggf. Prüfung in zwei Teilblöcken. Freundliche Grüsse Dr. Sandra Meier, NTA-Fachstelle UZH",
+  "submittedAt": "2026-03-10T09:20:00.000Z"
+}

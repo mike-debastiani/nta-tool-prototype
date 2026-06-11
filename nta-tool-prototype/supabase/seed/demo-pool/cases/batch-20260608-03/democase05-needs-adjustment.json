@@ -1,0 +1,54 @@
+{
+  "targetState": "needs_adjustment",
+  "title": "NTA Antrag Vanessa Kunz",
+  "personalData": {
+    "vorname": "Vanessa",
+    "name": "Kunz",
+    "email": "vanessa.kunz@students.uzh.ch",
+    "phone": "+41 79 540 86 31",
+    "matrikel": "21-118-447",
+    "studiengang": "MA Psychologie",
+    "semester": "9",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Gynaekologie_Endometriose_Kunz.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Vanessa Kunz, geb. 2000  \n**Diagnose:** Endometriose (N80.9) mit chronischen Unterleibsschmerzen  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Klinik für Gynäkologie\n\n## Studienrelevante Beeinträchtigungen\n\n- Zyklusabhängige, teils starke Schmerzschübe mit deutlicher Leistungsminderung\n- Konzentrationsverlust und rasche Erschöpfung an Schmerztagen\n- Eingeschränkte Planbarkeit der Anwesenheit an akuten Schmerztagen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Zusätzliche Pausen sowie angepasste Präsenzpflicht an Schmerztagen\n- Zeitverlängerung und angepasste Pausenregelung bei schriftlichen Prüfungen\n- Flexible Abgabefristen für schriftliche Arbeiten an akuten Schmerztagen\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer; gynäkologische Betreuung läuft.\n\nZürich, 13. Mai 2026 — Dr. med. Eva Brunner, Fachärztin für Gynäkologie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-05-11",
+    "date": "Montag, 11. Mai 2026",
+    "slot": "14:00–14:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer Endometriose mit chronischen Unterleibsschmerzen habe ich zyklusabhängig teils starke Schmerzschübe, die meine Leistungsfähigkeit deutlich mindern. An Schmerztagen treten Konzentrationsverlust und rasche Erschöpfung auf, und meine Anwesenheit ist an akuten Tagen kaum planbar. Lange Prüfungen ohne flexible Pausen sind in solchen Phasen besonders belastend. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Schriftliche Arbeiten",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m1", "m3"],
+    "assessmentMeasures": ["m4", "m5"],
+    "assessmentOtherLines": [
+      "Flexible bzw. moderat verlängerte Abgabefristen für schriftliche Arbeiten an akuten Schmerztagen"
+    ]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 13.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 11. Mai 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom Mai 2026. Das Attest bestätigt eine diagnostizierte <strong>Endometriose (N80.9)</strong> mit chronischen, zyklusabhängigen Unterleibsschmerzen und deutlicher Leistungsminderung an Schmerztagen.</p><p>Wie im Gespräch geschildert, treten die Beeinträchtigungen insbesondere durch starke Schmerzschübe, Konzentrationsverlust und rasche Erschöpfung sowie durch die eingeschränkte Planbarkeit der Anwesenheit auf. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Zusätzliche Pausen bei längeren Lehrveranstaltungsblöcken zur Schmerzentlastung.</li><li>Angepasste Präsenzpflicht an akuten Schmerztagen mit der Möglichkeit, Inhalte nachzuarbeiten.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %), um schmerzbedingte Einbussen auszugleichen.</li><li>Angepasste Pausenregelung mit kurzen, individuellen Pausen ohne Zeitabzug an Schmerztagen.</li><li>Flexible bzw. moderat verlängerte Abgabefristen für schriftliche Arbeiten an akuten Schmerztagen.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Suzanne Beispiel<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 13.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 11. Mai 2026 und auf das fachärztliche Attest im ICF-Format vom Mai 2026. Bestätigt ist eine Endometriose (N80.9). Geeignete Massnahmen: – Zusätzliche Pausen bei längeren Blöcken. – Angepasste Präsenzpflicht an Schmerztagen. – Zeitverlängerung von rund 25 % bei schriftlichen Prüfungen. – Angepasste Pausenregelung ohne Zeitabzug. – Flexible Abgabefristen für schriftliche Arbeiten an akuten Schmerztagen. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Suzanne Beispiel, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-22T10:05:00.000Z",
+  "reviewForwardedAt": "2026-05-27T13:15:00.000Z",
+  "adjustmentRequests": [
+    {
+      "blockId": "duration",
+      "remark": "Sie beantragen die Massnahmen für die gesamte Studiendauer. Bitte begründen Sie kurz, weshalb angesichts des laufenden Behandlungsverlaufs keine befristete Bewilligung mit anschliessender Verlaufskontrolle ausreichend wäre."
+    },
+    {
+      "blockId": "scope",
+      "remark": "Im Geltungsbereich sind mündliche Prüfungen nicht aufgeführt. Bitte prüfen Sie, ob an akuten Schmerztagen auch mündliche Prüfungen betroffen sein können, und ergänzen Sie den Geltungsbereich gegebenenfalls."
+    }
+  ]
+}

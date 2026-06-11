@@ -1,0 +1,56 @@
+{
+  "targetState": "rejected",
+  "title": "NTA Antrag Noah Looser",
+  "personalData": {
+    "vorname": "Noah",
+    "name": "Looser",
+    "email": "noah.looser@students.uzh.ch",
+    "phone": "+41 78 651 30 22",
+    "matrikel": "22-446-718",
+    "studiengang": "BSc Wirtschaftsinformatik",
+    "semester": "4",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "Attest_Dysgraphie_Looser.md",
+    "markdownContent": "# Fachärztliches Attest\n\n**Patient:** Noah Looser, geb. 2003  \n**Diagnose:** Umschriebene Störung des schriftsprachlichen Ausdrucks (Dysgraphie, F81.1)  \n**Attestierende Stelle:** Universitäre Poliklinik für Lern- und Entwicklungsstörungen, Zürich\n\n## Studienrelevante Beeinträchtigungen\n\n- Verlangsamtes und teils unleserliches Schreiben von Hand\n- Erhöhter Aufwand bei der schriftlichen Strukturierung längerer Texte\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Nutzung eines Laptops bei schriftlichen Prüfungen\n- Zeitverlängerung bei längeren schriftlichen Aufgaben\n\n**Gültigkeit der Empfehlung:** ein Semester.\n\nZürich, 30. März 2026 — Dr. phil. Karin Suter, Fachpsychologin für Lernstörungen"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-03-27",
+    "date": "Freitag, 27. März 2026",
+    "slot": "11:00–11:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer Dysgraphie schreibe ich von Hand deutlich langsamer und teilweise unleserlich, und das Strukturieren längerer Texte fällt mir schwer. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen, unter anderem die Möglichkeit, Gruppenarbeiten als Einzelarbeit zu erbringen sowie eine personelle Schreibassistenz bei Prüfungen. Im Studiengang Wirtschaftsinformatik betrifft dies vor allem schriftliche Prüfungen und Arbeiten. Ich beantrage diese Massnahmen für ein Semester.",
+    "duration": "one_semester",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Schriftliche Arbeiten",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m2"],
+    "assessmentMeasures": ["m1", "m3", "m4"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 30.03.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 27. März 2026 sowie auf das eingereichte fachärztliche Attest vom März 2026. Das Attest bestätigt eine diagnostizierte <strong>Dysgraphie (F81.1)</strong> mit verlangsamtem und teils unleserlichem Schreiben von Hand.</p><p>Wie im Gespräch geschildert, wirken sich die Beeinträchtigungen vor allem beim handschriftlichen Verfassen längerer Texte aus. Die beantragte personelle Schreibassistenz sowie die generelle Umwandlung von Gruppen- in Einzelarbeiten gehen jedoch über den dokumentierten Bedarf hinaus.</p><p>Aus Sicht der Fachstelle ist im Grundsatz allein die Nutzung eines Laptops geeignet, den beschriebenen Nachteil auszugleichen; die übrigen beantragten Massnahmen erscheinen nicht verhältnismässig. Die abschliessende Beurteilung obliegt der zuständigen Entscheidungsinstanz.</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Beantragt wurde die Erbringung von Gruppenarbeiten als Einzelarbeit; aus fachlicher Sicht ist diese Massnahme nicht erforderlich.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Nutzung eines Laptops bei schriftlichen Prüfungen als grundsätzlich geeignete Massnahme.</li><li>Beantragt wurden zusätzlich eine personelle Schreibassistenz sowie eine pauschale Zeitverlängerung; beide erscheinen im vorliegenden Fall nicht verhältnismässig.</li></ul><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Suzanne Beispiel<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 30.03.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 27. März 2026 und auf das fachärztliche Attest vom März 2026. Bestätigt ist eine Dysgraphie (F81.1). Grundsätzlich geeignet erscheint die Nutzung eines Laptops bei schriftlichen Prüfungen. Die beantragte personelle Schreibassistenz, die pauschale Zeitverlängerung sowie die Umwandlung von Gruppen- in Einzelarbeiten gehen über den dokumentierten Bedarf hinaus. Die abschliessende Beurteilung obliegt der Entscheidungsinstanz. Freundliche Grüsse, Dr. Suzanne Beispiel, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-04-10T09:50:00.000Z",
+  "reviewForwardedAt": "2026-04-15T10:15:00.000Z",
+  "r4Decision": {
+    "updatedAt": "2026-04-29T15:40:00.000Z",
+    "rejectedBlocks": [
+      {
+        "blockId": "lectureMeasures",
+        "reason": "Beantragt wurde, Gruppenarbeiten generell als Einzelarbeit erbringen zu dürfen. Die Dysgraphie betrifft jedoch den handschriftlichen Ausdruck und nicht die Fähigkeit zur Mitarbeit in Gruppen; ein Nachteil bei kollaborativen Lehrveranstaltungsformaten ist weder geschildert noch attestiert. Da die Zusammenarbeit in Gruppen in mehreren Modulen ein eigenständiges Lernziel darstellt, würde die generelle Umwandlung den Prüfungsgegenstand verändern. Der Block wird daher abgelehnt.",
+        "rejectedMeasureKeys": ["m2"]
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "reason": "Der dokumentierte Nachteil – verlangsamtes und unleserliches Schreiben von Hand – wird bereits durch die Nutzung eines Laptops vollständig ausgeglichen, die hier nicht in Frage steht. Eine zusätzliche personelle Schreibassistenz ist nicht erforderlich und würde bei einer reinen Schreibstörung eine nicht gerechtfertigte Fremdunterstützung darstellen. Auch die pauschale Zeitverlängerung ist nicht belegt, da das Attest keinen erhöhten Zeitbedarf bei Laptop-Nutzung ausweist. Die beantragte Kombination ist in dieser Form unverhältnismässig und wird abgelehnt.",
+        "rejectedMeasureKeys": ["m1", "m3", "m4"]
+      }
+    ]
+  }
+}

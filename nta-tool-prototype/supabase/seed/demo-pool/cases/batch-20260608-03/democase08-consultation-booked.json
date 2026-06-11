@@ -1,0 +1,26 @@
+{
+  "targetState": "consultation_booked",
+  "title": "NTA Antrag Andrin Huber",
+  "personalData": {
+    "vorname": "Andrin",
+    "name": "Huber",
+    "email": "andrin.huber@students.uzh.ch",
+    "phone": "+41 79 226 70 48",
+    "matrikel": "22-518-330",
+    "studiengang": "B Med Chiro Chiropraktische Medizin",
+    "semester": "4",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Pneumologie_Asthma_Huber.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** Andrin Huber, geb. 2003  \n**Diagnose:** Schweres Asthma bronchiale (J45.5) mit belastungs- und reizinduzierten Anfällen  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Klinik für Pneumologie\n\n## Studienrelevante Beeinträchtigungen\n\n- Anfälle mit Atemnot bei Reizexposition (Staub, Duftstoffe) und körperlicher Belastung\n- Konzentrations- und Leistungsminderung nach akuten Anfällen\n- Bedarf an rascher Erreichbarkeit von Notfallmedikation und Pausen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Sitzplatz mit Ausgangsnähe sowie zusätzliche Pausen in Lehrveranstaltungen\n- Angepasste Pausenregelung und Zeitverlängerung bei schriftlichen Prüfungen\n- Durchführung von Prüfungen in einem gut belüfteten, reizarmen Raum\n\n**Gültigkeit der Empfehlung:** wird im Beratungsgespräch konkretisiert; pneumologische Betreuung läuft.\n\nZürich, 8. Juni 2026 — Dr. med. Andrea Suter, Fachärztin für Pneumologie"
+  },
+  "consultation": {
+    "status": "booked",
+    "dateIso": "2026-06-15",
+    "date": "Montag, 15. Juni 2026",
+    "slot": "14:15–15:00",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  }
+}

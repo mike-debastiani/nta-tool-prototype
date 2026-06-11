@@ -1,0 +1,66 @@
+{
+  "targetState": "approved",
+  "title": "NTA Antrag Melina Roos",
+  "personalData": {
+    "vorname": "Melina",
+    "name": "Roos",
+    "email": "melina.roos@students.uzh.ch",
+    "phone": "+41 76 528 41 90",
+    "matrikel": "20-447-219",
+    "studiengang": "MA Geschichte",
+    "semester": "10",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Psychiatrie_BipolareStoerung_Roos.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Melina Roos, geb. 2000  \n**Diagnose:** Bipolare affektive Störung (F31.1), aktuell stabil unter Medikation  \n**Attestierende Stelle:** Psychiatrische Universitätsklinik Zürich, Ambulatorium\n\n## Studienrelevante Beeinträchtigungen\n\n- Phasenweise stark schwankende Konzentrations- und Belastungsfähigkeit\n- Medikationsbedingte morgendliche Verlangsamung und reduzierte Daueraufmerksamkeit\n- Erhöhte Erschöpfbarkeit bei langen, ununterbrochenen Prüfungen und engen Fristen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Zeitverlängerung und angepasste Pausenregelung bei schriftlichen Prüfungen\n- Durchführung von Prüfungen in einem separaten, reizarmen Raum\n- Flexible Abgabefristen für schriftliche Arbeiten in instabilen Phasen\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer; psychiatrische Behandlung läuft.\n\nZürich, 30. April 2026 — Dr. med. Thomas Egli, Facharzt für Psychiatrie und Psychotherapie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-04-28",
+    "date": "Dienstag, 28. April 2026",
+    "slot": "14:30–15:15",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer bipolaren affektiven Störung schwankt meine Konzentrations- und Belastungsfähigkeit phasenweise erheblich, auch wenn ich aktuell unter Medikation stabil bin. Die Medikation führt morgens zu einer Verlangsamung und reduzierter Daueraufmerksamkeit. Lange, ununterbrochene Prüfungen und enge Abgabefristen sind in instabileren Phasen besonders belastend, obwohl ich inhaltlich gut vorbereitet bin. Ich beantrage deshalb Massnahmen bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Schriftliche Arbeiten"
+    ],
+    "lectureMeasuresKeine": true,
+    "assessmentMeasures": ["m4", "m5", "m6"],
+    "assessmentOtherLines": [
+      "Flexible bzw. moderat verlängerte Abgabefristen für schriftliche Arbeiten in instabilen Krankheitsphasen"
+    ]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 30.04.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 28. April 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom April 2026. Das Attest bestätigt eine diagnostizierte <strong>bipolare affektive Störung (F31.1)</strong> mit phasenweise stark schwankender Konzentrations- und Belastungsfähigkeit.</p><p>Wie im Gespräch geschildert, treten die Beeinträchtigungen insbesondere durch medikationsbedingte morgendliche Verlangsamung, reduzierte Daueraufmerksamkeit sowie erhöhte Erschöpfbarkeit bei langen Prüfungen und engen Fristen auf. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %), um die schwankende Belastungsfähigkeit auszugleichen.</li><li>Angepasste Pausenregelung mit kurzen, individuellen Pausen ohne Zeitabzug zur Entlastung bei Erschöpfung.</li><li>Durchführung von Prüfungen in einem separaten, reizarmen Raum zur Reduktion zusätzlicher Belastung.</li><li>Flexible bzw. moderat verlängerte Abgabefristen für schriftliche Arbeiten in instabilen Krankheitsphasen.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Suzanne Beispiel<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 30.04.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 28. April 2026 und auf das fachärztliche Attest im ICF-Format vom April 2026. Bestätigt ist eine bipolare affektive Störung (F31.1). Geeignete Massnahmen: – Zeitverlängerung von rund 25 % bei schriftlichen Prüfungen. – Angepasste Pausenregelung ohne Zeitabzug. – Durchführung von Prüfungen in einem separaten, reizarmen Raum. – Flexible Abgabefristen für schriftliche Arbeiten in instabilen Phasen. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Suzanne Beispiel, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-11T09:15:00.000Z",
+  "reviewForwardedAt": "2026-05-15T11:30:00.000Z",
+  "r4Decision": {
+    "updatedAt": "2026-05-28T13:40:00.000Z",
+    "concretizations": [
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m4",
+        "title": "Zeitverlängerung 25 % bei schriftlichen Prüfungen",
+        "description": "Die Bearbeitungszeit schriftlicher Prüfungen wird um 25 % verlängert, um die phasenweise reduzierte Belastungsfähigkeit auszugleichen."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m5",
+        "title": "Angepasste Pausenregelung",
+        "description": "Während schriftlicher Prüfungen sind kurze, individuelle Pausen ohne Zeitabzug zur Entlastung bei Erschöpfung zulässig."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m6",
+        "title": "Separater, reizarmer Prüfungsraum",
+        "description": "Prüfungen werden in einem separaten Raum mit reduzierter Stimulation durchgeführt, um zusätzliche Belastung zu vermeiden."
+      }
+    ]
+  }
+}

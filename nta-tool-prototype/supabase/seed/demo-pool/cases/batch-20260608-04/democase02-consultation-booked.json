@@ -1,0 +1,26 @@
+{
+  "targetState": "consultation_booked",
+  "title": "NTA Antrag Nils Schneider",
+  "personalData": {
+    "vorname": "Nils",
+    "name": "Schneider",
+    "email": "nils.schneider@students.uzh.ch",
+    "phone": "+41 76 338 27 14",
+    "matrikel": "23-119-540",
+    "studiengang": "BA Publizistik- und Kommunikationswissenschaft",
+    "semester": "3",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "Attest_Psychiatrie_ADHS_Schneider.md",
+    "markdownContent": "# Fachärztliches Attest\n\n**Patient:** Nils Schneider, geb. 2004  \n**Diagnose:** Aufmerksamkeitsdefizit-/Hyperaktivitätsstörung (F90.0), kombinierter Typ  \n**Attestierende Stelle:** Psychiatrische Universitätsklinik Zürich, Ambulanz für ADHS im Erwachsenenalter\n\n## Studienrelevante Beeinträchtigungen\n\n- Ausgeprägte Ablenkbarkeit und Konzentrationsschwierigkeiten in reizintensiven Prüfungsräumen\n- Erhöhter Zeitbedarf durch Schwierigkeiten bei der Aufgabenstrukturierung\n- Rasche mentale Ermüdung in langen Prüfungen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Durchführung von Prüfungen in einem reizarmen, separaten Raum\n- Zeitverlängerung bei schriftlichen Prüfungen\n- Angepasste Pausenregelung\n\n**Gültigkeit der Empfehlung:** wird im Beratungsgespräch konkretisiert; medikamentöse Behandlung läuft.\n\nZürich, 4. Juni 2026 — Dr. med. Martin Frei, Facharzt für Psychiatrie und Psychotherapie"
+  },
+  "consultation": {
+    "status": "booked",
+    "dateIso": "2026-06-17",
+    "date": "Mittwoch, 17. Juni 2026",
+    "slot": "09:00–09:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  }
+}

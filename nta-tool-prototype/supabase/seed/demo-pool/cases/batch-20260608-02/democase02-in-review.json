@@ -1,0 +1,40 @@
+{
+  "targetState": "in_review",
+  "title": "NTA Antrag Yves Wegmann",
+  "personalData": {
+    "vorname": "Yves",
+    "name": "Wegmann",
+    "email": "yves.wegmann@students.uzh.ch",
+    "phone": "+41 79 508 13 64",
+    "matrikel": "22-117-980",
+    "studiengang": "BSc Biochemie",
+    "semester": "4",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Gastroenterologie_MorbusCrohn_Wegmann.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** Yves Wegmann, geb. 2003  \n**Diagnose:** Morbus Crohn (K50.0), schubförmiger Verlauf  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Gastroenterologie und Hepatologie\n\n## Studienrelevante Beeinträchtigungen\n\n- Schubweise auftretende Bauchschmerzen und dringender, häufiger Toilettenbedarf\n- Ausgeprägte Erschöpfung (Fatigue) in akuten Krankheitsphasen\n- Eingeschränkte Planbarkeit von Anwesenheit bei akuten Schüben\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Zusätzliche Pausen sowie angepasste Präsenzpflicht in Schubphasen\n- Sitzplatz mit Ausgangsnähe für unauffällige, kurzfristige Toilettengänge\n- Angepasste Pausenregelung und Zeitverlängerung bei schriftlichen Prüfungen\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer; gastroenterologische Betreuung läuft.\n\nZürich, 15. Mai 2026 — Dr. med. Andrea Suter, Fachärztin für Gastroenterologie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-05-14",
+    "date": "Donnerstag, 14. Mai 2026",
+    "slot": "10:00–10:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund eines schubförmig verlaufenden Morbus Crohn habe ich phasenweise starke Bauchschmerzen und einen dringenden, häufigen Toilettenbedarf, der sich nicht vorhersehen lässt. In akuten Schüben bin ich zudem durch ausgeprägte Erschöpfung in meiner Leistungsfähigkeit eingeschränkt. Lange Prüfungen ohne flexible Pausen und Veranstaltungen ohne Ausgangsnähe sind für mich besonders belastend. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Während Lehrveranstaltungen",
+      "Praktika"
+    ],
+    "lectureMeasures": ["m1", "m3"],
+    "assessmentMeasures": ["m4", "m5"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 17.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 14. Mai 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom Mai 2026. Das Attest bestätigt einen diagnostizierten <strong>Morbus Crohn (K50.0)</strong> mit schubförmigem Verlauf, dringendem Toilettenbedarf und ausgeprägter Fatigue in akuten Phasen.</p><p>Wie im Gespräch geschildert, treten die Beeinträchtigungen insbesondere durch unvorhersehbare Schübe, häufige Toilettengänge sowie krankheitsbedingte Erschöpfung in langen Veranstaltungen und Prüfungen auf. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Zusätzliche Pausen bei längeren Lehrveranstaltungs- und Praktikumsblöcken zur Entlastung in beginnenden Schubphasen.</li><li>Angepasste Präsenzpflicht in akuten Schüben mit der Möglichkeit, Inhalte nachzuarbeiten.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %), um schubbedingte Pausen auszugleichen.</li><li>Angepasste Pausenregelung mit kurzen, individuellen Pausen ohne Zeitabzug für unaufschiebbare Toilettengänge.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Sandra Meier<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 17.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 14. Mai 2026 und auf das fachärztliche Attest im ICF-Format vom Mai 2026. Bestätigt ist ein Morbus Crohn (K50.0) mit schubförmigem Verlauf. Geeignete Massnahmen: – Zusätzliche Pausen bei längeren Blöcken. – Angepasste Präsenzpflicht in akuten Schüben. – Zeitverlängerung von rund 25 % bei schriftlichen Prüfungen. – Angepasste Pausenregelung ohne Zeitabzug für Toilettengänge. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Sandra Meier, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-27T10:10:00.000Z"
+}

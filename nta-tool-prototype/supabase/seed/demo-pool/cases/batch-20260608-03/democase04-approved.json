@@ -1,0 +1,63 @@
+{
+  "targetState": "approved",
+  "title": "NTA Antrag Samuel Frei",
+  "personalData": {
+    "vorname": "Samuel",
+    "name": "Frei",
+    "email": "samuel.frei@students.uzh.ch",
+    "phone": "+41 79 663 28 14",
+    "matrikel": "20-318-557",
+    "studiengang": "BSc Biomedizin",
+    "semester": "6",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Rheumatologie_RheumatoideArthritis_Frei.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** Samuel Frei, geb. 2002  \n**Diagnose:** Rheumatoide Arthritis (M06.9) mit Befall der Hand- und Fingergelenke  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Klinik für Rheumatologie\n\n## Studienrelevante Beeinträchtigungen\n\n- Schmerzhafte Schwellungen und Morgensteifigkeit der Hand- und Fingergelenke\n- Deutlich reduzierte Schreibgeschwindigkeit und -ausdauer in schubaktiven Phasen\n- Rasche Ermüdung der Hände bei längerem handschriftlichem Arbeiten\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Einsatz technischer Hilfsmittel beim Schreiben (Laptop)\n- Zeitverlängerung bei schriftlichen Prüfungen\n- Angepasste Pausenregelung zur Entlastung der Gelenke\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer; rheumatologische Betreuung läuft.\n\nZürich, 29. April 2026 — Dr. med. Eva Brunner, Fachärztin für Rheumatologie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-04-27",
+    "date": "Montag, 27. April 2026",
+    "slot": "11:30–12:15",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer rheumatoiden Arthritis mit Befall der Hand- und Fingergelenke habe ich schmerzhafte Schwellungen und eine ausgeprägte Morgensteifigkeit. In schubaktiven Phasen ist meine Schreibgeschwindigkeit und -ausdauer deutlich reduziert, und meine Hände ermüden bei längerem handschriftlichem Arbeiten rasch. Lange schriftliche Prüfungen sind dadurch besonders belastend. Ich beantrage deshalb Massnahmen bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Schriftliche Arbeiten"
+    ],
+    "lectureMeasuresKeine": true,
+    "assessmentMeasures": ["m1", "m4", "m5"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 29.04.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 27. April 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom April 2026. Das Attest bestätigt eine diagnostizierte <strong>rheumatoide Arthritis (M06.9)</strong> mit Befall der Hand- und Fingergelenke und deutlich reduzierter Schreibfähigkeit in schubaktiven Phasen.</p><p>Wie im Gespräch geschildert, wirken sich die Beeinträchtigungen insbesondere durch schmerzbedingt verlangsamtes Schreiben, rasche Ermüdung der Hände sowie Morgensteifigkeit bei früh angesetzten Prüfungen aus. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Einsatz technischer Hilfsmittel wie eines Laptops zum Schreiben, um die schmerzbedingt reduzierte Schreibfähigkeit auszugleichen.</li><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %), da die Hände bei längerem Schreiben rasch ermüden.</li><li>Angepasste Pausenregelung mit kurzen, individuellen Pausen ohne Zeitabzug zur Entlastung der Gelenke.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Suzanne Beispiel<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 29.04.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 27. April 2026 und auf das fachärztliche Attest im ICF-Format vom April 2026. Bestätigt ist eine rheumatoide Arthritis (M06.9). Geeignete Massnahmen: – Einsatz technischer Hilfsmittel (Laptop) beim Schreiben. – Zeitverlängerung von rund 25 % bei schriftlichen Prüfungen. – Angepasste Pausenregelung ohne Zeitabzug. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Suzanne Beispiel, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-08T13:45:00.000Z",
+  "reviewForwardedAt": "2026-05-13T11:00:00.000Z",
+  "r4Decision": {
+    "updatedAt": "2026-05-27T14:15:00.000Z",
+    "concretizations": [
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m1",
+        "title": "Technische Hilfsmittel beim Schreiben",
+        "description": "Bei schriftlichen Prüfungen wird die Nutzung eines Laptops zugelassen, um die schmerzbedingt reduzierte Schreibfähigkeit auszugleichen."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m4",
+        "title": "Zeitverlängerung 25 % bei schriftlichen Prüfungen",
+        "description": "Die Bearbeitungszeit schriftlicher Prüfungen wird um 25 % verlängert, da die Hände bei längerem Schreiben rasch ermüden."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m5",
+        "title": "Angepasste Pausenregelung",
+        "description": "Während schriftlicher Prüfungen sind kurze, individuelle Pausen ohne Zeitabzug zur Entlastung der Gelenke zulässig."
+      }
+    ]
+  }
+}

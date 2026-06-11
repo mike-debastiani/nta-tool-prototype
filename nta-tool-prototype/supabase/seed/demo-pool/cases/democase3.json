@@ -1,0 +1,45 @@
+{
+    "targetState": "in_review",
+    "title": "NTA Antrag Céline Bourquin",
+    "personalData": {
+      "vorname": "Céline",
+      "name": "Bourquin",
+      "email": "celine.bourquin@students.uzh.ch",
+      "phone": "+41 76 234 87 51",
+      "matrikel": "21-445-782",
+      "studiengang": "MA Psychologie",
+      "semester": "8",
+      "antragsart": "studium"
+    },
+    "attest": {
+      "fileName": "Attest_Neurologie_Migraene_Bourquin.md",
+      "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Céline Bourquin, geb. 2000\n**Diagnose:** Episodische Migräne mit Aura (G43.1), mindestens 6–8 Attacken pro Monat\n**Attestierende Stelle:** Neurologische Poliklinik, UniversitätsSpital Zürich\n\n## Funktionsbeschränkungen (ICF-Kategorien)\n\n- b2801 Schmerzempfindung im Kopf: schwer beeinträchtigt (3)\n- b1101 Orientierung: leicht bis mässig beeinträchtigt während Prodromi und Postdromi (2)\n- b1600 Gedankentempo: mässig reduziert bei prodromalen Symptomen (2)\n- d820 Schulbesuch / Hochschulbildung: beeinträchtigt durch unvorhersehbare Attacken (2)\n\n## Studienrelevante Auswirkungen\n\n- Unvorhersehbare Migräneattacken mit Vorwarnsymptomen (Lichtaura, Sprachstörung) von 20–60 Minuten Dauer\n- Ausgeprägte Photosensitivität und Lärmempfindlichkeit während und nach Attacken\n- Kognitive Verlangsamung (sog. «Migraine fog») bis zu 24 Stunden nach Attackenbeginn\n- Notwendigkeit, bei Attackenbeginn sofort Medikament einzunehmen und sich ruhig zu verhalten\n- Langanhaltende Prüfungsfähigkeit unter Kunstlicht und in Gruppenräumen stark eingeschränkt\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Erlaubnis, bei Attackenbeginn Lehrveranstaltungen kurzfristig zu verlassen\n- Reservierter Sitzplatz in Randbereichen mit Zugangsmöglichkeit zu Ausgang\n- Verlängerung der Prüfungszeit (25–33 %)\n- Prüfungsraum mit gedimmtem oder natürlichem Licht\n- Mitnahme von Bedarfsmedikamenten in Prüfungssituationen\n\n**Gültigkeit:** Dauerhaft (chronische Erkrankung); Verlaufskontrolle jährlich empfohlen.\n\nZürich, 14. Januar 2026 — Dr. med. Thomas Wyder, Facharzt FMH Neurologie, UniversitätsSpital Zürich"
+    },
+    "consultation": {
+      "status": "done",
+      "dateIso": "2026-01-22",
+      "date": "Donnerstag, 22. Januar 2026",
+      "slot": "11:00–11:45",
+      "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+      "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+    },
+    "applicationDefinition": {
+      "situationDescription": "Ich leide seit mehreren Jahren an episodischer Migräne mit Aura, die mich durchschnittlich 6–8 Mal pro Monat beeinträchtigt. Die Attacken beginnen oft unvorhersehbar mit einer visuellen Aura, gefolgt von starken Kopfschmerzen, Licht- und Lärmempfindlichkeit. Besonders in Prüfungssituationen unter Neonlicht und in engen Räumen mit anderen Personen ist mein Risiko für eine Attacke erhöht. Auch nach einer Attacke bin ich für bis zu einen Tag kognitiv verlangsamt, was mir das Weiterarbeiten stark erschwert. Im Studium hat mich das wiederholt dazu gezwungen, Prüfungen zu unterbrechen oder Lehrveranstaltungen zu verlassen. Die Massnahmen sollen mir ermöglichen, meine tatsächliche Leistungsfähigkeit zu zeigen und nicht wegen der Erkrankung benachteiligt zu werden.",
+      "duration": "full_study",
+      "scopeSelections": [
+        "Schriftliche Prüfungen",
+        "Während Lehrveranstaltungen"
+      ],
+      "lectureMeasures": ["m3", "m5"],
+      "lectureOtherLines": [
+        "Erlaubnis, bei einsetzender Migräneaura die Lehrveranstaltung kurzfristig zu verlassen und bei Wegfall der Symptome zurückzukehren"
+      ],
+      "assessmentMeasures": ["m4", "m5", "m6"],
+      "assessmentOtherLines": [
+        "Erlaubnis zur Mitnahme und Einnahme von Bedarfsmedikamenten (Triptane) während der Prüfung"
+      ]
+    },
+    "recommendationHtml": "<p>Sehr geehrte Damen und Herren,</p><p>Frau <strong>Céline Bourquin</strong> hat am 22.01.2026 die Beratung der NTA-Fachstelle wahrgenommen. Das neurologische Attest des UniversitätsSpitals Zürich bestätigt eine episodische Migräne mit Aura (G43.1) mit 6–8 Attacken pro Monat. Die Erkrankung führt zu unvorhersehbaren, akut einsetzenden Beeinträchtigungen mit Photosensitivität, kognitiver Verlangsamung und eingeschränkter Prüfungsfähigkeit unter herkömmlichen Prüfungsbedingungen.</p><h2>Empfehlung der Fachstelle für die gesamte Studiendauer</h2><ul><li>Angepasste Präsenzpflicht sowie reservierter Sitzplatz mit Zugangsmöglichkeit zum Ausgang in Lehrveranstaltungen.</li><li>Erlaubnis, bei einsetzender Migräneaura die Lehrveranstaltung kurzfristig zu verlassen und nach Abklingen der Symptome zurückzukehren.</li><li>Zeitverlängerung (25 %) bei schriftlichen Prüfungen.</li><li>Angepasste Pausenregelung sowie separater Prüfungsraum mit gedimmtem oder natürlichem Licht.</li><li>Erlaubnis zur Mitnahme und Einnahme von Bedarfsmedikamenten (Triptane) während der Prüfung.</li></ul><p>Die Fachstelle empfiehlt zusätzlich, in Lehrveranstaltungen den Neonlicht-Einfluss durch Sitzplatzzuweisung am Rand oder Fensterseite zu minimieren. Die beantragten Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Freundliche Grüsse<br>Dr. Sandra Meier, NTA-Fachstelle UZH</p>",
+    "recommendationText": "Sehr geehrte Damen und Herren, Frau Céline Bourquin hat am 22.01.2026 die Beratung der NTA-Fachstelle wahrgenommen. Das neurologische Attest bestätigt episodische Migräne mit Aura mit 6–8 Attacken pro Monat. Empfehlung für die gesamte Studiendauer: angepasste Präsenzpflicht, reservierter Sitzplatz, Erlaubnis kurzfristiger Abwesenheit bei Aura, Zeitverlängerung 25 %, angepasste Pausenregelung, separater Prüfungsraum mit gedimmtem Licht sowie Mitnahme von Bedarfsmedikamenten. Freundliche Grüsse Dr. Sandra Meier, NTA-Fachstelle UZH",
+    "submittedAt": "2026-01-30T08:45:00.000Z"
+  }

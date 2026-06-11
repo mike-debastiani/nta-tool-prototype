@@ -1,0 +1,70 @@
+{
+  "targetState": "in_decision",
+  "title": "NTA Antrag Simon Amrein",
+  "personalData": {
+    "vorname": "Simon",
+    "name": "Amrein",
+    "email": "simon.amrein@students.uzh.ch",
+    "phone": "+41 76 519 27 84",
+    "matrikel": "22-204-913",
+    "studiengang": "BA Wirtschaftswissenschaften",
+    "semester": "4",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Psychiatrie_Angststoerung_Amrein.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** Simon Amrein, geb. 2003  \n**Diagnose:** Generalisierte Angststörung (F41.1) mit ausgeprägter Prüfungsangst  \n**Attestierende Stelle:** Psychiatrische Universitätsklinik Zürich, Ambulanz für Angsterkrankungen\n\n## Studienrelevante Beeinträchtigungen\n\n- Massive Anspannung und Blackout-Erleben in dicht besetzten Prüfungsräumen\n- Ausgeprägte Symptomatik bei mündlichen Prüfungen mit kurzfristiger Sprechblockade\n- Konzentrationseinbrüche durch antizipatorische Angst\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Durchführung schriftlicher Prüfungen in einem separaten, reizarmen Raum\n- Angepasste Pausenregelung zur Bewältigung akuter Anspannung\n- Bei mündlichen Prüfungen ruhiges Setting und kurze Sammelpause\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer; ambulante Psychotherapie läuft.\n\nZürich, 29. April 2026 — Dr. med. Nicole Berger, Fachärztin für Psychiatrie und Psychotherapie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-04-27",
+    "date": "Montag, 27. April 2026",
+    "slot": "15:00–15:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer generalisierten Angststörung mit ausgeprägter Prüfungsangst gerate ich in dicht besetzten Prüfungsräumen in massive Anspannung bis hin zu Blackout-Erleben. Bei mündlichen Prüfungen kommt es kurzfristig zu Sprechblockaden, und die antizipatorische Angst beeinträchtigt schon im Vorfeld meine Konzentration. Im Studiengang Wirtschaftswissenschaften betrifft dies sowohl schriftliche als auch mündliche Prüfungen. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Mündliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m5", "m6"],
+    "assessmentMeasures": ["m4", "m6"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 29.04.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 27. April 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom April 2026. Das Attest bestätigt eine diagnostizierte <strong>generalisierte Angststörung (F41.1)</strong> mit ausgeprägter Prüfungsangst.</p><p>Wie im Gespräch geschildert, äussern sich die Beeinträchtigungen insbesondere in massiver Anspannung und Blackout-Erleben in besetzten Räumen, in Sprechblockaden bei mündlichen Prüfungen sowie in antizipatorischer Angst. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Reservierter Sitzplatz nahe Ausgang, um bei akuter Anspannung unauffällig kurz austreten zu können.</li><li>Möglichkeit, bei akuten Angstsymptomen eine kurze Pause ausserhalb des Raumes einzulegen.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Durchführung schriftlicher Prüfungen in einem separaten, reizarmen Raum zur Reduktion der Anspannung.</li><li>Angepasste Pausenregelung mit kurzen Pausen ohne Zeitabzug zur Bewältigung akuter Symptome.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Suzanne Beispiel<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 29.04.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 27. April 2026 und auf das fachärztliche Attest im ICF-Format vom April 2026. Bestätigt ist eine generalisierte Angststörung (F41.1) mit Prüfungsangst. Geeignete Massnahmen: – Reservierter Sitzplatz nahe Ausgang. – Möglichkeit einer kurzen Pause bei akuten Symptomen. – Durchführung schriftlicher Prüfungen in einem separaten, reizarmen Raum. – Angepasste Pausenregelung ohne Zeitabzug. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Suzanne Beispiel, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-08T10:20:00.000Z",
+  "reviewForwardedAt": "2026-05-13T09:15:00.000Z",
+  "r4Decision": {
+    "updatedAt": "2026-05-22T11:05:00.000Z",
+    "concretizations": [
+      {
+        "blockId": "lectureMeasures",
+        "measureKey": "m5",
+        "title": "Reservierter Sitzplatz nahe Ausgang",
+        "description": "In Lehrveranstaltungen wird ein fester Platz nahe einem Ausgang reserviert, um bei akuter Anspannung unauffällig kurz austreten zu können."
+      },
+      {
+        "blockId": "lectureMeasures",
+        "measureKey": "m6",
+        "title": "Kurze Pause bei akuten Symptomen",
+        "description": "Bei akuten Angstsymptomen wird eine kurze Pause ausserhalb des Veranstaltungsraums ermöglicht."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m6",
+        "title": "Separater, reizarmer Prüfungsraum",
+        "description": "Schriftliche Prüfungen werden in einem separaten, reizarmen Raum durchgeführt, um die prüfungsbedingte Anspannung zu reduzieren."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m4",
+        "title": "Angepasste Pausenregelung",
+        "description": "Es werden kurze Pausen ohne Zeitabzug gewährt, um akute Angstsymptome während der Prüfung bewältigen zu können."
+      }
+    ]
+  }
+}

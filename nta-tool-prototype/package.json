@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed:r4-faculty": "node scripts/seed-r4-faculty-users.mjs"
+    "seed:r4-faculty": "node scripts/seed-r4-faculty-users.mjs",
+    "validate:demo-case": "node scripts/validate-demo-case.mjs",
+    "demo-pool:summary": "node scripts/validate-demo-case.mjs --summary",
+    "demo-pool:import": "node scripts/demo-pool-import.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",

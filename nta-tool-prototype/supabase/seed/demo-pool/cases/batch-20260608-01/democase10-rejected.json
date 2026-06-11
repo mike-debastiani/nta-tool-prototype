@@ -1,0 +1,56 @@
+{
+  "targetState": "rejected",
+  "title": "NTA Antrag Anna Roth",
+  "personalData": {
+    "vorname": "Anna",
+    "name": "Roth",
+    "email": "anna.roth@students.uzh.ch",
+    "phone": "+41 76 230 47 88",
+    "matrikel": "19-662-413",
+    "studiengang": "MLaw Rechtswissenschaft",
+    "semester": "9",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "Attest_Handchirurgie_Roth.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Anna Roth, geb. 2000  \n**Diagnose:** Postoperative Funktionseinschränkung der dominanten rechten Hand nach Sehnenrekonstruktion  \n**Attestierende Stelle:** Schulthess Klinik Zürich, Handchirurgie\n\n## Studienrelevante Beeinträchtigungen\n\n- Vorübergehend reduzierte Schreib- und Tippgeschwindigkeit der rechten Hand\n- Schmerzhaftigkeit bei längerem handschriftlichem Arbeiten\n- Voraussichtliche Erholung innerhalb der nächsten Monate\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Einsatz technischer Hilfsmittel beim Schreiben (Laptop, Diktierfunktion)\n- Zeitverlängerung bei schriftlichen Prüfungen\n- Möglichkeit, einzelne schriftliche Prüfungen mündlich abzulegen\n\n**Gültigkeit der Empfehlung:** ein Semester (temporär).\n\nZürich, 25. April 2026 — Dr. med. Felix Hartmann, Facharzt für Orthopädische Chirurgie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-04-24",
+    "date": "Freitag, 24. April 2026",
+    "slot": "15:30–16:15",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Nach einer Sehnenrekonstruktion an der dominanten rechten Hand kann ich derzeit nur langsam und unter Schmerzen schreiben und tippen. Längere schriftliche Prüfungen und handschriftliche Mitarbeit in Lehrveranstaltungen überfordern mich vorübergehend. Auch intensive Gruppenarbeiten mit handschriftlichen Protokollen sind für mich aktuell belastend. Ich beantrage daher für ein Semester technische Hilfsmittel, Zeitverlängerung, angepasste Arbeitsformen sowie die Möglichkeit mündlicher Prüfungen.",
+    "duration": "one_semester",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Schriftliche Arbeiten",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m2"],
+    "assessmentMeasures": ["m1", "m4", "m7"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 27.04.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 24. April 2026 sowie auf das eingereichte fachärztliche Attest vom April 2026. Das Attest bestätigt eine <strong>postoperative Funktionseinschränkung der dominanten rechten Hand</strong> nach Sehnenrekonstruktion mit vorübergehend reduzierter Schreibfähigkeit.</p><p>Wie im Gespräch geschildert, wirken sich die Beeinträchtigungen insbesondere bei längeren schriftlichen Prüfungen, handschriftlicher Mitarbeit sowie bei Gruppenarbeiten mit handschriftlichen Protokollen aus. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen, die von einer Erholung innerhalb der nächsten Monate ausgehen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Ersatz von Gruppenarbeiten mit handschriftlichen Protokollen durch gleichwertige Einzelarbeiten während der Genesungsphase.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Einsatz technischer Hilfsmittel wie Laptop oder Diktierfunktion bei schriftlichen Leistungen.</li><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %) wegen der reduzierten Schreibgeschwindigkeit.</li><li>Möglichkeit, einzelne schriftliche Prüfungen während der Genesungsphase mündlich abzulegen.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Sandra Meier<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 27.04.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 24. April 2026 und auf das fachärztliche Attest vom April 2026. Bestätigt ist eine postoperative Funktionseinschränkung der dominanten rechten Hand. Geeignete Massnahmen: – Ersatz von Gruppenarbeiten durch Einzelarbeiten. – Einsatz technischer Hilfsmittel (Laptop, Diktierfunktion). – Zeitverlängerung von rund 25 % bei schriftlichen Prüfungen. – Möglichkeit, einzelne schriftliche Prüfungen mündlich abzulegen. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Sandra Meier, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-07T08:40:00.000Z",
+  "reviewForwardedAt": "2026-05-13T11:00:00.000Z",
+  "r4Decision": {
+    "updatedAt": "2026-05-26T16:45:00.000Z",
+    "rejectedBlocks": [
+      {
+        "blockId": "lectureMeasures",
+        "reason": "Die beantragte pauschale Ersetzung von Gruppenarbeiten durch Einzelarbeiten ist im Masterstudium der Rechtswissenschaft nicht gleichwertig umsetzbar, da kollaborative Formate hier prüfungsrelevante Kompetenzen vermitteln. Die dokumentierte Einschränkung betrifft die Schreibhand, nicht die Teilnahme an Gruppenarbeit als solche; eine Entlastung lässt sich bereits durch technische Hilfsmittel bei der Protokollführung erreichen. Eine vollständige Befreiung von Gruppenformaten wird daher nicht zugesprochen.",
+        "rejectedMeasureKeys": ["m2"]
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "reason": "Die Kombination aus technischen Hilfsmitteln, pauschaler Zeitverlängerung und dem Ersatz schriftlicher durch mündliche Prüfungen geht über das hinaus, was die temporäre Handverletzung medizinisch begründet. Da bereits der Einsatz eines Laptops mit Diktierfunktion die reduzierte Schreibgeschwindigkeit weitgehend ausgleicht, sind eine zusätzliche Zeitverlängerung und ein Formatwechsel auf mündliche Prüfungen nicht verhältnismässig. Der Wechsel der Prüfungsform würde zudem die geprüften Kompetenzen verändern. Der Massnahmenblock wird in der beantragten Form abgelehnt.",
+        "rejectedMeasureKeys": ["m1", "m4", "m7"]
+      }
+    ]
+  }
+}

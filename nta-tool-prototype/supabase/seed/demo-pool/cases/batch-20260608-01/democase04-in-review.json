@@ -1,0 +1,43 @@
+{
+  "targetState": "in_review",
+  "title": "NTA Antrag Carla Moser",
+  "personalData": {
+    "vorname": "Carla",
+    "name": "Moser",
+    "email": "carla.moser@students.uzh.ch",
+    "phone": "+41 78 551 67 92",
+    "matrikel": "20-489-225",
+    "studiengang": "M Med Humanmedizin",
+    "semester": "10",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Rheumatologie_Fibromyalgie_Moser.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Carla Moser, geb. 1999  \n**Diagnose:** Fibromyalgie-Syndrom mit chronischem Schmerz (M79.7)  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Rheumatologie\n\n## Studienrelevante Beeinträchtigungen\n\n- Anhaltende muskuloskelettale Schmerzen, die langes ununterbrochenes Sitzen stark erschweren\n- Rasche Erschöpfbarkeit und Konzentrationsverlust bei langen Prüfungen\n- Schmerzbedingt erhöhter Bedarf an Positionswechsel und Pausen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Zusätzliche Pausen in langen Lehrveranstaltungen und Prüfungen\n- Möglichkeit, die Sitzposition zu wechseln oder kurzzeitig aufzustehen\n- Angepasste Pausenregelung und Zeitverlängerung bei schriftlichen Prüfungen\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer; rheumatologische Betreuung läuft.\n\nZürich, 21. Mai 2026 — Dr. med. Eva Brunner, Fachärztin für Rheumatologie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-05-20",
+    "date": "Mittwoch, 20. Mai 2026",
+    "slot": "15:00–15:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund eines Fibromyalgie-Syndroms mit chronischen Schmerzen kann ich nicht über längere Zeit ununterbrochen sitzen, ohne dass Schmerzen und Erschöpfung deutlich zunehmen. In langen Prüfungen verliere ich dadurch an Konzentration und benötige regelmässige Positionswechsel und Pausen. Auch in mehrstündigen Lehrveranstaltungen und Praktika belastet mich das lange Verharren in einer Haltung stark. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Während Lehrveranstaltungen",
+      "Praktika"
+    ],
+    "lectureMeasures": ["m1"],
+    "lectureOtherLines": [
+      "Möglichkeit, bei Bedarf die Sitzposition zu wechseln oder kurzzeitig aufzustehen, ohne die Veranstaltung zu stören"
+    ],
+    "assessmentMeasures": ["m4", "m5"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 25.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 20. Mai 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom Mai 2026. Das Attest bestätigt ein diagnostiziertes <strong>Fibromyalgie-Syndrom mit chronischem Schmerz (M79.7)</strong> mit deutlicher Beeinträchtigung bei langem ununterbrochenem Sitzen sowie rascher Erschöpfbarkeit.</p><p>Wie im Gespräch geschildert, treten die Beeinträchtigungen insbesondere in mehrstündigen Lehrveranstaltungen, Praktika und langen schriftlichen Prüfungen auf, in denen Schmerz und Erschöpfung die Konzentration mindern. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Zusätzliche Pausen bei Lehrveranstaltungs- und Praktikumsblöcken von mehr als 90 Minuten zur Schmerzentlastung.</li><li>Möglichkeit, bei Bedarf die Sitzposition zu wechseln oder kurzzeitig aufzustehen, ohne die Veranstaltung zu stören.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %), da schmerzbedingte Pausen die effektive Bearbeitungszeit verkürzen.</li><li>Angepasste Pausenregelung mit kurzen, individuellen Pausen ohne Zeitabzug zur Schmerz- und Haltungsentlastung.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Sandra Meier<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 25.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 20. Mai 2026 und auf das fachärztliche Attest im ICF-Format vom Mai 2026. Bestätigt ist ein Fibromyalgie-Syndrom mit chronischem Schmerz (M79.7). Geeignete Massnahmen: – Zusätzliche Pausen bei Blöcken über 90 Minuten. – Möglichkeit, die Sitzposition zu wechseln oder kurz aufzustehen. – Zeitverlängerung von rund 25 % bei schriftlichen Prüfungen. – Angepasste Pausenregelung ohne Zeitabzug. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Sandra Meier, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-06-03T16:05:00.000Z"
+}

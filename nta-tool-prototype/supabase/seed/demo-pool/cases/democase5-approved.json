@@ -1,0 +1,77 @@
+{
+  "targetState": "approved",
+  "title": "NTA Antrag Sofia Nakamura",
+  "personalData": {
+    "vorname": "Sofia",
+    "name": "Nakamura",
+    "email": "sofia.nakamura@students.uzh.ch",
+    "phone": "+41 76 345 67 03",
+    "matrikel": "18-556-778",
+    "studiengang": "BSc Biologie",
+    "semester": "8",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "Attest_Endokrinologie_Diabetes_Nakamura.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Sofia Nakamura, geb. 2000  \n**Diagnose:** Diabetes mellitus Typ 1 (E10)  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Endokrinologie/Diabetologie\n\n## Studienrelevante Beeinträchtigungen\n\n- Notwendigkeit regelmässiger BZ-Kontrollen und Kohlenhydratzufuhr während langer Prüfungen\n- Hypoglykämie-Risiko bei unregelmässigen Pausen\n- Erschöpfung bei schlecht eingestellten Tageswerten\n\n## Empfohlene Massnahmen\n\n- Reservierter Sitzplatz nahe Ausgang in Grossveranstaltungen\n- Zusätzliche Pausen in Prüfungen\n- Zeitverlängerung und technische Hilfsmittel bei schriftlichen Prüfungen\n\nZürich, 18. Februar 2026 — Dr. med. Anna Frei, Fachärztin für Endokrinologie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-02-28",
+    "date": "Freitag, 28. Februar 2026",
+    "slot": "09:30–10:15",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Mit Diabetes Typ 1 muss ich während langer Prüfungen meinen Blutzucker kontrollieren und bei Bedarf essen. Fehlende oder zu kurze Pausen erhöhen mein Hypoglykämie-Risiko und beeinträchtigen meine Konzentration. In grossen Hörsälen ist ein schneller Ausgang zu den Pausen oft erschwert.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Mündliche Prüfungen",
+      "Während Lehrveranstaltungen",
+      "Praktika"
+    ],
+    "lectureMeasures": ["m1", "m5"],
+    "assessmentMeasures": ["m1", "m4", "m5"]
+  },
+  "recommendationHtml": "<p>Sehr geehrte Damen und Herren,</p><p>Frau <strong>Sofia Nakamura</strong> hat am 28.02.2026 die Beratung wahrgenommen. Das endokrinologische Attest bestätigt Diabetes mellitus Typ 1 mit studienrelevanter Belastung in langen Prüfungen und Grossveranstaltungen.</p><h2>Empfehlung der Fachstelle für die gesamte Studiendauer</h2><ul><li>Reservierter Sitzplatz nahe Ausgang in Lehrveranstaltungen.</li><li>Zusätzliche Pausen in Prüfungen.</li><li>Zeitverlängerung und Einsatz technischer Hilfsmittel bei schriftlichen Prüfungen.</li></ul><p>Freundliche Grüsse<br>Dr. Sandra Meier, NTA-Fachstelle UZH</p>",
+  "recommendationText": "Frau Sofia Nakamura, Diabetes Typ 1. Empfehlung für die gesamte Studiendauer: reservierter Sitzplatz, zusätzliche Pausen, Zeitverlängerung und technische Hilfsmittel.",
+  "submittedAt": "2026-03-05T08:45:00.000Z",
+  "reviewForwardedAt": "2026-03-12T11:00:00.000Z",
+  "r4Decision": {
+    "updatedAt": "2026-04-08T15:30:00.000Z",
+    "concretizations": [
+      {
+        "blockId": "lectureMeasures",
+        "measureKey": "m5",
+        "title": "Reservierter Sitzplatz nahe Ausgang",
+        "description": "In Grossveranstaltungen wird ein fester Platz in den vorderen Reihen nahe einem Ausgang reserviert, damit kurzfristige BZ-Kontrollen und Kohlenhydratzufuhr ohne Störung möglich sind."
+      },
+      {
+        "blockId": "lectureMeasures",
+        "measureKey": "m1",
+        "title": "Zusätzliche Pausen in langen Vorlesungsblöcken",
+        "description": "In Lehrveranstaltungen über 90 Minuten ist eine zusätzliche Pause von mindestens 10 Minuten vorgesehen."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m4",
+        "title": "Zeitverlängerung 25 % bei schriftlichen Prüfungen",
+        "description": "Die Bearbeitungszeit bei schriftlichen Prüfungen wird um 25 % verlängert; die zusätzliche Zeit dient auch der BZ-Kontrolle."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m5",
+        "title": "Individuelle Pausenregelung in Prüfungen",
+        "description": "Während schriftlicher Prüfungen sind kurze, individuelle Pausen zur BZ-Kontrolle und Nahrungsaufnahme ohne Zeitabzug erlaubt."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m1",
+        "title": "BZ-Messgerät und Kohlenhydrate am Prüfungsplatz",
+        "description": "Die Nutzung eines persönlichen Blutzuckermessgeräts sowie bereitgestellter Kohlenhydrate am Prüfungsplatz ist erlaubt."
+      }
+    ]
+  }
+}

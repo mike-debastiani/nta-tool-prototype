@@ -1,0 +1,57 @@
+{
+    "targetState": "rejected",
+    "title": "NTA Antrag Dario Pfister",
+    "personalData": {
+      "vorname": "Dario",
+      "name": "Pfister",
+      "email": "dario.pfister@students.uzh.ch",
+      "phone": "+41 79 117 65 28",
+      "matrikel": "23-340-882",
+      "studiengang": "BA Wirtschaftswissenschaften",
+      "semester": "2",
+      "antragsart": "studium"
+    },
+    "attest": {
+      "fileName": "Attest_Allgemeinmedizin_Rueckenleiden_Pfister.md",
+      "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** Dario Pfister, geb. 2004  \n**Diagnose:** Chronisches lumbales Schmerzsyndrom (M54.5) nach Bandscheibenvorfall\n**Attestierende Stelle:** Hausarztpraxis Wiedikon, Zürich\n\n## Studienrelevante Beeinträchtigungen\n\n- Schmerzen beim längeren Sitzen, mit Bedarf an Positionswechseln\n- Reduzierte Belastbarkeit bei langen Prüfungen\n- Phasenweise Konzentrationsbeeinträchtigung durch Schmerzen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Ergonomischer Stuhl bzw. Stehmöglichkeit in Prüfungen\n- Zusätzliche Pausen mit Bewegungsmöglichkeit\n- Zeitverlängerung bei schriftlichen Prüfungen\n\n**Gültigkeit:** ein Semester; physiotherapeutische Behandlung laufend.\n\nZürich, 3. März 2026 — Dr. med. Andreas Lehmann, Facharzt für Allgemeine Innere Medizin FMH"
+    },
+    "consultation": {
+      "status": "done",
+      "dateIso": "2026-03-09",
+      "date": "Montag, 9. März 2026",
+      "slot": "16:00–16:45",
+      "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+      "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+    },
+    "applicationDefinition": {
+      "situationDescription": "Nach einem Bandscheibenvorfall leide ich an einem chronischen lumbalen Schmerzsyndrom, das beim längeren Sitzen Schmerzen verursacht und mich zu häufigen Positionswechseln zwingt. In langen Prüfungen lässt meine Belastbarkeit nach, und die Schmerzen beeinträchtigen zeitweise meine Konzentration. Ich beantrage Massnahmen für das laufende Semester, die mir ergonomischeres Arbeiten und mehr Bewegung in Prüfungen ermöglichen.",
+      "duration": "one_semester",
+      "scopeSelections": [
+        "Schriftliche Prüfungen"
+      ],
+      "lectureMeasuresKeine": true,
+      "assessmentMeasures": ["m4", "m5"],
+      "assessmentOtherLines": [
+        "Bereitstellung eines ergonomischen Stuhls oder einer Stehmöglichkeit während schriftlicher Prüfungen"
+      ]
+    },
+    "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 12.03.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 9. März 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom März 2026. Das Attest bestätigt ein <strong>chronisches lumbales Schmerzsyndrom (M54.5)</strong> nach Bandscheibenvorfall mit Schmerzen beim längeren Sitzen und reduzierter Belastbarkeit in langen Prüfungen.</p><p>Wie im Gespräch geschildert, zeigen sich die Beeinträchtigungen besonders in langen Prüfungen mit anhaltender sitzender Position sowie in schmerzbedingten Konzentrationsphasen. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><ul><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %), um schmerzbedingte Unterbrechungen auszugleichen.</li><li>Angepasste Pausenregelung mit zusätzlichen Pausen und Bewegungsmöglichkeit während längerer Prüfungen.</li><li>Bereitstellung eines ergonomischen Stuhls oder einer Stehmöglichkeit während schriftlicher Prüfungen.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Sandra Meier<br>Fachstelle Nachteilsausgleich</p>",
+    "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 12.03.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 9. März 2026 und auf das fachärztliche Attest vom März 2026, das ein chronisches lumbales Schmerzsyndrom (M54.5) bestätigt. Die Beeinträchtigungen zeigen sich in langen Prüfungen mit sitzender Position. Empfohlene Massnahmen: – Zeitverlängerung bei schriftlichen Prüfungen (Richtwert 25 %). – Angepasste Pausenregelung mit Bewegungsmöglichkeit. – Ergonomischer Stuhl oder Stehmöglichkeit. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Die abschliessende Wahl liegt bei der antragstellenden Person. Freundliche Grüsse, Dr. Sandra Meier, Fachstelle Nachteilsausgleich.",
+    "submittedAt": "2026-03-15T12:40:00.000Z",
+    "reviewForwardedAt": "2026-03-21T10:30:00.000Z",
+    "r4Decision": {
+      "updatedAt": "2026-04-06T15:00:00.000Z",
+      "rejectedBlocks": [
+        {
+          "blockId": "assessmentMeasures",
+          "reason": "Die beantragte Zeitverlängerung von 25 % ist durch die vorliegende hausärztliche Begründung nicht ausreichend gestützt; das Attest belegt keine prüfungsrelevante Verlangsamung der Leistungserbringung, sondern eine sitzbedingte Schmerzproblematik. Diese kann durch ergonomische Anpassungen und Pausen aufgefangen werden, weshalb eine Zeitverlängerung in diesem Umfang nicht zugesprochen wird.",
+          "rejectedMeasureKeys": ["m4"]
+        },
+        {
+          "blockId": "assessmentMeasures",
+          "reason": "Für die ergonomischen Massnahmen (Stuhl/Stehmöglichkeit, zusätzliche Bewegungspausen) wird ein fachärztliches Attest mit konkreter Belastungsbeurteilung benötigt; die vorliegende hausärztliche Bestätigung genügt den Anforderungen der Entscheidungsinstanz nicht. Der Antrag wird in dieser Form abgelehnt; eine erneute Einreichung mit fachärztlicher Dokumentation steht offen.",
+          "rejectedMeasureKeys": ["m5"]
+        }
+      ]
+    }
+  }

@@ -1,0 +1,50 @@
+{
+  "targetState": "needs_adjustment",
+  "title": "NTA Antrag David Marti",
+  "personalData": {
+    "vorname": "David",
+    "name": "Marti",
+    "email": "david.marti@students.uzh.ch",
+    "phone": "+41 79 712 40 63",
+    "matrikel": "20-356-901",
+    "studiengang": "BSc Physik",
+    "semester": "8",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Neurologie_Epilepsie_Marti.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** David Marti, geb. 2000  \n**Diagnose:** Fokale Epilepsie (G40.2) mit gelegentlichen komplex-fokalen Anfällen  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Klinik für Neurologie, Epileptologie\n\n## Studienrelevante Beeinträchtigungen\n\n- Gelegentliche Anfälle mit anschliessender postiktaler Erschöpfung und Konzentrationsverlust\n- Erhöhtes Anfallsrisiko bei Schlafmangel, Stress und langer ununterbrochener Belastung\n- Kurzfristiger Verlust von Veranstaltungsinhalten während und nach einem Anfall\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Zusätzliche Pausen in langen Lehrveranstaltungen und Prüfungen\n- Erlaubnis zur Audioaufnahme von Lehrveranstaltungen für persönliche Lernzwecke\n- Zeitverlängerung sowie separater Prüfungsraum bei schriftlichen Prüfungen\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer; neurologische Verlaufskontrolle laufend.\n\nZürich, 1. Mai 2026 — Dr. med. Stefan Aebi, Facharzt für Neurologie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-04-30",
+    "date": "Donnerstag, 30. April 2026",
+    "slot": "16:00–16:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer fokalen Epilepsie treten bei mir gelegentlich Anfälle auf, nach denen ich für einige Zeit erschöpft und in der Konzentration deutlich eingeschränkt bin. Lange, ununterbrochene Belastungen sowie Stress in Prüfungssituationen erhöhen mein Anfallsrisiko. Während und nach einem Anfall verliere ich kurzfristig Veranstaltungsinhalte, die ich anschliessend nacharbeiten muss. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m1", "m4"],
+    "assessmentMeasures": ["m4", "m5", "m6"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 04.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 30. April 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom Mai 2026. Das Attest bestätigt eine diagnostizierte <strong>fokale Epilepsie (G40.2)</strong> mit gelegentlichen Anfällen und anschliessender postiktaler Erschöpfung.</p><p>Wie im Gespräch geschildert, treten die Beeinträchtigungen insbesondere durch anfallsbedingten Inhaltsverlust in Lehrveranstaltungen sowie durch erhöhtes Anfallsrisiko bei langer, ununterbrochener Prüfungsbelastung auf. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Zusätzliche Pausen bei Lehrveranstaltungsblöcken von mehr als 90 Minuten zur Reduktion des belastungsbedingten Anfallsrisikos.</li><li>Erlaubnis zur Audioaufnahme von Lehrveranstaltungen zu persönlichen Lernzwecken, um anfallsbedingt verpasste Inhalte nacharbeiten zu können.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %), um postiktale Erschöpfungsphasen auszugleichen.</li><li>Angepasste Pausenregelung mit kurzen, individuellen Pausen ohne Zeitabzug.</li><li>Durchführung schriftlicher Prüfungen in einem separaten Raum, um im Anfallsfall eine sichere Betreuung zu ermöglichen.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Sandra Meier<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 04.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 30. April 2026 und auf das fachärztliche Attest im ICF-Format vom Mai 2026. Bestätigt ist eine fokale Epilepsie (G40.2). Geeignete Massnahmen: – Zusätzliche Pausen bei Blöcken über 90 Minuten. – Erlaubnis zur Audioaufnahme von Lehrveranstaltungen. – Zeitverlängerung von rund 25 % bei schriftlichen Prüfungen. – Angepasste Pausenregelung ohne Zeitabzug. – Durchführung schriftlicher Prüfungen in einem separaten Raum. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Sandra Meier, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-14T15:40:00.000Z",
+  "reviewForwardedAt": "2026-05-19T10:15:00.000Z",
+  "adjustmentRequests": [
+    {
+      "blockId": "attest",
+      "remark": "Das eingereichte Attest nennt keine Aussage zur Anfallshäufigkeit der letzten zwölf Monate. Bitte reichen Sie eine ergänzende fachärztliche Angabe zur aktuellen Anfallsfrequenz nach, damit der Umfang der Massnahmen beurteilt werden kann."
+    },
+    {
+      "blockId": "scope",
+      "remark": "Im Geltungsbereich fehlen mündliche Prüfungen und Praktika, obwohl im Studiengang Physik Laborpraktika anfallen. Bitte prüfen und ergänzen Sie, ob auch in Praktika ein Nachteilsausgleich erforderlich ist."
+    }
+  ]
+}

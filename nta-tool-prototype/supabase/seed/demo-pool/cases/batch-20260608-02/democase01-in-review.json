@@ -1,0 +1,43 @@
+{
+  "targetState": "in_review",
+  "title": "NTA Antrag Mara Sutter",
+  "personalData": {
+    "vorname": "Mara",
+    "name": "Sutter",
+    "email": "mara.sutter@students.uzh.ch",
+    "phone": "+41 78 341 22 09",
+    "matrikel": "21-455-672",
+    "studiengang": "BA Kunstgeschichte",
+    "semester": "5",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Ophthalmologie_Sehbehinderung_Sutter.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Mara Sutter, geb. 2002  \n**Diagnose:** Hochgradige Sehbehinderung beidseits (H54.1) bei juveniler Makuladegeneration  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Augenklinik\n\n## Studienrelevante Beeinträchtigungen\n\n- Stark reduzierte Sehschärfe und eingeschränktes zentrales Gesichtsfeld\n- Deutlich verlangsamtes Lesen gedruckter Texte und Bildvorlagen\n- Rasche visuelle Ermüdung bei langer Bildschirm- und Lesearbeit\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Reservierter Sitzplatz in den vorderen Reihen mit guter Sicht auf die Projektion\n- Digitale Bereitstellung von Folien und Bildvorlagen in vergrösserbarer Form\n- Einsatz technischer Hilfsmittel (Bildschirmvergrösserung, Screenreader) und Grossdruck bei Prüfungen\n- Zeitverlängerung bei schriftlichen Prüfungen und Arbeiten\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer.\n\nZürich, 9. Mai 2026 — Dr. med. Christine Bühler, Fachärztin für Ophthalmologie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-05-08",
+    "date": "Freitag, 8. Mai 2026",
+    "slot": "13:30–14:15",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer hochgradigen Sehbehinderung mit reduzierter Sehschärfe und eingeschränktem zentralem Gesichtsfeld lese ich gedruckte Texte und Bildvorlagen deutlich langsamer als Mitstudierende und ermüde dabei rasch. Im Studium der Kunstgeschichte sind die intensive Arbeit mit Bildmaterial und umfangreichen Texten zentral, was mich besonders belastet. In Vorlesungen kann ich projizierte Inhalte nur aus den vorderen Reihen ausreichend erkennen. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Schriftliche Arbeiten",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m4", "m5"],
+    "lectureOtherLines": [
+      "Digitale Bereitstellung von Folien und Bildvorlagen in vergrösserbarer Form vor der Veranstaltung"
+    ],
+    "assessmentMeasures": ["m1", "m2", "m4"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 12.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 8. Mai 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom Mai 2026. Das Attest bestätigt eine diagnostizierte <strong>hochgradige Sehbehinderung beidseits (H54.1)</strong> mit stark reduzierter Sehschärfe und deutlich verlangsamtem Lesen.</p><p>Wie im Gespräch geschildert, treten die Beeinträchtigungen insbesondere bei der Arbeit mit Bildmaterial und umfangreichen Texten, beim Erkennen projizierter Inhalte sowie bei langer Bildschirm- und Lesearbeit auf. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Reservierter Sitzplatz in den vorderen Reihen mit guter Sicht auf die Projektion.</li><li>Erlaubnis zur Audioaufnahme von Lehrveranstaltungen zu persönlichen Lernzwecken.</li><li>Digitale Bereitstellung von Folien und Bildvorlagen in vergrösserbarer Form vor der Veranstaltung.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Einsatz technischer Hilfsmittel wie Bildschirmvergrösserung und Screenreader bei Prüfungen.</li><li>Anpassung der Prüfungsunterlagen durch Grossdruck und kontrastreiche Gestaltung.</li><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 50 %), da das verlangsamte Lesen die effektive Bearbeitungszeit erheblich verkürzt.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Sandra Meier<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 12.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 8. Mai 2026 und auf das fachärztliche Attest im ICF-Format vom Mai 2026. Bestätigt ist eine hochgradige Sehbehinderung beidseits (H54.1). Geeignete Massnahmen: – Reservierter Sitzplatz in den vorderen Reihen. – Erlaubnis zur Audioaufnahme von Lehrveranstaltungen. – Digitale Bereitstellung von Folien in vergrösserbarer Form. – Einsatz technischer Hilfsmittel (Bildschirmvergrösserung, Screenreader). – Anpassung der Prüfungsunterlagen durch Grossdruck. – Zeitverlängerung von rund 50 % bei schriftlichen Prüfungen. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Sandra Meier, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-22T13:20:00.000Z"
+}

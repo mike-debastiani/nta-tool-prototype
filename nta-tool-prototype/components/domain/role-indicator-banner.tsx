@@ -206,7 +206,7 @@ export function RoleIndicatorBanner({ role }: RoleIndicatorBannerProps) {
       )}
     >
       <span className="text-sm font-semibold leading-5">
-        Angemeldete Rolle: {visual.label}
+        Aktive Rolle: {visual.label}
         <span className="ml-1.5 font-medium opacity-70">({visual.code})</span>
       </span>
       <span className="inline-flex items-center gap-1.5 text-sm font-medium leading-5 opacity-80">

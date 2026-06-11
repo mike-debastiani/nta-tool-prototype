@@ -1,0 +1,26 @@
+{
+  "targetState": "consultation_booked",
+  "title": "NTA Antrag Reto Lanz",
+  "personalData": {
+    "vorname": "Reto",
+    "name": "Lanz",
+    "email": "reto.lanz@students.uzh.ch",
+    "phone": "+41 79 117 56 43",
+    "matrikel": "21-902-377",
+    "studiengang": "MSc Data Science",
+    "semester": "9",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Psychiatrie_Depression_Lanz.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** Reto Lanz, geb. 2000  \n**Diagnose:** Rezidivierende depressive Störung (F33.1), aktuell mittelgradige Episode  \n**Attestierende Stelle:** Psychiatrische Universitätsklinik Zürich, Ambulanz für affektive Störungen\n\n## Studienrelevante Beeinträchtigungen\n\n- Verminderter Antrieb und ausgeprägte kognitive Verlangsamung\n- Konzentrations- und Gedächtnisstörungen mit erhöhtem Zeitbedarf\n- Reduzierte Belastbarkeit in langen Prüfungen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Zeitverlängerung bei schriftlichen Prüfungen\n- Angepasste Pausenregelung\n- Durchführung von Prüfungen in einem reizarmen Raum\n\n**Gültigkeit der Empfehlung:** wird im Beratungsgespräch konkretisiert; ambulante Behandlung läuft.\n\nZürich, 4. Juni 2026 — Dr. med. Andrea Meier, Fachärztin für Psychiatrie und Psychotherapie"
+  },
+  "consultation": {
+    "status": "booked",
+    "dateIso": "2026-06-24",
+    "date": "Mittwoch, 24. Juni 2026",
+    "slot": "10:30–11:15",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  }
+}

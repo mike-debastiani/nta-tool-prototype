@@ -1,0 +1,72 @@
+{
+  "targetState": "approved",
+  "title": "NTA Antrag Linus Caprez",
+  "personalData": {
+    "vorname": "Linus",
+    "name": "Caprez",
+    "email": "linus.caprez@students.uzh.ch",
+    "phone": "+41 79 446 81 27",
+    "matrikel": "21-302-857",
+    "studiengang": "BSc Mathematik",
+    "semester": "6",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Immunologie_MECFS_Caprez.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** Linus Caprez, geb. 2002  \n**Diagnose:** Myalgische Enzephalomyelitis / Chronisches Fatigue-Syndrom (ME/CFS, G93.3)  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Ambulanz für Fatigue und postvirale Erkrankungen\n\n## Studienrelevante Beeinträchtigungen\n\n- Schwere, belastungsabhängige Erschöpfung mit verzögerter Zustandsverschlechterung (PEM)\n- Stark reduzierte Belastbarkeit bei langer ununterbrochener kognitiver Anstrengung\n- Konzentrations- und Gedächtnisstörungen («brain fog») in Erschöpfungsphasen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Zusätzliche Pausen und angepasste Präsenzpflicht in belastungsintensiven Phasen\n- Zeitverlängerung und angepasste Pausenregelung bei schriftlichen Prüfungen\n- Aufteilung langer Prüfungen in zeitlich getrennte Teilblöcke\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer; Verlaufskontrolle vorgesehen.\n\nZürich, 25. April 2026 — Dr. med. Sarah Weber, Fachärztin für Allgemeine Innere Medizin"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-04-24",
+    "date": "Freitag, 24. April 2026",
+    "slot": "14:00–14:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund eines ME/CFS leide ich unter einer schweren, belastungsabhängigen Erschöpfung, die sich nach Überlastung verzögert noch verschlimmert. Lange, ununterbrochene kognitive Anstrengung kann ich nur sehr eingeschränkt bewältigen, und in Erschöpfungsphasen treten Konzentrations- und Gedächtnisstörungen auf. Besonders lange Prüfungen am Stück führen zu einem deutlichen Leistungseinbruch. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m1", "m3"],
+    "assessmentMeasures": ["m4", "m5"],
+    "assessmentOtherLines": [
+      "Aufteilung langer schriftlicher Prüfungen in zwei zeitlich getrennte Teilblöcke, sofern fachlich gleichwertig"
+    ]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 27.04.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 24. April 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom April 2026. Das Attest bestätigt ein diagnostiziertes <strong>Myalgische Enzephalomyelitis / Chronisches Fatigue-Syndrom (G93.3)</strong> mit schwerer, belastungsabhängiger Erschöpfung und reduzierter kognitiver Belastbarkeit.</p><p>Wie im Gespräch geschildert, treten die Beeinträchtigungen insbesondere bei langer ununterbrochener Anstrengung, in Erschöpfungsphasen mit Konzentrationsstörungen sowie bei langen Prüfungen am Stück auf. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Zusätzliche Pausen bei längeren Lehrveranstaltungsblöcken zur Vermeidung von Überlastung.</li><li>Angepasste Präsenzpflicht in belastungsintensiven Phasen mit der Möglichkeit, Inhalte nachzuarbeiten.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %), um die reduzierte Belastbarkeit auszugleichen.</li><li>Angepasste Pausenregelung mit kurzen, individuellen Pausen ohne Zeitabzug.</li><li>Aufteilung langer schriftlicher Prüfungen in zwei zeitlich getrennte Teilblöcke, sofern fachlich gleichwertig.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Sandra Meier<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 27.04.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 24. April 2026 und auf das fachärztliche Attest im ICF-Format vom April 2026. Bestätigt ist ein ME/CFS (G93.3). Geeignete Massnahmen: – Zusätzliche Pausen bei längeren Blöcken. – Angepasste Präsenzpflicht in belastungsintensiven Phasen. – Zeitverlängerung von rund 25 % bei schriftlichen Prüfungen. – Angepasste Pausenregelung ohne Zeitabzug. – Aufteilung langer Prüfungen in zwei Teilblöcke. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Sandra Meier, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-07T14:15:00.000Z",
+  "reviewForwardedAt": "2026-05-13T11:30:00.000Z",
+  "r4Decision": {
+    "updatedAt": "2026-05-26T10:15:00.000Z",
+    "concretizations": [
+      {
+        "blockId": "lectureMeasures",
+        "measureKey": "m1",
+        "title": "Zusätzliche Pausen in langen Lehrveranstaltungen",
+        "description": "Bei Lehrveranstaltungsblöcken von mehr als 90 Minuten wird eine zusätzliche Pause gewährt, um belastungsbedingte Erschöpfung zu vermeiden."
+      },
+      {
+        "blockId": "lectureMeasures",
+        "measureKey": "m3",
+        "title": "Angepasste Präsenzpflicht in Erschöpfungsphasen",
+        "description": "In belastungsintensiven Phasen wird die Präsenzpflicht individuell angepasst; verpasste Inhalte können nachgearbeitet werden."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m4",
+        "title": "Zeitverlängerung 25 % bei schriftlichen Prüfungen",
+        "description": "Die Bearbeitungszeit schriftlicher Prüfungen wird um 25 % verlängert, um die belastungsabhängig reduzierte Belastbarkeit auszugleichen."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m5",
+        "title": "Individuelle Pausenregelung in Prüfungen",
+        "description": "Während schriftlicher Prüfungen sind kurze, individuelle Pausen ohne Zeitabzug zur Erholung zulässig."
+      }
+    ]
+  }
+}

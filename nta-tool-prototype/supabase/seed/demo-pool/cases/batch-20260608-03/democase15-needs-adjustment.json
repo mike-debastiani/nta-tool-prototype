@@ -1,0 +1,53 @@
+{
+  "targetState": "needs_adjustment",
+  "title": "NTA Antrag Eveline Good",
+  "personalData": {
+    "vorname": "Eveline",
+    "name": "Good",
+    "email": "eveline.good@students.uzh.ch",
+    "phone": "+41 79 462 80 17",
+    "matrikel": "21-733-205",
+    "studiengang": "B Th Theologie",
+    "semester": "6",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Nephrologie_Dialyse_Good.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Eveline Good, geb. 2002  \n**Diagnose:** Chronische Niereninsuffizienz im Stadium 5 (N18.5) mit Hämodialyse  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Klinik für Nephrologie\n\n## Studienrelevante Beeinträchtigungen\n\n- Feste, mehrmals wöchentliche Dialysetermine mit erheblicher zeitlicher Bindung\n- Ausgeprägte Erschöpfung und Konzentrationsminderung an Dialysetagen\n- Eingeschränkte Belastbarkeit bei langen, ununterbrochenen Prüfungen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Angepasste Präsenzpflicht und Erlaubnis zur Audioaufnahme von Lehrveranstaltungen\n- Berücksichtigung der Dialysetermine bei der Prüfungsterminierung\n- Zeitverlängerung und angepasste Pausenregelung bei schriftlichen Prüfungen\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer; nephrologische Betreuung läuft.\n\nZürich, 26. Mai 2026 — Dr. med. Sarah Weber, Fachärztin für Nephrologie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-05-22",
+    "date": "Freitag, 22. Mai 2026",
+    "slot": "09:30–10:15",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer chronischen Niereninsuffizienz im Dialysestadium bin ich durch feste, mehrmals wöchentliche Dialysetermine zeitlich stark gebunden. An Dialysetagen treten ausgeprägte Erschöpfung und Konzentrationsminderung auf, und meine Belastbarkeit bei langen, ununterbrochenen Prüfungen ist deutlich eingeschränkt. Prüfungstermine, die mit der Dialyse kollidieren, stellen mich vor erhebliche Schwierigkeiten. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m3", "m4"],
+    "assessmentMeasures": ["m4", "m5"],
+    "assessmentOtherLines": [
+      "Berücksichtigung der festen Dialysetermine bei der Terminierung von Prüfungen"
+    ]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 26.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 22. Mai 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom Mai 2026. Das Attest bestätigt eine diagnostizierte <strong>chronische Niereninsuffizienz im Stadium 5 (N18.5)</strong> mit Hämodialyse und erheblicher zeitlicher Bindung sowie Erschöpfung an Dialysetagen.</p><p>Wie im Gespräch geschildert, treten die Beeinträchtigungen insbesondere durch die festen Dialysetermine, die Erschöpfung und Konzentrationsminderung an Dialysetagen sowie durch die eingeschränkte Belastbarkeit bei langen Prüfungen auf. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Angepasste Präsenzpflicht an Dialysetagen mit der Möglichkeit, Inhalte nachzuarbeiten.</li><li>Erlaubnis zur Audioaufnahme von Lehrveranstaltungen, um dialysebedingt verpasste Inhalte nacharbeiten zu können.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %), um die eingeschränkte Belastbarkeit auszugleichen.</li><li>Angepasste Pausenregelung mit kurzen, individuellen Pausen ohne Zeitabzug.</li><li>Berücksichtigung der festen Dialysetermine bei der Terminierung von Prüfungen.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Suzanne Beispiel<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 26.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 22. Mai 2026 und auf das fachärztliche Attest im ICF-Format vom Mai 2026. Bestätigt ist eine chronische Niereninsuffizienz im Stadium 5 (N18.5) mit Hämodialyse. Geeignete Massnahmen: – Angepasste Präsenzpflicht an Dialysetagen. – Erlaubnis zur Audioaufnahme von Lehrveranstaltungen. – Zeitverlängerung von rund 25 % bei schriftlichen Prüfungen. – Angepasste Pausenregelung ohne Zeitabzug. – Berücksichtigung der Dialysetermine bei der Prüfungsterminierung. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Suzanne Beispiel, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-06-03T08:50:00.000Z",
+  "reviewForwardedAt": "2026-06-07T11:15:00.000Z",
+  "adjustmentRequests": [
+    {
+      "blockId": "definition",
+      "remark": "Bitte ergänzen Sie, an welchen Wochentagen die Dialysetermine liegen, damit die Berücksichtigung bei der Prüfungsterminierung konkret geprüft werden kann."
+    },
+    {
+      "blockId": "scope",
+      "remark": "Der Geltungsbereich umfasst keine mündlichen Prüfungen. Bitte prüfen Sie, ob auch mündliche Prüfungen an Dialysetagen betroffen sein können, und ergänzen Sie den Geltungsbereich gegebenenfalls."
+    }
+  ]
+}

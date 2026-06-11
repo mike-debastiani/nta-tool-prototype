@@ -1,0 +1,47 @@
+{
+  "targetState": "needs_adjustment",
+  "title": "NTA Antrag Timo Gerber",
+  "personalData": {
+    "vorname": "Timo",
+    "name": "Gerber",
+    "email": "timo.gerber@students.uzh.ch",
+    "phone": "+41 79 812 34 56",
+    "matrikel": "22-418-907",
+    "studiengang": "BSc Informatik",
+    "semester": "4",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "Attest_Psychiatrie_LRS_Gerber.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** Timo Gerber, geb. 2003  \n**Diagnose:** Legasthenie (LRS) mit ausgeprägter Reizüberflutung in Prüfungssituationen (F81.0)  \n**Attestierende Stelle:** Psychiatrische Universitätsklinik Zürich, Ambulanz Studierende\n\n## Studienrelevante Beeinträchtigungen\n\n- Deutlich verlangsamtes Lesen und Schreiben unter Zeitdruck\n- Erhöhte Fehlerquote bei diktierter oder streng zeitgebundener schriftlicher Leistungserbringung\n- Erschöpfung und Konzentrationsabbruch in langen Prüfungen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Anpassung der Prüfungsunterlagen (Schriftgrösse, Zeilenabstand)\n- Zeitverlängerung bei schriftlichen Prüfungen\n- Einsatz technischer Hilfsmittel (Text-to-Speech, Rechtschreibprüfung)\n\n**Gültigkeit:** mindestens ein Semester.\n\nZürich, 8. März 2026 — Dr. med. Patricia Keller, Fachärztin für Psychiatrie und Psychotherapie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-03-14",
+    "date": "Freitag, 14. März 2026",
+    "slot": "10:15–11:00",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer Legasthenie benötige ich bei schriftlichen Leistungsnachweisen deutlich mehr Zeit zum Lesen und Formulieren als Mitstudierende. Unter engem Zeitdruck steigt meine Fehlerquote stark an, obwohl ich inhaltlich vorbereitet bin. Lange Prüfungen führen zu Erschöpfung und Konzentrationsabbrüchen.",
+    "duration": "one_semester",
+    "scopeSelections": ["Schriftliche Prüfungen", "Schriftliche Arbeiten"],
+    "lectureMeasuresKeine": true,
+    "assessmentMeasures": ["m1", "m2", "m4"]
+  },
+  "recommendationHtml": "<p>Sehr geehrte Damen und Herren,</p><p>Herr <strong>Timo Gerber</strong> hat am 14.03.2026 die Beratung der NTA-Fachstelle wahrgenommen. Das psychiatrische Attest bestätigt eine Legasthenie (F81.0) mit studienrelevanter Beeinträchtigung bei zeitgebundenen schriftlichen Leistungen.</p><h2>Empfehlung der Fachstelle für ein Semester</h2><ul><li>Anpassung der Prüfungsunterlagen.</li><li>Zeitverlängerung bei schriftlichen Prüfungen.</li><li>Einsatz technischer Hilfsmittel.</li></ul><p>Freundliche Grüsse<br>Dr. Sandra Meier, NTA-Fachstelle UZH</p>",
+  "recommendationText": "Herr Timo Gerber hat am 14.03.2026 die Beratung wahrgenommen. Legasthenie mit Beeinträchtigung bei schriftlichen Leistungen. Empfehlung für ein Semester: angepasste Prüfungsunterlagen, Zeitverlängerung, technische Hilfsmittel.",
+  "submittedAt": "2026-03-20T09:15:00.000Z",
+  "reviewForwardedAt": "2026-03-25T14:20:00.000Z",
+  "adjustmentRequests": [
+    {
+      "blockId": "definition",
+      "remark": "Bitte konkretisieren, in welchen schriftlichen Leistungsnachweisen (Prüfungen, Hausarbeiten, Programmierabgaben) die Lesegeschwindigkeit und die Fehlerquote am stärksten beeinträchtigt sind. Nennen Sie mindestens ein konkretes Beispiel aus dem laufenden Semester."
+    },
+    {
+      "blockId": "assessmentMeasures",
+      "remark": "Begründen Sie die Kombination der Massnahmen m1, m2 und m4: Welches technische Hilfsmittel ist vorgesehen, und warum reicht eine einzelne Massnahme nicht aus?"
+    }
+  ]
+}

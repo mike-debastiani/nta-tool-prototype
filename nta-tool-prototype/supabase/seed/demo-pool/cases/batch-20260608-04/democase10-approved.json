@@ -1,0 +1,73 @@
+{
+  "targetState": "approved",
+  "title": "NTA Antrag Janis Hediger",
+  "personalData": {
+    "vorname": "Janis",
+    "name": "Hediger",
+    "email": "janis.hediger@students.uzh.ch",
+    "phone": "+41 78 593 21 70",
+    "matrikel": "21-471-263",
+    "studiengang": "BSc Informatik",
+    "semester": "6",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_ORL_Hoerbeeintraechtigung_Hediger.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** Janis Hediger, geb. 2002  \n**Diagnose:** Beidseitige hochgradige Schwerhörigkeit (H90.3), Versorgung mit Hörgeräten  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Klinik für Ohren-, Nasen-, Hals- und Gesichtschirurgie\n\n## Studienrelevante Beeinträchtigungen\n\n- Erschwertes Sprachverstehen in grossen, halligen Räumen und bei Hintergrundlärm\n- Erhöhte Anstrengung beim Mitschreiben durch gleichzeitiges Absehen und Zuhören\n- Schwierigkeiten bei mündlichen Prüfungen ohne direkten Blickkontakt\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Reservierter Sitzplatz mit Sicht zur sprechenden Person sowie Einsatz einer FM-Anlage\n- Bereitstellung von Folien und Skripten vorab\n- Schriftliche Aufgabenstellung und ruhiges Setting bei mündlichen Prüfungen\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer.\n\nZürich, 17. April 2026 — Dr. med. Petra Schmid, Fachärztin für ORL"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-04-15",
+    "date": "Mittwoch, 15. April 2026",
+    "slot": "10:00–10:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer beidseitigen hochgradigen Schwerhörigkeit verstehe ich Sprache in grossen, halligen Räumen und bei Hintergrundlärm nur erschwert, obwohl ich Hörgeräte trage. Das gleichzeitige Absehen, Zuhören und Mitschreiben in Vorlesungen ist sehr anstrengend, und bei mündlichen Prüfungen ohne direkten Blickkontakt habe ich Verständnisschwierigkeiten. Im Studiengang Informatik betrifft dies Vorlesungen sowie mündliche und schriftliche Prüfungen. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Mündliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m4", "m5"],
+    "lectureOtherLines": [
+      "Bereitstellung der Vorlesungsfolien und Skripte spätestens am Vortag zur Vorbereitung"
+    ],
+    "assessmentMeasures": ["m1", "m3", "m6"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 17.04.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 15. April 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom April 2026. Das Attest bestätigt eine diagnostizierte <strong>beidseitige hochgradige Schwerhörigkeit (H90.3)</strong> mit Hörgeräteversorgung.</p><p>Wie im Gespräch geschildert, wirken sich die Beeinträchtigungen insbesondere durch erschwertes Sprachverstehen bei Lärm, hohe Anstrengung beim gleichzeitigen Zuhören und Mitschreiben sowie Schwierigkeiten bei mündlichen Prüfungen aus. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Reservierter Sitzplatz mit direkter Sicht zur sprechenden Person sowie Einsatz einer FM-Anlage zur Übertragung des Sprachsignals.</li><li>Erlaubnis zur Audioaufnahme der Lehrveranstaltungen zur Nachbearbeitung schwer verständlicher Passagen.</li><li>Bereitstellung der Vorlesungsfolien und Skripte spätestens am Vortag zur Vorbereitung.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Einsatz technischer Hilfsmittel (FM-Anlage) auch bei mündlichen Prüfungen.</li><li>Schriftliche Bereitstellung der Aufgabenstellungen, damit akustisch nicht erfasste Inhalte nicht zu Nachteilen führen.</li><li>Durchführung mündlicher Prüfungen in einem ruhigen, separaten Raum mit direktem Blickkontakt.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Suzanne Beispiel<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 17.04.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 15. April 2026 und auf das fachärztliche Attest im ICF-Format vom April 2026. Bestätigt ist eine beidseitige hochgradige Schwerhörigkeit (H90.3). Geeignete Massnahmen: – Reservierter Sitzplatz mit Sicht und FM-Anlage. – Erlaubnis zur Audioaufnahme. – Folien und Skripte vorab. – FM-Anlage bei mündlichen Prüfungen. – Schriftliche Aufgabenstellungen. – Durchführung mündlicher Prüfungen in ruhigem, separatem Raum. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Suzanne Beispiel, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-04-28T08:55:00.000Z",
+  "reviewForwardedAt": "2026-05-04T10:20:00.000Z",
+  "r4Decision": {
+    "updatedAt": "2026-05-18T13:45:00.000Z",
+    "concretizations": [
+      {
+        "blockId": "lectureMeasures",
+        "measureKey": "m5",
+        "title": "Sitzplatz mit Sicht und FM-Anlage",
+        "description": "In Lehrveranstaltungen wird ein Platz mit direkter Sicht zur sprechenden Person reserviert; zusätzlich wird der Einsatz einer FM-Anlage ermöglicht."
+      },
+      {
+        "blockId": "lectureMeasures",
+        "measureKey": "m4",
+        "title": "Audioaufnahme der Lehrveranstaltungen",
+        "description": "Die Audioaufnahme wird zum persönlichen Gebrauch zugelassen, um schwer verständliche Passagen nachbearbeiten zu können."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m6",
+        "title": "Ruhiger, separater Raum bei mündlichen Prüfungen",
+        "description": "Mündliche Prüfungen werden in einem ruhigen, separaten Raum mit direktem Blickkontakt durchgeführt."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m3",
+        "title": "Schriftliche Aufgabenstellungen",
+        "description": "Aufgabenstellungen werden zusätzlich schriftlich bereitgestellt, damit akustisch nicht erfasste Inhalte keinen Nachteil verursachen."
+      }
+    ]
+  }
+}

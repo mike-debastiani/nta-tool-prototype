@@ -1,0 +1,70 @@
+{
+  "targetState": "approved",
+  "title": "NTA Antrag Anja Ruckstuhl",
+  "personalData": {
+    "vorname": "Anja",
+    "name": "Ruckstuhl",
+    "email": "anja.ruckstuhl@students.uzh.ch",
+    "phone": "+41 79 204 88 51",
+    "matrikel": "21-330-672",
+    "studiengang": "BSc Biologie",
+    "semester": "5",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Endokrinologie_Diabetes_Ruckstuhl.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Anja Ruckstuhl, geb. 2002  \n**Diagnose:** Diabetes mellitus Typ 1 (E10), insulinpflichtig mit Sensortechnik  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Endokrinologie/Diabetologie\n\n## Studienrelevante Beeinträchtigungen\n\n- Notwendigkeit regelmässiger Blutzuckerkontrollen und Kohlenhydratzufuhr in langen Prüfungen\n- Hypoglykämie-Risiko bei fehlenden Pausen und in körperlich fordernden Laborpraktika\n- Konzentrationseinbrüche bei entgleisten Werten\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Reservierter Sitzplatz nahe Ausgang sowie zusätzliche Pausen in langen Veranstaltungen\n- Zulassung von Messgerät und Kohlenhydraten am Prüfungsplatz\n- Zeitverlängerung und angepasste Pausenregelung bei schriftlichen Prüfungen\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer.\n\nZürich, 9. April 2026 — Dr. med. Philipp Vogt, Facharzt für Endokrinologie und Diabetologie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-04-07",
+    "date": "Dienstag, 7. April 2026",
+    "slot": "10:30–11:15",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Mit einem insulinpflichtigen Diabetes mellitus Typ 1 muss ich während langer Prüfungen regelmässig meinen Blutzucker kontrollieren und bei Bedarf Kohlenhydrate zu mir nehmen. Fehlende Pausen erhöhen mein Hypoglykämie-Risiko, was besonders in den körperlich fordernden Laborpraktika des Biologiestudiums kritisch ist. Bei entgleisten Werten brechen meine Konzentration und Leistungsfähigkeit deutlich ein. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Während Lehrveranstaltungen",
+      "Praktika"
+    ],
+    "lectureMeasures": ["m1", "m5"],
+    "assessmentMeasures": ["m1", "m4", "m5"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 09.04.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 7. April 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom April 2026. Das Attest bestätigt einen diagnostizierten <strong>Diabetes mellitus Typ 1 (E10)</strong> mit studienrelevanter Belastung in langen Prüfungen, Grossveranstaltungen und Laborpraktika.</p><p>Wie im Gespräch geschildert, äussern sich die Beeinträchtigungen insbesondere in der Notwendigkeit regelmässiger Blutzuckerkontrollen, im Hypoglykämie-Risiko bei fehlenden Pausen sowie in Konzentrationseinbrüchen bei entgleisten Werten. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Zusätzliche Pausen bei Lehrveranstaltungs- und Praktikumsblöcken von mehr als 90 Minuten zur Stabilisierung des Blutzuckers.</li><li>Reservierter Sitzplatz nahe Ausgang für unauffällige Messung und Kohlenhydratzufuhr.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Zulassung eines persönlichen Blutzuckermessgeräts sowie bereitgestellter Kohlenhydrate am Prüfungsplatz.</li><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %), da Kontrollen und Korrekturen Bearbeitungszeit beanspruchen.</li><li>Angepasste Pausenregelung mit kurzen, individuellen Pausen ohne Zeitabzug zur Blutzuckerkontrolle.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Suzanne Beispiel<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 09.04.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 7. April 2026 und auf das fachärztliche Attest im ICF-Format vom April 2026. Bestätigt ist ein Diabetes mellitus Typ 1 (E10). Geeignete Massnahmen: – Zusätzliche Pausen bei Blöcken über 90 Minuten. – Reservierter Sitzplatz nahe Ausgang. – Zulassung von Messgerät und Kohlenhydraten am Prüfungsplatz. – Zeitverlängerung von rund 25 % bei schriftlichen Prüfungen. – Angepasste Pausenregelung ohne Zeitabzug. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Suzanne Beispiel, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-04-20T09:10:00.000Z",
+  "reviewForwardedAt": "2026-04-24T10:00:00.000Z",
+  "r4Decision": {
+    "updatedAt": "2026-05-08T14:00:00.000Z",
+    "concretizations": [
+      {
+        "blockId": "lectureMeasures",
+        "measureKey": "m5",
+        "title": "Reservierter Sitzplatz nahe Ausgang",
+        "description": "In Grossveranstaltungen und Praktika wird ein fester Platz nahe einem Ausgang reserviert, damit Messung und Kohlenhydratzufuhr ohne Störung möglich sind."
+      },
+      {
+        "blockId": "lectureMeasures",
+        "measureKey": "m1",
+        "title": "Zusätzliche Pausen in langen Blöcken",
+        "description": "Bei Veranstaltungs- und Praktikumsblöcken über 90 Minuten wird eine zusätzliche Pause zur Stabilisierung des Blutzuckers gewährt."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m1",
+        "title": "Messgerät und Kohlenhydrate am Prüfungsplatz",
+        "description": "Die Nutzung eines persönlichen Blutzuckermessgeräts sowie bereitgestellter Kohlenhydrate am Prüfungsplatz wird zugelassen."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m4",
+        "title": "Zeitverlängerung 25 % bei schriftlichen Prüfungen",
+        "description": "Die Bearbeitungszeit schriftlicher Prüfungen wird um 25 % verlängert; die zusätzliche Zeit dient auch der Blutzuckerkontrolle."
+      }
+    ]
+  }
+}

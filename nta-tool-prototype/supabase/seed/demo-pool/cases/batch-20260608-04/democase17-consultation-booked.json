@@ -1,0 +1,26 @@
+{
+  "targetState": "consultation_booked",
+  "title": "NTA Antrag Nadja Rüegg",
+  "personalData": {
+    "vorname": "Nadja",
+    "name": "Rüegg",
+    "email": "nadja.rueegg@students.uzh.ch",
+    "phone": "+41 76 209 73 58",
+    "matrikel": "23-487-201",
+    "studiengang": "BA Religionswissenschaft",
+    "semester": "2",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "Attest_Psychiatrie_Panikstoerung_Rueegg.md",
+    "markdownContent": "# Fachärztliches Attest\n\n**Patientin:** Nadja Rüegg, geb. 2004  \n**Diagnose:** Panikstörung (F41.0) mit wiederkehrenden Panikattacken  \n**Attestierende Stelle:** Psychiatrische Universitätsklinik Zürich, Ambulanz für Angsterkrankungen\n\n## Studienrelevante Beeinträchtigungen\n\n- Plötzliche Panikattacken mit körperlichen Symptomen in dicht besetzten Räumen\n- Ausgeprägte Erwartungsangst vor Prüfungssituationen\n- Bedürfnis nach kurzfristigem Verlassen des Raumes bei akuter Attacke\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Reservierter Sitzplatz nahe Ausgang\n- Durchführung von Prüfungen in einem separaten Raum\n- Angepasste Pausenregelung bei akuter Symptomatik\n\n**Gültigkeit der Empfehlung:** wird im Beratungsgespräch konkretisiert; ambulante Psychotherapie läuft.\n\nZürich, 5. Juni 2026 — Dr. med. Nicole Berger, Fachärztin für Psychiatrie und Psychotherapie"
+  },
+  "consultation": {
+    "status": "booked",
+    "dateIso": "2026-06-26",
+    "date": "Freitag, 26. Juni 2026",
+    "slot": "13:30–14:15",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  }
+}

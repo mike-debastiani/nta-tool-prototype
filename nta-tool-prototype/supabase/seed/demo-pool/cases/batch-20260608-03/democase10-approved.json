@@ -1,0 +1,69 @@
+{
+  "targetState": "approved",
+  "title": "NTA Antrag Dario Pfister",
+  "personalData": {
+    "vorname": "Dario",
+    "name": "Pfister",
+    "email": "dario.pfister@students.uzh.ch",
+    "phone": "+41 78 305 76 42",
+    "matrikel": "21-664-330",
+    "studiengang": "BSc Erdsystemwissenschaften",
+    "semester": "6",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_ORL_TinnitusHyperakusis_Pfister.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** Dario Pfister, geb. 2002  \n**Diagnose:** Chronischer Tinnitus mit ausgeprägter Hyperakusis (H93.1)  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Klinik für Ohren-, Nasen-, Hals- und Gesichtschirurgie\n\n## Studienrelevante Beeinträchtigungen\n\n- Starke Geräuschempfindlichkeit mit Schmerz- und Stressreaktionen in lauten Hörsälen\n- Konzentrationsabbrüche durch den dauerhaften Tinnitus bei langer geistiger Belastung\n- Erhöhte Erschöpfung in akustisch reizintensiven Prüfungsräumen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Reservierter Sitzplatz abseits lauter Geräuschquellen sowie zusätzliche Pausen\n- Durchführung schriftlicher Prüfungen in einem separaten, akustisch ruhigen Raum\n- Zeitverlängerung bei schriftlichen Prüfungen\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer.\n\nZürich, 4. Mai 2026 — Dr. med. Karin Lüthi, Fachärztin für Oto-Rhino-Laryngologie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-04-30",
+    "date": "Donnerstag, 30. April 2026",
+    "slot": "09:00–09:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund eines chronischen Tinnitus mit ausgeprägter Hyperakusis reagiere ich in lauten Hörsälen mit Schmerz- und Stressreaktionen auf Geräusche. Der dauerhafte Tinnitus führt bei langer geistiger Belastung zu Konzentrationsabbrüchen, und in akustisch reizintensiven Prüfungsräumen ermüde ich rasch. Besonders belastend sind volle Säle mit hohem Geräuschpegel und unruhige Prüfungsumgebungen. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m1", "m5"],
+    "assessmentMeasures": ["m4", "m6"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 04.05.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 30. April 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom Mai 2026. Das Attest bestätigt einen diagnostizierten <strong>chronischen Tinnitus mit ausgeprägter Hyperakusis (H93.1)</strong> mit starker Geräuschempfindlichkeit und Konzentrationsabbrüchen.</p><p>Wie im Gespräch geschildert, treten die Beeinträchtigungen insbesondere in lauten Hörsälen mit Schmerz- und Stressreaktionen, durch den dauerhaften Tinnitus bei langer Belastung sowie in akustisch reizintensiven Prüfungsräumen auf. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Reservierter Sitzplatz abseits lauter Geräuschquellen, etwa entfernt von Lüftungen, Türen und Durchgängen.</li><li>Zusätzliche Pausen bei Lehrveranstaltungsblöcken von mehr als 90 Minuten zur akustischen Erholung.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Durchführung schriftlicher Prüfungen in einem separaten, akustisch ruhigen Raum mit reduziertem Geräuschpegel.</li><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 25 %), da der Tinnitus die effektive Konzentrationszeit verkürzt.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Suzanne Beispiel<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 04.05.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 30. April 2026 und auf das fachärztliche Attest im ICF-Format vom Mai 2026. Bestätigt ist ein chronischer Tinnitus mit Hyperakusis (H93.1). Geeignete Massnahmen: – Reservierter Sitzplatz abseits lauter Geräuschquellen. – Zusätzliche Pausen bei Blöcken über 90 Minuten. – Durchführung schriftlicher Prüfungen in einem separaten, akustisch ruhigen Raum. – Zeitverlängerung von rund 25 % bei schriftlichen Prüfungen. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Suzanne Beispiel, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-05-13T11:50:00.000Z",
+  "reviewForwardedAt": "2026-05-18T10:00:00.000Z",
+  "r4Decision": {
+    "updatedAt": "2026-06-01T15:00:00.000Z",
+    "concretizations": [
+      {
+        "blockId": "lectureMeasures",
+        "measureKey": "m5",
+        "title": "Reservierter Sitzplatz abseits lauter Geräuschquellen",
+        "description": "Es wird ein fester Sitzplatz abseits von Lüftungen, Türen und Durchgängen reserviert, um die Geräuschbelastung zu reduzieren."
+      },
+      {
+        "blockId": "lectureMeasures",
+        "measureKey": "m1",
+        "title": "Zusätzliche Pausen in langen Lehrveranstaltungen",
+        "description": "Bei Lehrveranstaltungsblöcken von mehr als 90 Minuten wird eine zusätzliche Pause zur akustischen Erholung gewährt."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m6",
+        "title": "Separater, akustisch ruhiger Prüfungsraum",
+        "description": "Schriftliche Prüfungen werden in einem separaten Raum mit reduziertem Geräuschpegel durchgeführt."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m4",
+        "title": "Zeitverlängerung 25 % bei schriftlichen Prüfungen",
+        "description": "Die Bearbeitungszeit schriftlicher Prüfungen wird um 25 % verlängert, da der Tinnitus die effektive Konzentrationszeit verkürzt."
+      }
+    ]
+  }
+}

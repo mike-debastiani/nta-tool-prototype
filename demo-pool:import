@@ -1,0 +1,19 @@
+> npm run demo-pool:import --workspace=nta-tool-prototype nta-tool-prototype/supabase/seed/demo-po
+> npm run demo-pool:import --workspace=nta-tool-prototype nta-tool-prototype/supabase/seed/demo-pool/cases/democase1.json
+
+
+> nta-tool-prototype@0.1.0 demo-pool:import
+> node scripts/demo-pool-import.mjs nta-tool-prototype/supabase/seed/demo-pool/cases/democase1.jso
+> node scripts/demo-pool-import.mjs nta-tool-prototype/supabase/seed/demo-pool/cases/democase1.json
+
+  ✗ Datei nicht gefunden: /Users/mikedebastiani/Desktop/NTA Bachelor Projekt/nta-tool/nta-tool-pro
+  ✗ Datei nicht gefunden: /Users/mikedebastiani/Desktop/NTA Bachelor Projekt/nta-tool/nta-tool-prototype/nta-tool-prototype/supabase/seed/demo-pool/cases/democase1.json
+
+0 importiert, 1 fehlgeschlagen
+npm error Lifecycle script `demo-pool:import` failed with error:
+npm error code 1
+npm error  /Users/mikedebastiani/Desktop/NTA Bachelor Projekt/nta-tool/nta-tool-prototype
+npm error workspace nta-tool-prototype@0.1.0
+npm error location /Users/mikedebastiani/Desktop/NTA Bachelor Projekt/nta-tool/nta-tool-prototype
+npm error command failed
+npm error command sh -c node scripts/demo-pool-import.mjs nta-tool-prototype/supabase/seed/demo-po

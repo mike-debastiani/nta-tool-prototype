@@ -1,0 +1,26 @@
+{
+  "targetState": "consultation_booked",
+  "title": "NTA Antrag Gian Fontana",
+  "personalData": {
+    "vorname": "Gian",
+    "name": "Fontana",
+    "email": "gian.fontana@students.uzh.ch",
+    "phone": "+41 79 446 80 27",
+    "matrikel": "22-639-115",
+    "studiengang": "B Med Humanmedizin",
+    "semester": "4",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "Attest_Rheumatologie_Bechterew_Fontana.md",
+    "markdownContent": "# Fachärztliches Attest\n\n**Patient:** Gian Fontana, geb. 2003  \n**Diagnose:** Ankylosierende Spondylitis (Morbus Bechterew, M45)  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Klinik für Rheumatologie\n\n## Studienrelevante Beeinträchtigungen\n\n- Entzündlich bedingte Rücken- und Hüftschmerzen mit eingeschränkter Beweglichkeit\n- Zunehmende Schmerzen bei längerem Sitzen in unveränderter Position\n- Morgendliche Steifigkeit mit verminderter Belastbarkeit\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Ergonomischer Sitzplatz und Möglichkeit zum Positionswechsel\n- Angepasste Pausenregelung bei längeren Prüfungen\n- Zeitverlängerung bei schriftlichen Prüfungen\n\n**Gültigkeit der Empfehlung:** wird im Beratungsgespräch konkretisiert; rheumatologische Behandlung läuft.\n\nZürich, 5. Juni 2026 — Dr. med. Thomas Keller, Facharzt für Rheumatologie"
+  },
+  "consultation": {
+    "status": "booked",
+    "dateIso": "2026-06-19",
+    "date": "Freitag, 19. Juni 2026",
+    "slot": "14:00–14:45",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  }
+}

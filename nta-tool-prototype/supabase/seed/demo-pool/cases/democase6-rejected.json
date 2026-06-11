@@ -1,0 +1,52 @@
+{
+  "targetState": "rejected",
+  "title": "NTA Antrag Jonas Keller",
+  "personalData": {
+    "vorname": "Jonas",
+    "name": "Keller",
+    "email": "jonas.keller@students.uzh.ch",
+    "phone": "+41 79 456 78 04",
+    "matrikel": "22-901-445",
+    "studiengang": "BA Wirtschaftswissenschaften",
+    "semester": "3",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "Attest_Chirurgie_Handverletzung_Keller.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patient:** Jonas Keller, geb. 2002  \n**Diagnose:** Postoperative Stiffness und Schmerzhaftigkeit der rechten Hand nach Sehnenreparatur  \n**Attestierende Stelle:** Schulthess Klinik, Handchirurgie\n\n## Studienrelevante Beeinträchtigungen\n\n- Eingeschränkte Schreibgeschwindigkeit und feinmotorische Belastbarkeit der rechten Hand\n- Schmerzhaftigkeit bei längerem Schreiben und Tippen\n- Vorübergehende Einschränkung voraussichtlich über mehrere Monate\n\n## Empfohlene Massnahmen\n\n- Einsatz technischer Hilfsmittel beim Schreiben\n- Zeitverlängerung bei schriftlichen Prüfungen\n- Ersatz von Gruppenarbeiten durch Einzelarbeiten\n\nZürich, 1. März 2026 — Dr. med. Felix Hartmann, Facharzt für Orthopädische Chirurgie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-03-10",
+    "date": "Montag, 10. März 2026",
+    "slot": "15:45–16:30",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Nach einer Handoperation an der rechten Seite kann ich derzeit nur langsam und mit Schmerzen schreiben. Längere schriftliche Prüfungen und intensive Gruppenarbeiten mit handschriftlichen Protokollen überfordern mich. Ich beantrage technische Hilfsmittel, Zeitverlängerung und angepasste Arbeitsformen für ein Semester.",
+    "duration": "one_semester",
+    "scopeSelections": ["Schriftliche Prüfungen", "Schriftliche Arbeiten", "Während Lehrveranstaltungen"],
+    "lectureMeasures": ["m2"],
+    "assessmentMeasures": ["m1", "m4"]
+  },
+  "recommendationHtml": "<p>Sehr geehrte Damen und Herren,</p><p>Herr <strong>Jonas Keller</strong> hat am 10.03.2026 die Beratung wahrgenommen. Das handchirurgische Attest bestätigt eine vorübergehende Einschränkung der Schreibfähigkeit nach Sehnenreparatur.</p><h2>Empfehlung der Fachstelle für ein Semester</h2><ul><li>Einsatz technischer Hilfsmittel bei schriftlichen Leistungen.</li><li>Zeitverlängerung bei schriftlichen Prüfungen.</li><li>Einzelarbeit statt Gruppenarbeit in Lehrveranstaltungen.</li></ul><p>Freundliche Grüsse<br>Dr. Sandra Meier, NTA-Fachstelle UZH</p>",
+  "recommendationText": "Herr Jonas Keller, vorübergehende Schreibeinschränkung nach Handoperation. Empfehlung für ein Semester: technische Hilfsmittel, Zeitverlängerung, Einzelarbeit statt Gruppenarbeit.",
+  "submittedAt": "2026-03-15T13:05:00.000Z",
+  "reviewForwardedAt": "2026-03-22T10:00:00.000Z",
+  "r4Decision": {
+    "updatedAt": "2026-04-05T16:45:00.000Z",
+    "rejectedBlocks": [
+      {
+        "blockId": "lectureMeasures",
+        "reason": "Die beantragte Massnahme «Einzelarbeit statt Gruppenarbeit» ist für die betroffenen Lehrveranstaltungen nicht gleichwertig umsetzbar und im Umfang des Studiengangs nicht vertretbar. Eine pauschale Ersetzung von Gruppenformaten wird nicht zugesprochen.",
+        "rejectedMeasureKeys": ["m2"]
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "reason": "Die Kombination aus technischen Hilfsmitteln und pauschaler Zeitverlängerung ist aufgrund der vorliegenden medizinischen Begründung nicht in diesem Umfang gerechtfertigt. Eine verkürzte Prüfungsdauer mit angepasster Aufgabenstellung wäre prüfungsorganisatorisch vorzuziehen; der Gesamtantrag wird in dieser Form abgelehnt.",
+        "rejectedMeasureKeys": ["m1", "m4"]
+      }
+    ]
+  }
+}

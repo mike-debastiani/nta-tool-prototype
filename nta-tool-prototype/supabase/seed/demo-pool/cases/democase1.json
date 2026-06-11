@@ -1,0 +1,42 @@
+{
+    "targetState": "in_review",
+    "title": "NTA Antrag Elif Yıldırım",
+    "personalData": {
+      "vorname": "Elif",
+      "name": "Yıldırım",
+      "email": "elif.yildirim@students.uzh.ch",
+      "phone": "+41 76 284 51 09",
+      "matrikel": "21-742-188",
+      "studiengang": "BLaw Rechtswissenschaft",
+      "semester": "6",
+      "antragsart": "studium"
+    },
+    "attest": {
+      "fileName": "Attest_Neurologie_Migraene_Yildirim.md",
+      "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Elif Yıldırım, geb. 2002  \n**Diagnose:** Migräne mit Aura, episodisch hochfrequent (G43.1)  \n**Attestierende Stelle:** Neurologische Praxis am Stauffacher, Zürich\n\n## Studienrelevante Beeinträchtigungen\n\n- Wiederkehrende Migräneattacken (4–6 Tage pro Monat) mit visueller Aura, Übelkeit und ausgeprägter Lichtempfindlichkeit\n- Starke Photo- und Phonophobie während und nach Attacken; helle Hörsäle und Bildschirmlicht wirken auslösend\n- Erhöhte Auslöseempfindlichkeit gegenüber Stress, langem Sitzen und Flackerlicht (Beamer, Leuchtstoffröhren)\n- Nach einer Attacke deutlich reduzierte kognitive Leistungsfähigkeit für mehrere Stunden bis einen Tag\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Zeitverlängerung bei schriftlichen Prüfungen zur Kompensation attackenbedingter Leistungseinbussen\n- Separater, reizarmer Prüfungsraum mit gedämpfter, blendfreier Beleuchtung\n- Erlaubnis, bei akuter Attacke kurzfristig zu pausieren\n- Möglichkeit, eine Prüfung bei akuter Attacke ohne Anrechnung als Fehlversuch zu verschieben\n- Audioaufnahme von Lehrveranstaltungen zur Nacharbeit nach attackenbedingten Ausfällen\n\n**Gültigkeit der Empfehlung:** für die laufende Studienphase; neurologische Verlaufskontrolle alle sechs Monate.\n\nZürich, 12. März 2026 — Dr. med. Reto Brunner, Facharzt für Neurologie FMH"
+    },
+    "consultation": {
+      "status": "done",
+      "dateIso": "2026-03-18",
+      "date": "Mittwoch, 18. März 2026",
+      "slot": "11:30–12:15",
+      "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+      "advisor": "Dr. Sandra Meier, NTA-Fachstelle UZH"
+    },
+    "applicationDefinition": {
+      "situationDescription": "Ich leide an einer episodisch hochfrequenten Migräne mit Aura, die mich an mehreren Tagen pro Monat erheblich einschränkt. In Prüfungssituationen mit Zeitdruck und in hellen, mit Leuchtstoffröhren ausgeleuchteten Räumen steigt mein Anfallsrisiko deutlich, und das Beamerlicht in Vorlesungen wirkt häufig als Auslöser. Während einer Attacke kann ich aufgrund von Sehstörungen, Übelkeit und starker Lichtempfindlichkeit nicht arbeiten, und auch danach bleibt meine Konzentrationsfähigkeit für längere Zeit reduziert. Da sich Attacken nicht zuverlässig planen lassen, gerate ich bei fixen Prüfungsterminen unter zusätzlichen Druck. Ich beantrage Massnahmen, die mir bei einer akuten Attacke eine faire Prüfungssituation ermöglichen und die Nacharbeit verpasster Lehrveranstaltungen erleichtern.",
+      "duration": "full_study",
+      "scopeSelections": [
+        "Schriftliche Prüfungen",
+        "Während Lehrveranstaltungen"
+      ],
+      "lectureMeasures": ["m4"],
+      "assessmentMeasures": ["m4", "m6"],
+      "assessmentOtherLines": [
+        "Verschiebung einer Prüfung bei akuter Migräneattacke ohne Anrechnung als Fehlversuch (ärztliche Bestätigung am Prüfungstag)"
+      ]
+    },
+    "recommendationHtml": "<p>Sehr geehrte Damen und Herren,</p><p>Frau <strong>Elif Yıldırım</strong> hat am 18.03.2026 die Beratung der NTA-Fachstelle wahrgenommen. Das neurologische Attest bestätigt eine episodisch hochfrequente Migräne mit Aura (G43.1) mit ausgeprägter Licht- und Lärmempfindlichkeit sowie attackenbedingten kognitiven Leistungseinbussen, die Prüfungen und Lehrveranstaltungen beeinträchtigen.</p><h2>Empfehlung der Fachstelle für die laufende Studienphase</h2><ul><li>Zeitverlängerung bei schriftlichen Prüfungen.</li><li>Separater, reizarmer Prüfungsraum mit gedämpfter, blendfreier Beleuchtung.</li><li>Erlaubnis zur kurzfristigen Pause bei akuter Attacke.</li><li>Verschiebung einer Prüfung bei akuter Attacke ohne Anrechnung als Fehlversuch, gegen ärztliche Bestätigung.</li><li>Audioaufnahme von Lehrveranstaltungen zur Nacharbeit attackenbedingter Ausfälle.</li></ul><p>Die beantragten Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Freundliche Grüsse<br/>Dr. Sandra Meier, NTA-Fachstelle UZH</p>",
+    "recommendationText": "Sehr geehrte Damen und Herren, Frau Elif Yıldırım hat am 18.03.2026 die Beratung der NTA-Fachstelle wahrgenommen. Das neurologische Attest bestätigt eine episodisch hochfrequente Migräne mit Aura mit Licht- und Lärmempfindlichkeit sowie attackenbedingten Leistungseinbussen. Empfehlung für die laufende Studienphase: Zeitverlängerung bei schriftlichen Prüfungen, separater reizarmer Prüfungsraum mit gedämpfter Beleuchtung, kurzfristige Pausen bei akuter Attacke, Verschiebung einer Prüfung ohne Fehlversuch gegen ärztliche Bestätigung sowie Audioaufnahme von Lehrveranstaltungen zur Nacharbeit. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse Dr. Sandra Meier, NTA-Fachstelle UZH",
+    "submittedAt": "2026-03-24T15:42:00.000Z"
+  }

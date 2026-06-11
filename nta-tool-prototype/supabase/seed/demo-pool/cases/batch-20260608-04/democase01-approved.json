@@ -1,0 +1,78 @@
+{
+  "targetState": "approved",
+  "title": "NTA Antrag Elena Bianchi",
+  "personalData": {
+    "vorname": "Elena",
+    "name": "Bianchi",
+    "email": "elena.bianchi@students.uzh.ch",
+    "phone": "+41 78 264 19 05",
+    "matrikel": "21-714-228",
+    "studiengang": "BSc Chemie",
+    "semester": "6",
+    "antragsart": "studium"
+  },
+  "attest": {
+    "fileName": "ICF_Attest_Ophthalmologie_Sehbehinderung_Bianchi.md",
+    "markdownContent": "# Fachärztliches Attest (ICF-orientiert)\n\n**Patientin:** Elena Bianchi, geb. 2002  \n**Diagnose:** Retinitis pigmentosa (H35.5) mit hochgradiger Sehbehinderung und Gesichtsfeldeinschränkung  \n**Attestierende Stelle:** UniversitätsSpital Zürich, Augenklinik\n\n## Studienrelevante Beeinträchtigungen\n\n- Stark reduziertes Gesichtsfeld und herabgesetzte Sehschärfe, dadurch verlangsamtes Lesen\n- Erhöhte visuelle Ermüdung beim Erfassen von Tafelbildern und Präsentationsfolien\n- Erschwerte Orientierung in grossen, unbekannten Räumen\n\n## Empfohlene Massnahmen (studienbezogen)\n\n- Reservierter Sitzplatz mit guter Sicht sowie digitale Bereitstellung von Lehrmaterial\n- Vergrösserte Prüfungsunterlagen und Zulassung elektronischer Vergrösserungshilfen\n- Zeitverlängerung bei schriftlichen Prüfungen\n\n**Gültigkeit der Empfehlung:** gesamte Studiendauer; augenärztliche Verlaufskontrolle laufend.\n\nZürich, 27. März 2026 — Dr. med. Andrea Lüthi, Fachärztin für Ophthalmologie"
+  },
+  "consultation": {
+    "status": "done",
+    "dateIso": "2026-03-25",
+    "date": "Mittwoch, 25. März 2026",
+    "slot": "09:15–10:00",
+    "location": "NTA-Fachstelle, Rämistrasse 74, 8001 Zürich (Raum 2.14)",
+    "advisor": "Dr. Suzanne Beispiel"
+  },
+  "applicationDefinition": {
+    "situationDescription": "Aufgrund einer Retinitis pigmentosa habe ich ein stark eingeschränktes Gesichtsfeld und eine herabgesetzte Sehschärfe, weshalb ich deutlich langsamer lese und Tafelbilder sowie Präsentationsfolien nur mühsam erfasse. In langen Lesephasen ermüden meine Augen rasch, und in grossen, unbekannten Räumen fällt mir die Orientierung schwer. Im Studiengang Chemie betrifft dies sowohl Vorlesungen als auch schriftliche Prüfungen mit umfangreichen Formeln und Grafiken. Ich beantrage deshalb Massnahmen in Lehrveranstaltungen und bei Leistungsnachweisen für die gesamte Studiendauer.",
+    "duration": "full_study",
+    "scopeSelections": [
+      "Schriftliche Prüfungen",
+      "Während Lehrveranstaltungen"
+    ],
+    "lectureMeasures": ["m4", "m5"],
+    "lectureOtherLines": [
+      "Bereitstellung der Präsentationsfolien in digitaler, vergrösserbarer Form spätestens am Vortag der Veranstaltung"
+    ],
+    "assessmentMeasures": ["m1", "m2", "m4"]
+  },
+  "recommendationHtml": "<p>Universität Zürich<br>Fachstelle Nachteilsausgleich<br>Künstlergasse 15, 8001 Zürich<br><br>Zürich, 27.03.2026</p><h2>Empfehlungsschreiben zum Antrag auf Nachteilsausgleich</h2><p>Wir beziehen uns auf das obligatorische Beratungsgespräch vom 25. März 2026 sowie auf das eingereichte fachärztliche Attest im ICF-Format vom März 2026. Das Attest bestätigt eine diagnostizierte <strong>Retinitis pigmentosa (H35.5)</strong> mit hochgradiger Sehbehinderung und deutlicher Gesichtsfeldeinschränkung.</p><p>Wie im Gespräch geschildert, wirken sich die Beeinträchtigungen insbesondere durch verlangsamtes Lesen, rasche visuelle Ermüdung sowie erschwertes Erfassen von Tafelbildern und Folien aus. Diese Einschätzung deckt sich mit den fachärztlichen Ausführungen.</p><p>Aus Sicht der Fachstelle erscheinen folgende Massnahmen geeignet, die beschriebenen Nachteile auszugleichen, ohne die zu erbringenden Studienleistungen inhaltlich zu verändern:</p><h3>Massnahmen in Lehrveranstaltungen</h3><ul><li>Reservierter Sitzplatz mit guter Sicht auf Tafel und Projektion zur Reduktion der visuellen Belastung.</li><li>Erlaubnis zur Audioaufnahme der Lehrveranstaltungen, um nicht erfasste visuelle Inhalte nachträglich erschliessen zu können.</li><li>Bereitstellung der Präsentationsfolien in digitaler, vergrösserbarer Form spätestens am Vortag der Veranstaltung.</li></ul><h3>Massnahmen bei Leistungsnachweisen</h3><ul><li>Zulassung elektronischer Vergrösserungshilfen am Prüfungsplatz zur Bearbeitung von Texten, Formeln und Grafiken.</li><li>Bereitstellung der Prüfungsunterlagen in vergrössertem Format (Grossdruck) mit ausreichendem Kontrast.</li><li>Zeitverlängerung bei schriftlichen Prüfungen (Richtwert: 50 %), um das verlangsamte Lesen und die visuelle Ermüdung auszugleichen.</li></ul><p>Die empfohlenen Massnahmen stehen in einem angemessenen Verhältnis zur dokumentierten Einschränkung.</p><p>Diese Empfehlung versteht sich als Hilfestellung für Ihren Antrag und als Grundlage für die Beurteilung durch die zuständige Entscheidungsinstanz. Die abschliessende Wahl der zu beantragenden Massnahmen liegt bei Ihnen.</p><p>Freundliche Grüsse<br>Dr. Suzanne Beispiel<br>Fachstelle Nachteilsausgleich</p>",
+  "recommendationText": "Universität Zürich, Fachstelle Nachteilsausgleich. Zürich, 27.03.2026. Empfehlungsschreiben zum Antrag auf Nachteilsausgleich. Wir beziehen uns auf das Beratungsgespräch vom 25. März 2026 und auf das fachärztliche Attest im ICF-Format vom März 2026. Bestätigt ist eine Retinitis pigmentosa (H35.5). Geeignete Massnahmen: – Reservierter Sitzplatz mit guter Sicht. – Erlaubnis zur Audioaufnahme der Lehrveranstaltungen. – Digitale, vergrösserbare Folien am Vortag. – Zulassung elektronischer Vergrösserungshilfen. – Prüfungsunterlagen in Grossdruck. – Zeitverlängerung von rund 50 % bei schriftlichen Prüfungen. Die Massnahmen stehen in angemessenem Verhältnis zur Einschränkung. Freundliche Grüsse, Dr. Suzanne Beispiel, Fachstelle Nachteilsausgleich.",
+  "submittedAt": "2026-04-08T08:45:00.000Z",
+  "reviewForwardedAt": "2026-04-13T09:30:00.000Z",
+  "r4Decision": {
+    "updatedAt": "2026-04-27T14:15:00.000Z",
+    "concretizations": [
+      {
+        "blockId": "lectureMeasures",
+        "measureKey": "m5",
+        "title": "Reservierter Sitzplatz mit optimaler Sicht",
+        "description": "In allen Lehrveranstaltungen wird ein fester Sitzplatz in den vorderen Reihen mit guter Sicht auf Tafel und Projektion reserviert."
+      },
+      {
+        "blockId": "lectureMeasures",
+        "measureKey": "m4",
+        "title": "Audioaufnahme der Lehrveranstaltungen",
+        "description": "Die Audioaufnahme der Veranstaltungen wird zum persönlichen Gebrauch zugelassen, um visuell nicht erfassbare Inhalte nachträglich erschliessen zu können."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m1",
+        "title": "Elektronische Vergrösserungshilfen",
+        "description": "Am Prüfungsplatz wird der Einsatz elektronischer Vergrösserungshilfen (Bildschirmlupe) zugelassen."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m2",
+        "title": "Prüfungsunterlagen in Grossdruck",
+        "description": "Sämtliche Prüfungsunterlagen werden in vergrössertem Format mit hohem Kontrast bereitgestellt."
+      },
+      {
+        "blockId": "assessmentMeasures",
+        "measureKey": "m4",
+        "title": "Zeitverlängerung 50 % bei schriftlichen Prüfungen",
+        "description": "Die Bearbeitungszeit schriftlicher Prüfungen wird um 50 % verlängert, um verlangsamtes Lesen und visuelle Ermüdung auszugleichen."
+      }
+    ]
+  }
+}
