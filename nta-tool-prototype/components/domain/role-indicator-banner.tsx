@@ -1,15 +1,15 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { ArrowLeftRight } from "lucide-react";
 
 import type { UserRole } from "@/lib/auth";
+import {
+  getRoleBannerOpenSnapshot,
+  setRoleBannerOpen,
+  useRoleBannerOpen,
+} from "@/lib/role-banner-state";
 import { cn } from "@/lib/utils";
 
 type RoleIndicatorBannerProps = {
@@ -78,48 +78,21 @@ const NOT_SIGNED_IN_VISUAL: RoleVisual = {
   surfaceClass: NEUTRAL_SURFACE_CLASS,
 };
 
-const STORAGE_KEY = "nta-role-banner-open";
-const STORE_EVENT = "nta-role-banner-change";
 const HEIGHT_VAR = "--role-banner-height";
 
-/**
- * Kleiner externer Store über `localStorage`, gelesen via `useSyncExternalStore`.
- * Vorteile: kein Hydration-Mismatch (Server-Snapshot = geschlossen) und keine
- * `setState`-Aufrufe innerhalb von Effekten.
- */
-function subscribeToOpenState(callback: () => void) {
-  window.addEventListener(STORE_EVENT, callback);
-  window.addEventListener("storage", callback);
-  return () => {
-    window.removeEventListener(STORE_EVENT, callback);
-    window.removeEventListener("storage", callback);
-  };
-}
-
-function getOpenSnapshot(): boolean {
-  try {
-    return window.localStorage.getItem(STORAGE_KEY) === "1";
-  } catch {
+/** Bereiche, in denen die Rollen-Leiste erscheinen darf (nicht auf Login/Landing). */
+function isAppArea(pathname: string | null): boolean {
+  if (!pathname) {
     return false;
   }
-}
-
-function getServerOpenSnapshot(): boolean {
-  return false;
-}
-
-function setOpenState(next: boolean) {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, next ? "1" : "0");
-  } catch {
-    // Persistenz ist optional.
-  }
-  window.dispatchEvent(new Event(STORE_EVENT));
+  return pathname.startsWith("/portal") || pathname.startsWith("/workspace");
 }
 
 /**
  * Globale Rollen-Anzeige für die Ausstellung an einem einzelnen Gerät.
  *
+ * - Nur im **Portal** (`/portal`) und **Workspace** (`/workspace`) sichtbar —
+ *   nicht auf Login-/Landing-Seiten.
  * - Ein-/Ausblenden über `Ctrl + Alt + R` (selber Command schliesst wieder).
  *   Diese Kombination hat weder im Browser noch in macOS eine Standardfunktion;
  *   `Ctrl + Pfeiltaste` bleibt bewusst frei für den macOS-Desktop-Wechsel.
@@ -130,15 +103,14 @@ function setOpenState(next: boolean) {
  *   dadurch unverändert.
  */
 export function RoleIndicatorBanner({ role }: RoleIndicatorBannerProps) {
-  const open = useSyncExternalStore(
-    subscribeToOpenState,
-    getOpenSnapshot,
-    getServerOpenSnapshot,
-  );
+  const open = useRoleBannerOpen();
+  const pathname = usePathname();
+  // Nur in Portal/Workspace anzeigen, selbst wenn der Zustand «offen» ist.
+  const active = open && isAppArea(pathname);
   const bannerRef = useRef<HTMLDivElement | null>(null);
 
   const toggle = useCallback(() => {
-    setOpenState(!getOpenSnapshot());
+    setRoleBannerOpen(!getRoleBannerOpenSnapshot());
   }, []);
 
   useEffect(() => {
@@ -164,7 +136,7 @@ export function RoleIndicatorBanner({ role }: RoleIndicatorBannerProps) {
   useLayoutEffect(() => {
     const root = document.documentElement;
 
-    if (!open) {
+    if (!active) {
       root.style.setProperty(HEIGHT_VAR, "0px");
       return;
     }
@@ -187,9 +159,9 @@ export function RoleIndicatorBanner({ role }: RoleIndicatorBannerProps) {
       observer.disconnect();
       root.style.setProperty(HEIGHT_VAR, "0px");
     };
-  }, [open]);
+  }, [active]);
 
-  if (!open) {
+  if (!active) {
     return null;
   }
 

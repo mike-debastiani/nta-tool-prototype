@@ -17,6 +17,7 @@ import {
   workspaceSidebarLabelTransitionClass,
   workspaceSidebarNavItemWidthTransitionClass,
 } from "@/lib/design-tokens/workspace-dashboard";
+import { useRoleBannerOpen } from "@/lib/role-banner-state";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
 
@@ -47,9 +48,15 @@ type AccountMenuPanelProps = {
 function AccountMenuPanel({ variant, onClose }: AccountMenuPanelProps) {
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
+  // Abmelden ist gesperrt, solange die Rollen-Leiste (Demo) eingeblendet ist.
+  // Standard geschlossen → kein Einfluss auf den regulären Prototyp-Betrieb.
+  const roleBannerOpen = useRoleBannerOpen();
   const paths = ACCOUNT_MENU_PATHS[variant];
 
   async function handleSignOut() {
+    if (roleBannerOpen) {
+      return;
+    }
     setSigningOut(true);
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -79,9 +86,11 @@ function AccountMenuPanel({ variant, onClose }: AccountMenuPanelProps) {
         className={cn(
           MENU_ITEM,
           "justify-between gap-2 text-left hover:bg-destructive/10 hover:text-destructive focus-visible:bg-destructive/10 focus-visible:text-destructive",
+          "disabled:pointer-events-none disabled:opacity-50",
         )}
         onClick={() => void handleSignOut()}
-        disabled={signingOut}
+        disabled={signingOut || roleBannerOpen}
+        aria-disabled={roleBannerOpen}
       >
         <span>{signingOut ? "Abmelden…" : "Abmelden"}</span>
         <LogOut
@@ -90,6 +99,13 @@ function AccountMenuPanel({ variant, onClose }: AccountMenuPanelProps) {
           aria-hidden
         />
       </button>
+
+      {roleBannerOpen ? (
+        <p className="px-2 pb-1 pt-1 text-xs leading-snug text-muted-foreground">
+          Abmelden ist gesperrt, solange die Rollen-Leiste aktiv ist
+          (Ctrl + Alt + R zum Schliessen).
+        </p>
+      ) : null}
     </>
   );
 }
