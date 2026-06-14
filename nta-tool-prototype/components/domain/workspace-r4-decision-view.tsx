@@ -1220,9 +1220,13 @@ export function WorkspaceR4DecisionView({
               review={review}
               variant={verfuegungVariant}
             />
-            {verfuegungVariant === "rejected" ? (
-              <R4VerfuegungRejectedBlocks application={application} review={review} />
-            ) : null}
+            {/*
+              Auch bei einer bewilligten Verfügung werden teil-abgelehnte Entscheid-Blöcke
+              mit Begründung unterhalb angezeigt (wie bei der komplett abgelehnten Verfügung).
+              In der Vorschau ist `review` der Live-Stand (vor Materialisierung) und enthält
+              die abgelehnten Zeilen; rendert nichts, wenn kein Block abgelehnt wurde.
+            */}
+            <R4VerfuegungRejectedBlocks review={review} />
             <div className="flex w-full items-center justify-between gap-3 pt-2">
               <Button
                 type="button"

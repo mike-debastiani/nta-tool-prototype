@@ -63,6 +63,13 @@ export function ApplicationIssuedVerfuegungView({
   const CalloutIcon = callout.icon;
 
   const review = useMemo(() => mergeR4DecisionReview(application.data), [application.data]);
+  /**
+   * Abgelehnte Blöcke unter der Verfügung aus dem **rohen** Entscheid-Snapshot ableiten.
+   * Bei einer Bewilligung bereinigt `materializeApprovedR4DecisionReview` das
+   * `applicationDefinition`, weshalb der gemergte `review` die abgelehnten Zeilen verlöre.
+   * Der persistierte Snapshot behält den vollständigen Entscheid (inkl. Begründung).
+   */
+  const rejectedBlocksReview = application.data.r4DecisionReview ?? review;
   const submittedAtLabel = formatReviewSubmittedAt(application.data);
 
   const assignee = useMemo(() => {
@@ -150,9 +157,12 @@ export function ApplicationIssuedVerfuegungView({
             review={review}
             variant={verfuegungVariant}
           />
-          {verfuegungVariant === "rejected" ? (
-            <R4VerfuegungRejectedBlocks application={application} review={review} />
-          ) : null}
+          {/*
+            Auch unter einer bewilligten Verfügung erscheinen abgelehnte (teil-abgelehnte)
+            Entscheid-Blöcke mit Begründung — analog zur komplett abgelehnten Verfügung.
+            `R4VerfuegungRejectedBlocks` rendert nichts, wenn es keine abgelehnten Blöcke gibt.
+          */}
+          <R4VerfuegungRejectedBlocks review={rejectedBlocksReview} />
         </div>
       </div>
     </div>

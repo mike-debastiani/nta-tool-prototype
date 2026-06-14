@@ -206,7 +206,7 @@ Ausführlich mit Akzeptanzideen: **`Prototyp_Funktionen.md`**. Hier nur **Anker*
 | `components/domain/application-issued-verfuegung-view.tsx` | Ausgestellte Verfügung R1/R2/R4 (`approved`/`rejected`), Sidebar «Zugehörige Dokumente» |
 | `lib/issued-verfuegung-callouts.ts` | Rollenspezifische Verfügungs-Callouts + Icons (`CircleCheck` / `CircleX`) |
 | `components/domain/r4-verfuegung-document.tsx` | R4 Verfügungsdokument (`approved` / `rejected`) |
-| `components/domain/r4-verfuegung-rejected-blocks.tsx` | Abgelehnte Entscheid-Blöcke unter abgelehnter Verfügung |
+| `components/domain/r4-verfuegung-rejected-blocks.tsx` | Abgelehnte Entscheid-Blöcke unter Verfügung (abgelehnt **und** teil-abgelehnt unter bewilligter Verfügung) |
 | `components/domain/r4-related-documents-sidebar.tsx` | Sidebar Attest + Empfehlung auf Verfügungs-Screens |
 | `components/ui/auto-grow-textarea.tsx` | Mitwachsende Freitextfelder (R1 Sonstige Massnahmen, R4 Vorschläge) |
 | `components/domain/custom-measure-lines-field.tsx` | R1/R1-Anpassung: Sonstige-Massnahmen-Zeilen |

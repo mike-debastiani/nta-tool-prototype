@@ -169,9 +169,13 @@ Statt einer separat verfassten Verfügung erzeugt R4 die **Verfügung direkt im 
 | Massnahmen LV / Leistungsnachweise | **approved:** nummerierte konkretisierte Liste; **rejected:** nur `rejectedMeasuresText` (keine Massnahmenliste im Dokument) |
 | Einsprachen/Rekurse, Gruss, Footer-Signatur | fix; Fake-Signatur `fake-signature.svg` im Footer |
 
-### Abgelehnte Verfügung — Zusatzblöcke unter dem Dokument
+### Abgelehnte (Teil-)Entscheid-Blöcke — Zusatzblöcke unter dem Dokument
 
-Unter der Verfügung rendert **`R4VerfuegungRejectedBlocks`** nur Blöcke aus **`getR4RejectedVerfuegungBlockIds`**: bestätigt, **ohne** bewilligte Option, mit Begründung und/oder **vom Studierenden gewählt + von R4 abgelehnt** (`studentRejectedR4Rows`). Keine erneute Bearbeitung in der ausgestellten Ansicht.
+Unter der Verfügung rendert **`R4VerfuegungRejectedBlocks`** Blöcke aus **`getR4RejectedVerfuegungBlockIds`**: bestätigt, **ohne** bewilligte Option, mit Begründung und/oder **vom Studierenden gewählt + von R4 abgelehnt** (`studentRejectedR4Rows`). Keine erneute Bearbeitung in der ausgestellten Ansicht.
+
+- **Auch unter einer bewilligten Verfügung** (Teilbewilligung, z. B. ein Massnahmen-Block abgelehnt, der andere bewilligt → Gesamtstatus `approved`): Die abgelehnten Blöcke erscheinen mit Begründung untendran — genau wie bei der komplett abgelehnten Verfügung. Gilt in der R4-**Vorschau** (`verfuegungMode`) und in der **ausgestellten** Ansicht für **alle** Rollen mit Zugriff (R1/R2/R4), da der Snapshot in `data.r4DecisionReview` mit dem Abschluss persistiert wird.
+- **Erkennung ohne `applicationDefinition`-Visibility:** `getR4RejectedVerfuegungBlockIds(review)` nimmt **nur** den Review-Snapshot (kein `visibility`-Arg mehr). Grund: `materializeApprovedR4DecisionReview` bereinigt bei Bewilligung das `applicationDefinition` der abgelehnten Blöcke — eine Def-basierte Sichtbarkeit würde teil-abgelehnte Blöcke fälschlich verstecken. Ein Block ist nur `confirmed`, wenn R4 ihn aktiv (über einen sichtbaren Block) entschieden hat.
+- **Datenquelle in der ausgestellten Ansicht:** `ApplicationIssuedVerfuegungView` übergibt den **rohen** `application.data.r4DecisionReview` (nicht den gegen das materialisierte Def gemergten `review`) an `R4VerfuegungRejectedBlocks`, damit die abgelehnten Zeilen (`studentSelected`) erhalten bleiben. In der R4-Vorschau wird der Live-Stand vor Materialisierung verwendet.
 
 ### Ausgestellte Ansicht (`approved` / `rejected`)
 

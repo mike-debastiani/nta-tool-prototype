@@ -3,7 +3,6 @@
 import { SquareX } from "lucide-react";
 
 import {
-  getR4BlockVisibility,
   getR4RejectedVerfuegungBlockIds,
   isR4ProposalRowKey,
   studentRejectedR4Rows,
@@ -29,7 +28,6 @@ import type {
   R4DecisionReview,
   R4DecisionReviewBlockId,
   R4DecisionRow,
-  WorkspaceApplication,
 } from "@/lib/test-flow-types";
 import { cn } from "@/lib/utils";
 
@@ -117,19 +115,22 @@ function RejectedBlockSection({
 }
 
 type R4VerfuegungRejectedBlocksProps = {
-  application: WorkspaceApplication;
+  /**
+   * Entscheid-Snapshot. Für die ausgestellte (bewilligte) Verfügung muss der **rohe**
+   * persistierte `data.r4DecisionReview` übergeben werden — nicht ein gegen das
+   * materialisierte `applicationDefinition` neu gemergter Review, da dieser die abgelehnten
+   * Zeilen (`studentSelected`) verloren hätte.
+   */
   review: R4DecisionReview;
   className?: string;
 };
 
 /** Abgelehnte Entscheid-Blöcke unter der Verfügung — Figma `6426:26226`. */
 export function R4VerfuegungRejectedBlocks({
-  application,
   review,
   className,
 }: R4VerfuegungRejectedBlocksProps) {
-  const visibility = getR4BlockVisibility(application.data);
-  const blockIds = getR4RejectedVerfuegungBlockIds(review, visibility);
+  const blockIds = getR4RejectedVerfuegungBlockIds(review);
 
   if (blockIds.length === 0) return null;
 

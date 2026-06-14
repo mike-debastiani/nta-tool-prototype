@@ -404,13 +404,20 @@ const R4_VERFUEGUNG_BLOCK_ORDER: R4DecisionReviewBlockId[] = [
   "assessmentMeasures",
 ];
 
-/** Abgelehnte, bestätigte Blöcke für die Verfügungs-Ansicht (mit Begründung). */
+/**
+ * Abgelehnte, bestätigte Blöcke für die Verfügungs-Ansicht (mit Begründung).
+ *
+ * Bewusst **ohne** `applicationDefinition`-Visibility: Bei einer Bewilligung bereinigt
+ * `materializeApprovedR4DecisionReview` das `applicationDefinition` der abgelehnten Blöcke,
+ * sodass eine Definition-basierte Sichtbarkeit teil-abgelehnte Blöcke fälschlich verstecken
+ * würde. Ein Block ist nur `confirmed`, wenn R4 ihn aktiv entschieden hat — und R4 entscheidet
+ * ausschliesslich über sichtbare Blöcke. Die Erkennung stützt sich daher auf den
+ * persistierten Entscheid-Snapshot (`r4DecisionReview`), nicht auf das materialisierte Def.
+ */
 export function getR4RejectedVerfuegungBlockIds(
   review: R4DecisionReview,
-  visibility: R4BlockVisibility,
 ): R4DecisionReviewBlockId[] {
   return R4_VERFUEGUNG_BLOCK_ORDER.filter((id) => {
-    if (!visibility[id]) return false;
     const block = review.blocks[id];
     if (!block?.confirmed || blockHasR4ApprovedOption(block)) return false;
     const reason = block.decisionReason?.trim();
